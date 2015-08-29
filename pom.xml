@@ -20,17 +20,26 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-				 <modelVersion>4.0.0</modelVersion>
-				 <groupId>com.davidbracewell</groupId>		 
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.davidbracewell</groupId>
+        <artifactId>davidbracewell-parent-pom</artifactId>
+        <version>1.0.5-SNAPSHOT</version>
+    </parent>
     <artifactId>hermes</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <dependencies>
-   </dependencies>
+    <version>${hermesVersion}</version>
+    <packaging>pom</packaging>
     <contributors>
         <contributor>
             <name>David B. Bracewell</name>
         </contributor>
     </contributors>
+    <scm>
+        <connection>scm:git:git@github.com:dbracewell/hermes.git</connection>
+        <developerConnection>scm:git:git@github.com:dbracewell/hermes.git</developerConnection>
+        <url>http://hermes.davidbracewell.com</url>
+        <tag>HEAD</tag>
+    </scm>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -39,6 +48,11 @@
             <comments>A business-friendly OSS license</comments>
         </license>
     </licenses>
+
+    <properties>
+        <hermesVersion>0.0.1-SNAPSHOT</hermesVersion>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -53,6 +67,11 @@
             </plugin>
         </plugins>
     </build>
+
+    <modules>
+        <module>hermes-core</module>
+    </modules>
+
     <repositories>
         <repository>
             <id>davidbracewell-releases</id>
