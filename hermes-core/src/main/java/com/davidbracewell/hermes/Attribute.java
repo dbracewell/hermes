@@ -25,24 +25,28 @@ import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Convert;
-import com.davidbracewell.conversion.Val;
-import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredIOException;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
+import com.davidbracewell.reflection.ValueType;
 import com.davidbracewell.string.StringUtils;
-import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 
+import javax.annotation.Nonnull;
 import java.io.ObjectStreamException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * <p>
- * An attribute in the TIPSTER architecture is feature-value pair where the feature names are arbitrary strings and
- * values are arbitrary types. We depart from TIPSTER and use <code>Attribute</code> to represent the feature
- * names.  A <code>Attribute</code> is a dynamic enum backed by a normalized version of the string and has associated
- * with it the type of value it expects.
+ * An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link #create(String)} or
+ * the {@link #create(String, Class)} static methods. The value type of an attribute is either defined via the create
+ * method or via a config parameter, e.g. <code>Attribute.NAME.type=fully.qualified.className</code> (see {@link
+ * com.davidbracewell.reflection.ReflectionUtils#getClassForName(String)} for a list of classes that can be constructed
+ * using a simple name). Attribute names are not case-sensitive meaning that <pre>partOfSpeech</pre> and
+ * <pre>PartOfSpeech</pre> will equate to the same attribute.
+ * </p>
+ * <p>
  * </p>
  *
  * @author David B. Bracewell
@@ -56,6 +60,21 @@ public class Attribute extends EnumValue {
     super(name);
   }
 
+  public static Attribute create(String name, @Nonnull Class<?> valueType) {
+    if (StringUtils.isNullOrBlank(name)) {
+      throw new IllegalArgumentException(name + " is invalid");
+    }
+    Preconditions.checkArgument(!name.contains("::"), ":: is invalid for attribute names");
+    if (index.isDefined(name)) {
+      Attribute attribute = index.valueOf(name);
+      Preconditions.checkArgument(attribute.getValueType().equals(valueType), "Attempting to register an existing attribute with a new value type.");
+      return attribute;
+    }
+    Attribute attribute = index.register(new Attribute(name));
+    Config.setProperty("Attribute." + attribute.name() + ".type", valueType.getName());
+    return attribute;
+  }
+
   /**
    * Creates a new feature name.
    *
@@ -66,7 +85,6 @@ public class Attribute extends EnumValue {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
-    Preconditions.checkArgument(!name.contains("@"), "@ is invalid for attribute names");
     Preconditions.checkArgument(!name.contains("::"), ":: is invalid for attribute names");
     return index.register(new Attribute(name));
   }
@@ -84,30 +102,31 @@ public class Attribute extends EnumValue {
   static void read(StructuredReader reader, Fragment fragment) throws StructuredIOException {
 
 
-    if (reader.peek() == ElementType.BEGIN_ARRAY) {
-      String[] split = reader.beginArray().split("::");
-      Attribute attr = Attribute.create(split[0]);
-      List<Object> values = new ArrayList<>();
-      while (reader.peek() != ElementType.END_ARRAY) {
-        values.add(reader.nextValue().as(attr.getValueType()));
-      }
-      reader.endArray();
-      switch (split[1]) {
-        case "List":
-          fragment.putAttribute(attr, values);
-          break;
-        case "Set":
-          fragment.putAttribute(attr, new LinkedHashSet<>(values));
-          break;
-        case "Array":
-          fragment.putAttribute(attr, values.toArray());
-          break;
-      }
-    } else {
-      Tuple2<String, Val> keyValue = reader.nextKeyValue();
-      Attribute attr = Attribute.create(keyValue.getKey());
-      fragment.putAttribute(attr, keyValue.getValue().as(attr.getValueType()));
-    }
+//    if (reader.peek() == ElementType.BEGIN_ARRAY) {
+//      String[] split = reader.beginArray().split("::");
+//      Attribute attr = Attribute.create(split[0]);
+//      List<Object> values = new ArrayList<>();
+//      while (reader.peek() != ElementType.END_ARRAY) {
+//        values.add(reader.nextValue().as(attr.getValueType()));
+//      }
+//      reader.endArray();
+//      switch (split[1]) {
+//        case "List":
+//          fragment.putAttribute(attr, values);
+//          break;
+//        case "Set":
+//          fragment.putAttribute(attr, new LinkedHashSet<>(values));
+//          break;
+//        case "Array":
+//          fragment.putAttribute(attr, values.toArray());
+//          break;
+//      }
+//    } else {
+//      Tuple2<String, Val> keyValue = reader.nextKeyValue();
+//      Attribute attr = Attribute.create(keyValue.getKey());
+//      fragment.putAttribute(attr, keyValue.getValue().as(attr.getValueType()));
+//    }
+
   }
 
   /**
@@ -155,12 +174,12 @@ public class Attribute extends EnumValue {
 
   /**
    * Gets class information for the type of values this attribute is expected to have. Types are defined via
-   * configuration as follows: <code>Attribute.NAME = class</code>. If not defined String.class will be returned.
+   * configuration as follows: <code>Attribute.NAME.type = class</code>. If not defined String.class will be returned.
    *
    * @return The class associated with this attributes values
    */
-  public Class<?> getValueType() {
-    return Config.get("Attribute", name()).asClass(String.class);
+  public ValueType getValueType() {
+    return ValueType.fromConfig("Attribute" + "." + name());
   }
 
   private Object readResolve() throws ObjectStreamException {

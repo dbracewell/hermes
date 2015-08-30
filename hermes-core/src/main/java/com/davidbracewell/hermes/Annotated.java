@@ -37,29 +37,20 @@ import java.util.Optional;
 public interface Annotated extends CharSpan {
 
   /**
-   * Gets annotations of a given type that have the same starting offset as this object.
+   * Returns the document that this fragment is a part of.
    *
-   * @param type the type of annotation wanted
-   * @return the list of annotations of given type have the same starting offset as this object.
+   * @return The document that this fragment is associated with
    */
-  default List<Annotation> getStartingHere(AnnotationType type) {
-    if (isEmpty() || document() == null || type == null) {
-      return Collections.emptyList();
-    }
-    return document().getStartingAt(type, start());
-  }
+  Document document();
 
   /**
-   * Gets annotations of a given type that overlap with this object.
+   * First optional.
    *
-   * @param type the type of annotation wanted
-   * @return the list of annotations of given type that overlap with this object
+   * @param type the type
+   * @return the optional
    */
-  default List<Annotation> getOverlapping(AnnotationType type) {
-    if (isEmpty() || document() == null || type == null) {
-      return Collections.emptyList();
-    }
-    return document().getOverlapping(type, this);
+  default Optional<Annotation> first(AnnotationType type) {
+    return getOverlapping(type).stream().findFirst();
   }
 
   /**
@@ -91,15 +82,30 @@ public interface Annotated extends CharSpan {
     return document().getContaining(type, this);
   }
 
+  /**
+   * Gets annotations of a given type that overlap with this object.
+   *
+   * @param type the type of annotation wanted
+   * @return the list of annotations of given type that overlap with this object
+   */
+  default List<Annotation> getOverlapping(AnnotationType type) {
+    if (isEmpty() || document() == null || type == null) {
+      return Collections.emptyList();
+    }
+    return document().getOverlapping(type, this);
+  }
 
   /**
-   * First optional.
+   * Gets annotations of a given type that have the same starting offset as this object.
    *
-   * @param type the type
-   * @return the optional
+   * @param type the type of annotation wanted
+   * @return the list of annotations of given type have the same starting offset as this object.
    */
-  default Optional<Annotation> first(AnnotationType type) {
-    return getOverlapping(type).stream().findFirst();
+  default List<Annotation> getStartingHere(AnnotationType type) {
+    if (isEmpty() || document() == null || type == null) {
+      return Collections.emptyList();
+    }
+    return document().getStartingAt(type, start());
   }
 
   /**
@@ -114,10 +120,41 @@ public interface Annotated extends CharSpan {
   }
 
   /**
-   * Returns the document that this fragment is a part of.
+   * Sentences list.
    *
-   * @return The document that this fragment is associated with
+   * @return the list
    */
-  Document document();
+  default List<Annotation> sentences() {
+    return getOverlapping(Types.SENTENCE);
+  }
+
+  /**
+   * Token at.
+   *
+   * @param tokenIndex the token index
+   * @return the annotation
+   */
+  default Annotation tokenAt(int tokenIndex) {
+    return tokens().get(tokenIndex);
+  }
+
+  /**
+   * Token length.
+   *
+   * @return the int
+   */
+  default int tokenLength() {
+    return tokens().size();
+  }
+
+  /**
+   * Tokens list.
+   *
+   * @return the list
+   */
+  default List<Annotation> tokens() {
+    return getOverlapping(Types.TOKEN);
+  }
+
 
 }//END OF Annotated

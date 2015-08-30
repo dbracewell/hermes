@@ -25,7 +25,6 @@ import com.davidbracewell.Language;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 
 /**
  * The interface H string.
@@ -77,7 +76,7 @@ public interface HString extends AttributedObject, Annotated {
   /**
    * Find h string.
    *
-   * @param text  the text
+   * @param text the text
    * @param start the start
    * @return the h string
    */
@@ -103,7 +102,7 @@ public interface HString extends AttributedObject, Annotated {
   /**
    * Index of.
    *
-   * @param text  the text
+   * @param text the text
    * @param start the start
    * @return the int
    */
@@ -172,7 +171,7 @@ public interface HString extends AttributedObject, Annotated {
    * Sub string.
    *
    * @param relativeStart the start
-   * @param relativeEnd   the end
+   * @param relativeEnd the end
    * @return the h string
    */
   default HString subString(int relativeStart, int relativeEnd) {
@@ -202,23 +201,6 @@ public interface HString extends AttributedObject, Annotated {
    */
   default void setLanguage(Language language) {
     putAttribute(Attrs.LANGUAGE, language);
-  }
-
-  default List<Annotation> tokens() {
-    return getOverlapping(Types.TOKEN);
-  }
-
-  default int tokenLength() {
-    return tokens().size();
-  }
-
-  default Annotation tokenAt(int tokenIndex) {
-    return tokens().get(tokenIndex);
-  }
-
-
-  default List<Annotation> sentences() {
-    return getOverlapping(Types.SENTENCE);
   }
 
 
