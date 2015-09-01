@@ -45,14 +45,6 @@ public final class Types {
    */
   public static final AnnotationType TOKEN = AnnotationType.create("TOKEN");
   /**
-   * dependency node annotation type
-   */
-  public static final AnnotationType DEPENDENCY_NODE = AnnotationType.create("DEPENDENCY_NODE");
-  /**
-   * lemma annotation type
-   */
-  public static final AnnotationType LEMMA = AnnotationType.create("LEMMA");
-  /**
    * lexicon match annotation type
    */
   public static final AnnotationType LEXICON_MATCH = AnnotationType.create("LEXICON_MATCH");

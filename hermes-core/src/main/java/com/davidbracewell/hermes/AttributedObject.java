@@ -26,8 +26,11 @@ import com.davidbracewell.conversion.Cast;
 import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
+ * The interface Attributed object.
+ *
  * @author David B. Bracewell
  */
 public interface AttributedObject {
@@ -59,6 +62,31 @@ public interface AttributedObject {
    */
   default <T> T getAttribute(Attribute attribute) {
     return Cast.as(getAttributes().get(attribute));
+  }
+
+  /**
+   * Gets attribute or default.
+   *
+   * @param attribute    the attribute
+   * @param defaultValue the default value
+   * @return the attribute or default
+   */
+  default <T> T getAttributeOrDefault(Attribute attribute, T defaultValue) {
+    return getAttributeOrDefault(attribute, () -> defaultValue);
+  }
+
+  /**
+   * Gets attribute or default.
+   *
+   * @param attribute the attribute
+   * @param supplier  the supplier
+   * @return the attribute or default
+   */
+  default <T> T getAttributeOrDefault(Attribute attribute, @Nonnull Supplier<T> supplier) {
+    if (containsAttribute(attribute)) {
+      return getAttribute(attribute);
+    }
+    return supplier.get();
   }
 
   /**

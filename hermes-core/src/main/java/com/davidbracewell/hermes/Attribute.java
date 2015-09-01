@@ -24,25 +24,29 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
+import com.davidbracewell.conversion.Val;
+import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredIOException;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.reflection.ValueType;
 import com.davidbracewell.string.StringUtils;
+import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
 import java.io.ObjectStreamException;
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 
 /**
  * <p>
  * An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link #create(String)} or
  * the {@link #create(String, Class)} static methods. The value type of an attribute is either defined via the create
  * method or via a config parameter, e.g. <code>Attribute.NAME.type=fully.qualified.className</code> (see {@link
- * com.davidbracewell.reflection.ReflectionUtils#getClassForName(String)} for a list of classes that can be constructed
+ * com.davidbracewell.reflection.ReflectionUtils#getClassForName(String)}*** for a list of classes that can be
+ * constructed
  * using a simple name). Attribute names are not case-sensitive meaning that <pre>partOfSpeech</pre> and
  * <pre>PartOfSpeech</pre> will equate to the same attribute.
  * </p>
@@ -60,11 +64,17 @@ public class Attribute extends EnumValue {
     super(name);
   }
 
+  /**
+   * Create attribute.
+   *
+   * @param name the name
+   * @param valueType the value type
+   * @return the attribute
+   */
   public static Attribute create(String name, @Nonnull Class<?> valueType) {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
-    Preconditions.checkArgument(!name.contains("::"), ":: is invalid for attribute names");
     if (index.isDefined(name)) {
       Attribute attribute = index.valueOf(name);
       Preconditions.checkArgument(attribute.getValueType().equals(valueType), "Attempting to register an existing attribute with a new value type.");
@@ -85,7 +95,6 @@ public class Attribute extends EnumValue {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
-    Preconditions.checkArgument(!name.contains("::"), ":: is invalid for attribute names");
     return index.register(new Attribute(name));
   }
 
@@ -99,34 +108,48 @@ public class Attribute extends EnumValue {
     return index.isDefined(name);
   }
 
-  static void read(StructuredReader reader, Fragment fragment) throws StructuredIOException {
+  static void read(StructuredReader reader, AttributedObject attributedObject) throws StructuredIOException {
 
+    Attribute attribute;
+    Object value;
 
-//    if (reader.peek() == ElementType.BEGIN_ARRAY) {
-//      String[] split = reader.beginArray().split("::");
-//      Attribute attr = Attribute.create(split[0]);
-//      List<Object> values = new ArrayList<>();
-//      while (reader.peek() != ElementType.END_ARRAY) {
-//        values.add(reader.nextValue().as(attr.getValueType()));
-//      }
-//      reader.endArray();
-//      switch (split[1]) {
-//        case "List":
-//          fragment.putAttribute(attr, values);
-//          break;
-//        case "Set":
-//          fragment.putAttribute(attr, new LinkedHashSet<>(values));
-//          break;
-//        case "Array":
-//          fragment.putAttribute(attr, values.toArray());
-//          break;
-//      }
-//    } else {
-//      Tuple2<String, Val> keyValue = reader.nextKeyValue();
-//      Attribute attr = Attribute.create(keyValue.getKey());
-//      fragment.putAttribute(attr, keyValue.getValue().as(attr.getValueType()));
-//    }
+    if (reader.peek() == ElementType.BEGIN_ARRAY) {
 
+      attribute = Attribute.create(reader.beginArray());
+      ValueType valueType = attribute.getValueType();
+
+      Preconditions.checkArgument(valueType.isCollection(), attribute.name() + " is not defined as a collection.");
+
+      List<Object> list = new ArrayList<>();
+      while (reader.peek() != ElementType.END_ARRAY) {
+        list.add(reader.nextValue().as(valueType.getParameterTypes()[0]));
+      }
+      value = valueType.convert(list);
+      reader.endArray();
+
+    } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
+
+      attribute = Attribute.create(reader.beginObject());
+      ValueType valueType = attribute.getValueType();
+      Optional<AttributeValueDecoder> decoder = attribute.getDecoder();
+
+      if (decoder.isPresent()) {
+        value = decoder.get().decode(reader, attribute);
+      } else if (valueType.isMap()) {
+        value = valueType.convert(reader.nextMap());
+      } else {
+        throw new RuntimeException(attribute.name() + " is not defined as Map and does not have a declared decoder.");
+      }
+
+      reader.endObject();
+
+    } else {
+      Tuple2<String, Val> keyValue = reader.nextKeyValue();
+      attribute = Attribute.create(keyValue.getKey());
+      value = attribute.getValueType().convert(keyValue.getValue());
+    }
+
+    attributedObject.putAttribute(attribute, value);
   }
 
   /**
@@ -148,27 +171,33 @@ public class Attribute extends EnumValue {
     return index.values();
   }
 
-  static void write(StructuredWriter writer, Attribute attribute, Object val) throws StructuredIOException {
-    if (val instanceof Collection || val.getClass().isArray()) {
-      String type;
-      if (val.getClass().isArray()) {
-        type = "Array";
-      } else if (val instanceof Set) {
-        type = "Set";
-      } else {
-        type = "List";
-      }
-      String key = attribute.name() + "::" + type;
 
-      writer.beginArray(key);
-      for (Object o : Convert.convert(val, Iterable.class)) {
-        writer.writeValue((o instanceof Number) ? o : Convert.convert(o, String.class));
+  void write(StructuredWriter writer, Object val) throws StructuredIOException {
+    ValueType valueType = getValueType();
+    Optional<AttributeValueEncoder> encoder = getEncoder();
+
+    if (valueType.isCollection()) {
+      checkType(val);
+      writer.beginArray(name());
+      Collection<?> collection = Cast.as(val);
+      for (Object o : collection) {
+        writer.writeValue(o);
       }
       writer.endArray();
-
+    } else if (encoder.isPresent()) {
+      writer.beginObject(name());
+      encoder.get().encode(writer, this, val);
+      writer.endObject();
+    } else if (valueType.isMap()) {
+      checkType(val);
+      writer.beginObject(name());
+      Map<?, ?> map = Cast.as(val);
+      for (Map.Entry<?, ?> entry : map.entrySet()) {
+        writer.writeKeyValue(Convert.convert(entry.getKey(), String.class), entry.getValue());
+      }
+      writer.endObject();
     } else {
-      String key = attribute.name();
-      writer.writeKeyValue(key, (val instanceof Number) ? val : Convert.convert(val, String.class));
+      writer.writeKeyValue(name(), val);
     }
   }
 
@@ -189,5 +218,24 @@ public class Attribute extends EnumValue {
     return this;
   }
 
+  private Optional<AttributeValueDecoder> getDecoder() {
+    return Optional.ofNullable(Config.get("Attribute", name(), "decoder").as(AttributeValueDecoder.class));
+  }
+
+
+  private Optional<AttributeValueEncoder> getEncoder() {
+    return Optional.ofNullable(Config.get("Attribute", name(), "encoder").as(AttributeValueEncoder.class));
+  }
+
+  void checkType(Object value) {
+    if (value != null && !Config.get("Attribute", "ignoreTypeChecks").asBoolean(false)) {
+      ValueType valueType = getValueType();
+      if (!valueType.getType().isAssignableFrom(value.getClass())) {
+        throw new IllegalArgumentException(
+            value + " [" + value.getClass().getName() + "] is of wrong type. " +
+                name() + "'s defined type is " + valueType.getType().getName());
+      }
+    }
+  }
 
 }//END OF AttributeName
