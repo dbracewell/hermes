@@ -23,21 +23,31 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.io.structured.StructuredIOException;
 import com.davidbracewell.io.structured.StructuredReader;
+import com.davidbracewell.io.structured.StructuredWriter;
 
 /**
- * The interface Attribute value decoder.
  * @author David B. Bracewell
  */
-public interface AttributeValueDecoder {
+public interface AttributeValueCodec {
+
+  /**
+   * Encode void.
+   *
+   * @param writer    the writer
+   * @param attribute the attribute
+   * @param value     the value
+   * @throws StructuredIOException the structured iO exception
+   */
+  void encode(StructuredWriter writer, Attribute attribute, Object value) throws StructuredIOException;
 
   /**
    * Decode object.
    *
-   * @param reader the reader
+   * @param reader    the reader
    * @param attribute the attribute
    * @return the object
    * @throws StructuredIOException the structured iO exception
    */
   Object decode(StructuredReader reader, Attribute attribute) throws StructuredIOException;
 
-}//END OF AttributeValueDecoder
+}//END OF AttributeValueCodec

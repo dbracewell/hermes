@@ -53,7 +53,7 @@ public final class Attrs {
   /**
    * The Language assocaited with a span
    */
-  public static final Attribute LANGUAGE = Attribute.create("LANG");
+  public static final Attribute LANGUAGE = Attribute.create("LANGUAGE");
   /**
    * Document author
    */
@@ -69,7 +69,7 @@ public final class Attrs {
   /**
    * Document keywords
    */
-  public static final Attribute KEYPHRASE = Attribute.create("KEYPHRASE");
+  public static final Attribute KEYPHRASES = Attribute.create("KEYPHRASES");
   /**
    * Publication date of document
    */

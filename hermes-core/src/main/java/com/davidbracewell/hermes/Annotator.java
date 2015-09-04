@@ -21,23 +21,39 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.io.structured.StructuredIOException;
-import com.davidbracewell.io.structured.StructuredWriter;
+import java.util.Set;
 
 /**
- * The interface Attribute value encoder.
+ * <p>Annotators produce annotations for a given document. A single annotator may produce one ore more types of
+ * annotations. Additionally, multiple annotators may provide the same type of annotations.
+ * <p/>
+ *
  * @author David B. Bracewell
  */
-public interface AttributeValueEncoder {
+public interface Annotator {
+
 
   /**
-   * Encode void.
+   * Annotates a document with one or more annotations of the type defined in <code>provided()</code>.
    *
-   * @param writer the writer
-   * @param attribute the attribute
-   * @param value the value
-   * @throws StructuredIOException the structured iO exception
+   * @param document The document to annotate
    */
-  void encode(StructuredWriter writer, Attribute attribute, Object value) throws StructuredIOException;
+  void annotate(Document document);
 
-}//END OF AttributeValueEncoder
+
+  /**
+   * The set of annotation types that are provided by this annotator
+   *
+   * @return the set of provided annotation types
+   */
+  Set<AnnotationType> provides();
+
+  /**
+   * The annotation types required to be on a document before this annotator can annotate
+   *
+   * @return the set of required annotation types
+   */
+  Set<AnnotationType> requires();
+
+
+}//END OF Annotator

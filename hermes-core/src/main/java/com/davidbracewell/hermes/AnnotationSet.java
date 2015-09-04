@@ -21,13 +21,11 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.text.util.TextPredicates;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 
-import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * <p>In the TIPSTER architecture an <code>AnnotationSet</code> acts as the storage mechanism for annotations
@@ -39,20 +37,17 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public abstract class AnnotationSet implements Iterable<Annotation>, Serializable {
-
-
-  private static final long serialVersionUID = 1L;
+public interface AnnotationSet extends Iterable<Annotation> {
 
   /**
    * <p>Selects all annotations of a given annotation type within a given range and matching a given criteria.</p>
    *
-   * @param range    the range in which to search form annotations
+   * @param span     the range in which to search form annotations
    * @param criteria the criteria that an annotation must match
    * @return A list of annotations that are an instance of the given class within the given range and matching the
    * given criteria
    */
-  public abstract List<Annotation> select(Span range, Predicate<? super Annotation> criteria);
+  List<Annotation> select(Span span, Predicate<? super Annotation> criteria);
 
   /**
    * <p>Selects all annotations of a given annotation type and matching a given criteria.</p>
@@ -60,7 +55,7 @@ public abstract class AnnotationSet implements Iterable<Annotation>, Serializabl
    * @param criteria the criteria that an annotation must match
    * @return A list of annotations that are an instance of the given class and matching the given criteria
    */
-  public abstract List<Annotation> select(Predicate<? super Annotation> criteria);
+  List<Annotation> select(Predicate<? super Annotation> criteria);
 
   /**
    * Sets the given annotation type as being completed or not
@@ -68,7 +63,7 @@ public abstract class AnnotationSet implements Iterable<Annotation>, Serializabl
    * @param type        the annotation type
    * @param isCompleted True if the annotation is completed, False if not.
    */
-  public abstract void setIsCompleted(AnnotationType type, boolean isCompleted, String annotatorInformation);
+  void setIsCompleted(AnnotationType type, boolean isCompleted, String annotatorInformation);
 
   /**
    * Gets if the given annotation type is completed or not
@@ -76,21 +71,22 @@ public abstract class AnnotationSet implements Iterable<Annotation>, Serializabl
    * @param type the annotation type
    * @return True if the annotation is completed, False if not.
    */
-  public abstract boolean isCompleted(AnnotationType type);
+  boolean isCompleted(AnnotationType type);
 
   /**
    * Gets information on what annotator provided the anntoation of the given type
+   *
    * @param type The annotation type
    * @return String representing the anntoation provider or null
    */
-  public abstract String getAnnotationProvider(AnnotationType type);
+  String getAnnotationProvider(AnnotationType type);
 
   /**
    * Gets completed annotations.
    *
    * @return Set of classes for completed annotations
    */
-  public abstract Set<AnnotationType> getCompleted();
+  Set<AnnotationType> getCompleted();
 
   /**
    * Removes all annotations of a given type and marks that type as not completed.
@@ -98,14 +94,14 @@ public abstract class AnnotationSet implements Iterable<Annotation>, Serializabl
    * @param type the type
    * @return The list of annotations that were removed
    */
-  public List<Annotation> removeAll(AnnotationType type) {
-    Preconditions.checkNotNull(type);
-    setIsCompleted(type, false, null);
-    List<Annotation> annotations = select(TextPredicates.isOfType(type));
-    for (Annotation a : annotations) {
-      this.remove(a);
+  default List<Annotation> removeAll(AnnotationType type) {
+    if (type != null) {
+      setIsCompleted(type, false, null);
+      List<Annotation> annotations = select(a -> a.isInstance(type));
+      annotations.forEach(this::remove);
+      return annotations;
     }
-    return annotations;
+    return Collections.emptyList();
   }
 
   /**
@@ -114,7 +110,7 @@ public abstract class AnnotationSet implements Iterable<Annotation>, Serializabl
    * @param id The id of the annotation
    * @return The annotation associated with that id or null if one does not exist
    */
-  public abstract Annotation get(long id);
+  Annotation get(long id);
 
   /**
    * Checks if an annotation is in the set or not
@@ -122,21 +118,21 @@ public abstract class AnnotationSet implements Iterable<Annotation>, Serializabl
    * @param annotation The annotation to check
    * @return True if the annotation is  in the set, False if not
    */
-  public abstract boolean contains(Annotation annotation);
+  boolean contains(Annotation annotation);
 
   /**
    * Removes an annotation from the document
    *
    * @param annotation The annotation to detach
    */
-  public abstract void remove(Annotation annotation);
+  void remove(Annotation annotation);
 
   /**
    * Adds an annotation to the set
    *
    * @param annotation The annotation to attach
    */
-  public abstract void add(Annotation annotation);
+  void add(Annotation annotation);
 
   /**
    * Gets the first annotation after a given one of the same type
@@ -145,7 +141,7 @@ public abstract class AnnotationSet implements Iterable<Annotation>, Serializabl
    * @param type       the type of the next annotation wanted
    * @return The next annotation of the same type or null
    */
-  public abstract Annotation next(Annotation annotation, AnnotationType type);
+  Annotation next(Annotation annotation, AnnotationType type);
 
   /**
    * Gets the first annotation before a given one of the same type
@@ -154,13 +150,13 @@ public abstract class AnnotationSet implements Iterable<Annotation>, Serializabl
    * @param type       the type of the previous annotation wanted
    * @return The previous annotation of the same type or null
    */
-  public abstract Annotation previous(Annotation annotation, AnnotationType type);
+  Annotation previous(Annotation annotation, AnnotationType type);
 
   /**
    * The number of annotations in the set
    *
    * @return Number of annotations in the set
    */
-  public abstract int size();
+  int size();
 
 }//END OF AnnotationSet

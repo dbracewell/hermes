@@ -22,16 +22,29 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.conversion.Val;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The interface H string.
  *
  * @author David B. Bracewell
  */
-public interface HString extends AttributedObject, Annotated {
+public abstract class HString extends Span implements CharSequence, AttributedObject, Annotated {
+  private static final long serialVersionUID = 1L;
+
+  public HString(int start, int end) {
+    super(start, end);
+  }
+
 
   /**
    * Content equal.
@@ -39,7 +52,7 @@ public interface HString extends AttributedObject, Annotated {
    * @param content the content
    * @return the boolean
    */
-  default boolean contentEqual(CharSequence content) {
+  public boolean contentEqual(CharSequence content) {
     return toString().contentEquals(content);
   }
 
@@ -49,7 +62,7 @@ public interface HString extends AttributedObject, Annotated {
    * @param content the content
    * @return the boolean
    */
-  default boolean contentEqualIgnoreCase(String content) {
+  public boolean contentEqualIgnoreCase(String content) {
     return toString().equalsIgnoreCase(content);
   }
 
@@ -59,7 +72,7 @@ public interface HString extends AttributedObject, Annotated {
    * @param suffix the suffix
    * @return the boolean
    */
-  default boolean endsWith(String suffix) {
+  public boolean endsWith(String suffix) {
     return toString().endsWith(suffix);
   }
 
@@ -69,18 +82,18 @@ public interface HString extends AttributedObject, Annotated {
    * @param text the text
    * @return the h string
    */
-  default HString find(String text) {
+  public HString find(String text) {
     return find(text, 0);
   }
 
   /**
    * Find h string.
    *
-   * @param text the text
+   * @param text  the text
    * @param start the start
    * @return the h string
    */
-  default HString find(@Nonnull String text, int start) {
+  public HString find(@Nonnull String text, int start) {
     Preconditions.checkPositionIndex(start, length());
     int pos = indexOf(text, start);
     if (pos == -1) {
@@ -95,18 +108,18 @@ public interface HString extends AttributedObject, Annotated {
    * @param text the text
    * @return the int
    */
-  default int indexOf(String text) {
+  public int indexOf(String text) {
     return indexOf(text, 0);
   }
 
   /**
    * Index of.
    *
-   * @param text the text
+   * @param text  the text
    * @param start the start
    * @return the int
    */
-  default int indexOf(String text, int start) {
+  public int indexOf(String text, int start) {
     Preconditions.checkPositionIndex(start, length());
     return text == null ? -1 : toString().indexOf(text, start);
   }
@@ -116,7 +129,7 @@ public interface HString extends AttributedObject, Annotated {
    *
    * @return True if this fragment represents an annotation
    */
-  default boolean isAnnotation() {
+  public boolean isAnnotation() {
     return false;
   }
 
@@ -125,7 +138,7 @@ public interface HString extends AttributedObject, Annotated {
    *
    * @return True if this fragment represents a document
    */
-  default boolean isDocument() {
+  public boolean isDocument() {
     return false;
   }
 
@@ -135,7 +148,7 @@ public interface HString extends AttributedObject, Annotated {
    * @param type the annotation type
    * @return True if this fragment is an annotation of the given type
    */
-  default boolean isInstance(AnnotationType type) {
+  public boolean isInstance(AnnotationType type) {
     return false;
   }
 
@@ -145,7 +158,7 @@ public interface HString extends AttributedObject, Annotated {
    * @param regex the regex
    * @return the boolean
    */
-  default boolean matches(String regex) {
+  public boolean matches(String regex) {
     if (regex != null) {
       return toString().matches(regex);
     }
@@ -158,12 +171,16 @@ public interface HString extends AttributedObject, Annotated {
    * @param prefix the prefix
    * @return the boolean
    */
-  default boolean startsWith(String prefix) {
+  public boolean startsWith(String prefix) {
     return toString().startsWith(prefix);
   }
 
+  public Matcher matcher(String pattern) {
+    return Pattern.compile(pattern).matcher(this);
+  }
+
   @Override
-  default CharSequence subSequence(int start, int end) {
+  public CharSequence subSequence(int start, int end) {
     return toString().subSequence(start, end);
   }
 
@@ -171,10 +188,10 @@ public interface HString extends AttributedObject, Annotated {
    * Sub string.
    *
    * @param relativeStart the start
-   * @param relativeEnd the end
+   * @param relativeEnd   the end
    * @return the h string
    */
-  default HString subString(int relativeStart, int relativeEnd) {
+  public HString subString(int relativeStart, int relativeEnd) {
     Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
     return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
   }
@@ -184,9 +201,9 @@ public interface HString extends AttributedObject, Annotated {
    *
    * @return The language of the fragment
    */
-  default Language getLanguage() {
-    if (containsAttribute(Attrs.LANGUAGE)) {
-      return getAttribute(Attrs.LANGUAGE);
+  public Language getLanguage() {
+    if (hasAttribute(Attrs.LANGUAGE)) {
+      return getAttribute(Attrs.LANGUAGE).as(Language.class);
     }
     if (document() == null) {
       return Language.UNKNOWN;
@@ -199,9 +216,87 @@ public interface HString extends AttributedObject, Annotated {
    *
    * @param language The language of the fragment.
    */
-  default void setLanguage(Language language) {
+  public void setLanguage(Language language) {
     putAttribute(Attrs.LANGUAGE, language);
   }
 
+
+  @Override
+  public List<Annotation> getStartingHere(AnnotationType type) {
+    if (document() != null && type != null) {
+      return document().getStartingAt(type, start());
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<Annotation> getOverlapping(AnnotationType type) {
+    if (document() != null && type != null) {
+      return document().getOverlapping(type, this);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<Annotation> getDuring(AnnotationType type) {
+    if (document() != null && type != null) {
+      return document().getDuring(type, this);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<Annotation> getContaining(AnnotationType type) {
+    if (document() != null && type != null) {
+      return document().getContaining(type, this);
+    }
+    return Collections.emptyList();
+  }
+
+
+  /**
+   * Exposes the underlying attributes as a Map
+   *
+   * @return The attribute names and values as a map
+   */
+  protected abstract Map<Attribute, Val> getAttributeMap();
+
+  @Override
+  public Set<Map.Entry<Attribute, Val>> getAttributes() {
+    return getAttributeMap().entrySet();
+  }
+
+  @Override
+  public boolean hasAttribute(Attribute attribute) {
+    return getAttributeMap().containsKey(attribute);
+  }
+
+  @Override
+  public Val getAttribute(Attribute attribute) {
+    if (attribute == null) {
+      return Val.NULL;
+    }
+    if (getAttributeMap().containsKey(attribute)) {
+      return getAttributeMap().get(attribute);
+    }
+    return getAttributeMap().get(attribute.goldStandardVersion());
+  }
+
+  @Override
+  public Val putAttribute(Attribute attribute, Object value) {
+    if (attribute != null) {
+      Val val = Val.of(value);
+      if (val.isNull()) {
+        return removeAttribute(attribute);
+      }
+      return getAttributeMap().put(attribute, val);
+    }
+    return Val.NULL;
+  }
+
+  @Override
+  public Val removeAttribute(Attribute attribute) {
+    return getAttributeMap().remove(attribute);
+  }
 
 }//END OF HString

@@ -23,8 +23,8 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
+import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.io.structured.ElementType;
@@ -37,6 +37,7 @@ import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.util.*;
 
@@ -44,13 +45,22 @@ import java.util.*;
  * <p>
  * An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link #create(String)} or
  * the {@link #create(String, Class)} static methods. The value type of an attribute is either defined via the create
- * method or via a config parameter, e.g. <code>Attribute.NAME.type=fully.qualified.className</code> (see {@link
- * com.davidbracewell.reflection.ReflectionUtils#getClassForName(String)}*** for a list of classes that can be
- * constructed
- * using a simple name). Attribute names are not case-sensitive meaning that <pre>partOfSpeech</pre> and
- * <pre>PartOfSpeech</pre> will equate to the same attribute.
+ * method or via a config parameter using a value type (see {@link ValueType} for information of defining the type).
+ * Attributes that do not have a defined type default to being Strings. An attribute can define a custom codec ({@link
+ * AttributeValueCodec}) for encoding and decoding its value using  the <code>codec</code> property, e.g.
+ * <code>Attribute.NAME.codec=fully.qualified.codec.name</code>.  Note that the <code>Attribute</code> class only
+ * represents the name and type of an attribute.
  * </p>
  * <p>
+ * Attribute names are normalized so that an Attribute created with the name <code>partofspeech</code> and one created
+ * with the name <code>PartOfSpeech</code> are equal (see {@link DynamicEnum} for normalization information).
+ * </p>
+ * <p>
+ * Gold standard attributes can be constructed using the {@link #goldStandardVersion()} method of an attribute.
+ * The name of a gold standard attribute has <code>@</code> prepended to the name.
+ * Type information for gold standard attributes is taken from the non-gold standard definintion.
+ * This means that the gold standard attribute for part of speech (<code>@PART_OF_SPEECH</code> would get its type
+ * information from its non-gold standard form <code>PART_OF_SPEECH</code>).
  * </p>
  *
  * @author David B. Bracewell
@@ -67,7 +77,7 @@ public class Attribute extends EnumValue {
   /**
    * Create attribute.
    *
-   * @param name the name
+   * @param name      the name
    * @param valueType the value type
    * @return the attribute
    */
@@ -75,6 +85,7 @@ public class Attribute extends EnumValue {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
+    Preconditions.checkArgument(name.charAt(0) != '@', "Cannot create a Gold Standard attribute with a given value type");
     if (index.isDefined(name)) {
       Attribute attribute = index.valueOf(name);
       Preconditions.checkArgument(attribute.getValueType().equals(valueType), "Attempting to register an existing attribute with a new value type.");
@@ -104,11 +115,11 @@ public class Attribute extends EnumValue {
    * @param name the name
    * @return True if it exists, otherwise False
    */
-  public static boolean exists(String name) {
+  public static boolean isDefined(String name) {
     return index.isDefined(name);
   }
 
-  static void read(StructuredReader reader, AttributedObject attributedObject) throws StructuredIOException {
+  static Tuple2<Attribute, Val> read(StructuredReader reader) throws StructuredIOException {
 
     Attribute attribute;
     Object value;
@@ -131,7 +142,7 @@ public class Attribute extends EnumValue {
 
       attribute = Attribute.create(reader.beginObject());
       ValueType valueType = attribute.getValueType();
-      Optional<AttributeValueDecoder> decoder = attribute.getDecoder();
+      Optional<AttributeValueCodec> decoder = attribute.getCodec();
 
       if (decoder.isPresent()) {
         value = decoder.get().decode(reader, attribute);
@@ -149,7 +160,19 @@ public class Attribute extends EnumValue {
       value = attribute.getValueType().convert(keyValue.getValue());
     }
 
-    attributedObject.putAttribute(attribute, value);
+    return Tuple2.of(attribute, Val.of(value));
+  }
+
+  static Map<Attribute, Val> readAttributeList(StructuredReader reader) throws IOException {
+    if (reader.peek() == ElementType.BEGIN_OBJECT) {
+      reader.beginObject("attributes");
+    }
+    Map<Attribute, Val> attributeValMap = new HashMap<>();
+    while (reader.peek() != ElementType.END_OBJECT) {
+      Collect.put(attributeValMap, read(reader));
+    }
+    reader.endObject();
+    return attributeValMap;
   }
 
   /**
@@ -171,34 +194,19 @@ public class Attribute extends EnumValue {
     return index.values();
   }
 
-
-  void write(StructuredWriter writer, Object val) throws StructuredIOException {
-    ValueType valueType = getValueType();
-    Optional<AttributeValueEncoder> encoder = getEncoder();
-
-    if (valueType.isCollection()) {
-      checkType(val);
-      writer.beginArray(name());
-      Collection<?> collection = Cast.as(val);
-      for (Object o : collection) {
-        writer.writeValue(o);
+  void checkType(Val value) {
+    if (value != null && !Config.get("Attribute", "ignoreTypeChecks").asBoolean(false)) {
+      ValueType valueType = getValueType();
+      if (!valueType.getType().isAssignableFrom(value.getWrappedClass())) {
+        throw new IllegalArgumentException(
+            value + " [" + value.getClass().getName() + "] is of wrong type. " +
+                name() + "'s defined type is " + valueType.getType().getName());
       }
-      writer.endArray();
-    } else if (encoder.isPresent()) {
-      writer.beginObject(name());
-      encoder.get().encode(writer, this, val);
-      writer.endObject();
-    } else if (valueType.isMap()) {
-      checkType(val);
-      writer.beginObject(name());
-      Map<?, ?> map = Cast.as(val);
-      for (Map.Entry<?, ?> entry : map.entrySet()) {
-        writer.writeKeyValue(Convert.convert(entry.getKey(), String.class), entry.getValue());
-      }
-      writer.endObject();
-    } else {
-      writer.writeKeyValue(name(), val);
     }
+  }
+
+  private Optional<AttributeValueCodec> getCodec() {
+    return Optional.ofNullable(Config.get("Attribute", name(), "codec").as(AttributeValueCodec.class));
   }
 
   /**
@@ -208,34 +216,66 @@ public class Attribute extends EnumValue {
    * @return The class associated with this attributes values
    */
   public ValueType getValueType() {
+    if (isGoldStandard()) {
+      return ValueType.fromConfig("Attribute" + "." + name().substring(1));
+    }
     return ValueType.fromConfig("Attribute" + "." + name());
   }
 
+  /**
+   * Gold standard version.
+   *
+   * @return the attribute
+   */
+  public Attribute goldStandardVersion() {
+    return Attribute.create("@" + name());
+  }
+
+  /**
+   * Is gold standard.
+   *
+   * @return the boolean
+   */
+  public boolean isGoldStandard() {
+    return name().startsWith("@");
+  }
+
   private Object readResolve() throws ObjectStreamException {
-    if (exists(name())) {
+    if (isDefined(name())) {
       return index.valueOf(name());
     }
     return this;
   }
 
-  private Optional<AttributeValueDecoder> getDecoder() {
-    return Optional.ofNullable(Config.get("Attribute", name(), "decoder").as(AttributeValueDecoder.class));
-  }
+  void write(StructuredWriter writer, Object val) throws StructuredIOException {
+    ValueType valueType = getValueType();
+    Optional<AttributeValueCodec> encoder = getCodec();
+    Val wrapped = Val.of(val);
 
-
-  private Optional<AttributeValueEncoder> getEncoder() {
-    return Optional.ofNullable(Config.get("Attribute", name(), "encoder").as(AttributeValueEncoder.class));
-  }
-
-  void checkType(Object value) {
-    if (value != null && !Config.get("Attribute", "ignoreTypeChecks").asBoolean(false)) {
-      ValueType valueType = getValueType();
-      if (!valueType.getType().isAssignableFrom(value.getClass())) {
-        throw new IllegalArgumentException(
-            value + " [" + value.getClass().getName() + "] is of wrong type. " +
-                name() + "'s defined type is " + valueType.getType().getName());
+    if (valueType.isCollection()) {
+      checkType(wrapped);
+      writer.beginArray(name());
+      Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);
+      for (Object o : collection) {
+        writer.writeValue(o);
       }
+      writer.endArray();
+    } else if (encoder.isPresent()) {
+      writer.beginObject(name());
+      encoder.get().encode(writer, this, wrapped.asObject(Object.class));
+      writer.endObject();
+    } else if (valueType.isMap()) {
+      checkType(Val.of(val));
+      writer.beginObject(name());
+      Map<?, ?> map = wrapped.asMap(valueType.getParameterTypes()[0], valueType.getParameterTypes()[1]);
+      for (Map.Entry<?, ?> entry : map.entrySet()) {
+        writer.writeKeyValue(Convert.convert(entry.getKey(), String.class), entry.getValue());
+      }
+      writer.endObject();
+    } else {
+      writer.writeKeyValue(name(), val);
     }
   }
 
-}//END OF AttributeName
+
+}//END OF Attribute

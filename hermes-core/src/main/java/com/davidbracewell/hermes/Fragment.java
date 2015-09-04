@@ -22,7 +22,10 @@
 package com.davidbracewell.hermes;
 
 
-import java.io.Serializable;
+import com.davidbracewell.conversion.Val;
+import com.davidbracewell.string.StringUtils;
+
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,23 +39,24 @@ import java.util.Map;
  *
  * @author David B. Bracewell
  */
-class Fragment implements HString, Serializable {
+class Fragment extends HString {
   private static final long serialVersionUID = 1L;
-  private final Map<Attribute, Object> attributes = new HashMap<>(5);
+  private final Map<Attribute, Val> attributes = new HashMap<>(5);
   private final Document owner;
-  private final int start;
-  private final int end;
 
   Fragment(Document owner, int start, int end) {
+    super(start, end);
     this.owner = owner;
-    this.start = start;
-    this.end = end;
   }
 
-  Fragment(HString string) {
+  Fragment(@Nonnull HString string) {
+    super(string.start(), string.end());
     this.owner = string.document();
-    this.start = string.start();
-    this.end = string.end();
+  }
+
+  Fragment() {
+    super(0, 0);
+    this.owner = null;
   }
 
   @Override
@@ -66,23 +70,17 @@ class Fragment implements HString, Serializable {
   }
 
   @Override
-  public Map<Attribute, Object> getAttributes() {
+  protected Map<Attribute, Val> getAttributeMap() {
     return attributes;
   }
 
-  @Override
-  public int start() {
-    return start;
-  }
-
-  @Override
-  public int end() {
-    return end;
-  }
 
   @Override
   public String toString() {
-    return document().toString().substring(start, end);
+    if (document() == null) {
+      return StringUtils.EMPTY;
+    }
+    return document().toString().substring(start(), end());
   }
 
 

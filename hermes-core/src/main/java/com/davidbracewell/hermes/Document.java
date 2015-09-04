@@ -22,26 +22,39 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.collection.Collect;
+import com.davidbracewell.conversion.Val;
+import com.davidbracewell.io.Resources;
+import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.io.structured.ElementType;
+import com.davidbracewell.io.structured.StructuredFormat;
+import com.davidbracewell.io.structured.StructuredReader;
+import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.string.StringUtils;
+import com.google.common.base.Throwables;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author David B. Bracewell
  */
-public class Document implements HString {
+public class Document extends HString {
 
   private static final long serialVersionUID = 1L;
-  private final Map<Attribute, Object> attributes = new HashMap<>(5);
+  private final Map<Attribute, Val> attributes = new HashMap<>(5);
   private final String content;
   private String id;
 
-  public Document(@Nonnull String content) {
+  public Document(String id, @Nonnull String content) {
+    super(0, content.length());
     this.content = content;
-    setId(null);
+    setId(id);
+  }
+
+  public Document(@Nonnull String content) {
+    this(null, content);
   }
 
   @Override
@@ -55,18 +68,8 @@ public class Document implements HString {
   }
 
   @Override
-  public Map<Attribute, Object> getAttributes() {
+  protected Map<Attribute, Val> getAttributeMap() {
     return attributes;
-  }
-
-  @Override
-  public int start() {
-    return 0;
-  }
-
-  @Override
-  public int end() {
-    return content.length();
   }
 
   /**
@@ -103,8 +106,8 @@ public class Document implements HString {
 
   @Override
   public Language getLanguage() {
-    if (containsAttribute(Attrs.LANGUAGE)) {
-      return getAttribute(Attrs.LANGUAGE);
+    if (hasAttribute(Attrs.LANGUAGE)) {
+      return getAttribute(Attrs.LANGUAGE).as(Language.class);
     }
     return Language.ENGLISH;
   }
@@ -113,15 +116,15 @@ public class Document implements HString {
     return null;
   }
 
-  public List<Annotation> getOverlapping(AnnotationType type, CharSpan span) {
+  public List<Annotation> getOverlapping(AnnotationType type, Span span) {
     return null;
   }
 
-  public List<Annotation> getContaining(AnnotationType type, CharSpan span) {
+  public List<Annotation> getContaining(AnnotationType type, Span span) {
     return null;
   }
 
-  public List<Annotation> getDuring(AnnotationType type, CharSpan span) {
+  public List<Annotation> getDuring(AnnotationType type, Span span) {
     return null;
   }
 
@@ -139,5 +142,83 @@ public class Document implements HString {
   public List<Annotation> getDuring(AnnotationType type) {
     return null;
   }
+
+  public void write(@Nonnull StructuredFormat format, @Nonnull Resource resource) throws IOException {
+    try (StructuredWriter writer = format.createWriter(resource)) {
+      writer.beginDocument();
+      writer.writeKeyValue("id", getId());
+      writer.writeKeyValue("content", toString());
+      writer.beginObject("attributes");
+      for (Map.Entry<Attribute, Val> entry : getAttributes()) {
+        entry.getKey().write(writer, entry.getValue());
+      }
+      writer.endObject();
+      writer.endDocument();
+    }
+  }
+
+  public String toJson() {
+    try {
+      Resource stringResource = Resources.fromString();
+      write(StructuredFormat.JSON, stringResource);
+      return stringResource.readToString().trim();
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  public static Document read(@Nonnull StructuredFormat format, @Nonnull Resource resource) throws IOException {
+    try (StructuredReader reader = format.createReader(resource)) {
+      reader.beginDocument();
+
+      Map<String, Val> docProperties = new HashMap<>();
+      List<Annotation> annotations = new LinkedList<>();
+      Map<Attribute, Val> attributeValMap = Collections.emptyMap();
+
+      while (reader.peek() != ElementType.END_DOCUMENT) {
+        if (reader.peek() == ElementType.NAME) {
+
+          Collect.put(docProperties, reader.nextKeyValue());
+
+        } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
+
+          String name = reader.beginObject();
+          if (name.equals("attributes")) {
+            attributeValMap = Attribute.readAttributeList(reader);
+          } else {
+            throw new IOException("Unexpected object named [" + name + "]");
+          }
+
+        } else if (reader.peek() == ElementType.BEGIN_ARRAY) {
+
+          String name = reader.beginArray();
+
+          if (name.equals("annotations")) {
+            while (reader.peek() != ElementType.END_ARRAY) {
+              annotations.add(Annotation.read(reader));
+            }
+            reader.endArray();
+          } else {
+            throw new IOException("Unexpected array named [" + name + "]");
+          }
+        }
+      }
+      reader.endDocument();
+
+      Document document = new Document(
+          docProperties.get("id").asString(),
+          docProperties.get("content").asString()
+      );
+      document.putAllAttributes(attributeValMap);
+      annotations.forEach(annotation -> {
+        Annotation newAnnotation = new Annotation(document, annotation.getType(), annotation.start(), annotation.end());
+        newAnnotation.putAllAttributes(annotation.getAttributeMap());
+        newAnnotation.setId(annotation.getId());
+        System.out.println(newAnnotation + "[" + newAnnotation.getType() + "]");
+      });
+      return document;
+    }
+  }
+
 
 }//END OF Document

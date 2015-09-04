@@ -21,14 +21,16 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.collection.Collect;
+import com.davidbracewell.conversion.Val;
+import com.davidbracewell.io.structured.ElementType;
+import com.davidbracewell.io.structured.StructuredReader;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * <p>An annotation provides information and attributes relating to specific segments of text in a document, which may
@@ -61,6 +63,10 @@ public class Annotation extends Fragment implements Serializable {
   }
 
 
+  public boolean isDetached() {
+    return document() == null || id == DETATCHED_ID;
+  }
+
   /**
    * Instantiates a new Annotation.
    *
@@ -70,6 +76,16 @@ public class Annotation extends Fragment implements Serializable {
   public Annotation(@Nonnull HString string, @Nonnull AnnotationType annotationType) {
     super(string);
     this.annotationType = annotationType;
+  }
+
+
+  protected Annotation() {
+    this.annotationType = AnnotationType.ROOT;
+  }
+
+  protected Annotation(AnnotationType type, int start, int end) {
+    super(null, start, end);
+    this.annotationType = type == null ? AnnotationType.ROOT : type;
   }
 
   /**
@@ -162,6 +178,40 @@ public class Annotation extends Fragment implements Serializable {
       }
     }
     return tokens == null ? Collections.emptyList() : Arrays.asList(tokens);
+  }
+
+  static Annotation read(StructuredReader reader) throws IOException {
+    reader.beginObject();
+
+    Map<String, Val> annotationProperties = new HashMap<>();
+    Map<Attribute, Val> attributeValMap = Collections.emptyMap();
+
+    while (reader.peek() != ElementType.END_OBJECT) {
+      if (reader.peek() == ElementType.NAME) {
+        Collect.put(annotationProperties, reader.nextKeyValue());
+      } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
+        String name = reader.beginObject();
+        if (name.equals("attributes")) {
+          attributeValMap = Attribute.readAttributeList(reader);
+        } else {
+          throw new IOException("Unexpected object named [" + name + "]");
+        }
+      } else {
+        throw new IOException("Unexpected " + reader.peek());
+      }
+    }
+
+    Annotation annotation = Fragments.detatchedAnnotation(
+        AnnotationType.create(annotationProperties.get("type").asString()),
+        annotationProperties.get("start").asIntegerValue(),
+        annotationProperties.get("end").asIntegerValue()
+    );
+    annotation.setId(annotationProperties.get("id").asLongValue());
+    annotation.putAllAttributes(attributeValMap);
+
+
+    reader.endObject();
+    return annotation;
   }
 
 }//END OF Annotation

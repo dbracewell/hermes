@@ -21,23 +21,46 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.conversion.Cast;
+import com.google.common.base.Preconditions;
+
+import java.io.Serializable;
+import java.util.Objects;
+
 /**
  * @author David B. Bracewell
  */
-public interface CharSpan extends CharSequence {
+public class Span implements Serializable {
+  private static final long serialVersionUID = 1L;
+  private final int start;
+  private final int end;
+
+
+  public Span(int start, int end) {
+    Preconditions.checkArgument(start >= 0, "Starting offset must be >= 0");
+    Preconditions.checkArgument(end >= start, "Ending offset must be >= Starting offset");
+    this.end = end;
+    this.start = start;
+  }
 
   /**
-   * @return The start offset of the <code>CharSpan</code> (inclusive).
+   * @return The start offset of the <code>Span</code> (inclusive).
    */
-  int start();
+  public int start() {
+    return start;
+  }
 
   /**
-   * @return The end offset of the <code>CharSpan</code> (non-inclusive).
+   * @return The end offset of the <code>Span</code> (non-inclusive).
    */
-  int end();
+  public int end() {
+    return end;
+  }
 
-  @Override
-  default int length() {
+  /**
+   * @return The length of the span
+   */
+  public int length() {
     return end() - start();
   }
 
@@ -46,7 +69,7 @@ public interface CharSpan extends CharSequence {
    *
    * @return True if the span is empty, False if not
    */
-  default boolean isEmpty() {
+  public boolean isEmpty() {
     return length() == 0;
   }
 
@@ -56,7 +79,7 @@ public interface CharSpan extends CharSequence {
    * @param other The other text to check if this one overlaps
    * @return True if the two texts are in the same document and overlap, False otherwise
    */
-  default boolean overlaps(CharSpan other) {
+  public boolean overlaps(Span other) {
     return other != null && this.start() < other.end() && this.end() > other.start();
   }
 
@@ -66,8 +89,26 @@ public interface CharSpan extends CharSequence {
    * @param other The other text to check if this one encloses
    * @return True if the two texts are in the same document and this text encloses the other, False otherwise
    */
-  default boolean encloses(CharSpan other) {
+  public boolean encloses(Span other) {
     return other != null && other.start() >= this.start() && other.end() < this.end();
   }
 
-}//END OF CharSpan
+  @Override
+  public String toString() {
+    return "(" + start + ", " + end + ")";
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(start, end);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    return other != null &&
+        other.getClass().equals(Span.class) &&
+        Cast.<Span>as(other).start == this.start &&
+        Cast.<Span>as(other).end == this.end;
+  }
+
+}//END OF Span

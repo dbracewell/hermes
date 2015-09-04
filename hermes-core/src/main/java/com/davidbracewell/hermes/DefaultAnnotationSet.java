@@ -21,17 +21,15 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.text.util.TextPredicates;
-import com.davidbracewell.text.util.TextUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 
+import javax.annotation.Nonnull;
+import java.io.Serializable;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -42,7 +40,7 @@ import java.util.*;
  *
  * @author David B. Bracewell
  */
-public class DefaultAnnotationSet extends AnnotationSet {
+public class DefaultAnnotationSet implements AnnotationSet, Serializable {
   private static final long serialVersionUID = 1L;
 
   private NavigableSet<Annotation> startSorted = new TreeSet<>(AnnotationOrdering.START_ORDERING);
@@ -52,7 +50,7 @@ public class DefaultAnnotationSet extends AnnotationSet {
 
   @Override
   public void add(Annotation annotation) {
-    if (annotation != null && annotation != TextUtils.DETACHED_EMPTY_FRAGMENT) {
+    if (annotation != null && !annotation.isDetached()) {
       startSorted.add(annotation);
       endSorted.add(annotation);
       idAnnotationMap.put(annotation.getId(), annotation);
@@ -92,17 +90,21 @@ public class DefaultAnnotationSet extends AnnotationSet {
   @Override
   public Annotation next(Annotation annotation, AnnotationType type) {
     if (annotation == null || type == null) {
-      return TextUtils.DETACHED_EMPTY_FRAGMENT;
+      return null;//Fragments.emptyOrphan();
     }
-    return Iterables.find(startSorted.tailSet(annotation, false), TextPredicates.isOfType(type), TextUtils.DETACHED_EMPTY_FRAGMENT);
+    return startSorted.tailSet(annotation, false).stream()
+        .filter(a -> a.isInstance(type) && !a.isDetached())
+        .findFirst().orElse(Fragments.detachedEmptyAnnotation());
   }
 
   @Override
   public Annotation previous(Annotation annotation, AnnotationType type) {
     if (annotation == null || type == null) {
-      return TextUtils.DETACHED_EMPTY_FRAGMENT;
+      return null;//Fragments.emptyOrphan();
     }
-    return Iterables.find(startSorted.headSet(annotation, false).descendingSet(), TextPredicates.isOfType(type), TextUtils.DETACHED_EMPTY_FRAGMENT);
+    return startSorted.headSet(annotation, false).stream()
+        .filter(a -> a.isInstance(type) && !a.isDetached())
+        .findFirst().orElse(Fragments.detachedEmptyAnnotation());
   }
 
   @Override
@@ -115,24 +117,19 @@ public class DefaultAnnotationSet extends AnnotationSet {
   }
 
   @Override
-  public List<Annotation> select(Span range, Predicate<? super Annotation> criteria) {
-    Preconditions.checkNotNull(range);
-    Preconditions.checkNotNull(criteria);
-    Annotation dummy = new Annotation(AnnotationType.ROOT, null, Long.MAX_VALUE, Span.of(range.end, Integer.MAX_VALUE));
-    Annotation dummy2 = new Annotation(AnnotationType.ROOT, null, Long.MAX_VALUE, Span.of(Integer.MIN_VALUE, range.start));
+  public List<Annotation> select(@Nonnull Span range, @Nonnull Predicate<? super Annotation> criteria) {
+    Annotation dummy = Fragments.detatchedAnnotation(null, range.end(), Integer.MAX_VALUE);
+    Annotation dummy2 = Fragments.detatchedAnnotation(null, Integer.MIN_VALUE, range.start());
 
-    return new ArrayList<>(
-        Collections2.filter(
-            Sets.intersection(startSorted.headSet(dummy, true), endSorted.tailSet(dummy2, true)),
-            criteria
-        )
-    );
+    return Sets.intersection(startSorted.headSet(dummy, true), endSorted.tailSet(dummy2, true))
+        .stream()
+        .filter(criteria)
+        .collect(Collectors.toList());
   }
 
   @Override
-  public List<Annotation> select(Predicate<? super Annotation> criteria) {
-    Preconditions.checkNotNull(criteria);
-    return new ArrayList<>(Collections2.filter(startSorted, criteria));
+  public List<Annotation> select(@Nonnull Predicate<? super Annotation> criteria) {
+    return startSorted.stream().filter(criteria).collect(Collectors.toList());
   }
 
   @Override
@@ -157,9 +154,9 @@ public class DefaultAnnotationSet extends AnnotationSet {
     START_ORDERING() {
       @Override
       public int compare(Annotation o1, Annotation o2) {
-        int cmp = o1.span().compareTo(o2.span());
+        int cmp = Integer.compare(o1.start(), o2.start());
         if (cmp == 0) {
-          cmp = Ints.compare(o1.span().length(), o2.span().length());
+          cmp = Ints.compare(o1.length(), o2.length());
         }
         if (cmp == 0) {
           cmp = Longs.compare(o1.getId(), o2.getId());
@@ -173,9 +170,9 @@ public class DefaultAnnotationSet extends AnnotationSet {
     END_ORDERING() {
       @Override
       public int compare(Annotation o1, Annotation o2) {
-        int cmp = Ints.compare(o1.span().end, o2.span().end);
+        int cmp = Integer.compare(o1.end(), o2.end());
         if (cmp == 0) {
-          cmp = Ints.compare(o1.span().length(), o2.span().length());
+          cmp = Ints.compare(o1.length(), o2.length());
         }
         if (cmp == 0) {
           cmp = Longs.compare(o1.getId(), o2.getId());

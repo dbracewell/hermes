@@ -24,14 +24,14 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
+import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.reflection.BeanUtils;
 import com.davidbracewell.string.StringUtils;
 
+import javax.annotation.Nonnull;
 import java.io.ObjectStreamException;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * <p>
@@ -59,22 +59,13 @@ import java.util.Set;
  */
 public final class AnnotationType extends EnumValue {
 
- private static final DynamicEnum<AnnotationType> index = new DynamicEnum<>();
+  private static final DynamicEnum<AnnotationType> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
 
   /**
    * The constant ROOT representing the base annotation type.
    */
   public static AnnotationType ROOT = create("ROOT");
-
-  static {
-    //Root annotations define an Annotator attribute and its parent is itself
-    ROOT.definedAttributes = Collections.emptySet();
-    ROOT.parent = ROOT;
-  }
-
-  private volatile transient Set<Attribute> definedAttributes = null;
-  private volatile transient AnnotationType parent;
 
 
   private AnnotationType(String name) {
@@ -100,7 +91,7 @@ public final class AnnotationType extends EnumValue {
    * @param name the name
    * @return True if it exists, otherwise False
    */
-  public static boolean exists(String name) {
+  public static boolean isDefined(String name) {
     return index.isDefined(name);
   }
 
@@ -123,16 +114,6 @@ public final class AnnotationType extends EnumValue {
     return index.values();
   }
 
-  /**
-   * Gets the set of defined attributes for this type. Attributes are defined via configuration. The advantange of
-   * defining attributes is that they allow for their values to be types other than strings.
-   *
-   * @return the set of defined attributes
-   */
-  public Set<Attribute> getAttributes() {
-    loadCfg();
-    return Collections.unmodifiableSet(definedAttributes);
-  }
 
   /**
    * Gets parent type of this one.
@@ -140,20 +121,54 @@ public final class AnnotationType extends EnumValue {
    * @return the parent type (ROOT if type is ROOT)
    */
   public AnnotationType getParent() {
-    loadCfg();
-    return parent;
+    return AnnotationType.create(Config.get("Annotation", nonGoldStandardVersion().name(), "parent").asString("ROOT"));
   }
 
+  /**
+   * Gold standard version.
+   *
+   * @return the annotation type
+   */
+  public AnnotationType goldStandardVersion() {
+    if (isGoldStandard()) {
+      return this;
+    }
+    return AnnotationType.create("@" + name());
+  }
 
   /**
-   * Checks if an attribute is defined for this anntoation type
+   * Non gold standard version.
    *
-   * @param name the name of the attribute
-   * @return True if defined, False if not
+   * @return the annotation type
    */
-  public boolean isDefined(Attribute name) {
-    loadCfg();
-    return definedAttributes.contains(name);
+  public AnnotationType nonGoldStandardVersion() {
+    if (isGoldStandard()) {
+      return AnnotationType.create("@" + name());
+    }
+    return this;
+  }
+
+  /**
+   * Is gold standard.
+   *
+   * @return the boolean
+   */
+  public boolean isGoldStandard() {
+    return name().startsWith("@");
+  }
+
+  /**
+   * Gets annotator.
+   *
+   * @param language the language
+   * @return the annotator
+   */
+  public Annotator getAnnotator(@Nonnull Language language) {
+    if (isGoldStandard()) {
+      throw new IllegalStateException("Gold Standard annotations cannot be annotated");
+    }
+    String key = Config.closestKey("AnnotationType", language, name(), "annotator");
+    return BeanUtils.parameterizeObject(Config.get(key).as(Annotator.class));
   }
 
   /**
@@ -164,34 +179,23 @@ public final class AnnotationType extends EnumValue {
    * @return the boolean
    */
   public boolean isInstance(AnnotationType type) {
-    return type != null && (this.equals(type) || !this.equals(getParent()) && getParent().isInstance(type));
-  }
-
-  private void loadCfg() {
-    if (definedAttributes == null) {
-      synchronized (this) {
-        if (definedAttributes == null) {
-          parent = Config.get("AnnotationType", name(), "parent").as(AnnotationType.class, ROOT);
-
-          if (name().startsWith("GOLD_") && name().length() > 5) {
-            parent = create(name().substring(5));
-          }
-
-          this.definedAttributes = Config.get("AnnotationType", name(), "attributes").asCollection(HashSet.class, Attribute.class);
-          if( this.definedAttributes == null ){
-            this.definedAttributes = new HashSet<>(4);
-          }
-
-          if( parent != this) {
-            this.definedAttributes.addAll(parent.getAttributes());
-          }
-        }
-      }
+    if (type == null) {
+      return false;
+    } else if (this.equals(type) || this.goldStandardVersion().equals(type.goldStandardVersion())) {
+      return true;
     }
+    AnnotationType parent = getParent();
+    while (!parent.equals(ROOT)) {
+      if (parent.equals(type) || parent.goldStandardVersion().equals(type.goldStandardVersion())) {
+        return true;
+      }
+      parent = parent.getParent();
+    }
+    return false;
   }
 
   private Object readResolve() throws ObjectStreamException {
-    if (exists(name())) {
+    if (isDefined(name())) {
       return index.valueOf(name());
     }
     return this;

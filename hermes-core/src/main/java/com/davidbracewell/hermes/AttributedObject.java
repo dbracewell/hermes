@@ -21,15 +21,18 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.conversion.Val;
 
-import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 /**
- * The interface Attributed object.
+ * <p>In the TIPSTER architecture an attribute represents features associated with different classes. Attributes in
+ * TIPSTER are represented as feature-value pairs where features names are arbitrary strings and the values are
+ * arbitrary types.In <code>com.davidbracewell.text</code> attributes are also represented as feature-value pairs, but
+ * feature names are of the type {@link Attribute} which is a dynamic enum and values are of type
+ * <code>Object</code> allowing any possible type. Values are cast to a specific type when calling the {@link
+ * #getAttribute(Attribute)} method as a convenience.</p>
  *
  * @author David B. Bracewell
  */
@@ -40,9 +43,7 @@ public interface AttributedObject {
    *
    * @return the attribute names
    */
-  default Set<Attribute> attributeNames() {
-    return getAttributes().keySet();
-  }
+  Set<Map.Entry<Attribute, Val>> getAttributes();
 
   /**
    * Determines if an attribute of a given name is associated with the object
@@ -50,9 +51,7 @@ public interface AttributedObject {
    * @param attribute The attribute name
    * @return True if the attribute is associated with the object, False otherwise
    */
-  default boolean containsAttribute(Attribute attribute) {
-    return getAttributes().containsKey(attribute);
-  }
+  boolean hasAttribute(Attribute attribute);
 
   /**
    * Gets the value for a given attribute name
@@ -60,52 +59,17 @@ public interface AttributedObject {
    * @param attribute the attribute name
    * @return the value associated with the attribute or null
    */
-  default <T> T getAttribute(Attribute attribute) {
-    return Cast.as(getAttributes().get(attribute));
-  }
+  Val getAttribute(Attribute attribute);
 
   /**
-   * Gets attribute or default.
-   *
-   * @param attribute    the attribute
-   * @param defaultValue the default value
-   * @return the attribute or default
-   */
-  default <T> T getAttributeOrDefault(Attribute attribute, T defaultValue) {
-    return getAttributeOrDefault(attribute, () -> defaultValue);
-  }
-
-  /**
-   * Gets attribute or default.
-   *
-   * @param attribute the attribute
-   * @param supplier  the supplier
-   * @return the attribute or default
-   */
-  default <T> T getAttributeOrDefault(Attribute attribute, @Nonnull Supplier<T> supplier) {
-    if (containsAttribute(attribute)) {
-      return getAttribute(attribute);
-    }
-    return supplier.get();
-  }
-
-  /**
-   * Gets the value for a given attribute name
+   * Sets the value of an attribute. Removes the attribute if the value is null and ignores setting a value if the
+   * attribute is null.
    *
    * @param attribute the attribute name
-   * @param clazz     The type of the attribute
-   * @return the value associated with the attribute or null
+   * @param value     the value
+   * @return The old value of the attribute or null
    */
-  default <T> T getAttribute(Attribute attribute, @Nonnull Class<T> clazz) {
-    return Cast.as(getAttributes().get(attribute), clazz);
-  }
-
-  /**
-   * Exposes the underlying attributes as a Map
-   *
-   * @return The attribute names and values as a map
-   */
-  Map<Attribute, Object> getAttributes();
+  Val putAttribute(Attribute attribute, Object value);
 
   /**
    * Sets all attributes in a given map.
@@ -119,34 +83,12 @@ public interface AttributedObject {
   }
 
   /**
-   * Sets the value of an attribute. Removes the attribute if the value is null and ignores setting a value if the
-   * attribute is null.
-   *
-   * @param <T>       the type of the value associated with the attribute
-   * @param attribute the attribute name
-   * @param value     the value
-   * @return The old value of the attribute or null
-   */
-  default <T> T putAttribute(Attribute attribute, Object value) {
-    if (attribute != null) {
-      if (value == null) {
-        return removeAttribute(attribute);
-      }
-      return Cast.as(getAttributes().put(attribute, value));
-    }
-    return null;
-  }
-
-  /**
    * Removes an attribute from the object.
    *
-   * @param <T>       the type of the value associated with the attribute being removed
    * @param attribute the attribute name
    * @return the value that was associated with the attribute
    */
-  default <T> T removeAttribute(Attribute attribute) {
-    return Cast.as(getAttributes().remove(attribute));
-  }
+  Val removeAttribute(Attribute attribute);
 
 
 }//END OF AttributedObject

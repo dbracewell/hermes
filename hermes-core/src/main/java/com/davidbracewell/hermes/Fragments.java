@@ -21,10 +21,9 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.string.StringUtils;
+import com.davidbracewell.conversion.Val;
 
 import javax.annotation.Nonnull;
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +39,7 @@ public final class Fragments {
 
 
   public static HString emptyOrphan() {
-    return ORPHANED_EMPTY.INSTANCE;
+    return ORPHANED_EMPTY;
   }
 
   public static HString orphan(@Nonnull String content) {
@@ -51,6 +50,14 @@ public final class Fragments {
     return new Fragment(document, 0, 0);
   }
 
+  public static Annotation detachedEmptyAnnotation() {
+    return new Annotation();
+  }
+
+  public static Annotation detatchedAnnotation(AnnotationType type, int start, int end) {
+    return new Annotation(type, start, end);
+  }
+
   public static HString empty(@Nonnull HString string) {
     if (string.document() == null) {
       return emptyOrphan();
@@ -59,13 +66,14 @@ public final class Fragments {
   }
 
 
-  private static class ORPHANED implements HString, Serializable {
+  private static class ORPHANED extends HString {
     private static final long serialVersionUID = 1L;
 
     private final String content;
-    private final Map<Attribute, Object> attributes = new HashMap<>(5);
+    private final Map<Attribute, Val> attributes = new HashMap<>(5);
 
-    private ORPHANED(String content) {
+    private ORPHANED(@Nonnull String content) {
+      super(0, content.length());
       this.content = content;
     }
 
@@ -80,7 +88,7 @@ public final class Fragments {
     }
 
     @Override
-    public Map<Attribute, Object> getAttributes() {
+    protected Map<Attribute, Val> getAttributeMap() {
       return attributes;
     }
 
@@ -95,39 +103,25 @@ public final class Fragments {
     }
   }
 
-  private enum ORPHANED_EMPTY implements HString {
-    INSTANCE {
-      @Override
-      public char charAt(int index) {
-        throw new IndexOutOfBoundsException();
-      }
 
-      @Override
-      public int start() {
-        return 0;
-      }
+  private static HString ORPHANED_EMPTY = new HString(0, 0) {
+    private static final long serialVersionUID = 1L;
 
-      @Override
-      public int end() {
-        return 0;
-      }
-
-      @Override
-      public Map<Attribute, Object> getAttributes() {
-        return Collections.emptyMap();
-      }
-
-      @Override
-      public Document document() {
-        return null;
-      }
-
-      @Override
-      public String toString() {
-        return StringUtils.EMPTY;
-      }
+    @Override
+    public char charAt(int index) {
+      throw new IndexOutOfBoundsException();
     }
-  }
+
+    @Override
+    public Document document() {
+      return null;
+    }
+
+    @Override
+    protected Map<Attribute, Val> getAttributeMap() {
+      return Collections.emptyMap();
+    }
+  };
 
 
 }//END OF Fragments

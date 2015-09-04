@@ -22,7 +22,6 @@
 package com.davidbracewell.hermes;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +33,7 @@ import java.util.Optional;
  *
  * @author David B. Bracewell
  */
-public interface Annotated extends CharSpan {
+public interface Annotated {
 
   /**
    * Returns the document that this fragment is a part of.
@@ -60,13 +59,7 @@ public interface Annotated extends CharSpan {
    * @param type the type  of annotation wanted
    * @return the list of annotations of given type contained within this object
    */
-  default List<Annotation> getContaining(AnnotationType type) {
-    if (isEmpty() || document() == null || type == null) {
-      return Collections.emptyList();
-    }
-    return document().getDuring(type, this);
-  }
-
+  List<Annotation> getContaining(AnnotationType type);
 
   /**
    * Gets the annotations that are during to this object, i.e. those annotations whose span starts before and ends
@@ -75,12 +68,7 @@ public interface Annotated extends CharSpan {
    * @param type the type  of annotation wanted
    * @return the list of annotations of given type covering this object
    */
-  default List<Annotation> getDuring(AnnotationType type) {
-    if (isEmpty() || document() == null || type == null) {
-      return Collections.emptyList();
-    }
-    return document().getContaining(type, this);
-  }
+  List<Annotation> getDuring(AnnotationType type);
 
   /**
    * Gets annotations of a given type that overlap with this object.
@@ -88,12 +76,7 @@ public interface Annotated extends CharSpan {
    * @param type the type of annotation wanted
    * @return the list of annotations of given type that overlap with this object
    */
-  default List<Annotation> getOverlapping(AnnotationType type) {
-    if (isEmpty() || document() == null || type == null) {
-      return Collections.emptyList();
-    }
-    return document().getOverlapping(type, this);
-  }
+  List<Annotation> getOverlapping(AnnotationType type);
 
   /**
    * Gets annotations of a given type that have the same starting offset as this object.
@@ -101,12 +84,7 @@ public interface Annotated extends CharSpan {
    * @param type the type of annotation wanted
    * @return the list of annotations of given type have the same starting offset as this object.
    */
-  default List<Annotation> getStartingHere(AnnotationType type) {
-    if (isEmpty() || document() == null || type == null) {
-      return Collections.emptyList();
-    }
-    return document().getStartingAt(type, start());
-  }
+  List<Annotation> getStartingHere(AnnotationType type);
 
   /**
    * Last optional.
