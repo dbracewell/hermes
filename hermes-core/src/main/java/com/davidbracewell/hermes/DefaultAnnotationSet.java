@@ -119,7 +119,7 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
   @Override
   public List<Annotation> select(@Nonnull Span range, @Nonnull Predicate<? super Annotation> criteria) {
     Annotation dummy = Fragments.detatchedAnnotation(null, range.end(), Integer.MAX_VALUE);
-    Annotation dummy2 = Fragments.detatchedAnnotation(null, Integer.MIN_VALUE, range.start());
+    Annotation dummy2 = Fragments.detatchedAnnotation(null, 0, range.start());
 
     return Sets.intersection(startSorted.headSet(dummy, true), endSorted.tailSet(dummy2, true))
         .stream()

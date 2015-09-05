@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
+import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
@@ -36,6 +37,7 @@ import com.google.common.base.Throwables;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author David B. Bracewell
@@ -45,12 +47,15 @@ public class Document extends HString {
   private static final long serialVersionUID = 1L;
   private final Map<Attribute, Val> attributes = new HashMap<>(5);
   private final String content;
+  private final AtomicLong idGenerator = new AtomicLong(0);
+  private final AnnotationSet annotationSet;
   private String id;
 
   public Document(String id, @Nonnull String content) {
     super(0, content.length());
     this.content = content;
     setId(id);
+    this.annotationSet = Config.get("hermes.AnnotationSetImpl").as(AnnotationSet.class);
   }
 
   public Document(@Nonnull String content) {
@@ -109,50 +114,74 @@ public class Document extends HString {
     if (hasAttribute(Attrs.LANGUAGE)) {
       return getAttribute(Attrs.LANGUAGE).as(Language.class);
     }
-    return Language.ENGLISH;
+    return Hermes.defaultLanguage();
   }
 
   List<Annotation> getStartingAt(AnnotationType type, int start) {
-    return null;
+    return annotationSet.select(a -> a.isInstance(type) && a.start() == start);
   }
 
-  public List<Annotation> getOverlapping(AnnotationType type, Span span) {
-    return null;
+  public List<Annotation> getOverlapping(AnnotationType type, @Nonnull Span span) {
+    return annotationSet.select(span, a -> a.isInstance(type) && a.overlaps(span));
   }
 
-  public List<Annotation> getContaining(AnnotationType type, Span span) {
-    return null;
+  public List<Annotation> getContaining(AnnotationType type, @Nonnull Span span) {
+    return annotationSet.select(span, a -> a.isInstance(type) && a.encloses(span));
   }
 
-  public List<Annotation> getDuring(AnnotationType type, Span span) {
-    return null;
+  public List<Annotation> getDuring(AnnotationType type, @Nonnull Span span) {
+    return annotationSet.select(span, a -> a.isInstance(type) && span.encloses(a));
   }
 
   @Override
   public List<Annotation> getOverlapping(AnnotationType type) {
-    return null;
+    return annotationSet.select(a -> a.isInstance(type));
   }
 
   @Override
   public List<Annotation> getContaining(AnnotationType type) {
-    return null;
+    return getOverlapping(type);
   }
 
   @Override
   public List<Annotation> getDuring(AnnotationType type) {
-    return null;
+    return Collections.emptyList();
   }
+
+  public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end) {
+    return createAnnotation(type, start, end, Collections.emptyMap());
+  }
+
+  public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end, @Nonnull Map<Attribute, ?> attributeMap) {
+    Annotation annotation = new Annotation(this, type, start, end);
+    annotation.setId(idGenerator.getAndIncrement());
+    annotation.putAllAttributes(attributeMap);
+    annotationSet.add(annotation);
+    return annotation;
+  }
+
 
   public void write(@Nonnull StructuredFormat format, @Nonnull Resource resource) throws IOException {
     try (StructuredWriter writer = format.createWriter(resource)) {
       writer.beginDocument();
       writer.writeKeyValue("id", getId());
       writer.writeKeyValue("content", toString());
-      writer.beginObject("attributes");
-      for (Map.Entry<Attribute, Val> entry : getAttributes()) {
-        entry.getKey().write(writer, entry.getValue());
+
+      if (attributes.size() > 0) {
+        writer.beginObject("attributes");
+        for (Map.Entry<Attribute, Val> entry : getAttributes()) {
+          entry.getKey().write(writer, entry.getValue());
+        }
+        writer.endObject();
       }
-      writer.endObject();
+
+      if (annotationSet.size() > 0) {
+        writer.beginArray("annotations");
+        for (Annotation annotation : annotationSet) {
+          annotation.write(writer);
+        }
+        writer.endArray();
+      }
       writer.endDocument();
     }
   }
@@ -166,6 +195,19 @@ public class Document extends HString {
       throw Throwables.propagate(e);
     }
   }
+
+  public static Document fromJson(String jsonString) {
+    try {
+      return fromJson(Resources.fromString(jsonString));
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  public static Document fromJson(@Nonnull Resource jsonResource) throws IOException {
+    return read(StructuredFormat.JSON, jsonResource);
+  }
+
 
   public static Document read(@Nonnull StructuredFormat format, @Nonnull Resource resource) throws IOException {
     try (StructuredReader reader = format.createReader(resource)) {
@@ -209,13 +251,18 @@ public class Document extends HString {
           docProperties.get("id").asString(),
           docProperties.get("content").asString()
       );
+
       document.putAllAttributes(attributeValMap);
       annotations.forEach(annotation -> {
         Annotation newAnnotation = new Annotation(document, annotation.getType(), annotation.start(), annotation.end());
         newAnnotation.putAllAttributes(annotation.getAttributeMap());
         newAnnotation.setId(annotation.getId());
-        System.out.println(newAnnotation + "[" + newAnnotation.getType() + "]");
+        document.annotationSet.add(newAnnotation);
       });
+      if (annotations.size() > 0) {
+        long max = annotations.stream().mapToLong(Annotation::getId).max().orElseGet(() -> 0L);
+        document.idGenerator.set(max + 1);
+      }
       return document;
     }
   }

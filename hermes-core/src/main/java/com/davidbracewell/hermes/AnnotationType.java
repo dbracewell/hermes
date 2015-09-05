@@ -167,7 +167,7 @@ public final class AnnotationType extends EnumValue {
     if (isGoldStandard()) {
       throw new IllegalStateException("Gold Standard annotations cannot be annotated");
     }
-    String key = Config.closestKey("AnnotationType", language, name(), "annotator");
+    String key = Config.closestKey("Annotation", language, name(), "annotator");
     return BeanUtils.parameterizeObject(Config.get(key).as(Annotator.class));
   }
 

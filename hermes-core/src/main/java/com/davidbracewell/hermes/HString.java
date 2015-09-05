@@ -22,6 +22,8 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.collection.Counter;
+import com.davidbracewell.collection.Counters;
 import com.davidbracewell.conversion.Val;
 import com.google.common.base.Preconditions;
 
@@ -30,8 +32,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * The interface H string.
@@ -179,6 +184,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return Pattern.compile(pattern).matcher(this);
   }
 
+  public Matcher matcher(@Nonnull Pattern pattern) {
+    return pattern.matcher(this);
+  }
+
+
   @Override
   public CharSequence subSequence(int start, int end) {
     return toString().subSequence(start, end);
@@ -191,7 +201,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param relativeEnd   the end
    * @return the h string
    */
-  public HString subString(int relativeStart, int relativeEnd) {
+  public HString substring(int relativeStart, int relativeEnd) {
     Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
     return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
   }
@@ -297,6 +307,63 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   @Override
   public Val removeAttribute(Attribute attribute) {
     return getAttributeMap().remove(attribute);
+  }
+
+
+  public String getLemma() {
+    if (hasAttribute(Attrs.LEMMA)) {
+      return getAttribute(Attrs.LEMMA).asString();
+    }
+    return "";
+  }
+
+  public Counter<String> countLemmas(AnnotationType type) {
+    return count(type, HString::getLemma);
+  }
+
+  public Counter<String> count(AnnotationType type) {
+    return count(type, Object::toString);
+  }
+
+  public Counter<String> count(AnnotationType type, @Nonnull Function<HString, String> transform) {
+    return count(type, a -> true, transform);
+  }
+
+  public Counter<String> count(AnnotationType type, @Nonnull Predicate<? super Annotation> predicate, @Nonnull Function<HString, String> transform) {
+    return Counters.newHashMapCounter(getOverlapping(type).stream()
+            .filter(predicate)
+            .map(transform)
+            .collect(Collectors.toList())
+    );
+  }
+
+
+  public String toLowerCase() {
+    return toString().toLowerCase();
+  }
+
+  public String toUpperCase() {
+    return toString().toUpperCase();
+  }
+
+
+  public static HString union(@Nonnull HString first, @Nonnull HString second, HString... others) {
+    Preconditions.checkArgument(first.document() == second.document(), "Cannot union strings from different documents");
+    Document owner = first.document();
+    int start = Math.min(first.start(), second.start());
+    int end = Math.max(first.end(), second.end());
+    if (others != null) {
+      for (HString hString : others) {
+        Preconditions.checkArgument(owner == hString.document(), "Cannot union strings from different documents");
+        start = Math.min(start, hString.start());
+        end = Math.max(end, hString.end());
+      }
+    }
+    return new Fragment(owner, start, end);
+  }
+
+  public HString union(@Nonnull HString other, HString... evenMore) {
+    return HString.union(this, other, evenMore);
   }
 
 }//END OF HString

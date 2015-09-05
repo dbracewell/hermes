@@ -61,7 +61,7 @@ class Fragment extends HString {
 
   @Override
   public char charAt(int index) {
-    return owner.charAt(index);
+    return owner.charAt(start() + index);
   }
 
   @Override

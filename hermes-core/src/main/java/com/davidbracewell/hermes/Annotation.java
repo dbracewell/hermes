@@ -25,6 +25,7 @@ import com.davidbracewell.collection.Collect;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
+import com.davidbracewell.io.structured.StructuredWriter;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
@@ -41,11 +42,13 @@ import java.util.*;
  */
 public class Annotation extends Fragment implements Serializable {
 
-  public static long DETATCHED_ID = Long.MIN_VALUE;
-
   private static final long serialVersionUID = 1L;
-  private long id = DETATCHED_ID;
+  /**
+   * The constant DETATCHED_ID.
+   */
+  public static long DETATCHED_ID = Long.MIN_VALUE;
   private final AnnotationType annotationType;
+  private long id = DETATCHED_ID;
   private transient Annotation[] tokens;
 
   /**
@@ -63,10 +66,6 @@ public class Annotation extends Fragment implements Serializable {
   }
 
 
-  public boolean isDetached() {
-    return document() == null || id == DETATCHED_ID;
-  }
-
   /**
    * Instantiates a new Annotation.
    *
@@ -78,14 +77,58 @@ public class Annotation extends Fragment implements Serializable {
     this.annotationType = annotationType;
   }
 
-
+  /**
+   * Instantiates a new Annotation.
+   */
   protected Annotation() {
     this.annotationType = AnnotationType.ROOT;
   }
 
+
+  /**
+   * Instantiates a new Annotation.
+   *
+   * @param type  the type
+   * @param start the start
+   * @param end   the end
+   */
   protected Annotation(AnnotationType type, int start, int end) {
     super(null, start, end);
     this.annotationType = type == null ? AnnotationType.ROOT : type;
+  }
+
+  static Annotation read(StructuredReader reader) throws IOException {
+    reader.beginObject();
+
+    Map<String, Val> annotationProperties = new HashMap<>();
+    Map<Attribute, Val> attributeValMap = Collections.emptyMap();
+
+    while (reader.peek() != ElementType.END_OBJECT) {
+      if (reader.peek() == ElementType.NAME) {
+        Collect.put(annotationProperties, reader.nextKeyValue());
+      } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
+        String name = reader.beginObject();
+        if (name.equals("attributes")) {
+          attributeValMap = Attribute.readAttributeList(reader);
+        } else {
+          throw new IOException("Unexpected object named [" + name + "]");
+        }
+      } else {
+        throw new IOException("Unexpected " + reader.peek());
+      }
+    }
+
+    Annotation annotation = Fragments.detatchedAnnotation(
+        AnnotationType.create(annotationProperties.get("type").asString()),
+        annotationProperties.get("start").asIntegerValue(),
+        annotationProperties.get("end").asIntegerValue()
+    );
+    annotation.setId(annotationProperties.get("id").asLongValue());
+    annotation.putAllAttributes(attributeValMap);
+
+
+    reader.endObject();
+    return annotation;
   }
 
   /**
@@ -102,14 +145,41 @@ public class Annotation extends Fragment implements Serializable {
     this.id = id;
   }
 
-  @Override
-  public boolean isInstance(AnnotationType type) {
-    return Objects.equals(type, this.annotationType);
+  /**
+   * Gets the type of the annotation
+   *
+   * @return the annotation type
+   */
+  public final AnnotationType getType() {
+    return annotationType;
   }
 
   @Override
   public boolean isAnnotation() {
     return true;
+  }
+
+  /**
+   * Is this annotation detached, i.e. not associated with a document?
+   *
+   * @return True if the annotation is detatched
+   */
+  public boolean isDetached() {
+    return document() == null || id == DETATCHED_ID;
+  }
+
+  /**
+   * Is this annotation a gold standard annotation, i.e. does its type start with <code>@</code>
+   *
+   * @return True if this annotation is a gold standard annotation
+   */
+  public boolean isGoldAnnotation() {
+    return annotationType.name().startsWith("@");
+  }
+
+  @Override
+  public boolean isInstance(AnnotationType type) {
+    return Objects.equals(type, this.annotationType);
   }
 
   /**
@@ -152,19 +222,6 @@ public class Annotation extends Fragment implements Serializable {
     return null;
   }
 
-  /**
-   * Gets the type of the annotation
-   *
-   * @return the annotation type
-   */
-  public final AnnotationType getType() {
-    return annotationType;
-  }
-
-  public boolean isGoldAnnotation() {
-    return annotationType.name().startsWith("GOLD");
-  }
-
   @Override
   public List<Annotation> tokens() {
     if (tokens == null) {
@@ -180,38 +237,23 @@ public class Annotation extends Fragment implements Serializable {
     return tokens == null ? Collections.emptyList() : Arrays.asList(tokens);
   }
 
-  static Annotation read(StructuredReader reader) throws IOException {
-    reader.beginObject();
+  void write(StructuredWriter writer) throws IOException {
+    writer.beginObject();
 
-    Map<String, Val> annotationProperties = new HashMap<>();
-    Map<Attribute, Val> attributeValMap = Collections.emptyMap();
+    writer.writeKeyValue("type", annotationType.name());
+    writer.writeKeyValue("start", start());
+    writer.writeKeyValue("end", end());
+    writer.writeKeyValue("id", getId());
 
-    while (reader.peek() != ElementType.END_OBJECT) {
-      if (reader.peek() == ElementType.NAME) {
-        Collect.put(annotationProperties, reader.nextKeyValue());
-      } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
-        String name = reader.beginObject();
-        if (name.equals("attributes")) {
-          attributeValMap = Attribute.readAttributeList(reader);
-        } else {
-          throw new IOException("Unexpected object named [" + name + "]");
-        }
-      } else {
-        throw new IOException("Unexpected " + reader.peek());
+    if (getAttributeMap().size() > 0) {
+      writer.beginObject("attributes");
+      for (Map.Entry<Attribute, Val> entry : getAttributes()) {
+        entry.getKey().write(writer, entry.getValue());
       }
+      writer.endObject();
     }
 
-    Annotation annotation = Fragments.detatchedAnnotation(
-        AnnotationType.create(annotationProperties.get("type").asString()),
-        annotationProperties.get("start").asIntegerValue(),
-        annotationProperties.get("end").asIntegerValue()
-    );
-    annotation.setId(annotationProperties.get("id").asLongValue());
-    annotation.putAllAttributes(attributeValMap);
-
-
-    reader.endObject();
-    return annotation;
+    writer.endObject();
   }
 
 }//END OF Annotation
