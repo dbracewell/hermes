@@ -21,10 +21,8 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Annotator;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.Types;
+import com.davidbracewell.collection.Collect;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.string.StringUtils;
 
 import java.io.Serializable;
@@ -42,9 +40,11 @@ public class DefaultTokenAnnotator implements Annotator, Serializable {
   public void annotate(Document document) {
     BreakIterator iterator = BreakIterator.getWordInstance(document.getLanguage().asLocale());
     iterator.setText(document.toString());
+    int index = 0;
     for (int end = iterator.next(), start = 0; end != BreakIterator.DONE; end = iterator.next()) {
       if (!StringUtils.isNullOrBlank(document.subSequence(start, end).toString())) {
-        document.createAnnotation(Types.TOKEN, start, end);
+        document.createAnnotation(Types.TOKEN, start, end, Collect.map(Attrs.INDEX, index));
+        index++;
       }
       start = end;
     }

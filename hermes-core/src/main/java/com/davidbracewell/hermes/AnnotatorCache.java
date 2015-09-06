@@ -66,7 +66,7 @@ public class AnnotatorCache {
    * @param language       The language of the annotator we want
    * @return An annotator that can annotate the given annotation class
    */
-  public synchronized Annotator get(@Nonnull AnnotationType annotationType, @Nonnull Language language) {
+  public Annotator get(@Nonnull AnnotationType annotationType, @Nonnull Language language) {
     String key = createKey(annotationType, language);
     if (!cache.containsKey(key)) {
       cache.putIfAbsent(key, annotationType.getAnnotator(language));

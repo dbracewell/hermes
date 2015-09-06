@@ -34,17 +34,19 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * <p>An annotation provides information and attributes relating to specific segments of text in a document, which may
- * include the entire document. Annotations on documents are specified as a span which has a start and end character
- * offset associated with it. </p>
+ * <p>
+ * An annotation associates a type, e.g. tokens, sentences, named entities, and a set of attributes, e.g. part of
+ * speech  and entity type, to  a specific  span of a document, which may include the entire document. Annotation type
+ * information is defined via the {@link AnnotationType} class.
+ * </p>
  *
  * @author David B. Bracewell
  */
-public class Annotation extends Fragment implements Serializable {
+public final class Annotation extends Fragment implements Serializable {
 
   private static final long serialVersionUID = 1L;
   /**
-   * The constant DETATCHED_ID.
+   * The ID associated with a detatched annotation
    */
   public static long DETATCHED_ID = Long.MIN_VALUE;
   private final AnnotationType annotationType;
@@ -187,8 +189,8 @@ public class Annotation extends Fragment implements Serializable {
    *
    * @return The next annotation with the same type as this one or an empty fragment
    */
-  public Annotation nextOfSameType() {
-    return nextOfType(annotationType);
+  public Annotation next() {
+    return next(annotationType);
   }
 
   /**
@@ -197,9 +199,8 @@ public class Annotation extends Fragment implements Serializable {
    * @param type the type of annotation wanted
    * @return the next annotation of the given type or null
    */
-  public Annotation nextOfType(@Nonnull AnnotationType type) {
-    //return document() == null ? Fragments.emptyOrphan() : document().getAnnotationSet().next(this, type);
-    return null;
+  public Annotation next(@Nonnull AnnotationType type) {
+    return document() == null ? Fragments.detachedEmptyAnnotation() : document().getAnnotationSet().next(this, type);
   }
 
   /**
@@ -207,8 +208,8 @@ public class Annotation extends Fragment implements Serializable {
    *
    * @return The previous annotation with the same type as this one or an empty fragment
    */
-  public Annotation previousOfSameType() {
-    return previousOfType(annotationType);
+  public Annotation previous() {
+    return previous(annotationType);
   }
 
   /**
@@ -217,9 +218,8 @@ public class Annotation extends Fragment implements Serializable {
    * @param type the type of annotation wanted
    * @return the previous annotation of the given type or null
    */
-  public Annotation previousOfType(AnnotationType type) {
-    //return document() == null ? Fragments.emptyOrphan() : document().getAnnotationSet().previous(this, type);
-    return null;
+  public Annotation previous(AnnotationType type) {
+    return document() == null ? Fragments.detachedEmptyAnnotation() : document().getAnnotationSet().previous(this, type);
   }
 
   @Override

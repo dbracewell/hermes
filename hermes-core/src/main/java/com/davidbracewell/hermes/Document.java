@@ -32,6 +32,7 @@ import com.davidbracewell.io.structured.StructuredFormat;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.string.StringUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 import javax.annotation.Nonnull;
@@ -51,15 +52,53 @@ public class Document extends HString {
   private final AnnotationSet annotationSet;
   private String id;
 
-  public Document(String id, @Nonnull String content) {
+  public Document(String id, @Nonnull String content, Language language) {
     super(0, content.length());
     this.content = content;
     setId(id);
+    setLanguage(language);
     this.annotationSet = Config.get("hermes.AnnotationSetImpl").as(AnnotationSet.class);
   }
 
+  public Document(String id, @Nonnull String content) {
+    this(id, content, null);
+  }
+
+  public Document(@Nonnull String content, Language language) {
+    this(null, content, language);
+  }
+
   public Document(@Nonnull String content) {
-    this(null, content);
+    this(null, content, null);
+  }
+
+
+  /**
+   * Constructs a document for a pre-tokenized source.
+   *
+   * @param language The language of the document
+   * @param tokens   The tokens.
+   * @return A new document consisting of the given tokens
+   */
+  public static Document fromTokens(Language language, Iterable<String> tokens) {
+    Preconditions.checkNotNull(language);
+    Preconditions.checkNotNull(tokens);
+    StringBuilder content = new StringBuilder();
+    List<Span> tokenSpans = new ArrayList<>();
+    for (String token : tokens) {
+      tokenSpans.add(new Span(content.length(), content.length() + token.length()));
+      content.append(token).append(" ");
+    }
+    Document doc = new Document("", content.toString().trim());
+    doc.setLanguage(language);
+    for (int idx = 0; idx < tokenSpans.size(); idx++) {
+      doc.createAnnotation(Types.TOKEN, tokenSpans.get(idx));
+//          MapUtils.map(Attrs.INDEX, idx,
+//              Attrs.TOKEN_TYPE, TokenType.UNKNOWN)
+//      );
+    }
+    doc.annotationSet.setIsCompleted(Types.TOKEN, true, "PROVIDED");
+    return doc;
   }
 
   @Override
@@ -148,6 +187,12 @@ public class Document extends HString {
     return Collections.emptyList();
   }
 
+
+  public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull Span span) {
+    return createAnnotation(type, span.start(), span.end(), Collections.emptyMap());
+  }
+
+
   public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end) {
     return createAnnotation(type, start, end, Collections.emptyMap());
   }
@@ -160,6 +205,10 @@ public class Document extends HString {
     return annotation;
   }
 
+
+  public AnnotationSet getAnnotationSet() {
+    return annotationSet;
+  }
 
   public void write(@Nonnull StructuredFormat format, @Nonnull Resource resource) throws IOException {
     try (StructuredWriter writer = format.createWriter(resource)) {

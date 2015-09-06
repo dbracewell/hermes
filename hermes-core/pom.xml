@@ -25,9 +25,17 @@
     <parent>
         <groupId>com.davidbracewell</groupId>
         <artifactId>hermes</artifactId>
-        <version>${hermesVersion}</version>
+        <version>0.0.1-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
+    <dependencies>
+        <dependency>
+            <groupId>org.kohsuke.metainf-services</groupId>
+            <artifactId>metainf-services</artifactId>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
     <contributors>
         <contributor>
             <name>David B. Bracewell</name>
@@ -44,22 +52,22 @@
     <build>
         <plugins>
             <!--<plugin>-->
-                <!--<groupId>de.jflex</groupId>-->
-                <!--<artifactId>jflex-maven-plugin</artifactId>-->
-                <!--<version>1.5.0</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<goals>-->
-                            <!--<goal>generate</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<outputDirectory>src/main/java</outputDirectory>-->
-                            <!--<lexDefinitions>-->
-                                <!--<lexDefinition>src/main/jflex</lexDefinition>-->
-                            <!--</lexDefinitions>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                <!--</executions>-->
+            <!--<groupId>de.jflex</groupId>-->
+            <!--<artifactId>jflex-maven-plugin</artifactId>-->
+            <!--<version>1.5.0</version>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<goals>-->
+            <!--<goal>generate</goal>-->
+            <!--</goals>-->
+            <!--<configuration>-->
+            <!--<outputDirectory>src/main/java</outputDirectory>-->
+            <!--<lexDefinitions>-->
+            <!--<lexDefinition>src/main/jflex</lexDefinition>-->
+            <!--</lexDefinitions>-->
+            <!--</configuration>-->
+            <!--</execution>-->
+            <!--</executions>-->
             <!--</plugin>-->
         </plugins>
     </build>

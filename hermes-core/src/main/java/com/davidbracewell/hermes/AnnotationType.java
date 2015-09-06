@@ -35,26 +35,47 @@ import java.util.Collection;
 
 /**
  * <p>
- * Defines a type of annotation which is made up of a unique name and a set of attributes. Attributes, e.g.
- * part-of-speech, can be defined for an annotation type via a configuration setting. These settings following the
- * convention: <code>AnnotationType.NAME.attributes = AttributeName:Type, AttributeName:Type</code> where
- * <code>NAME</code> is the
- * unique annotation type name, <code>AttributeName</code> is the name of the attribute, and <code>Type</code> is
- * class information that corresponds to the expected type of the attribute. Attributes not defined via configuration
- * can be stored on annotation, but will deserialize as a String.
+ * An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The definition
+ * provided by the type facillitates the portability of the annotation between different modules. An annotation type
+ * defines the type name, parent type, and optionally a set of attributes that are expected to be associated with an
+ * annotation of this type.
  * </p>
  * <p>
- * Annotation types are hierarchical. A type's parent is defined via configuration:
- * <code>AnnotationType.NAME.parent=PARENT_NAME</code>. If no parent is declared, the ROOT annotation type is used as
- * the parent. Annotation types inherit their parent's attributes. A special annotation type for gold standard
- * annotations can be defined using <code>GOLD_</code> prepended to the annotation type name and will inherit from the
- * annotation type defined after the prefix.
+ * Annotation types are hierarchical and all types have a parent defined. If no parent is explicitly declared, its
+ * parent is resolved to the <code>ROOT</code> type. Annotation types inherit their parent's attributes. Attribute
+ * information on the type serves as documentation and is not type checked.
  * </p>
+ * <p>Type information is defined via configuration. An Example is as follows:</p>
+ * <code>
+ * Annotation{
+ *  ENTITY {
+ *    attributes = ENTITY_TYPE, CONFIDENCE
+ *  }
+ *  REGEX_ENTITY {
+ *    parent = ENTITY
+ *    annotator {
+ *      ENGLISH = @{ENGLISH_ENTITY_REGEX}
+ *      JAPANESE = @{JAPANESE_ENTITY_REGEX}
+ *    }
+ *    attributes = PATTERN
+ *  }
+ * }
+ * </code>
  * <p>
- * Annotation types define their annotator through configuration as well using <code>AnnotationType.NAME.annotator=Class</code>
- * where Class is the fully qualified class name of the annotator.
+ * In the example shown above, we define the <code>ENTITY</code> and <code>REGEX_ENTITY</code> types. The
+ * <code>Entity</code> type has two attributes associated with it which relate to the type of entity and the confidence
+ * that the span of text is an entity of the given type. The <code>REGEX_ENTITY</code> is a sub-type (child) of
+ * <code>ENTITY</code> and inherits all of its attributes. It defines annotators for English and Japanese which are
+ * beans defined elsewhere in the configuration. Finally, it defines a <code>PATTERN</code> attribute relating to the
+ * pattern that was used to identify the entity.
  * </p>
- *
+ * <h2>Gold Standard Types</h2>
+ * <p>
+ * A special annotation type for gold standard annotations can be defined using <code>@</code> prepended to the
+ * annotation type name. Gold standard annotations inherit all of their information from their non-gold standard
+ * counterparts. The gold standard version of annotation type can be easily obtained via the
+ * {@link #goldStandardVersion()} method.
+ * </p>
  * @author David B. Bracewell
  */
 public final class AnnotationType extends EnumValue {
