@@ -26,9 +26,12 @@
         <artifactId>davidbracewell-parent-pom</artifactId>
         <version>1.0.5-SNAPSHOT</version>
     </parent>
+
     <artifactId>hermes</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
+
+
     <contributors>
         <contributor>
             <name>David B. Bracewell</name>
@@ -79,6 +82,7 @@
 
     <modules>
         <module>hermes-core</module>
+        <module>hermes-examples</module>
     </modules>
 
     <repositories>

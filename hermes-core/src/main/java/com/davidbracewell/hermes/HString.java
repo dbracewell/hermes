@@ -202,7 +202,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     if (getAttributeMap().containsKey(attribute)) {
       return getAttributeMap().get(attribute);
     }
-    return getAttributeMap().get(attribute.goldStandardVersion());
+    return Val.of(getAttributeMap().get(attribute.goldStandardVersion()));
   }
 
   /**
@@ -445,8 +445,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public String toPOSString() {
     return tokens().stream()
-        .map(t -> t.toString() + "/" + t.getAttribute(Attrs.PART_OF_SPEECH).as(POS.class).asString())
-        .reduce("", (x, y) -> x + " " + y);
+        .map(t -> t.toString() + "/" + t.getAttribute(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
+        .collect(Collectors.joining(" "));
   }
 
   /**
