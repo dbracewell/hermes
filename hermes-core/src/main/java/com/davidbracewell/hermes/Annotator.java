@@ -21,12 +21,19 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.config.Config;
+
+import java.util.Collections;
 import java.util.Set;
 
 /**
- * <p>Annotators produce annotations for a given document. A single annotator may produce one ore more types of
- * annotations. Additionally, multiple annotators may provide the same type of annotations.
- * <p/>
+ * <p>
+ * An annotator processes documents adding annotations of one or more types. An annotator may require specific types of
+ * annotations to be present on the document before it can process the document (by default it requires none).
+ * Annotators define a version ({@link #getVersion()}) that identifies the model, version, lexicon, etc. used by the
+ * annotator to produce its annotations.
+ * </p>
+ * <p><b>Note</b>: Annotator implementations should be implemented in a thread safe manner.</p>
  *
  * @author David B. Bracewell
  */
@@ -34,7 +41,7 @@ public interface Annotator {
 
 
   /**
-   * Annotates a document with one or more annotations of the type defined in <code>provided()</code>.
+   * Annotates a document with one or more annotations of the types defined in <code>provided()</code>.
    *
    * @param document The document to annotate
    */
@@ -53,7 +60,20 @@ public interface Annotator {
    *
    * @return the set of required annotation types
    */
-  Set<AnnotationType> requires();
+  default Set<AnnotationType> requires() {
+    return Collections.emptySet();
+  }
+
+
+  /**
+   * Gets the version of this annotator. The version may relate to a version number, model used, or something else to
+   * identify the settings of the annotator.
+   *
+   * @return the version
+   */
+  default String getVersion() {
+    return Config.get(this.getClass(), "version").asString("1.0");
+  }
 
 
 }//END OF Annotator

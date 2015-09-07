@@ -28,6 +28,7 @@ import com.davidbracewell.io.resource.Resource;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 
 /**
@@ -36,7 +37,8 @@ import java.util.Collections;
  * @author David B. Bracewell
  */
 @MetaInfServices(CorpusFormat.class)
-public class PlainTextFormat extends FileBasedFormat {
+public class PlainTextFormat extends FileBasedFormat implements Serializable {
+  private static final long serialVersionUID = 1L;
 
   @Override
   public String name() {

@@ -28,6 +28,10 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
+ * <p>
+ * Represents a starting (inclusive) and ending (exclusive) portion of a <code>CharSequence</code>.
+ * </p>
+ *
  * @author David B. Bracewell
  */
 public class Span implements Serializable {
@@ -36,6 +40,12 @@ public class Span implements Serializable {
   private final int end;
 
 
+  /**
+   * Instantiates a new Span.
+   *
+   * @param start the start
+   * @param end   the end
+   */
   public Span(int start, int end) {
     Preconditions.checkArgument(start >= 0, "Starting offset must be >= 0");
     Preconditions.checkArgument(end >= start, "Ending offset must be >= Starting offset");
@@ -44,20 +54,26 @@ public class Span implements Serializable {
   }
 
   /**
-   * @return The start offset of the <code>Span</code> (inclusive).
+   * The starting offset
+   *
+   * @return The start offset (inclusive).
    */
   public int start() {
     return start;
   }
 
   /**
-   * @return The end offset of the <code>Span</code> (non-inclusive).
+   * The ending offset
+   *
+   * @return The ending offset (exclusive).
    */
   public int end() {
     return end;
   }
 
   /**
+   * The length of the span
+   *
    * @return The length of the span
    */
   public int length() {

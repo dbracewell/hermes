@@ -28,6 +28,7 @@ import com.davidbracewell.io.resource.Resource;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 
 /**
@@ -36,7 +37,8 @@ import java.util.Collections;
  * @author David B. Bracewell
  */
 @MetaInfServices(CorpusFormat.class)
-public class JSONFormat extends FileBasedFormat {
+public class JSONFormat extends FileBasedFormat implements Serializable {
+  private static final long serialVersionUID = 1L;
 
   @Override
   public String name() {
@@ -45,7 +47,7 @@ public class JSONFormat extends FileBasedFormat {
 
   @Override
   protected Iterable<Document> readResource(Resource resource, DocumentFactory documentFactory) throws IOException {
-    return Collections.singleton(Document.fromJson(resource));
+    return Collections.singleton(Document.fromJson(resource.readToString()));
   }
 
 }//END OF JSONFormat

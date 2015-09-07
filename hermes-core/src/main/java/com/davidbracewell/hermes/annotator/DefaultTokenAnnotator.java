@@ -55,9 +55,4 @@ public class DefaultTokenAnnotator implements Annotator, Serializable {
     return Collections.singleton(Types.TOKEN);
   }
 
-  @Override
-  public Set<AnnotationType> requires() {
-    return Collections.emptySet();
-  }
-
 }//END OF DefaultTokenAnnotator

@@ -23,7 +23,6 @@ package com.davidbracewell.hermes;
 
 
 import com.davidbracewell.conversion.Val;
-import com.davidbracewell.string.StringUtils;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -73,15 +72,5 @@ class Fragment extends HString {
   protected Map<Attribute, Val> getAttributeMap() {
     return attributes;
   }
-
-
-  @Override
-  public String toString() {
-    if (document() == null) {
-      return StringUtils.EMPTY;
-    }
-    return document().toString().substring(start(), end());
-  }
-
 
 }//END OF Fragment

@@ -21,26 +21,30 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.Language;
-import com.davidbracewell.config.Config;
+import org.junit.Test;
 
-import java.util.Locale;
+import static org.junit.Assert.*;
 
 /**
- * <p>Convenience methods for getting common configuration options. </p>
- *
  * @author David B. Bracewell
  */
-public interface Hermes {
+public class AnnotationTypeTest {
 
-  /**
-   * Get the default language. The default language is specified using <code>hermes.DefaultLanguage</code>. If the
-   * configuration option is not set, it will default to the language matching the system locale.
-   *
-   * @return the default language
-   */
-  static Language defaultLanguage() {
-    return Config.get("hermes.DefaultLanguage").as(Language.class, Language.fromLocale(Locale.getDefault()));
+  @Test
+  public void testIsInstance() throws Exception {
+    AnnotationType TEST_PARENT = AnnotationType.create("TEST_PARENT");
+    AnnotationType TEST_CHILD1 = AnnotationType.create("TEST_CHILD1", TEST_PARENT);
+    AnnotationType TEST_CHILD2 = AnnotationType.create("TEST_CHILD2", TEST_PARENT);
+
+    assertTrue(TEST_PARENT.isInstance(AnnotationType.ROOT));
+
+    assertTrue(TEST_CHILD1.isInstance(TEST_PARENT));
+    assertTrue(TEST_CHILD1.goldStandardVersion().isInstance(TEST_PARENT));
+    assertTrue(TEST_CHILD1.goldStandardVersion().isInstance(TEST_CHILD1));
+    assertTrue(TEST_CHILD1.isInstance(TEST_CHILD1.goldStandardVersion()));
+
+    assertFalse(TEST_CHILD1.isInstance(TEST_CHILD2));
+    assertFalse(TEST_PARENT.isInstance(TEST_CHILD2));
+
   }
-
-}//END OF Hermes
+}

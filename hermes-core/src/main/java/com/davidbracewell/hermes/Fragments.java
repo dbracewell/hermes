@@ -29,6 +29,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * <p>
+ * Convenience methods for constructing orphaned and empty fragments.
+ * </p>
+ *
  * @author David B. Bracewell
  */
 public final class Fragments {
@@ -38,41 +42,63 @@ public final class Fragments {
   }
 
 
+  /**
+   * Creates a new HString that does not has no content or document associated with it.
+   *
+   * @return the new HString
+   */
   public static HString emptyOrphan() {
     return ORPHANED_EMPTY;
   }
 
+  /**
+   * Creates a new HString that has content, but no document associated with it
+   *
+   * @param content the content of the string
+   * @return the new HString
+   */
   public static HString orphan(@Nonnull String content) {
-    return new ORPHANED(content);
+    return new HStringImpl(content);
   }
 
-  public static HString empty(@Nonnull Document document) {
+  /**
+   * Creates an empty HString
+   *
+   * @param document the document
+   * @return the new HString (associated with the given document if it is not null)
+   */
+  public static HString empty(Document document) {
     return new Fragment(document, 0, 0);
   }
 
+  /**
+   * Creates a detached empty annotation, i.e. an empty span and no document associated with it.
+   *
+   * @return the annotation
+   */
   public static Annotation detachedEmptyAnnotation() {
     return new Annotation();
   }
 
+  /**
+   * Creates a detached annotation, i.e. no document associated with it.
+   *
+   * @param type  the type of annotation
+   * @param start the start of the span
+   * @param end   the end of the span
+   * @return the annotation
+   */
   public static Annotation detatchedAnnotation(AnnotationType type, int start, int end) {
     return new Annotation(type, start, end);
   }
 
-  public static HString empty(@Nonnull HString string) {
-    if (string.document() == null) {
-      return emptyOrphan();
-    }
-    return new Fragment(string.document(), 0, 0);
-  }
-
-
-  private static class ORPHANED extends HString {
+  private static class HStringImpl extends HString {
     private static final long serialVersionUID = 1L;
 
     private final String content;
     private final Map<Attribute, Val> attributes = new HashMap<>(5);
 
-    private ORPHANED(@Nonnull String content) {
+    private HStringImpl(@Nonnull String content) {
       super(0, content.length());
       this.content = content;
     }

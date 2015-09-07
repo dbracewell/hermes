@@ -21,33 +21,38 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.io.structured.StructuredIOException;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 
+import java.io.IOException;
+
 /**
+ * <p>
+ * Provides functionality for custom encoding and decoding attribute values to/from structured formats.
+ * </p>
+ *
  * @author David B. Bracewell
  */
 public interface AttributeValueCodec {
 
   /**
-   * Encode void.
+   * Encodes the given value.
    *
-   * @param writer    the writer
-   * @param attribute the attribute
-   * @param value     the value
-   * @throws StructuredIOException the structured iO exception
+   * @param writer    the writer to write the encoding to
+   * @param attribute the attribute whose value is being encoded
+   * @param value     the value to encode
+   * @throws IOException something went wrong writing
    */
-  void encode(StructuredWriter writer, Attribute attribute, Object value) throws StructuredIOException;
+  void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException;
 
   /**
-   * Decode object.
+   * Decodes an attribute's value from the given reader.
    *
-   * @param reader    the reader
-   * @param attribute the attribute
-   * @return the object
-   * @throws StructuredIOException the structured iO exception
+   * @param reader    the reader to read from
+   * @param attribute the attribute whose value needs decoding
+   * @return the attribute's value
+   * @throws IOException something went wrong reading
    */
-  Object decode(StructuredReader reader, Attribute attribute) throws StructuredIOException;
+  Object decode(StructuredReader reader, Attribute attribute) throws IOException;
 
 }//END OF AttributeValueCodec

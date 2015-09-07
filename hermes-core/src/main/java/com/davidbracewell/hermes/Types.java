@@ -54,7 +54,6 @@ public final class Types {
   public static final AnnotationType PART_OF_SPEECH = AnnotationType.create("PART_OF_SPEECH");
 
 
-
   public static final AnnotationType TOKEN_TYPE_ENTITY = AnnotationType.create("TOKEN_TYPE_ENTITY");
 
 

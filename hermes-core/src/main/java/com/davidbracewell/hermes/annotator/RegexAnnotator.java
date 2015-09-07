@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 
 /**
  * The type Regex annotator.
+ *
  * @author David B. Bracewell
  */
 public class RegexAnnotator implements Annotator, Serializable {
@@ -45,7 +46,7 @@ public class RegexAnnotator implements Annotator, Serializable {
   /**
    * Instantiates a new Regex annotator.
    *
-   * @param regex the regex
+   * @param regex        the regex
    * @param providedType the provided type
    */
   public RegexAnnotator(@Nonnull String regex, AnnotationType providedType) {
@@ -58,6 +59,16 @@ public class RegexAnnotator implements Annotator, Serializable {
     }
     this.regex = Pattern.compile(regex);
     this.providedType = providedType;
+  }
+
+  /**
+   * Instantiates a new Regex annotator.
+   *
+   * @param regex        the regex
+   * @param providedType the provided type
+   */
+  public RegexAnnotator(@Nonnull String regex, String providedType) {
+    this(regex, AnnotationType.create(providedType));
   }
 
   @Override
@@ -75,8 +86,7 @@ public class RegexAnnotator implements Annotator, Serializable {
   }
 
   @Override
-  public Set<AnnotationType> requires() {
-    return Collections.emptySet();
+  public String getVersion() {
+    return  "(" + regex.pattern() + ")";
   }
-
 }//END OF RegexAnnotator

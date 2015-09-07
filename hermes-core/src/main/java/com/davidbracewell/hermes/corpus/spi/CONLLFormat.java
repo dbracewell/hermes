@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes.corpus.spi;
 
-import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
@@ -33,6 +32,7 @@ import com.google.common.collect.FluentIterable;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +41,8 @@ import java.util.List;
  * @author David B. Bracewell
  */
 @MetaInfServices(CorpusFormat.class)
-public class CONLLFormat extends FileBasedFormat {
+public class CONLLFormat extends FileBasedFormat implements Serializable {
+  private static final long serialVersionUID = 1L;
 
 
   public enum FieldType {
@@ -103,7 +104,7 @@ public class CONLLFormat extends FileBasedFormat {
     for (String line : resource) {
       if (StringUtils.isNullOrBlank(line)) {
         if (!rows.isEmpty()) {
-          documents.add(createDocument(rows, documentFactory.getDefaultLanguage()));
+          documents.add(createDocument(rows, documentFactory));
         }
         rows = new ArrayList<>();
       } else {
@@ -112,19 +113,19 @@ public class CONLLFormat extends FileBasedFormat {
     }
 
     if (!rows.isEmpty()) {
-      documents.add(createDocument(rows, documentFactory.getDefaultLanguage()));
+      documents.add(createDocument(rows, documentFactory));
     }
 
 
     return FluentIterable.from(documents);
   }
 
-  private Document createDocument(List<List<String>> rows, Language language) {
+  private Document createDocument(List<List<String>> rows, DocumentFactory documentFactory) {
     List<String> tokens = new ArrayList<>();
     for (List<String> wordInfo : rows) {
       tokens.add(wordInfo.get(wordIndex));
     }
-    Document document = Document.fromTokens(language, tokens);
+    Document document = documentFactory.fromTokens(tokens);
     document.createAnnotation(Types.SENTENCE, 0, document.length());
     document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "Corpus");
     for (FieldProcessor processor : processors) {

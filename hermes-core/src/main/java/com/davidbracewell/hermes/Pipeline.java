@@ -47,7 +47,7 @@ import java.util.logging.Level;
 public final class Pipeline implements Serializable {
 
   private static final Logger log = Logger.getLogger(Pipeline.class);
-  private static final String timestamp = DateUtils.US_STANDARD.format(new Date()) +"_" + DateFormat.getTimeInstance().format(new Date());
+  private static final String timestamp = DateUtils.US_STANDARD.format(new Date()) + "_" + DateFormat.getTimeInstance().format(new Date());
   private static final long serialVersionUID = 1L;
   private final AnnotationType[] annotationTypes;
   private final int numberOfThreads;
@@ -55,7 +55,6 @@ public final class Pipeline implements Serializable {
   private final Function<Document, ?> onComplete;
   private final int queueSize;
   private AtomicLong documentsProcessed = new AtomicLong();
-
 
 
   private Pipeline(int numberOfThreads, int queueSize, Function<Document, ?> onComplete, Collection<AnnotationType> annotationTypes) {
@@ -67,7 +66,7 @@ public final class Pipeline implements Serializable {
     this.onComplete = Preconditions.checkNotNull(onComplete);
   }
 
-  public long getElapsedTime(TimeUnit timeUnit){
+  public long getElapsedTime(TimeUnit timeUnit) {
     return timer.elapsed(timeUnit);
   }
 
@@ -118,7 +117,7 @@ public final class Pipeline implements Serializable {
 
       annotator.annotate(textDocument);
       for (AnnotationType type : annotator.provides()) {
-        textDocument.getAnnotationSet().setIsCompleted(type, true, annotator.getClass().getName() + "::" + timestamp);
+        textDocument.getAnnotationSet().setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
       }
 
     }

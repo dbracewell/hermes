@@ -23,7 +23,6 @@ package com.davidbracewell.hermes;
 
 import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * <p>Defines the needed methods for an object that has annotations. Annotations are marked up areas of text
@@ -43,13 +42,14 @@ public interface Annotated {
   Document document();
 
   /**
-   * First optional.
+   * Gets the first annotation overlapping this object with the given annotation type.
    *
-   * @param type the type
-   * @return the optional
+   * @param type the annotation type
+   * @return the first annotation of the given type overlapping this object or a detached empty annotation if there is
+   * none.
    */
-  default Optional<Annotation> first(AnnotationType type) {
-    return getOverlapping(type).stream().findFirst();
+  default Annotation first(AnnotationType type) {
+    return getOverlapping(type).stream().findFirst().orElse(Fragments.detachedEmptyAnnotation());
   }
 
   /**
@@ -86,49 +86,54 @@ public interface Annotated {
    */
   List<Annotation> getStartingHere(AnnotationType type);
 
+
   /**
-   * Last optional.
+   * Gets the last annotation overlapping this object with the given annotation type.
    *
-   * @param type the type
-   * @return the optional
+   * @param type the annotation type
+   * @return the last annotation of the given type overlapping this object or a detached empty annotation if there is
+   * none.
    */
-  default Optional<Annotation> last(@Nonnull AnnotationType type) {
+  default Annotation last(@Nonnull AnnotationType type) {
     List<Annotation> annotations = getOverlapping(type);
-    return annotations.isEmpty() ? Optional.empty() : Optional.of(annotations.get(annotations.size() - 1));
+    return annotations.isEmpty() ? Fragments.detachedEmptyAnnotation() : annotations.get(annotations.size() - 1);
   }
 
   /**
-   * Sentences list.
+   * Gets the sentences overlapping this object
    *
-   * @return the list
+   * @return the sentences overlapping this annotation.
    */
   default List<Annotation> sentences() {
     return getOverlapping(Types.SENTENCE);
   }
 
   /**
-   * Token at.
+   * <p>Gits the token at the given token index which is a relative offset from this object. For example, given the
+   * document with the following tokens:<pre>["the", "quick", "brown", "fox", "jumps", "over", "the", "lazy",
+   * "dog"]</pre> and this annotation spanning <pre>["quick", "brown", "fox"]</pre> "quick" would have a relative
+   * offset in this object of 0 and document offset of 1. </p>
    *
-   * @param tokenIndex the token index
-   * @return the annotation
+   * @param tokenIndex the token index relative to the tokens overlapping this object.
+   * @return the token annotation at the relative offset
    */
   default Annotation tokenAt(int tokenIndex) {
     return tokens().get(tokenIndex);
   }
 
   /**
-   * Token length.
+   * The length of the object in tokens
    *
-   * @return the int
+   * @return the number of tokens in this annotation
    */
   default int tokenLength() {
     return tokens().size();
   }
 
   /**
-   * Tokens list.
+   * Gets the tokens overlapping this object.
    *
-   * @return the list
+   * @return the tokens overlapping this annotation.
    */
   default List<Annotation> tokens() {
     return getOverlapping(Types.TOKEN);

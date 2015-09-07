@@ -48,17 +48,18 @@ import java.util.Collection;
  * <p>Type information is defined via configuration. An Example is as follows:</p>
  * <code>
  * Annotation{
- *  ENTITY {
- *    attributes = ENTITY_TYPE, CONFIDENCE
- *  }
- *  REGEX_ENTITY {
- *    parent = ENTITY
- *    annotator {
- *      ENGLISH = @{ENGLISH_ENTITY_REGEX}
- *      JAPANESE = @{JAPANESE_ENTITY_REGEX}
- *    }
- *    attributes = PATTERN
- *  }
+ * ENTITY {
+ * attributes = ENTITY_TYPE, CONFIDENCE
+ * }
+ * REGEX_ENTITY {
+ * parent = ENTITY
+ * annotator = @{DEFAULT_ENTITY_REGEX}
+ * annotator {
+ * ENGLISH = @{ENGLISH_ENTITY_REGEX}
+ * JAPANESE = @{JAPANESE_ENTITY_REGEX}
+ * }
+ * attributes = PATTERN
+ * }
  * }
  * </code>
  * <p>
@@ -76,6 +77,7 @@ import java.util.Collection;
  * counterparts. The gold standard version of annotation type can be easily obtained via the
  * {@link #goldStandardVersion()} method.
  * </p>
+ *
  * @author David B. Bracewell
  */
 public final class AnnotationType extends EnumValue {
@@ -88,9 +90,27 @@ public final class AnnotationType extends EnumValue {
    */
   public static AnnotationType ROOT = create("ROOT");
 
-
   private AnnotationType(String name) {
     super(name);
+  }
+
+  /**
+   * Creates a new Annotation Type or retrieves an already existing one for a given name
+   *
+   * @param name the name
+   * @return the annotation type
+   * @throws IllegalArgumentException name is invalid, or annotation type already exists with different parent
+   */
+  public static AnnotationType create(String name, @Nonnull AnnotationType parent) {
+    if (StringUtils.isNullOrBlank(name)) {
+      throw new IllegalArgumentException(name + " is invalid");
+    }
+    if (index.isDefined(name) && !index.valueOf(name).getParent().equals(parent)) {
+      throw new IllegalArgumentException("Attempting to register an existing annotation type with a different parent type.");
+    }
+    AnnotationType type = index.register(new AnnotationType(name));
+    Config.setProperty("Annotation." + type.nonGoldStandardVersion().name() + ".parent", parent.nonGoldStandardVersion().name());
+    return type;
   }
 
   /**
@@ -146,9 +166,9 @@ public final class AnnotationType extends EnumValue {
   }
 
   /**
-   * Gold standard version.
+   * Gets the gold standard version of this annotation type.
    *
-   * @return the annotation type
+   * @return the gold standard version of this annotation type
    */
   public AnnotationType goldStandardVersion() {
     if (isGoldStandard()) {
@@ -158,31 +178,32 @@ public final class AnnotationType extends EnumValue {
   }
 
   /**
-   * Non gold standard version.
+   * Gets the non-gold standard version.
    *
-   * @return the annotation type
+   * @return the non-gold standard version of this annotation type
    */
   public AnnotationType nonGoldStandardVersion() {
     if (isGoldStandard()) {
-      return AnnotationType.create("@" + name());
+      return AnnotationType.create(name().substring(1));
     }
     return this;
   }
 
   /**
-   * Is gold standard.
+   * Determines if this type represents a gold standard annotation.
    *
-   * @return the boolean
+   * @return True if this is a gold standard type, False otherwise
    */
   public boolean isGoldStandard() {
     return name().startsWith("@");
   }
 
   /**
-   * Gets annotator.
+   * Gets the annotator assocated with this type for a given language.
    *
-   * @param language the language
-   * @return the annotator
+   * @param language the language for which the annotator is needed.
+   * @return the annotator for this type and the given langauge
+   * @throws IllegalStateException If this type is a gold standard annotation.
    */
   public Annotator getAnnotator(@Nonnull Language language) {
     if (isGoldStandard()) {
@@ -193,11 +214,11 @@ public final class AnnotationType extends EnumValue {
   }
 
   /**
-   * Checks if this type is an instance of another type. Type B is an instance of Type A if A == B or A is in B's
-   * parent tree.
+   * <p>Checks if this type is an instance of another type. Type B is an instance of Type A if A == B, B is the gold
+   * standard version of A, or A is in B's parent tree.</p>
    *
-   * @param type the annotation type
-   * @return the boolean
+   * @param type the annotation type we are checking against
+   * @return True if this is an instance of the given type, False otherwise
    */
   public boolean isInstance(AnnotationType type) {
     if (type == null) {
@@ -212,7 +233,7 @@ public final class AnnotationType extends EnumValue {
       }
       parent = parent.getParent();
     }
-    return false;
+    return type.equals(ROOT);
   }
 
   private Object readResolve() throws ObjectStreamException {

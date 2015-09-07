@@ -72,6 +72,21 @@ public interface AttributedObject {
   Val putAttribute(Attribute attribute, Object value);
 
   /**
+   * Sets the value of an attribute if a value is not already set. Removes the attribute if the value is null and
+   * ignores setting a value if the attribute is null.
+   *
+   * @param attribute the attribute name
+   * @param value     the value
+   * @return The old value of the attribute or null
+   */
+  default Val putAttributeIfAbsent(Attribute attribute, Object value) {
+    if (hasAttribute(attribute)) {
+      return getAttribute(attribute);
+    }
+    return putAttribute(attribute, value);
+  }
+
+  /**
    * Sets all attributes in a given map.
    *
    * @param map the attribute-value map

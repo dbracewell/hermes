@@ -34,7 +34,7 @@ import java.util.Set;
 /**
  * @author David B. Bracewell
  */
-public class DefaultSentenceAnnotator implements Annotator, Serializable{
+public class DefaultSentenceAnnotator implements Annotator, Serializable {
   private static final long serialVersionUID = 1L;
 
   private static CharMatcher BAD_EOS = CharMatcher.INVISIBLE.and(CharMatcher.WHITESPACE).and(CharMatcher.BREAKING_WHITESPACE);
@@ -79,12 +79,9 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable{
 
   }
 
+  @Override
   public Set<AnnotationType> provides() {
     return Collections.singleton(Types.SENTENCE);
-  }
-
-  public Set<AnnotationType> requires() {
-    return Collections.emptySet();
   }
 
 

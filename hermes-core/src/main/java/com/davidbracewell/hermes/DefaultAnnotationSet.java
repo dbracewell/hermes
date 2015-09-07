@@ -135,7 +135,7 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
   @Override
   public void setIsCompleted(AnnotationType type, boolean isCompleted, String annotationProvider) {
     if (isCompleted) {
-      completed.put(type, annotationProvider);
+      completed.put(type, annotationProvider.replaceFirst("^com\\.davidbracewell\\.",""));
     } else {
       completed.remove(type);
     }

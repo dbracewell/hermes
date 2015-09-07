@@ -26,6 +26,7 @@ import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
@@ -40,230 +41,169 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * The interface H string.
+ * <p>
+ * Represents a java string on steroids. HStrings act as a <code>CharSequence</code> and have methods similar to those
+ * on <code>String</code>. Methods that do not modify the underlying string representation, e.g. substring, find, will
+ * return another HString whereas methods that modify the string, e.g. lower casing, return a String object.
+ * Additionally, HStrings have a span (i.e. start and end positions), attributes, and annotations. HStrings allow for
+ * methods to process documents, fragments, and annotations in a uniform fashion. Methods on the HString facilitate
+ * determining if the object is an annotation ({@link #isAnnotation()} or is a document ({@link #isDocument()}).
+ * </p>
  *
  * @author David B. Bracewell
  */
 public abstract class HString extends Span implements CharSequence, AttributedObject, Annotated {
   private static final long serialVersionUID = 1L;
 
-  public HString(int start, int end) {
+  /**
+   * Instantiates a new HString.
+   *
+   * @param start the starting char offset of the string
+   * @param end   the ending char offset of the string
+   */
+  HString(int start, int end) {
     super(start, end);
   }
 
+  /**
+   * Creates a new string by performing a union over the spans of two or more HStrings. The new HString will have a
+   * span that starts at the minimum starting position of the given strings and end at the maximum ending position of
+   * the given strings.
+   *
+   * @param first  the first HString
+   * @param second the second HString
+   * @param others the other HStrings to union
+   * @return A new HString representing the union over the spans of the given HStrings.
+   */
+  public static HString union(@Nonnull HString first, @Nonnull HString second, HString... others) {
+    Preconditions.checkArgument(first.document() == second.document(), "Cannot union strings from different documents");
+    Document owner = first.document();
+    int start = Math.min(first.start(), second.start());
+    int end = Math.max(first.end(), second.end());
+    if (others != null) {
+      for (HString hString : others) {
+        Preconditions.checkArgument(owner == hString.document(), "Cannot union strings from different documents");
+        start = Math.min(start, hString.start());
+        end = Math.max(end, hString.end());
+      }
+    }
+    return new Fragment(owner, start, end);
+  }
 
   /**
-   * Content equal.
+   * Determines if the content of this HString equals the given char sequence.
    *
-   * @param content the content
-   * @return the boolean
+   * @param content the content to check for equality
+   * @return True if equals, False otherwise
    */
   public boolean contentEqual(CharSequence content) {
     return toString().contentEquals(content);
   }
 
   /**
-   * Content equal ignore case.
+   * Determines if the content of this HString equals the given char sequence ignoring case.
    *
-   * @param content the content
-   * @return the boolean
+   * @param content the content to check for equality
+   * @return True if equals, False otherwise
    */
   public boolean contentEqualIgnoreCase(String content) {
     return toString().equalsIgnoreCase(content);
   }
 
   /**
-   * Ends with.
+   * Counts the string version of the given annotation types.
    *
-   * @param suffix the suffix
-   * @return the boolean
+   * @param type the annotation type to count
+   * @return A counter whose key is the content of the annotations of the given type
+   */
+  public Counter<String> count(AnnotationType type) {
+    return count(type, Object::toString);
+  }
+
+  /**
+   * Counts the string version of the given annotation types. Strings are constructed using the provided function.
+   *
+   * @param type      the annotation type to count
+   * @param transform the function to transform the annotation into a string
+   * @return A counter whose key is the content of the annotations of the given type
+   */
+  public Counter<String> count(AnnotationType type, @Nonnull Function<? super Annotation, String> transform) {
+    return count(type, a -> true, transform);
+  }
+
+  /**
+   * Counts the string version of the given annotation types that satisfy the given predicate. Strings are constructed
+   * using the provided function.
+   *
+   * @param type      the annotation type to count
+   * @param predicate the predicate to test annotations against.
+   * @param transform the function to transform the annotation into a string
+   * @return A counter whose key is the content of the annotations of the given type
+   */
+  public Counter<String> count(AnnotationType type, @Nonnull Predicate<? super Annotation> predicate, @Nonnull Function<? super Annotation, String> transform) {
+    return Counters.newHashMapCounter(getOverlapping(type).stream()
+            .filter(predicate)
+            .map(transform)
+            .collect(Collectors.toList())
+    );
+  }
+
+  /**
+   * Counts the lemmatized version of the given annotation types.
+   *
+   * @param type the annotation type to count
+   * @return A counter whose key is the lemmatized content of the annotations of the given type
+   */
+  public Counter<String> countLemmas(AnnotationType type) {
+    return count(type, HString::getLemma);
+  }
+
+  /**
+   * Determines if this HString ends with the given suffix.
+   *
+   * @param suffix the suffix to check
+   * @return True ends with the given suffix, False otherwise
    */
   public boolean endsWith(String suffix) {
     return toString().endsWith(suffix);
   }
 
   /**
-   * Find h string.
+   * Finds the given text in this HString starting from the beginning of this HString
    *
-   * @param text the text
-   * @return the h string
+   * @param text the text to search for
+   * @return the HString for the match or empty if no match is found.
    */
   public HString find(String text) {
     return find(text, 0);
   }
 
   /**
-   * Find h string.
+   * Finds the given text in this HString starting from the given start index of this HString
    *
-   * @param text  the text
-   * @param start the start
-   * @return the h string
+   * @param text  the text to search for
+   * @param start the index to start the search from
+   * @return the HString for the match or empty if no match is found.
    */
   public HString find(@Nonnull String text, int start) {
     Preconditions.checkPositionIndex(start, length());
     int pos = indexOf(text, start);
     if (pos == -1) {
-      return Fragments.empty(this);
+      return Fragments.empty(document());
     }
     return new Fragment(document(), start() + pos, start() + text.length());
   }
 
-  /**
-   * Index of.
-   *
-   * @param text the text
-   * @return the int
-   */
-  public int indexOf(String text) {
-    return indexOf(text, 0);
-  }
-
-  /**
-   * Index of.
-   *
-   * @param text  the text
-   * @param start the start
-   * @return the int
-   */
-  public int indexOf(String text, int start) {
-    Preconditions.checkPositionIndex(start, length());
-    return text == null ? -1 : toString().indexOf(text, start);
-  }
-
-  /**
-   * Is this fragment an annotation?
-   *
-   * @return True if this fragment represents an annotation
-   */
-  public boolean isAnnotation() {
-    return false;
-  }
-
-  /**
-   * Is this fragment a document?
-   *
-   * @return True if this fragment represents a document
-   */
-  public boolean isDocument() {
-    return false;
-  }
-
-  /**
-   * Returns true this fragment is an instance of the given annotation type
-   *
-   * @param type the annotation type
-   * @return True if this fragment is an annotation of the given type
-   */
-  public boolean isInstance(AnnotationType type) {
-    return false;
-  }
-
-  /**
-   * Matches boolean.
-   *
-   * @param regex the regex
-   * @return the boolean
-   */
-  public boolean matches(String regex) {
-    if (regex != null) {
-      return toString().matches(regex);
-    }
-    return false;
-  }
-
-  /**
-   * Starts with.
-   *
-   * @param prefix the prefix
-   * @return the boolean
-   */
-  public boolean startsWith(String prefix) {
-    return toString().startsWith(prefix);
-  }
-
-  public Matcher matcher(String pattern) {
-    return Pattern.compile(pattern).matcher(this);
-  }
-
-  public Matcher matcher(@Nonnull Pattern pattern) {
-    return pattern.matcher(this);
-  }
-
-
   @Override
-  public CharSequence subSequence(int start, int end) {
-    return toString().subSequence(start, end);
-  }
-
-  /**
-   * Sub string.
-   *
-   * @param relativeStart the start
-   * @param relativeEnd   the end
-   * @return the h string
-   */
-  public HString substring(int relativeStart, int relativeEnd) {
-    Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
-    return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
-  }
-
-  /**
-   * Gets the language of the fragment.
-   *
-   * @return The language of the fragment
-   */
-  public Language getLanguage() {
-    if (hasAttribute(Attrs.LANGUAGE)) {
-      return getAttribute(Attrs.LANGUAGE).as(Language.class);
+  public Val getAttribute(Attribute attribute) {
+    if (attribute == null) {
+      return Val.NULL;
     }
-    if (document() == null) {
-      return Language.UNKNOWN;
+    if (getAttributeMap().containsKey(attribute)) {
+      return getAttributeMap().get(attribute);
     }
-    return document().getLanguage();
+    return getAttributeMap().get(attribute.goldStandardVersion());
   }
-
-  /**
-   * Sets the language of the fragment
-   *
-   * @param language The language of the fragment.
-   */
-  public void setLanguage(Language language) {
-    putAttribute(Attrs.LANGUAGE, language);
-  }
-
-
-  @Override
-  public List<Annotation> getStartingHere(AnnotationType type) {
-    if (document() != null && type != null) {
-      return document().getStartingAt(type, start());
-    }
-    return Collections.emptyList();
-  }
-
-  @Override
-  public List<Annotation> getOverlapping(AnnotationType type) {
-    if (document() != null && type != null) {
-      return document().getOverlapping(type, this);
-    }
-    return Collections.emptyList();
-  }
-
-  @Override
-  public List<Annotation> getDuring(AnnotationType type) {
-    if (document() != null && type != null) {
-      return document().getDuring(type, this);
-    }
-    return Collections.emptyList();
-  }
-
-  @Override
-  public List<Annotation> getContaining(AnnotationType type) {
-    if (document() != null && type != null) {
-      return document().getContaining(type, this);
-    }
-    return Collections.emptyList();
-  }
-
 
   /**
    * Exposes the underlying attributes as a Map
@@ -278,19 +218,147 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   @Override
-  public boolean hasAttribute(Attribute attribute) {
-    return getAttributeMap().containsKey(attribute);
+  public List<Annotation> getContaining(AnnotationType type) {
+    if (document() != null && type != null) {
+      return document().getContaining(type, this);
+    }
+    return Collections.emptyList();
   }
 
   @Override
-  public Val getAttribute(Attribute attribute) {
-    if (attribute == null) {
-      return Val.NULL;
+  public List<Annotation> getDuring(AnnotationType type) {
+    if (document() != null && type != null) {
+      return document().getDuring(type, this);
     }
-    if (getAttributeMap().containsKey(attribute)) {
-      return getAttributeMap().get(attribute);
+    return Collections.emptyList();
+  }
+
+  /**
+   * Gets the language of the HString. If no language is set for this HString, the language of document will be
+   * returned. In the event that this HString is not associated with a document, the default language will be returned.
+   *
+   * @return The language of the HString
+   */
+  public Language getLanguage() {
+    if (hasAttribute(Attrs.LANGUAGE)) {
+      return getAttribute(Attrs.LANGUAGE).as(Language.class);
     }
-    return getAttributeMap().get(attribute.goldStandardVersion());
+    if (document() == null) {
+      return Hermes.defaultLanguage();
+    }
+    return document().getLanguage();
+  }
+
+  /**
+   * Sets the language of the HString
+   *
+   * @param language The language of the HString.
+   */
+  public void setLanguage(Language language) {
+    putAttribute(Attrs.LANGUAGE, language);
+  }
+
+  /**
+   * Gets the lemmatized version of this HString.
+   *
+   * @return the lemmatized version of this HString
+   */
+  public String getLemma() {
+    if (hasAttribute(Attrs.LEMMA)) {
+      return getAttribute(Attrs.LEMMA).asString();
+    }
+    return toLowerCase();
+  }
+
+  @Override
+  public List<Annotation> getOverlapping(AnnotationType type) {
+    if (document() != null && type != null) {
+      return document().getOverlapping(type, this);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<Annotation> getStartingHere(AnnotationType type) {
+    if (document() != null && type != null) {
+      return document().getStartingAt(type, start());
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public boolean hasAttribute(Attribute attribute) {
+    return getAttributeMap().containsKey(attribute) ||
+        getAttributeMap().containsKey(attribute.goldStandardVersion());
+  }
+
+  /**
+   * @see String#indexOf(String)
+   */
+  public int indexOf(String text) {
+    return indexOf(text, 0);
+  }
+
+  /**
+   * @see String#indexOf(String, int)
+   */
+  public int indexOf(String text, int start) {
+    return toString().indexOf(text, start);
+  }
+
+  /**
+   * Is this HString an annotation?
+   *
+   * @return True if this HString represents an annotation
+   */
+  public boolean isAnnotation() {
+    return false;
+  }
+
+  /**
+   * Is this HString a document?
+   *
+   * @return True if this HString represents a document
+   */
+  public boolean isDocument() {
+    return false;
+  }
+
+  /**
+   * Returns true this HString is an instance of the given annotation type
+   *
+   * @param type the annotation type
+   * @return True if this HString is an annotation of the given type
+   */
+  public boolean isInstance(AnnotationType type) {
+    return false;
+  }
+
+  /**
+   * Returns a regular expression matcher for the given pattern over this HString
+   *
+   * @param pattern the pattern to search for
+   * @return the matcher
+   */
+  public Matcher matcher(String pattern) {
+    return Pattern.compile(pattern).matcher(this);
+  }
+
+  /**
+   * Returns a regular expression matcher for the given pattern over this HString
+   *
+   * @param pattern the pattern to search for
+   * @return the matcher
+   */
+  public Matcher matcher(@Nonnull Pattern pattern) {
+    return pattern.matcher(this);
+  }
+
+  /**
+   * @see String#matches(String)
+   */
+  public boolean matches(String regex) {
+    return toString().matches(regex);
   }
 
   @Override
@@ -310,66 +378,140 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return getAttributeMap().remove(attribute);
   }
 
-
-  public String getLemma() {
-    if (hasAttribute(Attrs.LEMMA)) {
-      return getAttribute(Attrs.LEMMA).asString();
-    }
-    return "";
+  /**
+   * @see String#replace(char, char)
+   */
+  public String replace(char oldChar, char newChar) {
+    return toString().replace(oldChar, newChar);
   }
 
-  public Counter<String> countLemmas(AnnotationType type) {
-    return count(type, HString::getLemma);
+  /**
+   * @see String#replace(CharSequence, CharSequence)
+   */
+  public String replace(String oldString, String newString) {
+    return toString().replace(oldString, newString);
   }
 
-  public Counter<String> count(AnnotationType type) {
-    return count(type, Object::toString);
+  /**
+   * @see String#replaceAll(String, String)
+   */
+  public String replaceAll(String regex, String replacement) {
+    return toString().replaceAll(regex, replacement);
   }
 
-  public Counter<String> count(AnnotationType type, @Nonnull Function<HString, String> transform) {
-    return count(type, a -> true, transform);
+  /**
+   * @see String#replaceFirst(String, String)
+   */
+  public String replaceFirst(String regex, String replacement) {
+    return toString().replaceFirst(regex, replacement);
   }
 
-  public Counter<String> count(AnnotationType type, @Nonnull Predicate<? super Annotation> predicate, @Nonnull Function<HString, String> transform) {
-    return Counters.newHashMapCounter(getOverlapping(type).stream()
-            .filter(predicate)
-            .map(transform)
-            .collect(Collectors.toList())
-    );
+  /**
+   * @see String#startsWith(String)
+   */
+  public boolean startsWith(String prefix) {
+    return toString().startsWith(prefix);
   }
 
+  @Override
+  public CharSequence subSequence(int start, int end) {
+    return toString().subSequence(start, end);
+  }
 
+  /**
+   * Sub string.
+   *
+   * @param relativeStart the start
+   * @param relativeEnd   the end
+   * @return the h string
+   */
+  public HString substring(int relativeStart, int relativeEnd) {
+    Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
+    return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
+  }
+
+  /**
+   * @see String#toLowerCase(java.util.Locale)
+   * NOTE: Uses locale associated with the HString's langauge
+   */
   public String toLowerCase() {
-    return toString().toLowerCase();
+    return toString().toLowerCase(getLanguage().asLocale());
   }
 
+  /**
+   * To pOS string.
+   *
+   * @return the string
+   */
+  public String toPOSString() {
+    return tokens().stream()
+        .map(t -> t.toString() + "/" + t.getAttribute(Attrs.PART_OF_SPEECH).as(POS.class).asString())
+        .reduce("", (x, y) -> x + " " + y);
+  }
+
+  /**
+   * @see String#toUpperCase(java.util.Locale)
+   * NOTE: Uses locale associated with the HString's langauge
+   */
   public String toUpperCase() {
-    return toString().toUpperCase();
+    return toString().toUpperCase(getLanguage().asLocale());
   }
 
-
-  public static HString union(@Nonnull HString first, @Nonnull HString second, HString... others) {
-    Preconditions.checkArgument(first.document() == second.document(), "Cannot union strings from different documents");
-    Document owner = first.document();
-    int start = Math.min(first.start(), second.start());
-    int end = Math.max(first.end(), second.end());
-    if (others != null) {
-      for (HString hString : others) {
-        Preconditions.checkArgument(owner == hString.document(), "Cannot union strings from different documents");
-        start = Math.min(start, hString.start());
-        end = Math.max(end, hString.end());
-      }
-    }
-    return new Fragment(owner, start, end);
-  }
-
+  /**
+   * Creates a new string by performing a union over the spans of this HString and at least one more HString. The new
+   * HString will have a span that starts at the minimum starting position of the given strings and end at the maximum
+   * ending position of the given strings.
+   *
+   * @param other    the HString to union with
+   * @param evenMore the other HStrings to union
+   * @return A new HString representing the union over the spans of the given HStrings.
+   */
   public HString union(@Nonnull HString other, HString... evenMore) {
     return HString.union(this, other, evenMore);
   }
 
-  public String toPOSString() {
-    return tokens().stream().map(t -> t.toString() + "/" + t.getAttribute(Attrs.PART_OF_SPEECH).as(POS.class).asString())
-        .reduce("", (x, y) -> x + " " + y);
+  @Override
+  public String toString() {
+    if (document() == null) {
+      return StringUtils.EMPTY;
+    }
+    return document().toString().substring(start(), end());
+  }
+
+  @Override
+  public final boolean equals(Object other) {
+    return super.equals(other);
+  }
+
+  @Override
+  public final int hashCode() {
+    return super.hashCode();
+  }
+
+  /**
+   * Checks if this HString overlaps with the given other.
+   *
+   * @param other The other HString
+   * @return True of this one overlaps with the given other.
+   */
+  public final boolean overlaps(HString other) {
+    if (other == null) {
+      return false;
+    }
+    return (document() == other.document()) && super.overlaps(other);
+  }
+
+  /**
+   * Checks if this HString encloses the given other.
+   *
+   * @param other The other HString
+   * @return True of this one encloses the given other.
+   */
+  public final boolean encloses(HString other) {
+    if (other == null) {
+      return false;
+    }
+    return (document() == other.document()) && super.encloses(other);
   }
 
 }//END OF HString

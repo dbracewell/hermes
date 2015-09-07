@@ -19,28 +19,34 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes;
+package com.davidbracewell.hermes.corpus.spi;
 
-import com.davidbracewell.Language;
-import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.corpus.CorpusFormat;
+import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.io.structured.StructuredFormat;
+import org.kohsuke.MetaInfServices;
 
-import java.util.Locale;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Collections;
 
 /**
- * <p>Convenience methods for getting common configuration options. </p>
- *
  * @author David B. Bracewell
  */
-public interface Hermes {
+@MetaInfServices(CorpusFormat.class)
+public class XMLFormat extends FileBasedFormat implements Serializable {
+  private static final long serialVersionUID = 1L;
 
-  /**
-   * Get the default language. The default language is specified using <code>hermes.DefaultLanguage</code>. If the
-   * configuration option is not set, it will default to the language matching the system locale.
-   *
-   * @return the default language
-   */
-  static Language defaultLanguage() {
-    return Config.get("hermes.DefaultLanguage").as(Language.class, Language.fromLocale(Locale.getDefault()));
+  @Override
+  public String name() {
+    return "XML";
   }
 
-}//END OF Hermes
+  @Override
+  protected Iterable<Document> readResource(Resource resource, DocumentFactory documentFactory) throws IOException {
+    return Collections.singleton(Document.read(StructuredFormat.XML, resource));
+  }
+
+}//END OF XMLFormat

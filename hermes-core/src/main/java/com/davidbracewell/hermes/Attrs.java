@@ -22,75 +22,82 @@
 package com.davidbracewell.hermes;
 
 /**
+ * Commonly used Attribute types
+ *
  * @author David B. Bracewell
  */
-public final class Attrs {
-
-  /**
-   * Confidence value associated with an annotation
-   */
-  public static final Attribute CONFIDENCE = Attribute.create("CONFIDENCE");
-  /**
-   * The lemma version of a span
-   */
-  public static final Attribute LEMMA = Attribute.create("LEMMA");
-  /**
-   * The tag associated with a span
-   */
-  public static final Attribute TAG = Attribute.create("TAG");
-  /**
-   * The type of token
-   */
-  public static final Attribute TOKEN_TYPE = Attribute.create("TOKEN_TYPE");
-  /**
-   * The index of a span with regards to a document
-   */
-  public static final Attribute INDEX = Attribute.create("INDEX");
-  /**
-   * The part-of-speech assocaited with a span
-   */
-  public static final Attribute PART_OF_SPEECH = Attribute.create("PART_OF_SPEECH");
-  /**
-   * The Language assocaited with a span
-   */
-  public static final Attribute LANGUAGE = Attribute.create("LANGUAGE");
+public interface Attrs {
   /**
    * Document author
    */
-  public static final Attribute COLLECTION = Attribute.create("COLLECTION");
-  /**
-   * Document author
-   */
-  public static final Attribute AUTHOR = Attribute.create("AUTHOR");
+  Attribute AUTHOR = Attribute.create("AUTHOR");
   /**
    * Document CATEGORY
    */
-  public static final Attribute CATEGORY = Attribute.create("CATEGORY");
+  Attribute CATEGORY = Attribute.create("CATEGORY");
   /**
-   * Document keywords
+   * Document author
    */
-  public static final Attribute KEYPHRASES = Attribute.create("KEYPHRASES");
+  Attribute COLLECTION = Attribute.create("COLLECTION");
   /**
-   * Publication date of document
+   * Confidence value associated with an annotation
    */
-  public static final Attribute PUBLICATION_DATE = Attribute.create("PUBLICATION_DATE");
+  Attribute CONFIDENCE = Attribute.create("CONFIDENCE");
   /**
-   * Document source
+   * The constant DEPENDENCY_RELATION.
    */
-  public static final Attribute SOURCE = Attribute.create("SOURCE");
+  Attribute DEPENDENCY_RELATION = Attribute.create("DEPENDENCY_RELATION");
   /**
-   * Document title
+   * The constant ENTITY_TYPE.
    */
-  public static final Attribute TITLE = Attribute.create("TITLE");
+  Attribute ENTITY_TYPE = Attribute.create("ENTITY_TYPE");
   /**
    * File used to create the document
    */
-  public static final Attribute FILE = Attribute.create("FILE");
-
-  public static final Attribute PARENT = Attribute.create("PARENT");
-
-  public static final Attribute DEPENDENCY_RELATION = Attribute.create("DEPENDENCY_RELATION");
-
-  public static final Attribute ENTITY_TYPE = Attribute.create("ENTITY_TYPE");
+  Attribute FILE = Attribute.create("FILE");
+  /**
+   * The index of a span with regards to a document
+   */
+  Attribute INDEX = Attribute.create("INDEX");
+  /**
+   * Document keywords
+   */
+  Attribute KEYPHRASES = Attribute.create("KEYPHRASES");
+  /**
+   * The Language assocaited with a span
+   */
+  Attribute LANGUAGE = Attribute.create("LANGUAGE");
+  /**
+   * The lemma version of a span
+   */
+  Attribute LEMMA = Attribute.create("LEMMA");
+  /**
+   * The constant PARENT.
+   */
+  Attribute PARENT = Attribute.create("PARENT");
+  /**
+   * The part-of-speech assocaited with a span
+   */
+  Attribute PART_OF_SPEECH = Attribute.create("PART_OF_SPEECH");
+  /**
+   * Publication date of document
+   */
+  Attribute PUBLICATION_DATE = Attribute.create("PUBLICATION_DATE");
+  /**
+   * Document source
+   */
+  Attribute SOURCE = Attribute.create("SOURCE");
+  /**
+   * The tag associated with a span
+   */
+  Attribute TAG = Attribute.create("TAG");
+  /**
+   * Document title
+   */
+  Attribute TITLE = Attribute.create("TITLE");
+  /**
+   * The type of token
+   */
+  Attribute TOKEN_TYPE = Attribute.create("TOKEN_TYPE");
 
 }//END OF Attrs

@@ -34,6 +34,7 @@ import lombok.NonNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -42,7 +43,8 @@ import java.util.Queue;
 /**
  * @author David B. Bracewell
  */
-public class OnePerLineFormat implements CorpusFormat {
+public class OnePerLineFormat implements CorpusFormat, Serializable {
+  private static final long serialVersionUID = 1L;
 
   final CorpusFormat subFormat;
 

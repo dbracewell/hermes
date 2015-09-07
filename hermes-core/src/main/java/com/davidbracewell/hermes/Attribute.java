@@ -28,7 +28,6 @@ import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.io.structured.ElementType;
-import com.davidbracewell.io.structured.StructuredIOException;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.reflection.ValueType;
@@ -47,7 +46,7 @@ import java.util.*;
  * the {@link #create(String, Class)} static methods. The value type of an attribute is either defined via the create
  * method or via a config parameter using a value type (see {@link ValueType} for information of defining the type).
  * Attributes that do not have a defined type default to being Strings. An attribute can define a custom codec ({@link
- * AttributeValueCodec}) for encoding and decoding its value using  the <code>codec</code> property, e.g.
+ * AttributeValueCodec}*) for encoding and decoding its value using  the <code>codec</code> property, e.g.
  * <code>Attribute.NAME.codec=fully.qualified.codec.name</code>.  Note that the <code>Attribute</code> class only
  * represents the name and type of an attribute.
  * </p>
@@ -74,12 +73,15 @@ public class Attribute extends EnumValue {
     super(name);
   }
 
+
   /**
-   * Create attribute.
+   * Creates a new  attribute with the given name and value type
    *
-   * @param name      the name
-   * @param valueType the value type
+   * @param name      the name of the attribute
+   * @param valueType the type of attribute's value
    * @return the attribute
+   * @throws IllegalArgumentException If the name is invalid or an attribute exists with this name, but a differenty
+   *                                  value type.
    */
   public static Attribute create(String name, @Nonnull Class<?> valueType) {
     if (StringUtils.isNullOrBlank(name)) {
@@ -97,10 +99,11 @@ public class Attribute extends EnumValue {
   }
 
   /**
-   * Creates a new feature name.
+   * Creates an attribute with the given name.
    *
-   * @param name the name
-   * @return the feature name
+   * @param name the name of the attribute
+   * @return the attribute
+   * @throws IllegalArgumentException If the name is invalid
    */
   public static Attribute create(String name) {
     if (StringUtils.isNullOrBlank(name)) {
@@ -119,7 +122,7 @@ public class Attribute extends EnumValue {
     return index.isDefined(name);
   }
 
-  static Tuple2<Attribute, Val> read(StructuredReader reader) throws StructuredIOException {
+  static Tuple2<Attribute, Val> read(StructuredReader reader) throws IOException {
 
     Attribute attribute;
     Object value;
@@ -171,7 +174,6 @@ public class Attribute extends EnumValue {
     while (reader.peek() != ElementType.END_OBJECT) {
       Collect.put(attributeValMap, read(reader));
     }
-    reader.endObject();
     return attributeValMap;
   }
 
@@ -180,6 +182,7 @@ public class Attribute extends EnumValue {
    *
    * @param name the name as a string
    * @return the attribute for the string
+   * @throws IllegalArgumentException if the name is not a valid attribute
    */
   public static Attribute valueOf(String name) {
     return index.valueOf(name);
@@ -206,7 +209,7 @@ public class Attribute extends EnumValue {
   }
 
   private Optional<AttributeValueCodec> getCodec() {
-    return Optional.ofNullable(Config.get("Attribute", name(), "codec").as(AttributeValueCodec.class));
+    return Optional.ofNullable(Config.get("Attribute", nonGoldStandardVersion().name(), "codec").as(AttributeValueCodec.class));
   }
 
   /**
@@ -216,16 +219,13 @@ public class Attribute extends EnumValue {
    * @return The class associated with this attributes values
    */
   public ValueType getValueType() {
-    if (isGoldStandard()) {
-      return ValueType.fromConfig("Attribute" + "." + name().substring(1));
-    }
-    return ValueType.fromConfig("Attribute" + "." + name());
+    return ValueType.fromConfig("Attribute" + "." + nonGoldStandardVersion().name());
   }
 
   /**
-   * Gold standard version.
+   * Get the gold standard version of this attribute.
    *
-   * @return the attribute
+   * @return the gold standard version of this attribute
    */
   public Attribute goldStandardVersion() {
     if (isGoldStandard()) {
@@ -235,12 +235,24 @@ public class Attribute extends EnumValue {
   }
 
   /**
-   * Is gold standard.
+   * Determines if this attribute is a gold standard.
    *
-   * @return the boolean
+   * @return True if this is a gold standard attribute, False otherwise
    */
   public boolean isGoldStandard() {
     return name().startsWith("@");
+  }
+
+  /**
+   * Gets the non-gold standard version.
+   *
+   * @return the non-gold standard version of this attribute
+   */
+  public Attribute nonGoldStandardVersion() {
+    if (isGoldStandard()) {
+      return Attribute.create(name().substring(1));
+    }
+    return this;
   }
 
   private Object readResolve() throws ObjectStreamException {
@@ -250,7 +262,7 @@ public class Attribute extends EnumValue {
     return this;
   }
 
-  void write(StructuredWriter writer, Object val) throws StructuredIOException {
+  void write(StructuredWriter writer, Object val) throws IOException {
     ValueType valueType = getValueType();
     Optional<AttributeValueCodec> encoder = getCodec();
     Val wrapped = Val.of(val);
