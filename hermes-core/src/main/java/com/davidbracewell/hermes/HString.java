@@ -25,6 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
 import com.davidbracewell.conversion.Val;
+import com.davidbracewell.hermes.tag.POS;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
@@ -364,6 +365,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
 
   public HString union(@Nonnull HString other, HString... evenMore) {
     return HString.union(this, other, evenMore);
+  }
+
+  public String toPOSString() {
+    return tokens().stream().map(t -> t.toString() + "/" + t.getAttribute(Attrs.PART_OF_SPEECH).as(POS.class).asString())
+        .reduce("", (x, y) -> x + " " + y);
   }
 
 }//END OF HString

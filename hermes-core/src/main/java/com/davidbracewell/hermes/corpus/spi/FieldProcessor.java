@@ -19,29 +19,17 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.corpus;
+package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.io.resource.Resource;
 
-import java.io.IOException;
+import java.util.List;
 
 /**
  * @author David B. Bracewell
  */
-public interface CorpusFormat {
+public interface FieldProcessor {
 
-  String JSON = "JSON";
-  String CONLL = "CONLL";
-  String PLAIN_TEXT = "TEXT";
+  void process(Document document, List<List<String>> rows);
 
-  String JSON_OPL = "JSON_OPL";
-  String PLAIN_TEXT_OPL = "TEXT_OPL";
-
-
-  Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException;
-
-  String name();
-
-}//END OF CorpusFormat
+}//END OF FieldProcessor

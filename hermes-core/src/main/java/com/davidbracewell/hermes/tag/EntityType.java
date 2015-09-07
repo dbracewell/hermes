@@ -86,7 +86,7 @@ public enum EntityType implements Tag {
 
   private final EntityType parent;
 
-  private EntityType(EntityType parent) {
+  EntityType(EntityType parent) {
     this.parent = parent;
   }
 

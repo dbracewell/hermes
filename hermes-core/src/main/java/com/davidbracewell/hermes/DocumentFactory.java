@@ -95,7 +95,7 @@ public class DocumentFactory {
   /**
    * Create document.
    *
-   * @param id      the id
+   * @param id the id
    * @param content the content
    * @return the document
    */
@@ -106,7 +106,7 @@ public class DocumentFactory {
   /**
    * Create document.
    *
-   * @param content  the content
+   * @param content the content
    * @param language the language
    * @return the document
    */
@@ -117,8 +117,8 @@ public class DocumentFactory {
   /**
    * Create document.
    *
-   * @param id       the id
-   * @param content  the content
+   * @param id the id
+   * @param content the content
    * @param language the language
    * @return the document
    */
@@ -129,8 +129,8 @@ public class DocumentFactory {
   /**
    * Create document.
    *
-   * @param content      the content
-   * @param language     the language
+   * @param content the content
+   * @param language the language
    * @param attributeMap the attribute map
    * @return the document
    */
@@ -141,9 +141,9 @@ public class DocumentFactory {
   /**
    * Create document.
    *
-   * @param id           the id
-   * @param content      the content
-   * @param language     the language
+   * @param id the id
+   * @param content the content
+   * @param language the language
    * @param attributeMap the attribute map
    * @return the document
    */
@@ -202,5 +202,15 @@ public class DocumentFactory {
     }
 
   }//END OF DocumentFactory$Builder
+
+
+  /**
+   * Gets default language.
+   *
+   * @return the default language
+   */
+  public Language getDefaultLanguage() {
+    return defaultLanguage;
+  }
 
 }//END OF DocumentFactory

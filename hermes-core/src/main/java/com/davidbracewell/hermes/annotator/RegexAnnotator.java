@@ -34,6 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * The type Regex annotator.
  * @author David B. Bracewell
  */
 public class RegexAnnotator implements Annotator, Serializable {
@@ -41,6 +42,12 @@ public class RegexAnnotator implements Annotator, Serializable {
   private final Pattern regex;
   private final AnnotationType providedType;
 
+  /**
+   * Instantiates a new Regex annotator.
+   *
+   * @param regex the regex
+   * @param providedType the provided type
+   */
   public RegexAnnotator(@Nonnull String regex, AnnotationType providedType) {
     regex = StringUtils.trim(regex);
     if (!regex.startsWith("\\b")) {

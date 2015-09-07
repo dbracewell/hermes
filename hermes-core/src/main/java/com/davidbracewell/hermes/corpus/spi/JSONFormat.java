@@ -36,7 +36,7 @@ import java.util.Collections;
  * @author David B. Bracewell
  */
 @MetaInfServices(CorpusFormat.class)
-public class JSONDocumentFormat extends FileBasedFormat {
+public class JSONFormat extends FileBasedFormat {
 
   @Override
   public String name() {
@@ -48,4 +48,4 @@ public class JSONDocumentFormat extends FileBasedFormat {
     return Collections.singleton(Document.fromJson(resource));
   }
 
-}//END OF JSONDocumentFormat
+}//END OF JSONFormat

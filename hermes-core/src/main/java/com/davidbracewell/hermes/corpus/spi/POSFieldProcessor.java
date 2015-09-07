@@ -21,30 +21,27 @@
 
 package com.davidbracewell.hermes.corpus.spi;
 
+import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.corpus.CorpusFormat;
-import com.davidbracewell.io.resource.Resource;
-import org.kohsuke.MetaInfServices;
+import com.davidbracewell.hermes.tag.POS;
 
-import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 /**
- * <p>Processor for plain text documents.</p>
- *
  * @author David B. Bracewell
  */
-@MetaInfServices(CorpusFormat.class)
-public class PlainTextDocumentFormat extends FileBasedFormat {
+public class POSFieldProcessor implements FieldProcessor {
 
-  @Override
-  public String name() {
-    return "TEXT";
+  private final int index;
+
+  public POSFieldProcessor(int index) {
+    this.index = index;
   }
 
   @Override
-  protected Iterable<Document> readResource(Resource resource, DocumentFactory documentFactory) throws IOException {
-    return Collections.singleton(documentFactory.create(resource.readToString().trim()));
+  public void process(Document document, List<List<String>> rows) {
+    for (int i = 0; i < rows.size(); i++) {
+      document.tokenAt(i).putAttribute(Attrs.PART_OF_SPEECH.goldStandardVersion(), POS.fromString(rows.get(i).get(index)));
+    }
   }
-}//END OF PlainTextDocumentProcessor
+}//END OF POSFieldProcessor

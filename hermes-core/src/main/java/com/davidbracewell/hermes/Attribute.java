@@ -228,6 +228,9 @@ public class Attribute extends EnumValue {
    * @return the attribute
    */
   public Attribute goldStandardVersion() {
+    if (isGoldStandard()) {
+      return this;
+    }
     return Attribute.create("@" + name());
   }
 

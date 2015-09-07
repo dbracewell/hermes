@@ -19,29 +19,32 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.corpus;
+package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
+import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
+import java.util.Collections;
 
 /**
+ * <p>Processor for plain text documents.</p>
+ *
  * @author David B. Bracewell
  */
-public interface CorpusFormat {
+@MetaInfServices(CorpusFormat.class)
+public class PlainTextFormat extends FileBasedFormat {
 
-  String JSON = "JSON";
-  String CONLL = "CONLL";
-  String PLAIN_TEXT = "TEXT";
+  @Override
+  public String name() {
+    return "TEXT";
+  }
 
-  String JSON_OPL = "JSON_OPL";
-  String PLAIN_TEXT_OPL = "TEXT_OPL";
-
-
-  Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException;
-
-  String name();
-
-}//END OF CorpusFormat
+  @Override
+  protected Iterable<Document> readResource(Resource resource, DocumentFactory documentFactory) throws IOException {
+    return Collections.singleton(documentFactory.create(resource.readToString().trim()));
+  }
+}//END OF PlainTextFormat

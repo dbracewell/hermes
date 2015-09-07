@@ -181,7 +181,7 @@ public final class Annotation extends Fragment implements Serializable {
 
   @Override
   public boolean isInstance(AnnotationType type) {
-    return Objects.equals(type, this.annotationType);
+    return this.annotationType.isInstance(type);
   }
 
   /**

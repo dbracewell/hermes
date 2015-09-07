@@ -177,6 +177,7 @@ public class Document extends HString {
     return annotationSet.select(a -> a.isInstance(type));
   }
 
+
   @Override
   public List<Annotation> getContaining(AnnotationType type) {
     return getOverlapping(type);
