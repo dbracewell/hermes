@@ -197,6 +197,18 @@ public class Document extends HString {
     return createAnnotation(type, span.start(), span.end(), Collections.emptyMap());
   }
 
+  /**
+   * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
+   * has a unique id assigned.
+   *
+   * @param type the type of annotation
+   * @param span the span of the annotation
+   * @return the created annotation
+   */
+  public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull HString span) {
+    return createAnnotation(type, span.start(), span.end(), span.getAttributeMap());
+  }
+
 
   /**
    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and

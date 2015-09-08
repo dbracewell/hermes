@@ -1,0 +1,17 @@
+I am John.
+I am a student of St. Andrew’s High School.
+I am working in Microsoft Corporation.
+I am doing business.
+I am looking for a job.
+I am a housewife.
+He is my father.
+She is my mother.
+He is my elder brother.
+This is my younger brother.
+She is my elder sister.
+She is my younger sister.
+He is my grandfather.
+She is my grandmother.
+He is my neighbour.
+He is my classmate.
+He is my colleague. 

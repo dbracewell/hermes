@@ -24,6 +24,7 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Language;
 import com.davidbracewell.cache.Cache;
 import com.davidbracewell.cache.CacheManager;
+import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
 
@@ -43,6 +44,8 @@ public class AnnotatorCache {
   }
 
   /**
+   * Gets instance.
+   *
    * @return The instance of the <code>AnnotatorFactory</code>
    */
   public static AnnotatorCache getInstance() {
@@ -93,6 +96,19 @@ public class AnnotatorCache {
    */
   public void clear() {
     cache.clear();
+  }
+
+
+  /**
+   * Manually caches an annotator for an annotation type / language pair
+   *
+   * @param annotationType the annotation type
+   * @param language       the language
+   * @param annotator      the annotator
+   */
+  public void setAnnotator(@Nonnull AnnotationType annotationType, @Nonnull Language language, @Nonnull Annotator annotator) {
+    Preconditions.checkArgument(annotator.provides().contains(annotationType), "Attempting to register " + annotator.getClass().getName() + " for " + annotationType.name() + " which it does not provide");
+    cache.put(createKey(annotationType, language), annotator);
   }
 
 

@@ -90,6 +90,22 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return new Fragment(owner, start, end);
   }
 
+  public static HString union(@Nonnull Iterable<? extends  HString> strings) {
+    int start = Integer.MAX_VALUE;
+    int end = Integer.MIN_VALUE;
+    Document owner = null;
+    for (HString hString : strings) {
+      if (owner == null && hString.document() != null) {
+        owner = hString.document();
+      } else if (hString.document() == null || owner != hString.document()) {
+        throw new IllegalArgumentException("Cannot union strings from different documents");
+      }
+      start = Math.min(start, hString.start());
+      end = Math.max(end, hString.end());
+    }
+    return new Fragment(owner, start, end);
+  }
+
   /**
    * Determines if the content of this HString equals the given char sequence.
    *

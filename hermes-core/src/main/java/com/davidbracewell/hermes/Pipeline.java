@@ -21,18 +21,20 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.DateUtils;
+import com.davidbracewell.Language;
 import com.davidbracewell.concurrent.Broker;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.logging.Logger;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.text.DateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -47,17 +49,17 @@ import java.util.logging.Level;
 public final class Pipeline implements Serializable {
 
   private static final Logger log = Logger.getLogger(Pipeline.class);
-  private static final String timestamp = DateUtils.US_STANDARD.format(new Date()) + "_" + DateFormat.getTimeInstance().format(new Date());
   private static final long serialVersionUID = 1L;
   private final AnnotationType[] annotationTypes;
   private final int numberOfThreads;
+  private long totalTime;
   private final Stopwatch timer = Stopwatch.createUnstarted();
-  private final Function<Document, ?> onComplete;
+  private final java.util.function.Consumer<Document> onComplete;
   private final int queueSize;
   private AtomicLong documentsProcessed = new AtomicLong();
 
 
-  private Pipeline(int numberOfThreads, int queueSize, Function<Document, ?> onComplete, Collection<AnnotationType> annotationTypes) {
+  private Pipeline(int numberOfThreads, int queueSize, java.util.function.Consumer<Document> onComplete, Collection<AnnotationType> annotationTypes) {
     Preconditions.checkArgument(numberOfThreads > 0, "Number of threads must be > 0");
     Preconditions.checkArgument(queueSize > 0, "Queue size must be > 0");
     this.queueSize = queueSize;
@@ -66,8 +68,8 @@ public final class Pipeline implements Serializable {
     this.onComplete = Preconditions.checkNotNull(onComplete);
   }
 
-  public long getElapsedTime(TimeUnit timeUnit) {
-    return timer.elapsed(timeUnit);
+  public long getElapsedTime(@Nonnull TimeUnit timeUnit) {
+    return TimeUnit.MILLISECONDS.convert(totalTime, timeUnit) + timer.elapsed(timeUnit);
   }
 
   /**
@@ -86,7 +88,6 @@ public final class Pipeline implements Serializable {
    * @param annotationTypes the annotation types to be annotated
    */
   public static void process(Document textDocument, AnnotationType... annotationTypes) {
-
     if (annotationTypes == null || annotationTypes.length == 0) {
       return;
     }
@@ -129,7 +130,7 @@ public final class Pipeline implements Serializable {
    * @return the number of documents processed per second
    */
   public double documentsPerSecond() {
-    return documentsProcessed.get() / (timer.elapsed(TimeUnit.NANOSECONDS) / 1000000000d);
+    return documentsProcessed.get() / (getElapsedTime(TimeUnit.NANOSECONDS) / 1000000000d);
   }
 
   /**
@@ -146,6 +147,17 @@ public final class Pipeline implements Serializable {
         .build()
         .run();
     timer.stop();
+    totalTime += timer.elapsed(TimeUnit.MILLISECONDS);
+    timer.reset();
+  }
+
+  public void process(Document document) {
+    timer.start();
+    process(document, annotationTypes);
+    timer.stop();
+    documentsProcessed.incrementAndGet();
+    totalTime += timer.elapsed(TimeUnit.MILLISECONDS);
+    timer.reset();
   }
 
   /**
@@ -154,23 +166,25 @@ public final class Pipeline implements Serializable {
    * @return the total time processing in string representation
    */
   public String totalTimeProcessing() {
-    return timer.toString();
+    long nanoTime = getElapsedTime(TimeUnit.NANOSECONDS);
+    double value = nanoTime / TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS);
+    return String.format("%.4g s", value);
   }
 
-  private static enum NoOpt implements Function<Document, Void> {
-    /**
-     * The INSTANCE.
-     */INSTANCE;
+  public static void setAnnotator(@Nonnull AnnotationType annotationType, @Nonnull Language language, @Nonnull Annotator annotator) {
+    AnnotatorCache.getInstance().setAnnotator(annotationType, language, annotator);
+  }
 
-    @Nullable
+  private enum NoOpt implements java.util.function.Consumer<Document> {
+    INSTANCE;
+
     @Override
-    public Void apply(@Nullable Document input) {
-      return null;
+    public void accept(@Nullable Document input) {
     }
   }
 
-  private static class Producer extends Broker.Producer<Document> {
-
+  private static class Producer extends Broker.Producer<Document> implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final Corpus documents;
 
     private Producer(Corpus documents) {
@@ -180,35 +194,32 @@ public final class Pipeline implements Serializable {
     @Override
     public void produce() {
       start();
-      for (Document doc : documents) {
-        yield(doc);
-      }
+      documents.forEach(this::yield);
       stop();
     }
   }
 
-  private static class Consumer implements Function<Document, Object> {
-
+  private class Consumer implements java.util.function.Consumer<Document>, Serializable {
+    private static final long serialVersionUID = 1L;
     private final AnnotationType[] annotationTypes;
-    private final Function<Document, ?> onComplete;
+    private final java.util.function.Consumer<Document> onComplete;
     private final AtomicLong counter;
 
-    private Consumer(AnnotationType[] annotationTypes, Function<Document, ?> onComplete, AtomicLong counter) {
+    private Consumer(AnnotationType[] annotationTypes, java.util.function.Consumer<Document> onComplete, AtomicLong counter) {
       this.annotationTypes = annotationTypes;
       this.onComplete = onComplete;
       this.counter = counter;
     }
 
-    @Nullable
     @Override
-    public Object apply(@Nullable Document input) {
-      if (input != null) {
-        Pipeline.process(input, annotationTypes);
+    public void accept(Document document) {
+      if (document != null) {
+        process(document, annotationTypes);
         counter.incrementAndGet();
-        onComplete.apply(input);
+        onComplete.accept(document);
       }
-      return null;
     }
+
   }
 
   /**
@@ -219,7 +230,7 @@ public final class Pipeline implements Serializable {
     int queueSize = 10000;
     Set<AnnotationType> annotationTypes = new HashSet<>();
     int numberOfThreads = Runtime.getRuntime().availableProcessors();
-    Function<Document, ?> onComplete = NoOpt.INSTANCE;
+    java.util.function.Consumer<Document> onComplete = NoOpt.INSTANCE;
 
     /**
      * Add annotation.
@@ -270,7 +281,7 @@ public final class Pipeline implements Serializable {
      * @param onComplete the on complete
      * @return the builder
      */
-    public Builder onComplete(Function<Document, ?> onComplete) {
+    public Builder onComplete(java.util.function.Consumer<Document> onComplete) {
       this.onComplete = onComplete;
       return this;
     }

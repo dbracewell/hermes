@@ -28,6 +28,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.reflection.BeanUtils;
 import com.davidbracewell.string.StringUtils;
+import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
 import java.io.ObjectStreamException;
@@ -210,7 +211,10 @@ public final class AnnotationType extends EnumValue {
       throw new IllegalStateException("Gold Standard annotations cannot be annotated");
     }
     String key = Config.closestKey("Annotation", language, name(), "annotator");
-    return BeanUtils.parameterizeObject(Config.get(key).as(Annotator.class));
+    Annotator annotator = BeanUtils.parameterizeObject(Config.get(key).as(Annotator.class));
+    Preconditions.checkNotNull(annotator, "Could create an annotator for " + name());
+    Preconditions.checkArgument(annotator.provides().contains(this), "Attempting to register " + annotator.getClass().getName() + " for " + name() + " which it does not provide");
+    return annotator;
   }
 
   /**

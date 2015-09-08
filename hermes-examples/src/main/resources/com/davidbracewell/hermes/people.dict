@@ -1,0 +1,7 @@
+grand,GRANDPARENT
+mother,PARENT
+father,PARENT
+sister,SIBLING
+brother,SIBLING
+student,OCCUPATION
+housewife,OCCUPATION
