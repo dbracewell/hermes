@@ -34,7 +34,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The type Regex annotator.
+ * <p>
+ * Creates annotations of a given type based on a given regular expression.
+ * </p>
  *
  * @author David B. Bracewell
  */
@@ -49,7 +51,7 @@ public class RegexAnnotator implements Annotator, Serializable {
    * @param regex        the regex
    * @param providedType the provided type
    */
-  public RegexAnnotator(@Nonnull String regex, AnnotationType providedType) {
+  public RegexAnnotator(@Nonnull String regex, @Nonnull AnnotationType providedType) {
     regex = StringUtils.trim(regex);
     if (!regex.startsWith("\\b")) {
       regex = "\\b" + regex;
@@ -67,26 +69,26 @@ public class RegexAnnotator implements Annotator, Serializable {
    * @param regex        the regex
    * @param providedType the provided type
    */
-  public RegexAnnotator(@Nonnull String regex, String providedType) {
+  public RegexAnnotator(@Nonnull String regex, @Nonnull String providedType) {
     this(regex, AnnotationType.create(providedType));
   }
 
   @Override
   public void annotate(Document document) {
     Matcher matcher = document.matcher(regex);
-    AnnotationType type = providedType != null ? providedType : AnnotationType.create("UNKNOWN_REGEX");
     while (matcher.find()) {
-      document.createAnnotation(type, matcher.start(), matcher.end());
+      document.createAnnotation(providedType, matcher.start(), matcher.end());
     }
   }
 
   @Override
   public Set<AnnotationType> provides() {
-    return providedType == null ? Collections.emptySet() : Collections.singleton(providedType);
+    return Collections.singleton(providedType);
   }
 
   @Override
   public String getVersion() {
-    return  "(" + regex.pattern() + ")";
+    return "(" + regex.pattern() + ")";
   }
+
 }//END OF RegexAnnotator

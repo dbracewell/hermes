@@ -28,8 +28,9 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * A Sentence level annotator is an annotator that only needs access to a single sentence, like a Part of Speech
- * tagger.
+ * <p>
+ * Annotates a sentence at a time.
+ * </p>
  *
  * @author David B. Bracewell
  */

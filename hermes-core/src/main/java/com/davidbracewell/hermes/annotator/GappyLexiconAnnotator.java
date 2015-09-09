@@ -35,12 +35,15 @@ import com.google.common.collect.Sets;
 import java.util.*;
 
 /**
- * The type Gappy lexicon annotator.
+ * <p>
+ * A lexicon annotator that allows gaps to occur in multiple word expressions. For example, "old red car" and "old broke
+ * car" would match the lexicon item "old car".
+ * </p>
  *
  * @author David B. Bracewell
  */
 public class GappyLexiconAnnotator extends ViterbiAnnotator {
-
+  private static final long serialVersionUID = 1L;
   final AnnotationType type;
   final SimpleTagLexicon lexicon;
   final HashMultimap<String, String[]> prefix = HashMultimap.create();
@@ -141,7 +144,7 @@ public class GappyLexiconAnnotator extends ViterbiAnnotator {
       row1[0] = i + 1;
       for (int j = 0; j < candidate.length; j++) {
         double cost = (StringUtils.safeEquals(candidate[j], span.get(j).toString(), lexicon.isCaseSensitive()) ||
-            StringUtils.safeEquals(candidate[j], span.get(j).getLemma(), lexicon.isCaseSensitive())) ? 0d : 1d;
+          StringUtils.safeEquals(candidate[j], span.get(j).getLemma(), lexicon.isCaseSensitive())) ? 0d : 1d;
         if (cost == 1 && StringUtils.isPunctuation(span.get(j).toString())) {
           cost = row0.length;
         }
@@ -176,13 +179,13 @@ public class GappyLexiconAnnotator extends ViterbiAnnotator {
 
       if (lexicon.isCaseSensitive()) {
         candidates = Sets.union(
-            getCandidates(tokens.get(0).toString(), tokens.get(TL).toString()),
-            getCandidates(tokens.get(0).getLemma(), tokens.get(TL).getLemma())
+          getCandidates(tokens.get(0).toString(), tokens.get(TL).toString()),
+          getCandidates(tokens.get(0).getLemma(), tokens.get(TL).getLemma())
         );
       } else {
         candidates = Sets.union(
-            getCandidates(tokens.get(0).toString().toLowerCase(), tokens.get(TL).toString().toLowerCase()),
-            getCandidates(tokens.get(0).getLemma().toLowerCase(), tokens.get(TL).getLemma().toLowerCase())
+          getCandidates(tokens.get(0).toString().toLowerCase(), tokens.get(TL).toString().toLowerCase()),
+          getCandidates(tokens.get(0).getLemma().toLowerCase(), tokens.get(TL).getLemma().toLowerCase())
         );
       }
 

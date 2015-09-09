@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * The type Open nLP token annotator.
  * @author David B. Bracewell
  */
 public class OpenNLPTokenAnnotator implements Annotator, Serializable {

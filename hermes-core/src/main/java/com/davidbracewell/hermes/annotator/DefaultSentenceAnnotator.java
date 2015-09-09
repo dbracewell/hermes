@@ -32,6 +32,10 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
+ * <p>
+ * A <code>BreakIterator</code> backed sentence annotator that has limited knowledge of abbreviations.
+ * </p>
+ *
  * @author David B. Bracewell
  */
 public class DefaultSentenceAnnotator implements Annotator, Serializable {
@@ -39,11 +43,11 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
 
   private static CharMatcher BAD_EOS = CharMatcher.INVISIBLE.and(CharMatcher.WHITESPACE).and(CharMatcher.BREAKING_WHITESPACE);
   private final Set<String> noSentenceBreak = ImmutableSet.<String>builder()
-      .add("Mr.")
-      .add("Mrs.")
-      .add("Dr.")
-      .add("Gen.")
-      .build();
+    .add("Mr.")
+    .add("Mrs.")
+    .add("Dr.")
+    .add("Gen.")
+    .build();
 
   @Override
   public void annotate(Document doc) {
@@ -67,9 +71,9 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
 
       if (!noSentenceBreak.contains(doc.substring(start, end))) {
         doc.createAnnotation(Types.SENTENCE,
-            start,
-            end,
-            Collect.map(Attrs.INDEX, index)
+          start,
+          end,
+          Collect.map(Attrs.INDEX, index)
         );
         index++;
         start = end;

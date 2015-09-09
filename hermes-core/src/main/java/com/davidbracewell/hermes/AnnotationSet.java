@@ -31,8 +31,8 @@ import java.util.function.Predicate;
  * <p>In the TIPSTER architecture an <code>AnnotationSet</code> acts as the storage mechanism for annotations
  * associated with a document. It provides methods for adding, removing, and navigating the annotations. In particular,
  * a TIPSTER <code>AnnotationSet</code> defines sequential methods of accessing annotations ({@link
- * #next(Annotation, AnnotationType)}, {@link #previous(Annotation, AnnotationType)}) and based on criteria {@link
- * #select(Predicate)} and {@link #select(Span, Predicate)}.
+ * #next(Annotation, AnnotationType)}*, {@link #previous(Annotation, AnnotationType)}) and based on criteria {@link
+ * #select(Predicate)}* and {@link #select(Span, Predicate)}.
  * </p>
  *
  * @author David B. Bracewell
@@ -60,8 +60,9 @@ public interface AnnotationSet extends Iterable<Annotation> {
   /**
    * Sets the given annotation type as being completed or not
    *
-   * @param type        the annotation type
-   * @param isCompleted True if the annotation is completed, False if not.
+   * @param type                 the annotation type
+   * @param isCompleted          True if the annotation is completed, False if not.
+   * @param annotatorInformation the annotator information
    */
   void setIsCompleted(AnnotationType type, boolean isCompleted, String annotatorInformation);
 

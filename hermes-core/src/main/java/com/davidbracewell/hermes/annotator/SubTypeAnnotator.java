@@ -26,6 +26,8 @@ import com.davidbracewell.hermes.*;
 import java.util.*;
 
 /**
+ * The type Sub type annotator.
+ *
  * @author David B. Bracewell
  */
 public class SubTypeAnnotator implements Annotator {
@@ -34,20 +36,46 @@ public class SubTypeAnnotator implements Annotator {
   private final Set<AnnotationType> subTypes;
   private final boolean nonOverlapping;
 
+  /**
+   * Instantiates a new Sub type annotator.
+   *
+   * @param annotationType the annotation type
+   * @param nonOverlapping the non overlapping
+   * @param subTypes       the sub types
+   */
   public SubTypeAnnotator(AnnotationType annotationType, boolean nonOverlapping, AnnotationType... subTypes) {
     this(annotationType, nonOverlapping, Arrays.asList(subTypes));
   }
 
+  /**
+   * Instantiates a new Sub type annotator.
+   *
+   * @param annotationType the annotation type
+   * @param subTypes       the sub types
+   */
   public SubTypeAnnotator(AnnotationType annotationType, AnnotationType... subTypes) {
     this(annotationType, true, Arrays.asList(subTypes));
   }
 
+  /**
+   * Instantiates a new Sub type annotator.
+   *
+   * @param annotationType the annotation type
+   * @param nonOverlapping the non overlapping
+   * @param subTypes       the sub types
+   */
   public SubTypeAnnotator(AnnotationType annotationType, boolean nonOverlapping, Collection<AnnotationType> subTypes) {
     this.annotationType = annotationType;
     this.subTypes = new HashSet<>(subTypes);
     this.nonOverlapping = nonOverlapping;
   }
 
+  /**
+   * Instantiates a new Sub type annotator.
+   *
+   * @param annotationType the annotation type
+   * @param subTypes       the sub types
+   */
   public SubTypeAnnotator(AnnotationType annotationType, Collection<AnnotationType> subTypes) {
     this(annotationType, true, subTypes);
   }

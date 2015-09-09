@@ -98,7 +98,8 @@ public final class AnnotationType extends EnumValue {
   /**
    * Creates a new Annotation Type or retrieves an already existing one for a given name
    *
-   * @param name the name
+   * @param name   the name
+   * @param parent the parent
    * @return the annotation type
    * @throws IllegalArgumentException name is invalid, or annotation type already exists with different parent
    */

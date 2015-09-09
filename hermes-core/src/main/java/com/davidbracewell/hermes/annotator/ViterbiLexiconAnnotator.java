@@ -37,7 +37,7 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class ViterbiLexiconAnnotator extends ViterbiAnnotator {
-
+  private static final long serialVersionUID = 1L;
   final AnnotationType type;
   final SimpleTagLexicon lexicon;
   final Attribute tagAttribute;
@@ -112,7 +112,7 @@ public class ViterbiLexiconAnnotator extends ViterbiAnnotator {
     if (lexicon.contains(span)) {
       return Tuple2.of(span.toString(), Math.pow(span.tokenLength() * lexicon.probability(span.toString()), 2));
     }
-    return Tuple2.of(null, 0d);
+    return Tuple2.of(null, 0.0001d);
   }
 
 

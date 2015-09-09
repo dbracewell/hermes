@@ -31,6 +31,10 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
+ * <p>
+ * A <code>BreakIterator</code> backed tokenizer.
+ * </p>
+ *
  * @author David B. Bracewell
  */
 public class DefaultTokenAnnotator implements Annotator, Serializable {

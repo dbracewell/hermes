@@ -33,12 +33,12 @@ import java.util.Set;
  * <p>An abstract base annotator that uses the Viterbi algorithm to find text items in a document. Child classes
  * implement the <code>scoreSpan</code> and <code>createAndAttachAnnotation</code> methods to score individual spans
  * and attach to the document. Child implementations may also override <code>combineScore</code> to change how scores
- * are combined, by default theyocker  are multiplied.</p>
+ * are combined, by default they  are multiplied.</p>
  *
  * @author David B. Bracewell
  */
 public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
-
+  private static final long serialVersionUID = 1L;
   private final int maxSpanSize;
 
   /**
@@ -84,16 +84,17 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
    * segmentation.
    *
    * @param currentScore The score of the sentence so far
-   * @param spanScore    The score of the span under consideration
+   * @param spanScore The score of the span under consideration
    * @return The combination of the current and span scores
    */
   protected double combineScore(double currentScore, double spanScore) {
-    return currentScore + spanScore;
+    return currentScore * spanScore;
   }
 
   /**
    * Given an possible span determines if an annotation should be created and if so creates and attaches it.
    *
+   * @param document the document
    * @param span The span to check
    */
   protected abstract void createAndAttachAnnotation(Document document, Match span);
@@ -110,10 +111,26 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
    * Class for holding lexicon matches
    */
   protected static class Match {
+    /**
+     * The Span.
+     */
     public final HString span;
+    /**
+     * The Score.
+     */
     public final double score;
+    /**
+     * The Matched string.
+     */
     public final String matchedString;
 
+    /**
+     * Instantiates a new Match.
+     *
+     * @param span the span
+     * @param matchedString the matched string
+     * @param score the score
+     */
     public Match(HString span, String matchedString, double score) {
       this.span = span;
       this.matchedString = matchedString;
@@ -126,4 +143,5 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
   public Set<AnnotationType> requires() {
     return Collections.singleton(Types.TOKEN);
   }
+
 }//END OF ViterbiAnnotator

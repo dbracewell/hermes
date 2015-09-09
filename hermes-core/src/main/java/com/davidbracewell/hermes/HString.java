@@ -90,7 +90,13 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return new Fragment(owner, start, end);
   }
 
-  public static HString union(@Nonnull Iterable<? extends  HString> strings) {
+  /**
+   * Union h string.
+   *
+   * @param strings the strings
+   * @return the h string
+   */
+  public static HString union(@Nonnull Iterable<? extends HString> strings) {
     int start = Integer.MAX_VALUE;
     int end = Integer.MIN_VALUE;
     Document owner = null;
@@ -158,9 +164,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public Counter<String> count(AnnotationType type, @Nonnull Predicate<? super Annotation> predicate, @Nonnull Function<? super Annotation, String> transform) {
     return Counters.newHashMapCounter(getOverlapping(type).stream()
-            .filter(predicate)
-            .map(transform)
-            .collect(Collectors.toList())
+        .filter(predicate)
+        .map(transform)
+        .collect(Collectors.toList())
     );
   }
 
@@ -305,10 +311,14 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   @Override
   public boolean hasAttribute(Attribute attribute) {
     return getAttributeMap().containsKey(attribute) ||
-        getAttributeMap().containsKey(attribute.goldStandardVersion());
+      getAttributeMap().containsKey(attribute.goldStandardVersion());
   }
 
   /**
+   * Index of.
+   *
+   * @param text the text
+   * @return the int
    * @see String#indexOf(String)
    */
   public int indexOf(String text) {
@@ -316,6 +326,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
+   * Index of.
+   *
+   * @param text  the text
+   * @param start the start
+   * @return the int
    * @see String#indexOf(String, int)
    */
   public int indexOf(String text, int start) {
@@ -371,6 +386,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
+   * Matches boolean.
+   *
+   * @param regex the regex
+   * @return the boolean
    * @see String#matches(String)
    */
   public boolean matches(String regex) {
@@ -395,6 +414,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
+   * Replace string.
+   *
+   * @param oldChar the old char
+   * @param newChar the new char
+   * @return the string
    * @see String#replace(char, char)
    */
   public String replace(char oldChar, char newChar) {
@@ -402,6 +426,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
+   * Replace string.
+   *
+   * @param oldString the old string
+   * @param newString the new string
+   * @return the string
    * @see String#replace(CharSequence, CharSequence)
    */
   public String replace(String oldString, String newString) {
@@ -409,6 +438,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
+   * Replace all.
+   *
+   * @param regex       the regex
+   * @param replacement the replacement
+   * @return the string
    * @see String#replaceAll(String, String)
    */
   public String replaceAll(String regex, String replacement) {
@@ -416,6 +450,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
+   * Replace first.
+   *
+   * @param regex       the regex
+   * @param replacement the replacement
+   * @return the string
    * @see String#replaceFirst(String, String)
    */
   public String replaceFirst(String regex, String replacement) {
@@ -423,6 +462,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
+   * Starts with.
+   *
+   * @param prefix the prefix
+   * @return the boolean
    * @see String#startsWith(String)
    */
   public boolean startsWith(String prefix) {
@@ -447,8 +490,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * @see String#toLowerCase(java.util.Locale)
-   * NOTE: Uses locale associated with the HString's langauge
+   * To lower case.
+   *
+   * @return the string
+   * @see String#toLowerCase(java.util.Locale)  NOTE: Uses locale associated with the HString's langauge
    */
   public String toLowerCase() {
     return toString().toLowerCase(getLanguage().asLocale());
@@ -461,13 +506,15 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public String toPOSString() {
     return tokens().stream()
-        .map(t -> t.toString() + "/" + t.getAttribute(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
-        .collect(Collectors.joining(" "));
+      .map(t -> t.toString() + "/" + t.getAttribute(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
+      .collect(Collectors.joining(" "));
   }
 
   /**
-   * @see String#toUpperCase(java.util.Locale)
-   * NOTE: Uses locale associated with the HString's langauge
+   * To upper case.
+   *
+   * @return the string
+   * @see String#toUpperCase(java.util.Locale)  NOTE: Uses locale associated with the HString's langauge
    */
   public String toUpperCase() {
     return toString().toUpperCase(getLanguage().asLocale());

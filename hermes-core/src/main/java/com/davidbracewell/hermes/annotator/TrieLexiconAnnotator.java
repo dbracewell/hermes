@@ -26,13 +26,14 @@ import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import com.davidbracewell.io.resource.Resource;
 import com.google.common.base.Preconditions;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
 /**
- * The type Trie lexicon annotator.
+ * <p>A lexicon annotator that uses a trie-backed lexicon allowing for prefix matches.</p>
  *
  * @author David B. Bracewell
  */
@@ -53,6 +54,11 @@ public class TrieLexiconAnnotator implements Annotator {
     this(false, false, type, tagAttribute, Arrays.asList(lexiconFiles));
   }
 
+
+  @Override
+  public Set<AnnotationType> requires() {
+    return null;
+  }
 
   /**
    * Instantiates a new Trie lexicon annotator.
@@ -83,15 +89,15 @@ public class TrieLexiconAnnotator implements Annotator {
    * Instantiates a new Trie lexicon annotator.
    *
    * @param caseSensitive the case sensitive
+   * @param prefixMatch   the fuzzy
    * @param type          the type
    * @param tagAttribute  the tag attribute
    * @param lexiconFiles  the lexicon files
-   * @parm fuzzy
    */
-  public TrieLexiconAnnotator(boolean caseSensitive, boolean fuzzy, AnnotationType type, Attribute tagAttribute, Collection<Resource> lexiconFiles) {
+  public TrieLexiconAnnotator(boolean caseSensitive, boolean prefixMatch, @Nonnull AnnotationType type, @Nonnull Attribute tagAttribute, @Nonnull Collection<Resource> lexiconFiles) {
     this.type = Preconditions.checkNotNull(type);
     this.lexicon = new TrieLexicon(caseSensitive, tagAttribute, lexiconFiles);
-    this.lexicon.setFuzzyMatch(fuzzy);
+    this.lexicon.setFuzzyMatch(prefixMatch);
   }
 
   @Override
@@ -107,7 +113,12 @@ public class TrieLexiconAnnotator implements Annotator {
   }
 
 
-  public void setFuzzyMatch(boolean fuzzyMatch) {
+  /**
+   * Sets prefix match.
+   *
+   * @param fuzzyMatch the fuzzy match
+   */
+  public void setPrefixMatch(boolean fuzzyMatch) {
     this.lexicon.setFuzzyMatch(fuzzyMatch);
   }
 

@@ -29,7 +29,7 @@ import java.util.List;
  * Annotated objects have zero or more {@link Annotation}s which it overlaps, encloses, or is enclosed by. The
  * interface defines the needed methods for accessing those annotations. In particular, methods exist for retrieving
  * annotations that overlap ({@link #getOverlapping(AnnotationType)} with, are enclosed ({@link
- * #getContaining(AnnotationType)} by, and enclose ({@link #getDuring(AnnotationType)} the object. Additional methods
+ * #getContaining(AnnotationType)}* by, and enclose ({@link #getDuring(AnnotationType)} the object. Additional methods
  * are defined as a convenience for accessing commonly used annotations, like tokens and sentences.
  * </p>
  *
@@ -112,10 +112,12 @@ public interface Annotated {
   }
 
   /**
-   * <p>Gits the token at the given token index which is a relative offset from this object. For example, given the
-   * document with the following tokens:<pre>["the", "quick", "brown", "fox", "jumps", "over", "the", "lazy",
-   * "dog"]</pre> and this annotation spanning <pre>["quick", "brown", "fox"]</pre> "quick" would have a relative
-   * offset in this object of 0 and document offset of 1. </p>
+   * <p>
+   * Gits the token at the given token index which is a relative offset from this object. For example, given the
+   * document with the following tokens: <code>["the", "quick", "brown", "fox", "jumps", "over", "the", "lazy",
+   * "dog"]</code> and this annotation spanning <code>["quick", "brown", "fox"]</code> "quick" would have a relative
+   * offset in this object of 0 and document offset of 1.
+   * </p>
    *
    * @param tokenIndex the token index relative to the tokens overlapping this object.
    * @return the token annotation at the relative offset

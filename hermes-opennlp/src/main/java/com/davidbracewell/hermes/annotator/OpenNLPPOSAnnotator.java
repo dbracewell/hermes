@@ -37,6 +37,8 @@ import java.io.IOException;
 import java.util.*;
 
 /**
+ * The type Open nLPPOS annotator.
+ *
  * @author David B. Bracewell
  */
 public class OpenNLPPOSAnnotator extends SentenceLevelAnnotator {

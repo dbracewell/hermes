@@ -26,6 +26,7 @@ import com.davidbracewell.io.resource.Resource;
 import java.util.*;
 
 /**
+ * The type Simple probablistic lexicon.
  * @author David B. Bracewell
  */
 public class SimpleProbablisticLexicon extends ProbabilisticLexicon {
@@ -37,11 +38,18 @@ public class SimpleProbablisticLexicon extends ProbabilisticLexicon {
    * Instantiates a new Tag lexicon.
    *
    * @param caseSensitive the case sensitive
+   * @param lexicons the lexicons
    */
   public SimpleProbablisticLexicon(boolean caseSensitive, Resource... lexicons) {
     this(caseSensitive, Arrays.asList(lexicons));
   }
 
+  /**
+   * Instantiates a new Simple probablistic lexicon.
+   *
+   * @param caseSensitive the case sensitive
+   * @param lexicons the lexicons
+   */
   public SimpleProbablisticLexicon(boolean caseSensitive, Collection<Resource> lexicons) {
     super(caseSensitive);
     this.lexicon = loadProbabilisticLexicon(lexicons);

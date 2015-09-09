@@ -44,7 +44,7 @@ public class LexiconExample {
         Attrs.TAG,
         Resources.fromClasspath("com/davidbracewell/hermes/people.dict")
     );
-    annotator.setFuzzyMatch(true);
+    annotator.setPrefixMatch(true);
     Pipeline.setAnnotator(Types.LEXICON_MATCH, Language.ENGLISH, annotator);
 
     Pipeline pipeline = Pipeline.builder()
