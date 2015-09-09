@@ -22,6 +22,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>hermes-core</artifactId>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>A Natural Language Processing framework for Java</description>
+    <url>http://hermes.davidbracewell.com</url>
     <parent>
         <groupId>com.davidbracewell</groupId>
         <artifactId>hermes</artifactId>
@@ -36,19 +39,6 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-    <contributors>
-        <contributor>
-            <name>David B. Bracewell</name>
-        </contributor>
-    </contributors>
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-            <comments>A business-friendly OSS license</comments>
-        </license>
-    </licenses>
     <build>
         <plugins>
             <!--<plugin>-->

@@ -36,7 +36,7 @@ import static com.davidbracewell.hermes.Types.*;
 public class LexiconExample {
 
   public static void main(String[] args) throws Exception {
-    Config.initialize("CustomAnnotator");
+    Config.initialize("LexiconExample");
 
 
     TrieLexiconAnnotator annotator = new TrieLexiconAnnotator(
@@ -45,7 +45,6 @@ public class LexiconExample {
         Resources.fromClasspath("com/davidbracewell/hermes/people.dict")
     );
     annotator.setFuzzyMatch(true);
-
     Pipeline.setAnnotator(Types.LEXICON_MATCH, Language.ENGLISH, annotator);
 
     Pipeline pipeline = Pipeline.builder()

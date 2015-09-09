@@ -23,6 +23,7 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.hermes.*;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
 
@@ -32,7 +33,8 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public abstract class SentenceLevelAnnotator implements Annotator {
+public abstract class SentenceLevelAnnotator implements Annotator, Serializable {
+  private static final long serialVersionUID = 1L;
 
   @Override
   public final void annotate(Document document) {

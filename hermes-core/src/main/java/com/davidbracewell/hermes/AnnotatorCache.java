@@ -87,7 +87,7 @@ public class AnnotatorCache {
    * @param annotationType the annotation type
    * @param language       The language
    */
-  public void invalidate(@Nonnull AnnotationType annotationType, @Nonnull Language language) {
+  public void remove(@Nonnull AnnotationType annotationType, @Nonnull Language language) {
     cache.invalidate(createKey(annotationType, language));
   }
 

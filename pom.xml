@@ -24,25 +24,32 @@
     <parent>
         <groupId>com.davidbracewell</groupId>
         <artifactId>davidbracewell-parent-pom</artifactId>
-        <version>1.0.5-SNAPSHOT</version>
+        <version>1.0.8-SNAPSHOT</version>
     </parent>
 
     <artifactId>hermes</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>A Natural Language Processing framework for Java</description>
+    <url>http://hermes.davidbracewell.com</url>
 
-
-    <contributors>
-        <contributor>
+    <developers>
+        <developer>
             <name>David B. Bracewell</name>
-        </contributor>
-    </contributors>
+            <email>david@davidbracewell.com</email>
+            <organization>David Bracewell</organization>
+            <organizationUrl>http://www.davidbracewell.com</organizationUrl>
+        </developer>
+    </developers>
+
     <scm>
         <connection>scm:git:git@github.com:dbracewell/hermes.git</connection>
         <developerConnection>scm:git:git@github.com:dbracewell/hermes.git</developerConnection>
-        <url>http://hermes.davidbracewell.com</url>
+        <url>git@github.com:dbracewell/hermes.git</url>
         <tag>HEAD</tag>
     </scm>
+
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -67,41 +74,13 @@
 
     <build>
         <plugins>
-            <plugin>
-                <inherited>true</inherited>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
     <modules>
         <module>hermes-core</module>
         <module>hermes-examples</module>
+        <module>hermes-opennlp</module>
     </modules>
 
-    <repositories>
-        <repository>
-            <id>davidbracewell-releases</id>
-            <name>davidbracewell-releases</name>
-            <url>https://github.com/dbracewell/dbracewell-mvn-repo/raw/master/releases</url>
-        </repository>
-        <repository>
-            <id>davidbracewell-snapshots</id>
-            <name>davidbracewell-snapshots</name>
-            <url>https://github.com/dbracewell/dbracewell-mvn-repo/raw/master/snapshots</url>
-        </repository>
-    </repositories>
-    <distributionManagement>
-        <repository>
-            <id>internal.repo</id>
-            <name>Temporary Staging Repository</name>
-            <url>file:///home/david/prj/dbracewell-mvn-repo/releases</url>
-        </repository>
-    </distributionManagement>
 </project>

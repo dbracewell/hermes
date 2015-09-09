@@ -21,7 +21,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>hermes-examples</artifactId>
+    <artifactId>hermes-opennlp</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A Natural Language Processing framework for Java</description>
     <url>http://hermes.davidbracewell.com</url>
@@ -38,9 +38,9 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.davidbracewell</groupId>
-            <artifactId>hermes-opennlp</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <groupId>org.apache.opennlp</groupId>
+            <artifactId>opennlp-tools</artifactId>
+            <version>1.6.0</version>
         </dependency>
     </dependencies>
 </project>

@@ -24,16 +24,17 @@ package com.davidbracewell.hermes.tag;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * A tag which represented as a string. Care must be taken in that different string variations will represent different
- * tags.
+ * A tag which is represented as a string. Care must be taken in that different string variations will represent
+ * different tags.
  *
  * @author David B. Bracewell
  */
-public class StringTag implements Tag {
-
+public class StringTag implements Tag, Serializable {
+  private static final long serialVersionUID = 1L;
   private final String tag;
 
   /**
