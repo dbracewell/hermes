@@ -19,3 +19,14 @@ The core sub-module contains the basic api.
      <version>0.0.1-SNAPSHOT</version>
  </dependency>
 ```
+
+### OpenNLP Backend
+A set of wrappers around the [OpenNLP](https://opennlp.apache.org/) framework for tokenization, sentence segmentation, part-of-speech tagging, shallow parsing, named entity recognition, and syntactic parsing.
+```
+ <dependency>
+     <groupId>com.davidbracewell</groupId>
+     <artifactId>hermes-opennlp</artifactId>
+     <version>0.0.1-SNAPSHOT</version>
+ </dependency>
+```
+
