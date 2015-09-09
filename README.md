@@ -8,7 +8,7 @@ Copyright 2015 David B. Bracewell
 Hermes is [Apache License, Version 2.0 ](LICENSE) licensed making it free for all uses.
 
 ## Maven
-If you use maven, you can get the latest release using the following dependency (Note Hermes is not in Maven Central yet):
+If you use maven, you can get the latest release using the following dependency:
 
 ### Hermes Core
 The core sub-module contains the basic api.
