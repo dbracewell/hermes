@@ -128,6 +128,10 @@ public final class AnnotationType extends EnumValue {
     return index.register(new AnnotationType(name));
   }
 
+  public Attribute getTagAttribute() {
+    return Config.get("Annotation", nonGoldStandardVersion().name(), "tag").as(Attribute.class);
+  }
+
   /**
    * Determine if an Annotation type exists for the given name
    *

@@ -203,11 +203,12 @@ public class GappyLexiconAnnotator extends ViterbiAnnotator {
 
       if (minDist <= maxDistance && bestCandidate != null) {
         String matchedString = Joiner.on(' ').join(bestCandidate);
-        return Tuple2.of(matchedString, Math.pow(lexicon.probability(matchedString) * span.tokenLength() - minDist, 2));
+        return Tuple2.of(matchedString, lexicon.probability(matchedString) * span.tokenLength());
+          //Math.pow(lexicon.probability(matchedString) * span.tokenLength() - minDist, 2));
       }
 
     }
-    return Tuple2.of(null, 0d);
+    return Tuple2.of(null, 1d);
   }
 
 }//END OF ViterbiLexiconAnnotator

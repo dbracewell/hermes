@@ -577,4 +577,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return (document() == other.document()) && super.encloses(other);
   }
 
+  public POS getPOS() {
+    return POS.forText(this);
+  }
+
+
 }//END OF HString

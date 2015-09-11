@@ -23,6 +23,8 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.conversion.Val;
+import com.davidbracewell.hermes.tag.EntityType;
+import com.davidbracewell.hermes.tag.Tag;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
@@ -121,9 +123,9 @@ public final class Annotation extends Fragment implements Serializable {
     }
 
     Annotation annotation = Fragments.detatchedAnnotation(
-        AnnotationType.create(annotationProperties.get("type").asString()),
-        annotationProperties.get("start").asIntegerValue(),
-        annotationProperties.get("end").asIntegerValue()
+      AnnotationType.create(annotationProperties.get("type").asString()),
+      annotationProperties.get("start").asIntegerValue(),
+      annotationProperties.get("end").asIntegerValue()
     );
     annotation.setId(annotationProperties.get("id").asLongValue());
     annotation.putAllAttributes(attributeValMap);
@@ -254,6 +256,20 @@ public final class Annotation extends Fragment implements Serializable {
     }
 
     writer.endObject();
+  }
+
+
+  public Optional<Tag> getTag() {
+    if (isInstance(Types.TOKEN)) {
+      return Optional.of(getPOS());
+    } else if (isInstance(Types.ENTITY)) {
+      return Optional.of(getAttribute(Attrs.ENTITY_TYPE).as(EntityType.class));
+    }
+    Attribute tagAttribute = annotationType.getTagAttribute();
+    if (tagAttribute == null) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(getAttribute(tagAttribute).as(Tag.class));
   }
 
 }//END OF Annotation
