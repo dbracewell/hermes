@@ -36,8 +36,8 @@ import java.util.*;
 
 /**
  * <p>
- * A lexicon annotator that allows gaps to occur in multiple word expressions. For example, "old red car" and "old broke
- * car" would match the lexicon item "old car".
+ * A lexicon annotator that allows gaps to occur in multi-word expressions. For example, "old red car" and "old broke
+ * car" would match the lexicon item "old car" with a distance of one.
  * </p>
  *
  * @author David B. Bracewell
@@ -108,12 +108,13 @@ public class GappyLexiconAnnotator extends ViterbiAnnotator {
   protected void createAndAttachAnnotation(Document document, Match match) {
     if (match.matchedString != null) {
       Annotation annotation = document.createAnnotation(type, match.span);
-      annotation.putAttribute(tagAttribute, lexicon.lookup(match.matchedString).get());
-      annotation.putAttribute(Attrs.CONFIDENCE, lexicon.probability(match.matchedString));
+      annotation.put(tagAttribute, lexicon.lookup(match.matchedString).get());
+      annotation.put(Attrs.CONFIDENCE, lexicon.probability(match.matchedString));
     }
   }
 
   private double distance(List<Annotation> span, String[] candidate) {
+
 
     //Make sure the span contains at least all of the words in the candidate
     Counter<String> cCtr = Counters.newHashMapCounter(Arrays.asList(candidate));
@@ -137,17 +138,19 @@ public class GappyLexiconAnnotator extends ViterbiAnnotator {
     double[] row1 = new double[candidate.length + 1];
     for (int i = 0; i < row0.length; i++) {
       row0[i] = i;
-
     }
 
     for (int i = 0; i < span.size(); i++) {
       row1[0] = i + 1;
       for (int j = 0; j < candidate.length; j++) {
-        double cost = (StringUtils.safeEquals(candidate[j], span.get(j).toString(), lexicon.isCaseSensitive()) ||
-          StringUtils.safeEquals(candidate[j], span.get(j).getLemma(), lexicon.isCaseSensitive())) ? 0d : 1d;
+        double cost =
+          (StringUtils.safeEquals(candidate[j], span.get(i).toString(), lexicon.isCaseSensitive()) ||
+            StringUtils.safeEquals(candidate[j], span.get(i).getLemma(), lexicon.isCaseSensitive())) ? 0d : 1d;
+
         if (cost == 1 && StringUtils.isPunctuation(span.get(j).toString())) {
           cost = row0.length;
         }
+
         row1[j + 1] = Math.min(row1[j] + cost, Math.min(row0[j + 1] + cost, row0[j] + cost));
       }
       if (row1[candidate.length] > maxDistance) {
@@ -155,6 +158,7 @@ public class GappyLexiconAnnotator extends ViterbiAnnotator {
       }
       System.arraycopy(row1, 0, row0, 0, row0.length);
     }
+
     return row0[candidate.length];
   }
 
@@ -203,8 +207,9 @@ public class GappyLexiconAnnotator extends ViterbiAnnotator {
 
       if (minDist <= maxDistance && bestCandidate != null) {
         String matchedString = Joiner.on(' ').join(bestCandidate);
-        return Tuple2.of(matchedString, lexicon.probability(matchedString) * span.tokenLength());
-          //Math.pow(lexicon.probability(matchedString) * span.tokenLength() - minDist, 2));
+        double score = lexicon.probability(matchedString) / (0.1 + minDist);
+        score = Math.abs(2.0 / (1.0 + score)) - 1.0;
+        return Tuple2.of(matchedString, score + span.tokenLength());
       }
 
     }

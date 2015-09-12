@@ -28,7 +28,7 @@ import java.io.IOException;
 
 /**
  * <p>
- * Provides functionality for custom encoding and decoding attribute values to/from structured formats.
+ * Provides functionality for custom encoding and decoding of attribute values to/from structured formats.
  * </p>
  *
  * @author David B. Bracewell

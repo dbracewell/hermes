@@ -389,13 +389,13 @@ public enum POS implements Tag {
   public static com.davidbracewell.hermes.tag.POS forText(HString text) {
     Preconditions.checkNotNull(text);
 
-    if (text.hasAttribute(Attrs.PART_OF_SPEECH)) {
-      return text.getAttribute(Attrs.PART_OF_SPEECH).cast();
+    if (text.contains(Attrs.PART_OF_SPEECH)) {
+      return text.get(Attrs.PART_OF_SPEECH).cast();
     }
 
     com.davidbracewell.hermes.tag.POS tag = ANY;
     for (Annotation token : text.tokens()) {
-      Tag temp = token.getAttribute(Attrs.PART_OF_SPEECH).cast();
+      Tag temp = token.get(Attrs.PART_OF_SPEECH).cast();
       if (temp != null) {
         if (temp.isInstance(VERB)) {
           return VERB;

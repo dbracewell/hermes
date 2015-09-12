@@ -71,8 +71,8 @@ public class TrieLexicon extends TagLexicon {
     String content = isCaseSensitive() ? text.toString() : text.toString().toLowerCase();
     for (Tuple3<Integer, Integer, Tuple2<Tag, Double>> match : trie.findOccurrencesIn(content, fuzzyMatch)) {
       HString f = text.substring(match.v1, match.v2);
-      f.putAttribute(tagAttribute, match.v3.v1);
-      f.putAttribute(Attrs.CONFIDENCE, match.v3.v2);
+      f.put(tagAttribute, match.v3.v1);
+      f.put(Attrs.CONFIDENCE, match.v3.v2);
       matches.add(f);
     }
 

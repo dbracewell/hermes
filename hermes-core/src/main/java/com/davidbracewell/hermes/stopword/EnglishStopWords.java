@@ -25,6 +25,7 @@ import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.logging.Logger;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
@@ -41,27 +42,31 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class EnglishStopWords extends StopWords {
-
   private static volatile StopWords INSTANCE;
   private final Set<String> stopWords = new HashSet<>();
 
   private EnglishStopWords() {
     try {
-      Config.get(EnglishStopWords.class, "dict").asResource().read(new LineProcessor<Object>() {
-        @Override
-        public boolean processLine(String line) throws IOException {
-          line = CharMatcher.WHITESPACE.trimFrom(line);
-          if (!Strings.isNullOrEmpty(line) && !line.startsWith("#")) {
-            stopWords.add(line);
-          }
-          return true;
-        }
+      if (Config.hasProperty("hermes.StopWords.ENGLISH", "dict")) {
+        Config.get("hermes.StopWords.ENGLISH", "dict").asResource().read(
+          new LineProcessor<Object>() {
+            @Override
+            public boolean processLine(String line) throws IOException {
+              line = CharMatcher.WHITESPACE.trimFrom(line);
+              if (!Strings.isNullOrEmpty(line) && !line.startsWith("#")) {
+                stopWords.add(line);
+              }
+              return true;
+            }
 
-        @Override
-        public Object getResult() {
-          return null;
-        }
-      });
+            @Override
+            public Object getResult() {
+              return null;
+            }
+          });
+      } else {
+        Logger.getLogger(EnglishStopWords.class).severe("No dictionary defined for English stop words.");
+      }
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
@@ -85,8 +90,8 @@ public class EnglishStopWords extends StopWords {
 
   @Override
   protected boolean isTokenStopWord(Annotation token) {
-    if (token.hasAttribute(Attrs.PART_OF_SPEECH)) {
-      POS tag = token.getAttribute(Attrs.PART_OF_SPEECH).as(POS.class);
+    if (token.contains(Attrs.PART_OF_SPEECH)) {
+      POS tag = token.get(Attrs.PART_OF_SPEECH).as(POS.class);
       if (tag != null) {
         if (tag.isInstance(POS.ADJECTIVE, POS.ADVERB, POS.NOUN, POS.VERB)) {
           return isStopWord(token.toString()) || isStopWord(token.getLemma());
@@ -100,8 +105,8 @@ public class EnglishStopWords extends StopWords {
   @Override
   public boolean isStopWord(String word) {
     return Strings.isNullOrEmpty(word) ||
-        stopWords.contains(word.toLowerCase()) ||
-        StringUtils.isNonAlphaNumeric(word);
+      stopWords.contains(word.toLowerCase()) ||
+      StringUtils.isNonAlphaNumeric(word);
   }
 
 

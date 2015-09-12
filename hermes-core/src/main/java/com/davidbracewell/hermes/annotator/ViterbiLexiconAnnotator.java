@@ -97,8 +97,8 @@ public class ViterbiLexiconAnnotator extends ViterbiAnnotator {
   protected void createAndAttachAnnotation(Document document, Match match) {
     if (match.matchedString != null) {
       Annotation annotation = document.createAnnotation(type, match.span);
-      annotation.putAttribute(tagAttribute, lexicon.lookup(match.matchedString).get());
-      annotation.putAttribute(Attrs.CONFIDENCE, lexicon.probability(annotation));
+      annotation.put(tagAttribute, lexicon.lookup(match.matchedString).get());
+      annotation.put(Attrs.CONFIDENCE, lexicon.probability(annotation));
     }
   }
 
@@ -110,9 +110,9 @@ public class ViterbiLexiconAnnotator extends ViterbiAnnotator {
   @Override
   protected Tuple2<String, Double> scoreSpan(HString span) {
     if (lexicon.contains(span)) {
-      return Tuple2.of(span.toString(), Math.pow(span.tokenLength() * lexicon.probability(span.toString()), 2));
+      return Tuple2.of(span.toString(), span.tokenLength() + Math.abs(2.0 / (1.0 + lexicon.probability(span))) - 1.0);
     }
-    return Tuple2.of(null, 0.0001d);
+    return Tuple2.of(null, 1d);
   }
 
 

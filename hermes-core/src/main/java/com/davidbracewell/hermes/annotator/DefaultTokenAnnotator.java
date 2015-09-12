@@ -23,6 +23,7 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.string.StringUtils;
 
 import java.io.Serializable;
@@ -32,7 +33,8 @@ import java.util.Set;
 
 /**
  * <p>
- * A <code>BreakIterator</code> backed tokenizer.
+ * A <code>BreakIterator</code> backed token annotator. The locale used for the break iterator is based on the language
+ * of the document.
  * </p>
  *
  * @author David B. Bracewell
@@ -47,7 +49,20 @@ public class DefaultTokenAnnotator implements Annotator, Serializable {
     int index = 0;
     for (int end = iterator.next(), start = 0; end != BreakIterator.DONE; end = iterator.next()) {
       if (!StringUtils.isNullOrBlank(document.subSequence(start, end).toString())) {
-        document.createAnnotation(Types.TOKEN, start, end, Collect.map(Attrs.INDEX, index));
+        Annotation token = document.createAnnotation(Types.TOKEN, start, end, Collect.map(Attrs.INDEX, index));
+        String tokenString = token.toString();
+
+        //Simplistic Type assignment
+        if (StringUtils.isDigit(tokenString)) {
+          token.put(Attrs.TOKEN_TYPE, TokenType.NUMBER);
+        } else if (StringUtils.isAlphaNumeric(tokenString)) {
+          token.put(Attrs.TOKEN_TYPE, TokenType.ALPHA_NUMERIC);
+        } else if (StringUtils.isPunctuation(tokenString)) {
+          token.put(Attrs.TOKEN_TYPE, TokenType.PUNCTUATION);
+        } else {
+          token.put(Attrs.TOKEN_TYPE, TokenType.UNKNOWN);
+        }
+
         index++;
       }
       start = end;

@@ -53,8 +53,8 @@ public class LexiconExample {
           document.getOverlapping(Types.LEXICON_MATCH)
               .forEach(m -> System.out.println(
                   m +
-                      " [" + m.getAttribute(Attrs.TAG) + "] " +
-                      " [" + m.getAttribute(Attrs.CONFIDENCE) + "]"
+                      " [" + m.get(Attrs.TAG) + "] " +
+                      " [" + m.get(Attrs.CONFIDENCE) + "]"
               ));
         })
         .build();

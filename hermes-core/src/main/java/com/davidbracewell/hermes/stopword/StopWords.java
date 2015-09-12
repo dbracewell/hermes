@@ -50,7 +50,7 @@ public abstract class StopWords implements Predicate<HString> {
     if (!stopWordLists.containsKey(language)) {
       synchronized (StopWords.class) {
         if (!stopWordLists.containsKey(language)) {
-          stopWordLists.put(language, Config.get(StopWords.class, language).as(StopWords.class, new NoOptStopWords()));
+          stopWordLists.put(language, Config.get("hermes.StopWords", language, "class").as(StopWords.class, new NoOptStopWords()));
         }
       }
     }
@@ -79,13 +79,13 @@ public abstract class StopWords implements Predicate<HString> {
     }
 
     return text.isEmpty() ||
-        text.tokens().stream().allMatch(this::isTokenStopWord);
+      text.tokens().stream().allMatch(this::isTokenStopWord);
 
   }
 
   @Override
   public final boolean test(HString input) {
-    return isStopWord(input);
+    return !isStopWord(input);
   }
 
   /**
@@ -98,7 +98,7 @@ public abstract class StopWords implements Predicate<HString> {
   }
 
   private final Predicate<CharSequence> STOPWORD_PREDICATE = (Serializable & Predicate<CharSequence>)
-      (input -> isStopWord(input.toString()));
+    (input -> isStopWord(input.toString()));
 
 
   /**

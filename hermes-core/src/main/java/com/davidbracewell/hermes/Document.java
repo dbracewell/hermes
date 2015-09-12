@@ -78,6 +78,11 @@ public class Document extends HString {
   }
 
   @Override
+  public Set<Attribute> attributes() {
+    return attributes.keySet();
+  }
+
+  @Override
   public char charAt(int index) {
     return content.charAt(index);
   }
@@ -126,8 +131,8 @@ public class Document extends HString {
 
   @Override
   public Language getLanguage() {
-    if (hasAttribute(Attrs.LANGUAGE)) {
-      return getAttribute(Attrs.LANGUAGE).as(Language.class);
+    if (contains(Attrs.LANGUAGE)) {
+      return get(Attrs.LANGUAGE).as(Language.class);
     }
     return Hermes.defaultLanguage();
   }
@@ -239,7 +244,7 @@ public class Document extends HString {
     Preconditions.checkArgument(end <= end(), "Annotation must have a ending position <= the end of the document");
     Annotation annotation = new Annotation(this, type, start, end);
     annotation.setId(idGenerator.getAndIncrement());
-    annotation.putAllAttributes(attributeMap);
+    annotation.putAll(attributeMap);
     annotationSet.add(annotation);
     return annotation;
   }
@@ -269,7 +274,7 @@ public class Document extends HString {
 
       if (attributes.size() > 0) {
         writer.beginObject("attributes");
-        for (Map.Entry<Attribute, Val> entry : getAttributes()) {
+        for (Map.Entry<Attribute, Val> entry : attributeValues()) {
           entry.getKey().write(writer, entry.getValue());
         }
         writer.endObject();
@@ -383,14 +388,14 @@ public class Document extends HString {
       reader.endDocument();
 
       Document document = new Document(
-          docProperties.get("id").asString(),
-          docProperties.get("content").asString()
+        docProperties.get("id").asString(),
+        docProperties.get("content").asString()
       );
 
-      document.putAllAttributes(attributeValMap);
+      document.putAll(attributeValMap);
       annotations.forEach(annotation -> {
         Annotation newAnnotation = new Annotation(document, annotation.getType(), annotation.start(), annotation.end());
-        newAnnotation.putAllAttributes(annotation.getAttributeMap());
+        newAnnotation.putAll(annotation.getAttributeMap());
         newAnnotation.setId(annotation.getId());
         document.annotationSet.add(newAnnotation);
       });

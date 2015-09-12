@@ -153,7 +153,7 @@ public class DocumentFactory {
    */
   public Document create(@NonNull String id, @NonNull String content, @NonNull Language language, @NonNull Map<Attribute, ?> attributeMap) {
     Document document = new Document(id, normalizer.normalize(content, language), language);
-    document.putAllAttributes(attributeMap);
+    document.putAll(attributeMap);
     document.setLanguage(language);
     return document;
   }
@@ -170,7 +170,7 @@ public class DocumentFactory {
    */
   public Document createRaw(@NonNull String id, @NonNull String content, @NonNull Language language, @NonNull Map<Attribute, ?> attributeMap) {
     Document document = new Document(id, content, language);
-    document.putAllAttributes(attributeMap);
+    document.putAll(attributeMap);
     document.setLanguage(language);
     return document;
   }

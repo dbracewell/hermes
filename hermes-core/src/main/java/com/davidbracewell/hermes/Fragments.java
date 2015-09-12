@@ -22,11 +22,13 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.conversion.Val;
+import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -37,101 +39,13 @@ import java.util.Map;
  */
 public final class Fragments {
 
-  private Fragments() {
-    throw new IllegalAccessError();
-  }
-
-
-  /**
-   * Creates a new HString that does not has no content or document associated with it.
-   *
-   * @return the new HString
-   */
-  public static HString emptyOrphan() {
-    return ORPHANED_EMPTY;
-  }
-
-  /**
-   * Creates a new HString that has content, but no document associated with it
-   *
-   * @param content the content of the string
-   * @return the new HString
-   */
-  public static HString orphan(@Nonnull String content) {
-    return new HStringImpl(content);
-  }
-
-  /**
-   * Creates an empty HString
-   *
-   * @param document the document
-   * @return the new HString (associated with the given document if it is not null)
-   */
-  public static HString empty(Document document) {
-    return new Fragment(document, 0, 0);
-  }
-
-  /**
-   * Creates a detached empty annotation, i.e. an empty span and no document associated with it.
-   *
-   * @return the annotation
-   */
-  public static Annotation detachedEmptyAnnotation() {
-    return new Annotation();
-  }
-
-  /**
-   * Creates a detached annotation, i.e. no document associated with it.
-   *
-   * @param type  the type of annotation
-   * @param start the start of the span
-   * @param end   the end of the span
-   * @return the annotation
-   */
-  public static Annotation detatchedAnnotation(AnnotationType type, int start, int end) {
-    return new Annotation(type, start, end);
-  }
-
-  private static class HStringImpl extends HString {
-    private static final long serialVersionUID = 1L;
-
-    private final String content;
-    private final Map<Attribute, Val> attributes = new HashMap<>(5);
-
-    private HStringImpl(@Nonnull String content) {
-      super(0, content.length());
-      this.content = content;
-    }
-
-    @Override
-    public char charAt(int index) {
-      return content.charAt(index);
-    }
-
-    @Override
-    public Document document() {
-      return null;
-    }
-
-    @Override
-    protected Map<Attribute, Val> getAttributeMap() {
-      return attributes;
-    }
-
-    @Override
-    public int start() {
-      return 0;
-    }
-
-    @Override
-    public int end() {
-      return content.length();
-    }
-  }
-
-
   private static HString ORPHANED_EMPTY = new HString(0, 0) {
     private static final long serialVersionUID = 1L;
+
+    @Override
+    public Set<Attribute> attributes() {
+      return Collections.emptySet();
+    }
 
     @Override
     public char charAt(int index) {
@@ -148,6 +62,124 @@ public final class Fragments {
       return Collections.emptyMap();
     }
   };
+
+
+  private Fragments() {
+    throw new IllegalAccessError();
+  }
+
+  /**
+   * Creates a detached annotation, i.e. no document associated with it.
+   *
+   * @param type  the type of annotation
+   * @param start the start of the span
+   * @param end   the end of the span
+   * @return the annotation
+   */
+  public static Annotation detachedAnnotation(AnnotationType type, int start, int end) {
+    return new Annotation(type, start, end);
+  }
+
+  /**
+   * Creates a new HString that has content, but no document associated with it
+   *
+   * @param content the content of the string
+   * @return the new HString
+   */
+  public static HString string(@Nonnull String content) {
+    return new HStringImpl(content);
+  }
+
+  /**
+   * Creates a detached empty annotation, i.e. an empty span and no document associated with it.
+   *
+   * @return the annotation
+   */
+  public static Annotation detachedEmptyAnnotation() {
+    return new Annotation();
+  }
+
+  /**
+   * Creates a new HString that does not has no content or document associated with it.
+   *
+   * @return the new HString
+   */
+  public static HString detachedEmptyHString() {
+    return ORPHANED_EMPTY;
+  }
+
+  /**
+   * Creates an empty HString
+   *
+   * @param document the document
+   * @return the new HString (associated with the given document if it is not null)
+   */
+  public static HString empty(Document document) {
+    return new Fragment(document, 0, 0);
+  }
+
+  private static class HStringImpl extends HString {
+    private static final long serialVersionUID = 1L;
+
+    private final String content;
+    private final Map<Attribute, Val> attributes = new HashMap<>(5);
+
+    private HStringImpl(@Nonnull String content) {
+      super(0, content.length());
+      this.content = content;
+    }
+
+    @Override
+    public Set<Attribute> attributes() {
+      return attributes.keySet();
+    }
+
+    @Override
+    public char charAt(int index) {
+      return content.charAt(index);
+    }
+
+    @Override
+    public Document document() {
+      return null;
+    }
+
+    @Override
+    public int end() {
+      return content.length();
+    }
+
+    @Override
+    public HString find(@Nonnull String text, int start) {
+      Preconditions.checkPositionIndex(start, length());
+      int pos = indexOf(text, start);
+      if (pos == -1) {
+        return Fragments.detachedEmptyHString();
+      }
+      return new HStringImpl(content.substring(pos, pos + text.length()));
+    }
+
+    @Override
+    protected Map<Attribute, Val> getAttributeMap() {
+      return attributes;
+    }
+
+    @Override
+    public int start() {
+      return 0;
+    }
+
+    @Override
+    public HString substring(int relativeStart, int relativeEnd) {
+      return new HStringImpl(content.substring(relativeStart, relativeEnd));
+    }
+
+    @Override
+    public String toString() {
+      return this.content;
+    }
+
+  }
 
 
 }//END OF Fragments

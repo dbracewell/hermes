@@ -24,16 +24,15 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
+import com.davidbracewell.hermes.stopword.StopWords;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -217,7 +216,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   @Override
-  public Val getAttribute(Attribute attribute) {
+  public Val get(Attribute attribute) {
     if (attribute == null) {
       return Val.NULL;
     }
@@ -235,7 +234,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   protected abstract Map<Attribute, Val> getAttributeMap();
 
   @Override
-  public Set<Map.Entry<Attribute, Val>> getAttributes() {
+  public Set<Map.Entry<Attribute, Val>> attributeValues() {
     return getAttributeMap().entrySet();
   }
 
@@ -262,8 +261,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @return The language of the HString
    */
   public Language getLanguage() {
-    if (hasAttribute(Attrs.LANGUAGE)) {
-      return getAttribute(Attrs.LANGUAGE).as(Language.class);
+    if (contains(Attrs.LANGUAGE)) {
+      return get(Attrs.LANGUAGE).as(Language.class);
     }
     if (document() == null) {
       return Hermes.defaultLanguage();
@@ -277,7 +276,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param language The language of the HString.
    */
   public void setLanguage(Language language) {
-    putAttribute(Attrs.LANGUAGE, language);
+    put(Attrs.LANGUAGE, language);
   }
 
   /**
@@ -286,8 +285,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @return the lemmatized version of this HString
    */
   public String getLemma() {
-    if (hasAttribute(Attrs.LEMMA)) {
-      return getAttribute(Attrs.LEMMA).asString();
+    if (contains(Attrs.LEMMA)) {
+      return get(Attrs.LEMMA).asString();
     }
     return toLowerCase();
   }
@@ -309,7 +308,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   @Override
-  public boolean hasAttribute(Attribute attribute) {
+  public boolean contains(Attribute attribute) {
     return getAttributeMap().containsKey(attribute) ||
       getAttributeMap().containsKey(attribute.goldStandardVersion());
   }
@@ -397,11 +396,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   @Override
-  public Val putAttribute(Attribute attribute, Object value) {
+  public Val put(Attribute attribute, Object value) {
     if (attribute != null) {
       Val val = Val.of(value);
       if (val.isNull()) {
-        return removeAttribute(attribute);
+        return remove(attribute);
       }
       return getAttributeMap().put(attribute, val);
     }
@@ -409,7 +408,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   @Override
-  public Val removeAttribute(Attribute attribute) {
+  public Val remove(Attribute attribute) {
     return getAttributeMap().remove(attribute);
   }
 
@@ -485,7 +484,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @return the h string
    */
   public HString substring(int relativeStart, int relativeEnd) {
-    Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
     return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
   }
 
@@ -493,7 +491,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * To lower case.
    *
    * @return the string
-   * @see String#toLowerCase(java.util.Locale)  NOTE: Uses locale associated with the HString's langauge
+   * @see String#toLowerCase(Locale) NOTE: Uses locale associated with the HString's langauge
    */
   public String toLowerCase() {
     return toString().toLowerCase(getLanguage().asLocale());
@@ -506,7 +504,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public String toPOSString() {
     return tokens().stream()
-      .map(t -> t.toString() + "/" + t.getAttribute(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
+      .map(t -> t.toString() + "/" + t.get(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
       .collect(Collectors.joining(" "));
   }
 
@@ -514,7 +512,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * To upper case.
    *
    * @return the string
-   * @see String#toUpperCase(java.util.Locale)  NOTE: Uses locale associated with the HString's langauge
+   * @see String#toUpperCase(Locale) NOTE: Uses locale associated with the HString's langauge
    */
   public String toUpperCase() {
     return toString().toUpperCase(getLanguage().asLocale());
@@ -561,7 +559,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     if (other == null) {
       return false;
     }
-    return (document() == other.document()) && super.overlaps(other);
+    return (document() != null && other.document() != null) &&
+      (document() == other.document()) &&
+      super.overlaps(other);
   }
 
   /**
@@ -574,12 +574,185 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     if (other == null) {
       return false;
     }
-    return (document() == other.document()) && super.encloses(other);
+    return (document() != null && other.document() != null) &&
+      (document() == other.document())
+      && super.encloses(other);
   }
 
+  /**
+   * Gets the part of speech of the HString
+   *
+   * @return The best part of speech for the HString
+   */
   public POS getPOS() {
     return POS.forText(this);
   }
 
+
+  /**
+   * Token n grams.
+   *
+   * @param order the order
+   * @return the list
+   */
+  public List<HString> tokenNGrams(int order) {
+    return ngrams(order, Types.TOKEN, true);
+  }
+
+  /**
+   * Token n grams.
+   *
+   * @param order            the order
+   * @param includeStopWords the include stop words
+   * @return the list
+   */
+  public List<HString> tokenNGrams(int order, boolean includeStopWords) {
+    return ngrams(order, Types.TOKEN, includeStopWords);
+  }
+
+  /**
+   * Token n grams.
+   *
+   * @param order  the order
+   * @param filter the filter
+   * @return the list
+   */
+  public List<HString> tokenNGrams(int order, @Nonnull Predicate<? super HString> filter) {
+    return ngrams(order, Types.TOKEN, filter);
+  }
+
+
+  /**
+   * Ngrams list.
+   *
+   * @param order          the order
+   * @param annotationType the annotation type
+   * @return the list
+   */
+  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType) {
+    return ngrams(order, annotationType, true);
+  }
+
+  /**
+   * Ngrams list.
+   *
+   * @param order            the order
+   * @param annotationType   the annotation type
+   * @param includeStopWords the include stop words
+   * @return the list
+   */
+  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, boolean includeStopWords) {
+    if (includeStopWords) {
+      return ngrams(
+        order,
+        annotationType,
+        t -> true
+      );
+    }
+    return ngrams(
+      order,
+      annotationType,
+      StopWords.getInstance(getLanguage())
+    );
+  }
+
+  /**
+   * Ngrams list.
+   *
+   * @param order          the order
+   * @param annotationType the annotation type
+   * @param filter         the filter
+   * @return the list
+   */
+  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, @Nonnull Predicate<? super HString> filter) {
+    if (order <= 0) {
+      return Collections.emptyList();
+    } else if (order == 1) {
+      return getOverlapping(annotationType)
+        .stream()
+        .filter(filter)
+        .collect(Collectors.toList());
+    }
+
+
+    List<HString> ngrams = new ArrayList<>();
+    List<HString> annotations = Cast.cast(getOverlapping(annotationType));
+    for (int i = 0; i <= annotations.size() - order; ) {
+      if (filter.test(annotations.get(i))) {
+        int badIndex = -1;
+
+        for (int j = i + 1; j < i + order; j++) {
+          if (!filter.test(annotations.get(j))) {
+            badIndex = j;
+            break;
+          }
+        }
+
+        if (badIndex == -1) {
+          ngrams.add(HString.union(annotations.subList(i, i + order)));
+          i++;
+        } else {
+          i = badIndex + 1;
+        }
+
+      } else {
+        i++;
+      }
+    }
+
+    return ngrams;
+  }
+
+
+  /**
+   * Char n grams.
+   *
+   * @param order the order
+   * @return the list
+   */
+  public List<HString> charNGrams(int order) {
+    return charNGrams(order, c -> true);
+  }
+
+  /**
+   * Char n grams.
+   *
+   * @param order  the order
+   * @param filter the filter
+   * @return the list
+   */
+  public List<HString> charNGrams(int order, @Nonnull Predicate<Character> filter) {
+    List<HString> ngrams = new ArrayList<>();
+
+    if (order <= 0) {
+      return ngrams;
+    }
+
+    for (int i = 0; i <= length() - order; ) {
+      if (filter.test(charAt(i))) {
+        int badIndex = -1;
+
+        for (int j = i + 1; j < i + order; j++) {
+          if (!filter.test(charAt(j))) {
+            badIndex = j;
+            break;
+          }
+        }
+
+        if (badIndex == -1) {
+          ngrams.add(substring(i, i + order));
+          i++;
+        } else {
+          i = badIndex + 1;
+        }
+
+      } else {
+        i++;
+      }
+
+    }
+
+    return ngrams;
+  }
 
 }//END OF HString

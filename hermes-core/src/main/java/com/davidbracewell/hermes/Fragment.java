@@ -27,6 +27,7 @@ import com.davidbracewell.conversion.Val;
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -56,6 +57,11 @@ class Fragment extends HString {
   Fragment() {
     super(0, 0);
     this.owner = null;
+  }
+
+  @Override
+  public Set<Attribute> attributes() {
+    return attributes.keySet();
   }
 
   @Override

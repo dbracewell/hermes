@@ -122,13 +122,13 @@ public final class Annotation extends Fragment implements Serializable {
       }
     }
 
-    Annotation annotation = Fragments.detatchedAnnotation(
+    Annotation annotation = Fragments.detachedAnnotation(
       AnnotationType.create(annotationProperties.get("type").asString()),
       annotationProperties.get("start").asIntegerValue(),
       annotationProperties.get("end").asIntegerValue()
     );
     annotation.setId(annotationProperties.get("id").asLongValue());
-    annotation.putAllAttributes(attributeValMap);
+    annotation.putAll(attributeValMap);
 
 
     reader.endObject();
@@ -249,7 +249,7 @@ public final class Annotation extends Fragment implements Serializable {
 
     if (getAttributeMap().size() > 0) {
       writer.beginObject("attributes");
-      for (Map.Entry<Attribute, Val> entry : getAttributes()) {
+      for (Map.Entry<Attribute, Val> entry : attributeValues()) {
         entry.getKey().write(writer, entry.getValue());
       }
       writer.endObject();
@@ -263,13 +263,13 @@ public final class Annotation extends Fragment implements Serializable {
     if (isInstance(Types.TOKEN)) {
       return Optional.of(getPOS());
     } else if (isInstance(Types.ENTITY)) {
-      return Optional.of(getAttribute(Attrs.ENTITY_TYPE).as(EntityType.class));
+      return Optional.of(get(Attrs.ENTITY_TYPE).as(EntityType.class));
     }
     Attribute tagAttribute = annotationType.getTagAttribute();
     if (tagAttribute == null) {
-      return Optional.empty();
+      return Optional.ofNullable(get(Attrs.TAG).as(Tag.class));
     }
-    return Optional.ofNullable(getAttribute(tagAttribute).as(Tag.class));
+    return Optional.ofNullable(get(tagAttribute).as(Tag.class));
   }
 
 }//END OF Annotation

@@ -61,11 +61,11 @@ public class OpenNLPEntityAnnotator implements Annotator, Serializable {
           document.createAnnotation(
               OPENNLP_ENTITY,
               tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
-          ).putAllAttributes(
-              Collect.map(
-                  Attrs.ENTITY_TYPE, EntityType.valueOf(span.getType().toUpperCase()),
-                  Attrs.CONFIDENCE, probs[i]
-              )
+          ).putAll(
+            Collect.map(
+              Attrs.ENTITY_TYPE, EntityType.valueOf(span.getType().toUpperCase()),
+              Attrs.CONFIDENCE, probs[i]
+            )
           );
         }
       }

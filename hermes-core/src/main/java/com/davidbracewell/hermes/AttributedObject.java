@@ -27,23 +27,29 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * <p>In the TIPSTER architecture an attribute represents features associated with different classes. Attributes in
- * TIPSTER are represented as feature-value pairs where features names are arbitrary strings and the values are
- * arbitrary types.In <code>com.davidbracewell.text</code> attributes are also represented as feature-value pairs, but
- * feature names are of the type {@link Attribute} which is a dynamic enum and values are of type
- * <code>Object</code> allowing any possible type. Values are cast to a specific type when calling the {@link
- * #getAttribute(Attribute)} method as a convenience.</p>
+ * <p>
+ * An <code>AttributedObject</code> is an object that has zero or more attributes associated with it. An attribute
+ * may represent an learned annotation (e.g. part of speech or word sense), metadata (e.g. author or source url), or a
+ * feature (e.g. suffix or phonetic encoding).
+ * </p>
  *
  * @author David B. Bracewell
  */
 public interface AttributedObject {
 
   /**
-   * Gets the set of attribute names for the attributes associated with the object.
+   * Gets the set of attributes and values associated with the object.
    *
-   * @return the attribute names
+   * @return the attributes and their values
    */
-  Set<Map.Entry<Attribute, Val>> getAttributes();
+  Set<Map.Entry<Attribute, Val>> attributeValues();
+
+  /**
+   * Gets the attributes associated with the object
+   *
+   * @return the attributes associated with the object.
+   */
+  Set<Attribute> attributes();
 
   /**
    * Determines if an attribute of a given name is associated with the object
@@ -51,7 +57,7 @@ public interface AttributedObject {
    * @param attribute The attribute name
    * @return True if the attribute is associated with the object, False otherwise
    */
-  boolean hasAttribute(Attribute attribute);
+  boolean contains(Attribute attribute);
 
   /**
    * Gets the value for a given attribute name
@@ -59,7 +65,7 @@ public interface AttributedObject {
    * @param attribute the attribute name
    * @return the value associated with the attribute or null
    */
-  Val getAttribute(Attribute attribute);
+  Val get(Attribute attribute);
 
   /**
    * Sets the value of an attribute. Removes the attribute if the value is null and ignores setting a value if the
@@ -69,7 +75,7 @@ public interface AttributedObject {
    * @param value     the value
    * @return The old value of the attribute or null
    */
-  Val putAttribute(Attribute attribute, Object value);
+  Val put(Attribute attribute, Object value);
 
   /**
    * Sets the value of an attribute if a value is not already set. Removes the attribute if the value is null and
@@ -79,11 +85,11 @@ public interface AttributedObject {
    * @param value     the value
    * @return The old value of the attribute or null
    */
-  default Val putAttributeIfAbsent(Attribute attribute, Object value) {
-    if (hasAttribute(attribute)) {
-      return getAttribute(attribute);
+  default Val putIfAbsent(Attribute attribute, Object value) {
+    if (contains(attribute)) {
+      return get(attribute);
     }
-    return putAttribute(attribute, value);
+    return put(attribute, value);
   }
 
   /**
@@ -91,9 +97,9 @@ public interface AttributedObject {
    *
    * @param map the attribute-value map
    */
-  default void putAllAttributes(Map<Attribute, ?> map) {
+  default void putAll(Map<Attribute, ?> map) {
     if (map != null) {
-      map.entrySet().stream().forEach(e -> this.putAttribute(e.getKey(), e.getValue()));
+      map.entrySet().stream().forEach(e -> this.put(e.getKey(), e.getValue()));
     }
   }
 
@@ -103,7 +109,7 @@ public interface AttributedObject {
    * @param attribute the attribute name
    * @return the value that was associated with the attribute
    */
-  Val removeAttribute(Attribute attribute);
+  Val remove(Attribute attribute);
 
 
 }//END OF AttributedObject

@@ -88,7 +88,7 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
    * @return The combination of the current and span scores
    */
   protected double combineScore(double currentScore, double spanScore) {
-    return currentScore * spanScore;
+    return currentScore + spanScore;
   }
 
   /**

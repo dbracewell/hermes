@@ -79,8 +79,8 @@ public class OpenNLPExample {
                   entity -> System.out.println
                     (
                       entity + "/" +
-                        entity.getAttribute(Attrs.ENTITY_TYPE) +
-                        " [" + entity.getAttribute(Attrs.CONFIDENCE) + "]"
+                        entity.get(Attrs.ENTITY_TYPE) +
+                        " [" + entity.get(Attrs.CONFIDENCE) + "]"
                     )
                 );
               System.out.println();

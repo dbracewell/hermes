@@ -52,7 +52,7 @@ public class OpenNLPPOSAnnotator extends SentenceLevelAnnotator {
     String[] tags = posTagger.tag(tokens);
     for (int i = 0; i < tokens.length; i++) {
       Annotation token = sentence.tokenAt(i);
-      token.putAttribute(Attrs.PART_OF_SPEECH, POS.fromString(tags[i]));
+      token.put(Attrs.PART_OF_SPEECH, POS.fromString(tags[i]));
     }
   }
 

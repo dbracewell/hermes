@@ -51,14 +51,14 @@ public class OpenNLPPhraseChunkAnnotator implements Annotator, Serializable {
       String[] pos = new String[tokenList.size()];
       for (int i = 0; i < tokenList.size(); i++) {
         tokens[i] = tokenList.get(i).toString();
-        pos[i] = tokenList.get(i).getAttribute(Attrs.PART_OF_SPEECH).as(POS.class).asString();
+        pos[i] = tokenList.get(i).get(Attrs.PART_OF_SPEECH).as(POS.class).asString();
       }
       Span[] chunks = chunker.chunkAsSpans(tokens, pos);
       for (Span span : chunks) {
         sentence.document().createAnnotation(
             Types.PHRASE_CHUNK,
             tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
-        ).putAttribute(Attrs.PART_OF_SPEECH, POS.valueOf(span.getType()));
+        ).put(Attrs.PART_OF_SPEECH, POS.valueOf(span.getType()));
       }
     }
   }
