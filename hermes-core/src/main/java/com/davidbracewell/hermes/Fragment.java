@@ -25,9 +25,8 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.conversion.Val;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * <p>
@@ -77,6 +76,14 @@ class Fragment extends HString {
   @Override
   protected Map<Attribute, Val> getAttributeMap() {
     return attributes;
+  }
+
+  @Override
+  public List<Annotation> get(AnnotationType type, @Nonnull Predicate<? super Annotation> filter) {
+    if (document() == null) {
+      return Collections.emptyList();
+    }
+    return document().get(type, this, filter);
   }
 
 }//END OF Fragment

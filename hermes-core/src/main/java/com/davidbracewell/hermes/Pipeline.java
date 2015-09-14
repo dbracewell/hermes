@@ -24,19 +24,23 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Language;
 import com.davidbracewell.concurrent.Broker;
 import com.davidbracewell.hermes.corpus.Corpus;
+import com.davidbracewell.hermes.corpus.CorpusFormat;
+import com.davidbracewell.io.AsyncWriter;
+import com.davidbracewell.io.Resources;
+import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Throwables;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 /**
@@ -57,9 +61,11 @@ public final class Pipeline implements Serializable {
   private final java.util.function.Consumer<Document> onComplete;
   private final int queueSize;
   private AtomicLong documentsProcessed = new AtomicLong();
+  private final boolean returnCorpus;
 
 
-  private Pipeline(int numberOfThreads, int queueSize, java.util.function.Consumer<Document> onComplete, Collection<AnnotationType> annotationTypes) {
+  private Pipeline(int numberOfThreads, int queueSize, Consumer<Document> onComplete, Collection<AnnotationType> annotationTypes, boolean returnCorpus) {
+    this.returnCorpus = returnCorpus;
     Preconditions.checkArgument(numberOfThreads > 0, "Number of threads must be > 0");
     Preconditions.checkArgument(queueSize > 0, "Queue size must be > 0");
     this.queueSize = queueSize;
@@ -107,8 +113,12 @@ public final class Pipeline implements Serializable {
 
       Annotator annotator = AnnotatorCache.getInstance().get(annotationType, textDocument.getLanguage());
 
-      if (!annotator.provides().contains(annotationType)) {
-        throw new IllegalStateException(annotator.getClass().getName() + " does not produce " + annotationType);
+      if (annotator == null) {
+        throw new IllegalStateException("Could not get annotator for " + annotationType);
+      }
+
+      if (!annotator.satisfies().contains(annotationType)) {
+        throw new IllegalStateException(annotator.getClass().getName() + " does not satisfy " + annotationType);
       }
 
       //Get the requirements out of the way
@@ -117,7 +127,7 @@ public final class Pipeline implements Serializable {
       }
 
       annotator.annotate(textDocument);
-      for (AnnotationType type : annotator.provides()) {
+      for (AnnotationType type : annotator.satisfies()) {
         textDocument.getAnnotationSet().setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
       }
 
@@ -138,17 +148,39 @@ public final class Pipeline implements Serializable {
    *
    * @param documents the source of documents to be annotated
    */
-  public void process(Corpus documents) {
+  public Corpus process(Corpus documents) {
     timer.start();
-    Broker.<Document>builder()
-        .addProducer(new Producer(documents))
-        .addConsumer(new Consumer(annotationTypes, onComplete, documentsProcessed), numberOfThreads)
-        .bufferSize(queueSize)
+
+    Broker.Builder<Document> builder = Broker.<Document>builder()
+      .addProducer(new Producer(documents))
+      .bufferSize(queueSize);
+
+    Corpus corpus = Corpus.from(Collections.emptyList());
+    if (returnCorpus) {
+      Resource tempFile = Resources.temporaryFile();
+      try (AsyncWriter writer = new AsyncWriter(tempFile.openWriter())) {
+        builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer), numberOfThreads)
+          .build().run();
+        writer.close();
+        corpus = Corpus.from(CorpusFormat.JSON_OPL, tempFile);
+      } catch (Exception e) {
+        throw Throwables.propagate(e);
+      }
+
+
+    } else {
+
+      builder
+        .addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, null), numberOfThreads)
         .build()
         .run();
+    }
+
     timer.stop();
     totalTime += timer.elapsed(TimeUnit.MILLISECONDS);
     timer.reset();
+
+    return corpus;
   }
 
   public void process(Document document) {
@@ -199,16 +231,18 @@ public final class Pipeline implements Serializable {
     }
   }
 
-  private class Consumer implements java.util.function.Consumer<Document>, Serializable {
+  private class AnnotateConsumer implements java.util.function.Consumer<Document>, Serializable {
     private static final long serialVersionUID = 1L;
     private final AnnotationType[] annotationTypes;
     private final java.util.function.Consumer<Document> onComplete;
     private final AtomicLong counter;
+    private final AsyncWriter writer;
 
-    private Consumer(AnnotationType[] annotationTypes, java.util.function.Consumer<Document> onComplete, AtomicLong counter) {
+    private AnnotateConsumer(AnnotationType[] annotationTypes, Consumer<Document> onComplete, AtomicLong counter, AsyncWriter writer) {
       this.annotationTypes = annotationTypes;
       this.onComplete = onComplete;
       this.counter = counter;
+      this.writer = writer;
     }
 
     @Override
@@ -216,6 +250,13 @@ public final class Pipeline implements Serializable {
       if (document != null) {
         process(document, annotationTypes);
         counter.incrementAndGet();
+        if (writer != null) {
+          try {
+            writer.write(document.toJson() + "\n");
+          } catch (IOException e) {
+            throw Throwables.propagate(e);
+          }
+        }
         onComplete.accept(document);
       }
     }
@@ -231,6 +272,7 @@ public final class Pipeline implements Serializable {
     Set<AnnotationType> annotationTypes = new HashSet<>();
     int numberOfThreads = Runtime.getRuntime().availableProcessors();
     java.util.function.Consumer<Document> onComplete = NoOpt.INSTANCE;
+    boolean returnCorpus = false;
 
     /**
      * Add annotation.
@@ -255,13 +297,18 @@ public final class Pipeline implements Serializable {
       return this;
     }
 
+    public Builder returnCorpus(boolean returnCorpus) {
+      this.returnCorpus = returnCorpus;
+      return this;
+    }
+
     /**
      * Build pipeline.
      *
      * @return the pipeline
      */
     public Pipeline build() {
-      return new Pipeline(numberOfThreads, queueSize, onComplete, annotationTypes);
+      return new Pipeline(numberOfThreads, queueSize, onComplete, annotationTypes, returnCorpus);
     }
 
     /**

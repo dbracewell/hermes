@@ -167,9 +167,9 @@ public class Attribute extends EnumValue {
   }
 
   static Map<Attribute, Val> readAttributeList(StructuredReader reader) throws IOException {
-    if (reader.peek() == ElementType.BEGIN_OBJECT) {
-      reader.beginObject("attributes");
-    }
+//    if (reader.peek() == ElementType.BEGIN_OBJECT) {
+//      reader.beginObject("attributes");
+//    }
     Map<Attribute, Val> attributeValMap = new HashMap<>();
     while (reader.peek() != ElementType.END_OBJECT) {
       Collect.put(attributeValMap, read(reader));

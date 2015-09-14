@@ -28,11 +28,9 @@ import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.collect.FluentIterable;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +39,7 @@ import java.util.List;
  * @author David B. Bracewell
  */
 @MetaInfServices(CorpusFormat.class)
-public class CONLLFormat extends FileBasedFormat implements Serializable {
+public class CONLLFormat extends FileBasedFormat {
   private static final long serialVersionUID = 1L;
 
 
@@ -95,8 +93,22 @@ public class CONLLFormat extends FileBasedFormat implements Serializable {
     }
   }
 
+  private Document createDocument(List<List<String>> rows, DocumentFactory documentFactory) {
+    List<String> tokens = new ArrayList<>();
+    for (List<String> wordInfo : rows) {
+      tokens.add(wordInfo.get(wordIndex));
+    }
+    Document document = documentFactory.fromTokens(tokens);
+    document.createAnnotation(Types.SENTENCE, 0, document.length());
+    document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "Corpus");
+    for (FieldProcessor processor : processors) {
+      processor.process(document, rows);
+    }
+    return document;
+  }
+
   @Override
-  protected Iterable<Document> readResource(Resource resource, DocumentFactory documentFactory) throws IOException {
+  public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
     List<Document> documents = new ArrayList<>();
 
     List<List<String>> rows = new ArrayList<>();
@@ -117,21 +129,7 @@ public class CONLLFormat extends FileBasedFormat implements Serializable {
     }
 
 
-    return FluentIterable.from(documents);
-  }
-
-  private Document createDocument(List<List<String>> rows, DocumentFactory documentFactory) {
-    List<String> tokens = new ArrayList<>();
-    for (List<String> wordInfo : rows) {
-      tokens.add(wordInfo.get(wordIndex));
-    }
-    Document document = documentFactory.fromTokens(tokens);
-    document.createAnnotation(Types.SENTENCE, 0, document.length());
-    document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "Corpus");
-    for (FieldProcessor processor : processors) {
-      processor.process(document, rows);
-    }
-    return document;
+    return documents;
   }
 
   @Override

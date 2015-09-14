@@ -63,7 +63,7 @@ public class GettingStarted {
     }
 
     //Print out the animal mention annotations
-    document.getOverlapping(animalMention).forEach(a -> System.out.println(a + "[" + a.start() + ", " + a.end() + "]"));
+    document.get(animalMention).forEach(a -> System.out.println(a + "[" + a.start() + ", " + a.end() + "]"));
   }
 
 }//END OF GettingStarted

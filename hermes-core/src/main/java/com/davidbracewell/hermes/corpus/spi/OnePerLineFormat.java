@@ -27,27 +27,32 @@ import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.io.resource.StringResource;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Throwables;
 import lombok.NonNull;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.NoSuchElementException;
-import java.util.Queue;
+import java.util.*;
 
 /**
+ * The type One per line format.
+ *
  * @author David B. Bracewell
  */
-public class OnePerLineFormat implements CorpusFormat, Serializable {
+public class OnePerLineFormat extends FileBasedFormat {
   private static final long serialVersionUID = 1L;
 
-  final CorpusFormat subFormat;
+  private final CorpusFormat subFormat;
 
+  /**
+   * Instantiates a new One per line format.
+   *
+   * @param subFormat the sub format
+   */
   public OnePerLineFormat(@NonNull CorpusFormat subFormat) {
     this.subFormat = subFormat;
   }
@@ -61,7 +66,6 @@ public class OnePerLineFormat implements CorpusFormat, Serializable {
   public String name() {
     return "OPL";
   }
-
 
   private static class LineIterator implements Iterator<Document> {
 
@@ -130,5 +134,27 @@ public class OnePerLineFormat implements CorpusFormat, Serializable {
     }
   }
 
+  @Override
+  public void write(@NonNull Resource resource, @NonNull Iterable<Document> documents) throws IOException {
+    try (BufferedWriter writer = new BufferedWriter(resource.openWriter())) {
+      for (Document document : documents) {
+        Resource stringResource = new StringResource();
+        subFormat.write(stringResource, document);
+        String string = stringResource.readToString().trim();
+        writer.write(string);
+        writer.write("\n");
+      }
+    }
+  }
+
+  @Override
+  public void write(Resource resource, Document document) throws IOException {
+    subFormat.write(resource, document);
+  }
+
+  @Override
+  public String extension() {
+    return subFormat.extension() + "_opl";
+  }
 
 }//END OF OnePerLineFormat

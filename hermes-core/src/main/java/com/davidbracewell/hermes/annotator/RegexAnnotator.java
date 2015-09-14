@@ -82,7 +82,7 @@ public class RegexAnnotator implements Annotator, Serializable {
   }
 
   @Override
-  public Set<AnnotationType> provides() {
+  public Set<AnnotationType> satisfies() {
     return Collections.singleton(providedType);
   }
 

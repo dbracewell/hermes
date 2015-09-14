@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.hermes.*;
+import com.google.common.collect.Sets;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -29,7 +30,7 @@ import java.util.Set;
 
 /**
  * <p>
- * Annotates a sentence at a time.
+ * Annotates all sentences in the document in parallel.
  * </p>
  *
  * @author David B. Bracewell
@@ -39,7 +40,7 @@ public abstract class SentenceLevelAnnotator implements Annotator, Serializable 
 
   @Override
   public final void annotate(Document document) {
-    document.sentences().forEach(this::annotate);
+    document.sentences().parallelStream().forEach(this::annotate);
   }
 
   /**
@@ -51,7 +52,17 @@ public abstract class SentenceLevelAnnotator implements Annotator, Serializable 
 
 
   @Override
-  public Set<AnnotationType> requires() {
-    return Collections.singleton(Types.SENTENCE);
+  public final Set<AnnotationType> requires() {
+    return Sets.union(Sets.newHashSet(Types.SENTENCE, Types.TOKEN), furtherRequires());
   }
+
+  /**
+   * The annotation types beyond sentence and token that are also required. By default will return an empty Set.
+   *
+   * @return The annotations beyond sentence and token that are required for this annotator to perform annotation
+   */
+  protected Set<AnnotationType> furtherRequires() {
+    return Collections.emptySet();
+  }
+
 }//END OF SentenceLevelAnnotator

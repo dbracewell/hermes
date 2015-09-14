@@ -28,7 +28,6 @@ import com.davidbracewell.io.resource.Resource;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Collections;
 
 /**
@@ -37,8 +36,18 @@ import java.util.Collections;
  * @author David B. Bracewell
  */
 @MetaInfServices(CorpusFormat.class)
-public class PlainTextFormat extends FileBasedFormat implements Serializable {
+public class PlainTextFormat extends FileBasedFormat {
   private static final long serialVersionUID = 1L;
+
+  @Override
+  public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
+    return Collections.singleton(documentFactory.create(resource.readToString().trim()));
+  }
+
+  @Override
+  public void write(Resource resource, Document document) throws IOException {
+    resource.write(document.toString());
+  }
 
   @Override
   public String name() {
@@ -46,7 +55,8 @@ public class PlainTextFormat extends FileBasedFormat implements Serializable {
   }
 
   @Override
-  protected Iterable<Document> readResource(Resource resource, DocumentFactory documentFactory) throws IOException {
-    return Collections.singleton(documentFactory.create(resource.readToString().trim()));
+  public String extension() {
+    return "txt";
   }
+
 }//END OF PlainTextFormat

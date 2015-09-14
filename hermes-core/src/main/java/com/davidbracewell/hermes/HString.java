@@ -26,7 +26,9 @@ import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
-import com.davidbracewell.hermes.stopword.StopWords;
+import com.davidbracewell.hermes.filters.StopWords;
+import com.davidbracewell.hermes.morphology.Lemmatizers;
+import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
@@ -51,7 +53,7 @@ import java.util.stream.Collectors;
  *
  * @author David B. Bracewell
  */
-public abstract class HString extends Span implements CharSequence, AttributedObject, Annotated {
+public abstract class HString extends Span implements CharSequence, AttributedObject, AnnotatedObject {
   private static final long serialVersionUID = 1L;
 
   /**
@@ -111,6 +113,68 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return new Fragment(owner, start, end);
   }
 
+  @Override
+  public Set<Map.Entry<Attribute, Val>> attributeValues() {
+    return getAttributeMap().entrySet();
+  }
+
+  /**
+   * Char n grams.
+   *
+   * @param order the order
+   * @return the list
+   */
+  public List<HString> charNGrams(int order) {
+    return charNGrams(order, c -> true);
+  }
+
+  /**
+   * Char n grams.
+   *
+   * @param order  the order
+   * @param filter the filter
+   * @return the list
+   */
+  public List<HString> charNGrams(int order, @Nonnull Predicate<Character> filter) {
+    List<HString> ngrams = new ArrayList<>();
+
+    if (order <= 0) {
+      return ngrams;
+    }
+
+    for (int i = 0; i <= length() - order; ) {
+      if (filter.test(charAt(i))) {
+        int badIndex = -1;
+
+        for (int j = i + 1; j < i + order; j++) {
+          if (!filter.test(charAt(j))) {
+            badIndex = j;
+            break;
+          }
+        }
+
+        if (badIndex == -1) {
+          ngrams.add(substring(i, i + order));
+          i++;
+        } else {
+          i = badIndex + 1;
+        }
+
+      } else {
+        i++;
+      }
+
+    }
+
+    return ngrams;
+  }
+
+  @Override
+  public boolean contains(Attribute attribute) {
+    return getAttributeMap().containsKey(attribute) ||
+      getAttributeMap().containsKey(attribute.goldStandardVersion());
+  }
+
   /**
    * Determines if the content of this HString equals the given char sequence.
    *
@@ -162,7 +226,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @return A counter whose key is the content of the annotations of the given type
    */
   public Counter<String> count(AnnotationType type, @Nonnull Predicate<? super Annotation> predicate, @Nonnull Function<? super Annotation, String> transform) {
-    return Counters.newHashMapCounter(getOverlapping(type).stream()
+    return Counters.newHashMapCounter(get(type).stream()
         .filter(predicate)
         .map(transform)
         .collect(Collectors.toList())
@@ -180,6 +244,21 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
+   * Checks if this HString encloses the given other.
+   *
+   * @param other The other HString
+   * @return True of this one encloses the given other.
+   */
+  public final boolean encloses(HString other) {
+    if (other == null) {
+      return false;
+    }
+    return (document() != null && other.document() != null) &&
+      (document() == other.document())
+      && super.encloses(other);
+  }
+
+  /**
    * Determines if this HString ends with the given suffix.
    *
    * @param suffix the suffix to check
@@ -187,6 +266,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public boolean endsWith(String suffix) {
     return toString().endsWith(suffix);
+  }
+
+  @Override
+  public final boolean equals(Object other) {
+    return super.equals(other);
   }
 
   /**
@@ -226,33 +310,20 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return Val.of(getAttributeMap().get(attribute.goldStandardVersion()));
   }
 
+  @Override
+  public List<Annotation> get(AnnotationType type) {
+    if (type == null) {
+      return Collections.emptyList();
+    }
+    return get(type, annotation -> annotation.isInstance(type) && annotation.overlaps(this));
+  }
+
   /**
    * Exposes the underlying attributes as a Map
    *
    * @return The attribute names and values as a map
    */
   protected abstract Map<Attribute, Val> getAttributeMap();
-
-  @Override
-  public Set<Map.Entry<Attribute, Val>> attributeValues() {
-    return getAttributeMap().entrySet();
-  }
-
-  @Override
-  public List<Annotation> getContaining(AnnotationType type) {
-    if (document() != null && type != null) {
-      return document().getContaining(type, this);
-    }
-    return Collections.emptyList();
-  }
-
-  @Override
-  public List<Annotation> getDuring(AnnotationType type) {
-    if (document() != null && type != null) {
-      return document().getDuring(type, this);
-    }
-    return Collections.emptyList();
-  }
 
   /**
    * Gets the language of the HString. If no language is set for this HString, the language of document will be
@@ -285,32 +356,37 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @return the lemmatized version of this HString
    */
   public String getLemma() {
-    if (contains(Attrs.LEMMA)) {
+    if (isInstance(Types.TOKEN)) {
+      putIfAbsent(Attrs.LEMMA, Lemmatizers.getLemmatizer(getLanguage()).lemmatize(this));
       return get(Attrs.LEMMA).asString();
     }
-    return toLowerCase();
+    return tokens().stream()
+      .map(HString::getLemma)
+      .collect(Collectors.joining(
+        getLanguage().usesWhitespace() ? " " : ""
+      ));
+  }
+
+  /**
+   * Gets the part of speech of the HString
+   *
+   * @return The best part of speech for the HString
+   */
+  public POS getPOS() {
+    return POS.forText(this);
   }
 
   @Override
-  public List<Annotation> getOverlapping(AnnotationType type) {
-    if (document() != null && type != null) {
-      return document().getOverlapping(type, this);
+  public final List<Annotation> getStartingHere(AnnotationType type) {
+    if (type == null) {
+      return Collections.emptyList();
     }
-    return Collections.emptyList();
+    return get(type, annotation -> annotation.start() == start() && annotation.isInstance(type));
   }
 
   @Override
-  public List<Annotation> getStartingHere(AnnotationType type) {
-    if (document() != null && type != null) {
-      return document().getStartingAt(type, start());
-    }
-    return Collections.emptyList();
-  }
-
-  @Override
-  public boolean contains(Attribute attribute) {
-    return getAttributeMap().containsKey(attribute) ||
-      getAttributeMap().containsKey(attribute.goldStandardVersion());
+  public final int hashCode() {
+    return super.hashCode();
   }
 
   /**
@@ -393,6 +469,102 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public boolean matches(String regex) {
     return toString().matches(regex);
+  }
+
+  /**
+   * Ngrams list.
+   *
+   * @param order          the order
+   * @param annotationType the annotation type
+   * @return the list
+   */
+  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType) {
+    return ngrams(order, annotationType, true);
+  }
+
+  /**
+   * Ngrams list.
+   *
+   * @param order            the order
+   * @param annotationType   the annotation type
+   * @param includeStopWords the include stop words
+   * @return the list
+   */
+  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, boolean includeStopWords) {
+    if (includeStopWords) {
+      return ngrams(
+        order,
+        annotationType,
+        t -> true
+      );
+    }
+    return ngrams(
+      order,
+      annotationType,
+      StopWords.getInstance(getLanguage())
+    );
+  }
+
+  /**
+   * Ngrams list.
+   *
+   * @param order          the order
+   * @param annotationType the annotation type
+   * @param filter         the filter
+   * @return the list
+   */
+  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, @Nonnull Predicate<? super HString> filter) {
+    if (order <= 0) {
+      return Collections.emptyList();
+    } else if (order == 1) {
+      return get(annotationType)
+        .stream()
+        .filter(filter)
+        .collect(Collectors.toList());
+    }
+
+
+    List<HString> ngrams = new ArrayList<>();
+    List<HString> annotations = Cast.cast(get(annotationType));
+    for (int i = 0; i <= annotations.size() - order; ) {
+      if (filter.test(annotations.get(i))) {
+        int badIndex = -1;
+
+        for (int j = i + 1; j < i + order; j++) {
+          if (!filter.test(annotations.get(j))) {
+            badIndex = j;
+            break;
+          }
+        }
+
+        if (badIndex == -1) {
+          ngrams.add(HString.union(annotations.subList(i, i + order)));
+          i++;
+        } else {
+          i = badIndex + 1;
+        }
+
+      } else {
+        i++;
+      }
+    }
+
+    return ngrams;
+  }
+
+  /**
+   * Checks if this HString overlaps with the given other.
+   *
+   * @param other The other HString
+   * @return True of this one overlaps with the given other.
+   */
+  public final boolean overlaps(HString other) {
+    if (other == null) {
+      return false;
+    }
+    return (document() != null && other.document() != null) &&
+      (document() == other.document()) &&
+      super.overlaps(other);
   }
 
   @Override
@@ -508,6 +680,14 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       .collect(Collectors.joining(" "));
   }
 
+  @Override
+  public String toString() {
+    if (document() == null) {
+      return StringUtils.EMPTY;
+    }
+    return document().toString().substring(start(), end());
+  }
+
   /**
    * To upper case.
    *
@@ -517,77 +697,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   public String toUpperCase() {
     return toString().toUpperCase(getLanguage().asLocale());
   }
-
-  /**
-   * Creates a new string by performing a union over the spans of this HString and at least one more HString. The new
-   * HString will have a span that starts at the minimum starting position of the given strings and end at the maximum
-   * ending position of the given strings.
-   *
-   * @param other    the HString to union with
-   * @param evenMore the other HStrings to union
-   * @return A new HString representing the union over the spans of the given HStrings.
-   */
-  public HString union(@Nonnull HString other, HString... evenMore) {
-    return HString.union(this, other, evenMore);
-  }
-
-  @Override
-  public String toString() {
-    if (document() == null) {
-      return StringUtils.EMPTY;
-    }
-    return document().toString().substring(start(), end());
-  }
-
-  @Override
-  public final boolean equals(Object other) {
-    return super.equals(other);
-  }
-
-  @Override
-  public final int hashCode() {
-    return super.hashCode();
-  }
-
-  /**
-   * Checks if this HString overlaps with the given other.
-   *
-   * @param other The other HString
-   * @return True of this one overlaps with the given other.
-   */
-  public final boolean overlaps(HString other) {
-    if (other == null) {
-      return false;
-    }
-    return (document() != null && other.document() != null) &&
-      (document() == other.document()) &&
-      super.overlaps(other);
-  }
-
-  /**
-   * Checks if this HString encloses the given other.
-   *
-   * @param other The other HString
-   * @return True of this one encloses the given other.
-   */
-  public final boolean encloses(HString other) {
-    if (other == null) {
-      return false;
-    }
-    return (document() != null && other.document() != null) &&
-      (document() == other.document())
-      && super.encloses(other);
-  }
-
-  /**
-   * Gets the part of speech of the HString
-   *
-   * @return The best part of speech for the HString
-   */
-  public POS getPOS() {
-    return POS.forText(this);
-  }
-
 
   /**
    * Token n grams.
@@ -621,138 +730,36 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return ngrams(order, Types.TOKEN, filter);
   }
 
-
   /**
-   * Ngrams list.
+   * Creates a new string by performing a union over the spans of this HString and at least one more HString. The new
+   * HString will have a span that starts at the minimum starting position of the given strings and end at the maximum
+   * ending position of the given strings.
    *
-   * @param order          the order
-   * @param annotationType the annotation type
-   * @return the list
+   * @param other    the HString to union with
+   * @param evenMore the other HStrings to union
+   * @return A new HString representing the union over the spans of the given HStrings.
    */
-  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType) {
-    return ngrams(order, annotationType, true);
-  }
-
-  /**
-   * Ngrams list.
-   *
-   * @param order            the order
-   * @param annotationType   the annotation type
-   * @param includeStopWords the include stop words
-   * @return the list
-   */
-  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, boolean includeStopWords) {
-    if (includeStopWords) {
-      return ngrams(
-        order,
-        annotationType,
-        t -> true
-      );
-    }
-    return ngrams(
-      order,
-      annotationType,
-      StopWords.getInstance(getLanguage())
-    );
-  }
-
-  /**
-   * Ngrams list.
-   *
-   * @param order          the order
-   * @param annotationType the annotation type
-   * @param filter         the filter
-   * @return the list
-   */
-  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, @Nonnull Predicate<? super HString> filter) {
-    if (order <= 0) {
-      return Collections.emptyList();
-    } else if (order == 1) {
-      return getOverlapping(annotationType)
-        .stream()
-        .filter(filter)
-        .collect(Collectors.toList());
-    }
-
-
-    List<HString> ngrams = new ArrayList<>();
-    List<HString> annotations = Cast.cast(getOverlapping(annotationType));
-    for (int i = 0; i <= annotations.size() - order; ) {
-      if (filter.test(annotations.get(i))) {
-        int badIndex = -1;
-
-        for (int j = i + 1; j < i + order; j++) {
-          if (!filter.test(annotations.get(j))) {
-            badIndex = j;
-            break;
-          }
-        }
-
-        if (badIndex == -1) {
-          ngrams.add(HString.union(annotations.subList(i, i + order)));
-          i++;
-        } else {
-          i = badIndex + 1;
-        }
-
-      } else {
-        i++;
-      }
-    }
-
-    return ngrams;
+  public HString union(@Nonnull HString other, HString... evenMore) {
+    return HString.union(this, other, evenMore);
   }
 
 
   /**
-   * Char n grams.
+   * Gets stem.
    *
-   * @param order the order
-   * @return the list
+   * @return the stem
    */
-  public List<HString> charNGrams(int order) {
-    return charNGrams(order, c -> true);
+  public String getStem() {
+    if (isInstance(Types.TOKEN)) {
+      putIfAbsent(Attrs.STEM, Stemmers.getStemmer(getLanguage()).stem(this));
+      return get(Attrs.STEM).asString();
+    }
+    return tokens().stream()
+      .map(HString::getStem)
+      .collect(Collectors.joining(
+        getLanguage().usesWhitespace() ? " " : ""
+      ));
   }
 
-  /**
-   * Char n grams.
-   *
-   * @param order  the order
-   * @param filter the filter
-   * @return the list
-   */
-  public List<HString> charNGrams(int order, @Nonnull Predicate<Character> filter) {
-    List<HString> ngrams = new ArrayList<>();
-
-    if (order <= 0) {
-      return ngrams;
-    }
-
-    for (int i = 0; i <= length() - order; ) {
-      if (filter.test(charAt(i))) {
-        int badIndex = -1;
-
-        for (int j = i + 1; j < i + order; j++) {
-          if (!filter.test(charAt(j))) {
-            badIndex = j;
-            break;
-          }
-        }
-
-        if (badIndex == -1) {
-          ngrams.add(substring(i, i + order));
-          i++;
-        } else {
-          i = badIndex + 1;
-        }
-
-      } else {
-        i++;
-      }
-
-    }
-
-    return ngrams;
-  }
 
 }//END OF HString

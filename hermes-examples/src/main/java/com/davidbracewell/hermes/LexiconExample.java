@@ -50,7 +50,7 @@ public class LexiconExample {
     Pipeline pipeline = Pipeline.builder()
         .addAnnotations(TOKEN, SENTENCE, LEXICON_MATCH)
         .onComplete(document -> {
-          document.getOverlapping(Types.LEXICON_MATCH)
+          document.get(Types.LEXICON_MATCH)
               .forEach(m -> System.out.println(
                   m +
                       " [" + m.get(Attrs.TAG) + "] " +

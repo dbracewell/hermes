@@ -103,7 +103,7 @@ public class ViterbiLexiconAnnotator extends ViterbiAnnotator {
   }
 
   @Override
-  public Set<AnnotationType> provides() {
+  public Set<AnnotationType> satisfies() {
     return Collections.singleton(type);
   }
 

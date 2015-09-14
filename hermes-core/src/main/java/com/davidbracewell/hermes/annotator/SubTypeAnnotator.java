@@ -83,7 +83,7 @@ public class SubTypeAnnotator implements Annotator {
   private List<Annotation> getAnnotations(HString fragment) {
     List<Annotation> annotations = new ArrayList<>();
     for (AnnotationType subType : subTypes) {
-      annotations.addAll(fragment.getOverlapping(subType));
+      annotations.addAll(fragment.get(subType));
     }
     return annotations;
   }
@@ -134,7 +134,7 @@ public class SubTypeAnnotator implements Annotator {
   }
 
   @Override
-  public Set<AnnotationType> provides() {
+  public Set<AnnotationType> satisfies() {
     return Collections.singleton(annotationType);
   }
 

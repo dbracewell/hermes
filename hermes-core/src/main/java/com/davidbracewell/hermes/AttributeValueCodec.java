@@ -46,11 +46,11 @@ public interface AttributeValueCodec {
   void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException;
 
   /**
-   * Decodes an attribute's value from the given reader.
+   * Decodes an attribute value from the given reader.
    *
    * @param reader    the reader to read from
    * @param attribute the attribute whose value needs decoding
-   * @return the attribute's value
+   * @return the attribute value
    * @throws IOException something went wrong reading
    */
   Object decode(StructuredReader reader, Attribute attribute) throws IOException;

@@ -33,24 +33,28 @@ import com.google.common.base.Preconditions;
 import javax.annotation.Nonnull;
 import java.io.ObjectStreamException;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <p>
  * An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The definition
- * provided by the type facillitates the portability of the annotation between different modules. An annotation type
+ * provided by the type facilitates the portability of the annotation between different modules. An annotation type
  * defines the type name, parent type, and optionally a set of attributes that are expected to be associated with an
  * annotation of this type.
  * </p>
  * <p>
  * Annotation types are hierarchical and all types have a parent defined. If no parent is explicitly declared, its
  * parent is resolved to the <code>ROOT</code> type. Annotation types inherit their parent's attributes. Attribute
- * information on the type serves as documentation and is not type checked.
+ * information on the type serves as documentation and is not type checked. Additionally, a "tag" can be defined for a
+ * type using the <code>tag</code> property, which defines the attribute to return on calls to <code>getTag()</code>.
  * </p>
  * <p>Type information is defined via configuration. An Example is as follows:</p>
- * <code>
+ * {@code
  * Annotation{
  * ENTITY {
  * attributes = ENTITY_TYPE, CONFIDENCE
+ * tag = ENTITY_TYPE
  * }
  * REGEX_ENTITY {
  * parent = ENTITY
@@ -62,7 +66,7 @@ import java.util.Collection;
  * attributes = PATTERN
  * }
  * }
- * </code>
+ * }
  * <p>
  * In the example shown above, we define the <code>ENTITY</code> and <code>REGEX_ENTITY</code> types. The
  * <code>Entity</code> type has two attributes associated with it which relate to the type of entity and the confidence
@@ -90,6 +94,9 @@ public final class AnnotationType extends EnumValue {
    * The constant ROOT representing the base annotation type.
    */
   public static AnnotationType ROOT = create("ROOT");
+
+
+  private volatile transient Set<Attribute> definedAttributes = null;
 
   private AnnotationType(String name) {
     super(name);
@@ -205,7 +212,7 @@ public final class AnnotationType extends EnumValue {
   }
 
   /**
-   * Gets the annotator assocated with this type for a given language.
+   * Gets the annotator associated with this type for a given language.
    *
    * @param language the language for which the annotator is needed.
    * @return the annotator for this type and the given langauge
@@ -215,10 +222,15 @@ public final class AnnotationType extends EnumValue {
     if (isGoldStandard()) {
       throw new IllegalStateException("Gold Standard annotations cannot be annotated");
     }
+
     String key = Config.closestKey("Annotation", language, name(), "annotator");
+    if (StringUtils.isNullOrBlank(key)) {
+      throw new IllegalStateException("No annotator is defined for " + name() + " and " + language);
+    }
+
     Annotator annotator = BeanUtils.parameterizeObject(Config.get(key).as(Annotator.class));
-    Preconditions.checkNotNull(annotator, "Could create an annotator for " + name());
-    Preconditions.checkArgument(annotator.provides().contains(this), "Attempting to register " + annotator.getClass().getName() + " for " + name() + " which it does not provide");
+    Preconditions.checkNotNull(annotator, "Could create the annotator [" + Config.get(key) + "] for " + name());
+    Preconditions.checkArgument(annotator.satisfies().contains(this), "Attempting to register " + annotator.getClass().getName() + " for " + name() + " which it does not provide.");
     return annotator;
   }
 
@@ -243,6 +255,29 @@ public final class AnnotationType extends EnumValue {
       parent = parent.getParent();
     }
     return type.equals(ROOT);
+  }
+
+  /**
+   * Gets the attributes defined for this annotation type via configuration.
+   *
+   * @return The set of attributes defined for this annotation type via configuration.
+   */
+  public Set<Attribute> getDefinedAttributes() {
+    if (definedAttributes == null) {
+      synchronized (this) {
+        if (definedAttributes == null) {
+          AnnotationType parent = getParent();
+          this.definedAttributes = Config.get("AnnotationType", nonGoldStandardVersion().name(), "attributes").asCollection(HashSet.class, Attribute.class);
+          if (this.definedAttributes == null) {
+            this.definedAttributes = new HashSet<>(4);
+          }
+          if (parent != this) {
+            this.definedAttributes.addAll(parent.getDefinedAttributes());
+          }
+        }
+      }
+    }
+    return definedAttributes;
   }
 
   private Object readResolve() throws ObjectStreamException {

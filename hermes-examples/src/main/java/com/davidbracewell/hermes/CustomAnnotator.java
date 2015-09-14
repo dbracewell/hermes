@@ -50,8 +50,8 @@ public class CustomAnnotator {
             "Now is the time for all good men to come to aid of their country.\n"
     )).forEach(document -> {
       Pipeline.process(document, TOKEN, SENTENCE, animalMention, verbs);
-      document.getOverlapping(animalMention).forEach(a -> System.out.println("ANIMAL: " + a));
-      document.getOverlapping(verbs).forEach(a -> System.out.println("VERB: " + a));
+      document.get(animalMention).forEach(a -> System.out.println("ANIMAL: " + a));
+      document.get(verbs).forEach(a -> System.out.println("VERB: " + a));
     });
 
   }

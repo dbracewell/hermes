@@ -54,12 +54,6 @@ public class TrieLexiconAnnotator implements Annotator {
     this(false, false, type, tagAttribute, Arrays.asList(lexiconFiles));
   }
 
-
-  @Override
-  public Set<AnnotationType> requires() {
-    return null;
-  }
-
   /**
    * Instantiates a new Trie lexicon annotator.
    *
@@ -108,7 +102,7 @@ public class TrieLexiconAnnotator implements Annotator {
   }
 
   @Override
-  public Set<AnnotationType> provides() {
+  public Set<AnnotationType> satisfies() {
     return Collections.singleton(type);
   }
 

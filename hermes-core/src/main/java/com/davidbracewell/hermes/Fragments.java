@@ -25,10 +25,8 @@ import com.davidbracewell.conversion.Val;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * <p>
@@ -55,6 +53,11 @@ public final class Fragments {
     @Override
     public Document document() {
       return null;
+    }
+
+    @Override
+    public List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter) {
+      return Collections.emptyList();
     }
 
     @Override
@@ -172,6 +175,11 @@ public final class Fragments {
     @Override
     public HString substring(int relativeStart, int relativeEnd) {
       return new HStringImpl(content.substring(relativeStart, relativeEnd));
+    }
+
+    @Override
+    public List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter) {
+      return Collections.emptyList();
     }
 
     @Override

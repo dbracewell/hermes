@@ -21,59 +21,64 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
-import com.google.common.collect.Lists;
+import lombok.NonNull;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Queue;
+import java.util.*;
+import java.util.function.BiFunction;
 
 /**
  * The type Recursive document iterator.
  *
  * @author David B. Bracewell
  */
-class RecursiveDocumentIterator implements Iterator<Resource> {
+public class RecursiveDocumentIterator implements Iterator<Document> {
   private final static Logger log = Logger.getLogger(RecursiveDocumentIterator.class);
-  private final Queue<Resource> queue = Lists.newLinkedList();
   private final Iterator<Resource> resourceIterator;
+  private final DocumentFactory documentFactory;
+  private final Queue<Document> documentQueue = new LinkedList<>();
+  private final BiFunction<Resource, DocumentFactory, Iterable<Document>> resourceReader;
 
   /**
    * Instantiates a new Recursive document iterator.
    *
    * @param resource the resource
+   * @param documentFactory the document factory
+   * @param resourceReader the resource reader
    */
-  public RecursiveDocumentIterator(Resource resource) {
+  public RecursiveDocumentIterator(@NonNull Resource resource, @NonNull DocumentFactory documentFactory, @NonNull BiFunction<Resource, DocumentFactory, Iterable<Document>> resourceReader) {
+    this.documentFactory = documentFactory;
+    this.resourceReader = resourceReader;
     this.resourceIterator = resource.isDirectory() ? resource.childIterator(true) : Collections.singleton(resource).iterator();
-    advance();
   }
 
-  private void advance() {
-    while (resourceIterator.hasNext() && queue.isEmpty()) {
+  boolean advance() {
+    while (resourceIterator.hasNext() && documentQueue.isEmpty()) {
       Resource r = resourceIterator.next();
       if (!r.isDirectory()) {
         if (r.asFile() == null || !r.asFile().isHidden()) {
-          queue.add(r);
+          resourceReader.apply(r, documentFactory).forEach(documentQueue::add);
         }
       }
     }
+    return documentQueue.size() > 0;
   }
 
   @Override
   public boolean hasNext() {
-    return !queue.isEmpty();
+    return advance();
   }
 
   @Override
-  public Resource next() {
-    if (queue.isEmpty()) {
+  public Document next() {
+    if (!advance()) {
       throw new NoSuchElementException();
     }
-    Resource returnValue = queue.remove();
-    advance();
-    return returnValue;
+    return documentQueue.remove();
   }
+
 
 }//END OF DocumentIterator

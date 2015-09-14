@@ -26,35 +26,49 @@ package com.davidbracewell.hermes;
  *
  * @author David B. Bracewell
  */
-public final class Types {
+public interface Types {
 
   /**
    * Entity annotation type
    */
-  public static final AnnotationType ENTITY = AnnotationType.create("ENTITY");
+  AnnotationType ENTITY = AnnotationType.create("ENTITY");
   /**
-   * phrase chunk annotation type
+   * lemma annotation type
    */
-  public static final AnnotationType PHRASE_CHUNK = AnnotationType.create("PHRASE_CHUNK");
-  /**
-   * sentence annotation type
-   */
-  public static final AnnotationType SENTENCE = AnnotationType.create("SENTENCE");
-  /**
-   * token annotation type
-   */
-  public static final AnnotationType TOKEN = AnnotationType.create("TOKEN");
+  AnnotationType LEMMA = AnnotationType.create("LEMMA");
   /**
    * lexicon match annotation type
    */
-  public static final AnnotationType LEXICON_MATCH = AnnotationType.create("LEXICON_MATCH");
+  AnnotationType LEXICON_MATCH = AnnotationType.create("LEXICON_MATCH");
   /**
    * part of speech annotation type
    */
-  public static final AnnotationType PART_OF_SPEECH = AnnotationType.create("PART_OF_SPEECH");
+  AnnotationType PART_OF_SPEECH = AnnotationType.create("PART_OF_SPEECH");
+  /**
+   * phrase chunk annotation type
+   */
+  AnnotationType PHRASE_CHUNK = AnnotationType.create("PHRASE_CHUNK");
+  /**
+   * sentence annotation type
+   */
+  AnnotationType SENTENCE = AnnotationType.create("SENTENCE");
 
+  /**
+   * The STEM.
+   */
+  AnnotationType STEM = AnnotationType.create("STEM");
 
-  public static final AnnotationType TOKEN_TYPE_ENTITY = AnnotationType.create("TOKEN_TYPE_ENTITY");
-
+  /**
+   * token annotation type
+   */
+  AnnotationType TOKEN = AnnotationType.create("TOKEN");
+  /**
+   * The constant TOKEN_TYPE_ENTITY.
+   */
+  AnnotationType TOKEN_TYPE_ENTITY = AnnotationType.create("TOKEN_TYPE_ENTITY");
+  /**
+   * The constant TRANSLITERATION.
+   */
+  AnnotationType TRANSLITERATION = AnnotationType.create("TRANSLITERATION");
 
 }//END OF AnnotationTypes

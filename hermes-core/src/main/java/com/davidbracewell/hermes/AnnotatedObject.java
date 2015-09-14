@@ -23,19 +23,18 @@ package com.davidbracewell.hermes;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * <p>
- * Annotated objects have zero or more {@link Annotation}s which it overlaps, encloses, or is enclosed by. The
- * interface defines the needed methods for accessing those annotations. In particular, methods exist for retrieving
- * annotations that overlap ({@link #getOverlapping(AnnotationType)} with, are enclosed ({@link
- * #getContaining(AnnotationType)}* by, and enclose ({@link #getDuring(AnnotationType)} the object. Additional methods
- * are defined as a convenience for accessing commonly used annotations, like tokens and sentences.
+ * An <code>AnnotatedObject</code> is an object that is capable of having overlapping <code>Annotations</code>. Thus,
+ * the interface defines common methods for retrieving linguistic annotations from an object. Since tokens and
+ * sentences are the most commonly used annotations it defines convenience methods for retrieving them.
  * </p>
  *
  * @author David B. Bracewell
  */
-public interface Annotated {
+public interface AnnotatedObject {
 
   /**
    * Returns the document that this fragment is a part of.
@@ -52,26 +51,18 @@ public interface Annotated {
    * none.
    */
   default Annotation first(AnnotationType type) {
-    return getOverlapping(type).stream().findFirst().orElse(Fragments.detachedEmptyAnnotation());
+    return get(type).stream().findFirst().orElse(Fragments.detachedEmptyAnnotation());
   }
 
   /**
-   * Gets the annotations that are contained, within this object, i.e. those annotations whose span lays
-   * fully within this object.
+   * Gets annotations of a given type and that test positive for the given filter that overlap with this object.
    *
-   * @param type the type  of annotation wanted
-   * @return the list of annotations of given type contained within this object
+   * @param type   the type of annotation wanted
+   * @param filter The filter that annotations must pass in order to be accepted
+   * @return the list of annotations of given type meeting the given filter that overlap with this object
    */
-  List<Annotation> getContaining(AnnotationType type);
 
-  /**
-   * Gets the annotations that are during to this object, i.e. those annotations whose span starts before and ends
-   * after this object.
-   *
-   * @param type the type  of annotation wanted
-   * @return the list of annotations of given type covering this object
-   */
-  List<Annotation> getDuring(AnnotationType type);
+  List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter);
 
   /**
    * Gets annotations of a given type that overlap with this object.
@@ -79,7 +70,7 @@ public interface Annotated {
    * @param type the type of annotation wanted
    * @return the list of annotations of given type that overlap with this object
    */
-  List<Annotation> getOverlapping(AnnotationType type);
+  List<Annotation> get(AnnotationType type);
 
   /**
    * Gets annotations of a given type that have the same starting offset as this object.
@@ -89,7 +80,6 @@ public interface Annotated {
    */
   List<Annotation> getStartingHere(AnnotationType type);
 
-
   /**
    * Gets the last annotation overlapping this object with the given annotation type.
    *
@@ -98,7 +88,7 @@ public interface Annotated {
    * none.
    */
   default Annotation last(@Nonnull AnnotationType type) {
-    List<Annotation> annotations = getOverlapping(type);
+    List<Annotation> annotations = get(type);
     return annotations.isEmpty() ? Fragments.detachedEmptyAnnotation() : annotations.get(annotations.size() - 1);
   }
 
@@ -108,7 +98,7 @@ public interface Annotated {
    * @return the sentences overlapping this annotation.
    */
   default List<Annotation> sentences() {
-    return getOverlapping(Types.SENTENCE);
+    return get(Types.SENTENCE);
   }
 
   /**
@@ -141,8 +131,7 @@ public interface Annotated {
    * @return the tokens overlapping this annotation.
    */
   default List<Annotation> tokens() {
-    return getOverlapping(Types.TOKEN);
+    return get(Types.TOKEN);
   }
 
-
-}//END OF Annotated
+}//END OF AnnotatedObject

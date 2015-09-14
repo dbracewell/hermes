@@ -29,14 +29,15 @@ import com.davidbracewell.io.structured.StructuredFormat;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Collections;
 
 /**
+ * The type XML format.
+ *
  * @author David B. Bracewell
  */
 @MetaInfServices(CorpusFormat.class)
-public class XMLFormat extends FileBasedFormat implements Serializable {
+public class XMLFormat extends FileBasedFormat {
   private static final long serialVersionUID = 1L;
 
   @Override
@@ -45,8 +46,13 @@ public class XMLFormat extends FileBasedFormat implements Serializable {
   }
 
   @Override
-  protected Iterable<Document> readResource(Resource resource, DocumentFactory documentFactory) throws IOException {
+  public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
     return Collections.singleton(Document.read(StructuredFormat.XML, resource));
+  }
+
+  @Override
+  public void write(Resource resource, Document document) throws IOException {
+    document.write(StructuredFormat.XML, resource);
   }
 
 }//END OF XMLFormat

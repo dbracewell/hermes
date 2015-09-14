@@ -40,6 +40,7 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 
 /**
  * <p>The document is the central object class in the TIPSTER architecture. It serves as repository for Attributes and
@@ -62,10 +63,7 @@ public class Document extends HString {
   private String id;
 
   Document(String id, @Nonnull String content) {
-    super(0, content.length());
-    this.content = content;
-    setId(id);
-    this.annotationSet = Config.get("hermes.AnnotationSetImpl").asOrElse(AnnotationSet.class, DefaultAnnotationSet::new);
+    this(id, content, null);
   }
 
 
@@ -113,7 +111,7 @@ public class Document extends HString {
    */
   public void setId(String id) {
     if (StringUtils.isNullOrBlank(id)) {
-      this.id = StringUtils.randomHexString(10);
+      this.id = UUID.randomUUID().toString();
     } else {
       this.id = id;
     }
@@ -137,9 +135,6 @@ public class Document extends HString {
     return Hermes.defaultLanguage();
   }
 
-  List<Annotation> getStartingAt(AnnotationType type, int start) {
-    return annotationSet.select(a -> a.isInstance(type) && a.start() == start);
-  }
 
   /**
    * Gets annotations of the given type that overlap with the given span.
@@ -148,47 +143,35 @@ public class Document extends HString {
    * @param span the span to search for overlapping annotations
    * @return All annotations of the given type on the document that overlap with the give span.
    */
-  public List<Annotation> getOverlapping(AnnotationType type, @Nonnull Span span) {
+  public List<Annotation> get(AnnotationType type, @Nonnull Span span) {
     return annotationSet.select(span, a -> a.isInstance(type) && a.overlaps(span));
   }
 
   /**
-   * Gets annotations of the given type that are contained within the given span.
+   * Gets annotations of the given type that overlap with the given span and meet the given filter.
    *
    * @param type the type of annotation
-   * @param span the span to search for annotations in
-   * @return All annotations of the given type on the document that are contained within the give span.
+   * @param span the span to search for overlapping annotations
+   * @param filter the filter to use on the annotations
+   * @return All annotations of the given type on the document that overlap with the give span and meet the given
+   * filter.
    */
-  public List<Annotation> getContaining(AnnotationType type, @Nonnull Span span) {
-    return annotationSet.select(span, a -> a.isInstance(type) && a.encloses(span));
-  }
-
-  /**
-   * Gets annotations of the given type that are during, i.e. fully enclose, the given span.
-   *
-   * @param type the type of annotation
-   * @param span the span to search for annotations in
-   * @return All annotations of the given type on the document that are during, i.e. fully enclose, the give span.
-   */
-  public List<Annotation> getDuring(AnnotationType type, @Nonnull Span span) {
-    return annotationSet.select(span, a -> a.isInstance(type) && span.encloses(a));
+  public List<Annotation> get(AnnotationType type, @Nonnull Span span, @Nonnull Predicate<? super Annotation> filter) {
+    return annotationSet.select(span, a -> filter.test(a) && a.isInstance(type) && a.overlaps(span));
   }
 
   @Override
-  public List<Annotation> getOverlapping(AnnotationType type) {
+  public List<Annotation> get(AnnotationType type) {
     return annotationSet.select(a -> a.isInstance(type));
   }
 
   @Override
-  public List<Annotation> getContaining(AnnotationType type) {
-    return getOverlapping(type);
+  public List<Annotation> get(AnnotationType type, @Nonnull Predicate<? super Annotation> filter) {
+    if (type == null) {
+      return Collections.emptyList();
+    }
+    return annotationSet.select(a -> filter.test(a) && a.isInstance(type));
   }
-
-  @Override
-  public List<Annotation> getDuring(AnnotationType type) {
-    return Collections.emptyList();
-  }
-
 
   /**
    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
@@ -219,9 +202,9 @@ public class Document extends HString {
    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
    * has a unique id assigned.
    *
-   * @param type  the type of annotation
+   * @param type the type of annotation
    * @param start the start of the span
-   * @param end   the end of the span
+   * @param end the end of the span
    * @return the created annotation
    */
   public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end) {
@@ -233,9 +216,9 @@ public class Document extends HString {
    * annotation
    * is added to the document and has a unique id assigned.
    *
-   * @param type         the type of annotation
-   * @param start        the start of the span
-   * @param end          the end of the span
+   * @param type the type of annotation
+   * @param start the start of the span
+   * @param end the end of the span
    * @param attributeMap the attributes associated with the annotation
    * @return the created annotation
    */
@@ -262,7 +245,7 @@ public class Document extends HString {
   /**
    * Writes the document in a structured format
    *
-   * @param format   the format to write in (supports xml and json)
+   * @param format the format to write in (supports xml and json)
    * @param resource the resource to write to
    * @throws IOException something went wrong writing
    */
@@ -282,13 +265,12 @@ public class Document extends HString {
 
       if (annotationSet.size() > 0) {
 
-        writer.beginArray("completed");
+
+        writer.beginObject("completed");
         for (AnnotationType type : getAnnotationSet().getCompleted()) {
-          writer.beginObject();
           writer.writeKeyValue(type.name(), getAnnotationSet().getAnnotationProvider(type));
-          writer.endObject();
         }
-        writer.endArray();
+        writer.endObject();
 
         writer.beginArray("annotations");
         for (Annotation annotation : annotationSet) {
@@ -330,9 +312,9 @@ public class Document extends HString {
   }
 
   /**
-   * Reads in a document in structured foramt (xml and json are supported).
+   * Reads in a document in structured format (xml and json are supported).
    *
-   * @param format   the format of the file
+   * @param format the format of the file
    * @param resource the resource the file is in
    * @return the document
    * @throws IOException something went wrong reading the file
@@ -354,6 +336,7 @@ public class Document extends HString {
         } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
 
           String name = reader.beginObject();
+
           switch (name) {
             case "attributes":
               attributeValMap = Attribute.readAttributeList(reader);
@@ -369,6 +352,7 @@ public class Document extends HString {
           }
 
           reader.endObject();
+
 
         } else if (reader.peek() == ElementType.BEGIN_ARRAY) {
 
@@ -387,8 +371,12 @@ public class Document extends HString {
       }
       reader.endDocument();
 
+      if (!docProperties.containsKey("content")) {
+        throw new IOException("Malformed document: no \"content\" file is present");
+      }
+
       Document document = new Document(
-        docProperties.get("id").asString(),
+        docProperties.containsKey("id") ? docProperties.get("id").asString() : null,
         docProperties.get("content").asString()
       );
 
@@ -408,5 +396,14 @@ public class Document extends HString {
     }
   }
 
+
+  /**
+   * Completed annotations.
+   *
+   * @return the set
+   */
+  public Set<AnnotationType> completedAnnotations() {
+    return annotationSet.getCompleted();
+  }
 
 }//END OF Document

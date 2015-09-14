@@ -47,4 +47,10 @@ public interface DocumentProvider {
     );
   }
 
+  static Document getProcessedDocument() {
+    Document document = getDocument();
+    Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
+    return document;
+  }
+
 }//END OF DocumentProvider

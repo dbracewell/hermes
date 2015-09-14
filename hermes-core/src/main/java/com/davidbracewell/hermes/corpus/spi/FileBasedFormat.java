@@ -21,72 +21,38 @@
 
 package com.davidbracewell.hermes.corpus.spi;
 
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
+import com.davidbracewell.hermes.corpus.FileCorpus;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.logging.Logger;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
 
 /**
  * @author David B. Bracewell
  */
-public abstract class FileBasedFormat implements CorpusFormat {
-  private final static Logger log = Logger.getLogger(FileBasedFormat.class);
+public abstract class FileBasedFormat implements CorpusFormat, Serializable {
+  private static final long serialVersionUID = 1L;
 
   @Override
-  public final Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
-    return Collect.asIterable(new DocumentIterator(resource, documentFactory));
+  public final Corpus create(Resource resource, DocumentFactory documentFactory) {
+    return new FileCorpus(this, resource, documentFactory);
   }
 
-
-  protected abstract Iterable<Document> readResource(Resource resource, DocumentFactory documentFactory) throws IOException;
-
-
-  class DocumentIterator implements Iterator<Document>, Serializable {
-    private static final long serialVersionUID = 1L;
-
-    private final Iterator<Resource> resourceIterator;
-    private final DocumentFactory documentFactory;
-    private final Queue<Document> documentQueue = new LinkedList<>();
-
-    DocumentIterator(Resource resource, DocumentFactory documentFactory) {
-      this.documentFactory = documentFactory;
-      this.resourceIterator = resource.isDirectory() ? resource.childIterator(true) : Collections.singleton(resource).iterator();
+  @Override
+  public void write(Resource resource, Iterable<Document> documents) throws IOException {
+    resource.mkdirs();
+    for (Document document : documents) {
+      write(resource.getChild(document.getId() + extension()), document);
     }
+  }
 
-    boolean advance() {
-      while (resourceIterator.hasNext() && documentQueue.isEmpty()) {
-        Resource r = resourceIterator.next();
-        if (!r.isDirectory()) {
-          if (r.asFile() == null || !r.asFile().isHidden()) {
-            try {
-              readResource(r, documentFactory).forEach(documentQueue::add);
-            } catch (IOException e) {
-              log.severe(e);
-            }
-          }
-        }
-      }
-      return documentQueue.size() > 0;
-    }
-
-    @Override
-    public boolean hasNext() {
-      return advance();
-    }
-
-    @Override
-    public Document next() {
-      if (!advance()) {
-        throw new NoSuchElementException();
-      }
-      return documentQueue.remove();
-    }
+  @Override
+  public void write(Resource resource, Document document) throws IOException {
+    throw new UnsupportedOperationException();
   }
 
 

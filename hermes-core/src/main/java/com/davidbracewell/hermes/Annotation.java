@@ -48,11 +48,11 @@ public final class Annotation extends Fragment implements Serializable {
 
   private static final long serialVersionUID = 1L;
   /**
-   * The ID associated with a detatched annotation
+   * The ID associated with a detached annotation
    */
-  public static long DETATCHED_ID = Long.MIN_VALUE;
+  public static long DETACHED_ID = Long.MIN_VALUE;
   private final AnnotationType annotationType;
-  private long id = DETATCHED_ID;
+  private long id = DETACHED_ID;
   private transient Annotation[] tokens;
 
   /**
@@ -117,6 +117,7 @@ public final class Annotation extends Fragment implements Serializable {
         } else {
           throw new IOException("Unexpected object named [" + name + "]");
         }
+        reader.endObject();
       } else {
         throw new IOException("Unexpected " + reader.peek());
       }
@@ -138,7 +139,7 @@ public final class Annotation extends Fragment implements Serializable {
   /**
    * Gets the unique id associated with the annotation.
    *
-   * @return the id of the annotation that is unique with in its document or <code>Annotation.DETATCHED_ID</code> if the
+   * @return the id of the annotation that is unique with in its document or <code>Annotation.DETACHED_ID</code> if the
    * annotation is not attached to the document.
    */
   public long getId() {
@@ -166,10 +167,10 @@ public final class Annotation extends Fragment implements Serializable {
   /**
    * Is this annotation detached, i.e. not associated with a document?
    *
-   * @return True if the annotation is detatched
+   * @return True if the annotation is detached
    */
   public boolean isDetached() {
-    return document() == null || id == DETATCHED_ID;
+    return document() == null || id == DETACHED_ID;
   }
 
   /**
@@ -259,6 +260,16 @@ public final class Annotation extends Fragment implements Serializable {
   }
 
 
+  /**
+   * <p>
+   * Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type using
+   * the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
+   * Tags must implement the <code>Tag</code> interface. If no tag type is defined, the <code>Attrs.TAG</code>
+   * attribute will be retrieved.
+   * </p>
+   *
+   * @return An optional containing the tag if present
+   */
   public Optional<Tag> getTag() {
     if (isInstance(Types.TOKEN)) {
       return Optional.of(getPOS());

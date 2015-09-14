@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.stopword;
+package com.davidbracewell.hermes.filters;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;

@@ -49,11 +49,11 @@ public interface Annotator {
 
 
   /**
-   * The set of annotation types that are provided by this annotator
+   * The set of annotation types that this annotator satisfies by this annotator
    *
-   * @return the set of provided annotation types
+   * @return the set of satisfied annotation types
    */
-  Set<AnnotationType> provides();
+  Set<AnnotationType> satisfies();
 
   /**
    * The annotation types required to be on a document before this annotator can annotate

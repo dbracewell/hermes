@@ -28,20 +28,99 @@ import com.davidbracewell.io.resource.Resource;
 import java.io.IOException;
 
 /**
+ * <p>
+ * Defines the format that a document is in. Examples include plain text, JSON (created by
+ * <code>Document.toJson()</code>, and CONLL format. Corpus formats are registered using Java's builtin service
+ * provider architecture via the Corpus object.
+ * </p>
+ *
  * @author David B. Bracewell
  */
 public interface CorpusFormat {
 
+  /**
+   * JSON format created by using write or toJson from a Document
+   */
   String JSON = "JSON";
+  /**
+   * XML format created by using write from a Document
+   */
+  String XML = "XML";
+  /**
+   * CONLL tab delimited format
+   */
   String CONLL = "CONLL";
+  /**
+   * Plain text
+   */
   String PLAIN_TEXT = "TEXT";
 
+  /**
+   * One per line JSON format
+   */
   String JSON_OPL = "JSON_OPL";
+  /**
+   * One per line plain text format
+   */
   String PLAIN_TEXT_OPL = "TEXT_OPL";
 
 
+  /**
+   * Create corpus.
+   *
+   * @param resource the resource
+   * @param documentFactory the document factory
+   * @return the corpus
+   */
+  Corpus create(Resource resource, DocumentFactory documentFactory);
+
+
+  /**
+   * Read iterable.
+   *
+   * @param resource the resource
+   * @param documentFactory the document factory
+   * @return the iterable
+   * @throws IOException the iO exception
+   */
   Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException;
 
+  /**
+   * Writes the documents in this format from the given resource using the given factory.
+   *
+   * @param resource the resource
+   * @param documents the documents
+   * @throws IOException something went wrong writing
+   */
+  default void write(Resource resource, Iterable<Document> documents) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Write void.
+   *
+   * @param resource the resource
+   * @param document the document
+   * @throws IOException the iO exception
+   */
+  default void write(Resource resource, Document document) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Name string.
+   *
+   * @return the string
+   */
   String name();
+
+  /**
+   * Extension string.
+   *
+   * @return the string
+   */
+  default String extension() {
+    return name().toLowerCase();
+  }
 
 }//END OF CorpusFormat

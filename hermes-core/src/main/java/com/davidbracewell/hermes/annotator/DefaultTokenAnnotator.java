@@ -52,16 +52,26 @@ public class DefaultTokenAnnotator implements Annotator, Serializable {
         Annotation token = document.createAnnotation(Types.TOKEN, start, end, Collect.map(Attrs.INDEX, index));
         String tokenString = token.toString();
 
+
         //Simplistic Type assignment
-        if (StringUtils.isDigit(tokenString)) {
-          token.put(Attrs.TOKEN_TYPE, TokenType.NUMBER);
-        } else if (StringUtils.isAlphaNumeric(tokenString)) {
-          token.put(Attrs.TOKEN_TYPE, TokenType.ALPHA_NUMERIC);
+        boolean hasLetter = StringUtils.hasLetter(tokenString);
+        boolean hasDigit = StringUtils.hasDigit(tokenString);
+        TokenType tokenType = TokenType.UNKNOWN;
+        if (hasDigit && hasLetter) {
+          tokenType = TokenType.ALPHA_NUMERIC;
+        } else if (hasDigit) {
+          tokenType = TokenType.NUMBER;
+        } else if (hasLetter && tokenString.contains(".")) {
+          tokenType = TokenType.ACRONYM;
+        } else if (hasLetter && tokenString.contains("'")) {
+          tokenType = TokenType.CONTRACTION;
+        } else if (hasLetter) {
+          tokenType = TokenType.ALPHA_NUMERIC;
         } else if (StringUtils.isPunctuation(tokenString)) {
-          token.put(Attrs.TOKEN_TYPE, TokenType.PUNCTUATION);
-        } else {
-          token.put(Attrs.TOKEN_TYPE, TokenType.UNKNOWN);
+          tokenType = TokenType.PUNCTUATION;
         }
+
+        token.put(Attrs.TOKEN_TYPE, tokenType);
 
         index++;
       }
@@ -70,7 +80,7 @@ public class DefaultTokenAnnotator implements Annotator, Serializable {
   }
 
   @Override
-  public Set<AnnotationType> provides() {
+  public Set<AnnotationType> satisfies() {
     return Collections.singleton(Types.TOKEN);
   }
 

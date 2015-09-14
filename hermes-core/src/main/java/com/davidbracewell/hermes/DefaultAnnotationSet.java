@@ -93,8 +93,8 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
       return null;//Fragments.emptyOrphan();
     }
     return startSorted.tailSet(annotation, false).stream()
-        .filter(a -> a.isInstance(type) && !a.isDetached())
-        .findFirst().orElse(Fragments.detachedEmptyAnnotation());
+      .filter(a -> a.isInstance(type) && !a.isDetached())
+      .findFirst().orElse(Fragments.detachedEmptyAnnotation());
   }
 
   @Override
@@ -103,8 +103,8 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
       return null;//Fragments.emptyOrphan();
     }
     return startSorted.headSet(annotation, false).stream()
-        .filter(a -> a.isInstance(type) && !a.isDetached())
-        .findFirst().orElse(Fragments.detachedEmptyAnnotation());
+      .filter(a -> a.isInstance(type) && !a.isDetached())
+      .findFirst().orElse(Fragments.detachedEmptyAnnotation());
   }
 
   @Override
@@ -118,13 +118,13 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
 
   @Override
   public List<Annotation> select(@Nonnull Span range, @Nonnull Predicate<? super Annotation> criteria) {
-    Annotation dummy = Fragments.detachedAnnotation(null, range.end(), Integer.MAX_VALUE);
-    Annotation dummy2 = Fragments.detachedAnnotation(null, 0, range.start());
+    Annotation dummy = Fragments.detachedAnnotation(null, range.start() - 1, range.end() + 1);
+    Annotation dummy2 = Fragments.detachedAnnotation(null, range.start() - 1, range.end() + 1);
 
-    return Sets.intersection(startSorted.headSet(dummy, true), endSorted.tailSet(dummy2, true))
-        .stream()
-        .filter(criteria)
-        .collect(Collectors.toList());
+    return Sets.intersection(startSorted.tailSet(dummy, true), endSorted.headSet(dummy2, true))
+      .stream()
+      .filter(criteria)
+      .collect(Collectors.toList());
   }
 
   @Override
@@ -135,7 +135,7 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
   @Override
   public void setIsCompleted(AnnotationType type, boolean isCompleted, String annotationProvider) {
     if (isCompleted) {
-      completed.put(type, annotationProvider.replaceFirst("^com\\.davidbracewell\\.",""));
+      completed.put(type, annotationProvider.replaceFirst("^com\\.davidbracewell\\.", ""));
     } else {
       completed.remove(type);
     }

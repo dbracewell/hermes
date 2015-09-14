@@ -88,6 +88,10 @@ public interface Attrs {
    */
   Attribute SOURCE = Attribute.create("SOURCE");
   /**
+   * The STEM.
+   */
+  Attribute STEM = Attribute.create("STEM");
+  /**
    * The tag associated with a span
    */
   Attribute TAG = Attribute.create("TAG");
@@ -99,5 +103,10 @@ public interface Attrs {
    * The type of token
    */
   Attribute TOKEN_TYPE = Attribute.create("TOKEN_TYPE");
+
+  /**
+   * The TRANSLITERATION.
+   */
+  Attribute TRANSLITERATION = Attribute.create("TRANSLITERATION");
 
 }//END OF Attrs

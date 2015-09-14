@@ -22,9 +22,11 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.conversion.Val;
+import lombok.NonNull;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * <p>
@@ -90,6 +92,21 @@ public interface AttributedObject {
       return get(attribute);
     }
     return put(attribute, value);
+  }
+
+  /**
+   * Sets the value of an attribute if a value is not already set. Removes the attribute if the value is null and
+   * ignores setting a value if the attribute is null.
+   *
+   * @param attribute the attribute name
+   * @param supplier  the supplier to generate the new value
+   * @return The old value of the attribute or null
+   */
+  default Val putIfAbsent(Attribute attribute, @NonNull Supplier<?> supplier) {
+    if (contains(attribute)) {
+      return get(attribute);
+    }
+    return put(attribute, supplier.get());
   }
 
   /**

@@ -47,7 +47,6 @@ public class Span implements Serializable {
    * @param end   the end
    */
   public Span(int start, int end) {
-    Preconditions.checkArgument(start >= 0, "Starting offset must be >= 0");
     Preconditions.checkArgument(end >= start, "Ending offset must be >= Starting offset");
     this.end = end;
     this.start = start;

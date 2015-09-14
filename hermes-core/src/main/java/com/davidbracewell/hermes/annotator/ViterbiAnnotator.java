@@ -22,12 +22,12 @@
 package com.davidbracewell.hermes.annotator;
 
 
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.HString;
 import com.davidbracewell.tuple.Tuple2;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * <p>An abstract base annotator that uses the Viterbi algorithm to find text items in a document. Child classes
@@ -84,7 +84,7 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
    * segmentation.
    *
    * @param currentScore The score of the sentence so far
-   * @param spanScore The score of the span under consideration
+   * @param spanScore    The score of the span under consideration
    * @return The combination of the current and span scores
    */
   protected double combineScore(double currentScore, double spanScore) {
@@ -95,7 +95,7 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
    * Given an possible span determines if an annotation should be created and if so creates and attaches it.
    *
    * @param document the document
-   * @param span The span to check
+   * @param span     The span to check
    */
   protected abstract void createAndAttachAnnotation(Document document, Match span);
 
@@ -127,9 +127,9 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
     /**
      * Instantiates a new Match.
      *
-     * @param span the span
+     * @param span          the span
      * @param matchedString the matched string
-     * @param score the score
+     * @param score         the score
      */
     public Match(HString span, String matchedString, double score) {
       this.span = span;
@@ -138,10 +138,5 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
     }
 
   }//END OF Match
-
-  @Override
-  public Set<AnnotationType> requires() {
-    return Collections.singleton(Types.TOKEN);
-  }
 
 }//END OF ViterbiAnnotator

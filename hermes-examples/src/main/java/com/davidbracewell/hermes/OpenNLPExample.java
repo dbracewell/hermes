@@ -62,28 +62,32 @@ public class OpenNLPExample {
     Config.setProperty("opennlp.part_of_speech.model.ENGLISH", "${data.cp}/en/opennlp-pos.bin");
 
 
-    Config.setProperty("data.cp", "/data/models");
     //Set where the model is located
     Config.setProperty("opennlp.entity.models.ENGLISH", "${data.cp}/en/ner/en-ner-person.bin,${data.cp}/en/ner/en-ner-location.bin,${data.cp}/en/ner/en-ner-organization.bin,${data.cp}/en/ner/en-ner-date.bin, ${data.cp}/en/ner/en-ner-money.bin, ${data.cp}/en/ner/en-ner-percentage.bin, ${data.cp}/en/ner/en-ner-time.bin");
 
 
     //Create a pipeline to do tokenization, sentence segmentation, and part of speech tagging
     Pipeline pipeline = Pipeline.builder()
-      .addAnnotations(TOKEN, SENTENCE, PART_OF_SPEECH, OpenNLPEntityAnnotator.OPENNLP_ENTITY)
+      .addAnnotations(TOKEN, SENTENCE, PART_OF_SPEECH, OpenNLPEntityAnnotator.OPENNLP_ENTITY, Types.LEMMA, Types.STEM)
       .onComplete(document -> document.sentences().forEach
           (
             sentence -> {
               System.out.println(sentence.toPOSString());
-              sentence.getOverlapping(ENTITY).forEach
-                (
-                  entity -> System.out.println
-                    (
-                      entity + "/" +
-                        entity.get(Attrs.ENTITY_TYPE) +
-                        " [" + entity.get(Attrs.CONFIDENCE) + "]"
-                    )
-                );
+              sentence.tokens().forEach(token -> System.out.print(token.getLemma() + " "));
               System.out.println();
+              sentence.tokens().forEach(token -> System.out.print(token.getStem() + " "));
+              System.out.println();
+
+//              sentence.get(ENTITY).forEach
+//                (
+//                  entity -> System.out.println
+//                    (
+//                      entity.getLemma() + "/" +
+//                        entity.get(Attrs.ENTITY_TYPE) +
+//                        " [" + entity.get(Attrs.CONFIDENCE) + "]"
+//                    )
+//                );
+//              System.out.println();
             }
           )
       )

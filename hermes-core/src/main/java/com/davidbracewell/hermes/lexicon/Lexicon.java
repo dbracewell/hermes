@@ -26,13 +26,14 @@ import com.davidbracewell.hermes.HString;
 
 import java.io.Serializable;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * <p>Defines a lexicon in which words/phrases are mapped to categories.</p>
  *
  * @author David B. Bracewell
  */
-public abstract class Lexicon implements Serializable {
+public abstract class Lexicon implements Serializable, Predicate<CharSequence> {
   private static final long serialVersionUID = 1L;
 
   /**
@@ -58,7 +59,7 @@ public abstract class Lexicon implements Serializable {
    */
   public final boolean contains(String lexicalItem) {
     return lexicalItem != null &&
-        (containsImpl(lexicalItem) || (!isCaseSensitive() && containsImpl(lexicalItem.toLowerCase())));
+      (containsImpl(lexicalItem) || (!isCaseSensitive() && containsImpl(lexicalItem.toLowerCase())));
   }
 
   /**
@@ -101,5 +102,14 @@ public abstract class Lexicon implements Serializable {
    * @return the number of lexical items in the lexicon
    */
   public abstract int size();
+
+
+  @Override
+  public final boolean test(CharSequence sequence) {
+    if (sequence == null) {
+      return false;
+    }
+    return contains(sequence.toString());
+  }
 
 }//END OF Lexicon

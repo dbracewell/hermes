@@ -24,13 +24,14 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Language;
 import com.davidbracewell.cache.Cache;
 import com.davidbracewell.cache.CacheManager;
+import com.davidbracewell.config.Config;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
 
 /**
  * <p>Factory with cache for constructing/retrieving annotators for a given annotation class. The cache is managed
- * using {@link CacheManager} and is named <code>com.davidbracewell.text.annotatorCache</code>.
+ * using {@link CacheManager} and is named <code>hermes.AnnotatorCache</code>.
  *
  * @author David B. Bracewell
  */
@@ -44,7 +45,7 @@ public class AnnotatorCache {
   }
 
   /**
-   * Gets instance.
+   * Gets the instance of the cache.
    *
    * @return The instance of the <code>AnnotatorFactory</code>
    */
@@ -72,12 +73,15 @@ public class AnnotatorCache {
   public Annotator get(@Nonnull AnnotationType annotationType, @Nonnull Language language) {
     String key = createKey(annotationType, language);
     if (!cache.containsKey(key)) {
-      cache.putIfAbsent(key, annotationType.getAnnotator(language));
+      cache.put(key, annotationType.getAnnotator(language));
     }
     return cache.get(key);
   }
 
   private String createKey(AnnotationType type, Language language) {
+    if (language == Language.UNKNOWN) {
+      return type.name();
+    }
     return type.name() + "::" + language;
   }
 
@@ -107,8 +111,16 @@ public class AnnotatorCache {
    * @param annotator      the annotator
    */
   public void setAnnotator(@Nonnull AnnotationType annotationType, @Nonnull Language language, @Nonnull Annotator annotator) {
-    Preconditions.checkArgument(annotator.provides().contains(annotationType), "Attempting to register " + annotator.getClass().getName() + " for " + annotationType.name() + " which it does not provide");
+    Preconditions.checkArgument(annotator.satisfies().contains(annotationType), "Attempting to register " + annotator.getClass().getName() + " for " + annotationType.name() + " which it does not provide");
     cache.put(createKey(annotationType, language), annotator);
+
+    if (language == Language.UNKNOWN) {
+      Config.setProperty("Annotator" + annotationType.name() + ".annotator", "CACHED");
+    } else {
+      Config.setProperty("Annotator" + annotationType.name() + ".annotator." + language, "CACHED");
+    }
+
+    assert cache.containsKey(createKey(annotationType, language));
   }
 
 

@@ -58,7 +58,7 @@ public class GappyLexiconAnnotatorTest {
     );
 
     gappyLexiconAnnotator.annotate(document);
-    List<Annotation> annotationList = document.getOverlapping(Types.LEXICON_MATCH);
+    List<Annotation> annotationList = document.get(Types.LEXICON_MATCH);
 
     assertEquals(5, annotationList.size());
     assertEquals("get very tired", annotationList.get(0).toLowerCase());

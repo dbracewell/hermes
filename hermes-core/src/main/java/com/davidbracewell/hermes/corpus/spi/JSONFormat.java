@@ -25,10 +25,10 @@ import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.io.structured.StructuredFormat;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Collections;
 
 /**
@@ -37,17 +37,23 @@ import java.util.Collections;
  * @author David B. Bracewell
  */
 @MetaInfServices(CorpusFormat.class)
-public class JSONFormat extends FileBasedFormat implements Serializable {
+public class JSONFormat extends FileBasedFormat {
   private static final long serialVersionUID = 1L;
+
+  @Override
+  public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
+    return Collections.singleton(Document.fromJson(resource.readToString()));
+  }
+
+  @Override
+  public void write(Resource resource, Document document) throws IOException {
+    document.write(StructuredFormat.JSON, resource);
+  }
 
   @Override
   public String name() {
     return "JSON";
   }
 
-  @Override
-  protected Iterable<Document> readResource(Resource resource, DocumentFactory documentFactory) throws IOException {
-    return Collections.singleton(Document.fromJson(resource.readToString()));
-  }
 
 }//END OF JSONFormat

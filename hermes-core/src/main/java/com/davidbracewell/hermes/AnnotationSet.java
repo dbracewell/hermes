@@ -75,10 +75,10 @@ public interface AnnotationSet extends Iterable<Annotation> {
   boolean isCompleted(AnnotationType type);
 
   /**
-   * Gets information on what annotator provided the anntoation of the given type
+   * Gets information on what annotator provided the annotation of the given type
    *
    * @param type The annotation type
-   * @return String representing the anntoation provider or null
+   * @return String representing the annotation provider or null
    */
   String getAnnotationProvider(AnnotationType type);
 
