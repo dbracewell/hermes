@@ -1,4 +1,4 @@
-![Hermes](http://dbracewell.github.io/hermes/images/hermes.png)
+![Hermes](https://github.com/dbracewell/hermes/blob/gh-pages/images/hermes.png)
 
 A Natural Language Processing framework for Java based on the [Tipster Architecture](http://cs.nyu.edu/cs/faculty/grishman/tipster.html).
 
