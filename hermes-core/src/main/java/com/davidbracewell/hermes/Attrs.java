@@ -103,7 +103,6 @@ public interface Attrs {
    * The type of token
    */
   Attribute TOKEN_TYPE = Attribute.create("TOKEN_TYPE");
-
   /**
    * The TRANSLITERATION.
    */

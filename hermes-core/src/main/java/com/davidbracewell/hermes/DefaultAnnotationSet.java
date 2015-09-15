@@ -47,6 +47,7 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
   private NavigableSet<Annotation> endSorted = new TreeSet<>(AnnotationOrdering.END_ORDERING);
   private Map<AnnotationType, String> completed = new HashMap<>(4);
   private Map<Long, Annotation> idAnnotationMap = new HashMap<>(4);
+  private TreeSet<Integer> tokenStarts = new TreeSet<>();
 
   @Override
   public void add(Annotation annotation) {
@@ -54,6 +55,9 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
       startSorted.add(annotation);
       endSorted.add(annotation);
       idAnnotationMap.put(annotation.getId(), annotation);
+      if (annotation.isInstance(Types.TOKEN)) {
+        tokenStarts.add(annotation.start());
+      }
     }
   }
 
@@ -118,10 +122,10 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
 
   @Override
   public List<Annotation> select(@Nonnull Span range, @Nonnull Predicate<? super Annotation> criteria) {
-    Annotation dummy = Fragments.detachedAnnotation(null, range.start() - 1, range.end() + 1);
-    Annotation dummy2 = Fragments.detachedAnnotation(null, range.start() - 1, range.end() + 1);
-
-    return Sets.intersection(startSorted.tailSet(dummy, true), endSorted.headSet(dummy2, true))
+    int start = tokenStarts.lower(range.start());
+    int end = tokenStarts.higher(range.end());
+    Annotation dummy = Fragments.detachedAnnotation(null, start, end);
+    return Sets.union(startSorted.tailSet(dummy, true), endSorted.headSet(dummy, true))
       .stream()
       .filter(criteria)
       .collect(Collectors.toList());

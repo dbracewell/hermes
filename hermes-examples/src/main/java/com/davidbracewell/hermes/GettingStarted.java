@@ -64,6 +64,9 @@ public class GettingStarted {
 
     //Print out the animal mention annotations
     document.get(animalMention).forEach(a -> System.out.println(a + "[" + a.start() + ", " + a.end() + "]"));
+
+    System.out.println(document.findAllPatterns("[ou]"));
+
   }
 
 }//END OF GettingStarted

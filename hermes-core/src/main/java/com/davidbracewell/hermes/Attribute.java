@@ -61,6 +61,12 @@ import java.util.*;
  * This means that the gold standard attribute for part of speech (<code>@PART_OF_SPEECH</code> would get its type
  * information from its non-gold standard form <code>PART_OF_SPEECH</code>).
  * </p>
+ * <p>
+ * When attributes are written to a structured format their type is checked against what is defined. Differences in
+ * type will by default cause ignore the attribute and not write it to file. You can set
+ * <code>Attribute.ignoreTypeChecks</code> to <code>false</code> to ensure the type and throw an
+ * <code>IllegalArgumentException</code> when there is a mismatch.
+ * </p>
  *
  * @author David B. Bracewell
  */
@@ -167,9 +173,6 @@ public class Attribute extends EnumValue {
   }
 
   static Map<Attribute, Val> readAttributeList(StructuredReader reader) throws IOException {
-//    if (reader.peek() == ElementType.BEGIN_OBJECT) {
-//      reader.beginObject("attributes");
-//    }
     Map<Attribute, Val> attributeValMap = new HashMap<>();
     while (reader.peek() != ElementType.END_OBJECT) {
       Collect.put(attributeValMap, read(reader));
@@ -197,15 +200,19 @@ public class Attribute extends EnumValue {
     return index.values();
   }
 
-  void checkType(Val value) {
+  boolean checkType(Val value) {
     if (value != null && !Config.get("Attribute", "ignoreTypeChecks").asBoolean(false)) {
       ValueType valueType = getValueType();
       if (!valueType.getType().isAssignableFrom(value.getWrappedClass())) {
+        if (Config.get("Attribute.ignoreTypeErrors").asBooleanValue(false)) {
+          return false;
+        }
         throw new IllegalArgumentException(
-            value + " [" + value.getClass().getName() + "] is of wrong type. " +
-                name() + "'s defined type is " + valueType.getType().getName());
+          value + " [" + value.getClass().getName() + "] is of wrong type. " +
+            name() + "'s defined type is " + valueType.getType().getName());
       }
     }
+    return true;
   }
 
   private Optional<AttributeValueCodec> getCodec() {
@@ -267,29 +274,30 @@ public class Attribute extends EnumValue {
     Optional<AttributeValueCodec> encoder = getCodec();
     Val wrapped = Val.of(val);
 
-    if (valueType.isCollection()) {
-      checkType(wrapped);
-      writer.beginArray(name());
-      Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);
-      for (Object o : collection) {
-        writer.writeValue(o);
+    if (checkType(Val.of(val))) {
+      if (valueType.isCollection()) {
+        writer.beginArray(name());
+        Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);
+        for (Object o : collection) {
+          writer.writeValue(o);
+        }
+        writer.endArray();
+      } else if (encoder.isPresent()) {
+        writer.beginObject(name());
+        encoder.get().encode(writer, this, wrapped.asObject(Object.class));
+        writer.endObject();
+      } else if (valueType.isMap()) {
+        writer.beginObject(name());
+        Map<?, ?> map = wrapped.asMap(valueType.getParameterTypes()[0], valueType.getParameterTypes()[1]);
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+          writer.writeKeyValue(Convert.convert(entry.getKey(), String.class), entry.getValue());
+        }
+        writer.endObject();
+      } else {
+        writer.writeKeyValue(name(), val);
       }
-      writer.endArray();
-    } else if (encoder.isPresent()) {
-      writer.beginObject(name());
-      encoder.get().encode(writer, this, wrapped.asObject(Object.class));
-      writer.endObject();
-    } else if (valueType.isMap()) {
-      checkType(Val.of(val));
-      writer.beginObject(name());
-      Map<?, ?> map = wrapped.asMap(valueType.getParameterTypes()[0], valueType.getParameterTypes()[1]);
-      for (Map.Entry<?, ?> entry : map.entrySet()) {
-        writer.writeKeyValue(Convert.convert(entry.getKey(), String.class), entry.getValue());
-      }
-      writer.endObject();
-    } else {
-      writer.writeKeyValue(name(), val);
     }
+
   }
 
 

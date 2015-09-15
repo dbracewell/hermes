@@ -27,7 +27,6 @@ import com.davidbracewell.collection.Counters;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.filters.StopWords;
-import com.davidbracewell.hermes.morphology.Lemmatizers;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.string.StringUtils;
@@ -88,6 +87,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
         end = Math.max(end, hString.end());
       }
     }
+    if (start < 0 || start >= end) {
+      return Fragments.empty(owner);
+    }
     return new Fragment(owner, start, end);
   }
 
@@ -109,6 +111,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       }
       start = Math.min(start, hString.start());
       end = Math.max(end, hString.end());
+    }
+    if (start < 0 || start >= end) {
+      return Fragments.empty(owner);
     }
     return new Fragment(owner, start, end);
   }
@@ -274,6 +279,55 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
+   * Finds the given regular expression in this HString starting from the beginning of this HString
+   *
+   * @param regex the regular expression to search for
+   * @return the HString for the match or empty if no match is found.
+   */
+  public HString findPattern(@Nonnull String regex) {
+    return findPattern(Pattern.compile(regex));
+  }
+
+  /**
+   * Finds the given regular expression in this HString starting from the beginning of this HString
+   *
+   * @param regex the regular expression to search for
+   * @return the HString for the match or empty if no match is found.
+   */
+  public HString findPattern(@Nonnull Pattern regex) {
+    Matcher m = matcher(regex);
+    if (m.find()) {
+      return union(substring(m.start(), m.end()).tokens());
+    }
+    return Fragments.empty(document());
+  }
+
+  /**
+   * Finds all occurrences of the  given regular expression in this HString starting from the beginning of this HString
+   *
+   * @param regex the regular expression to search for
+   * @return A list of HString that are matches to the given regular expression
+   */
+  public List<HString> findAllPatterns(@Nonnull String regex) {
+    return findAllPatterns(Pattern.compile(regex));
+  }
+
+  /**
+   * Finds all occurrences of the  given regular expression in this HString starting from the beginning of this HString
+   *
+   * @param regex the regular expression to search for
+   * @return A list of HString that are matches to the given regular expression
+   */
+  public List<HString> findAllPatterns(@Nonnull Pattern regex) {
+    Matcher m = regex.matcher(this);
+    List<HString> matches = new ArrayList<>();
+    while (m.find()) {
+      matches.add(union(substring(m.start(), m.end()).tokens()));
+    }
+    return matches;
+  }
+
+  /**
    * Finds the given text in this HString starting from the beginning of this HString
    *
    * @param text the text to search for
@@ -281,6 +335,20 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public HString find(String text) {
     return find(text, 0);
+  }
+
+  /**
+   * Finds all occurrences of the given text in this HString starting
+   *
+   * @param text the text to search for
+   * @return A list of HString that are matches to the given string
+   */
+  public List<HString> findAll(@Nonnull String text) {
+    List<HString> matches = new ArrayList<>();
+    for (int pos = indexOf(text, 0); pos < length() && pos != -1; pos = indexOf(text, pos)) {
+      matches.add(union(substring(pos, pos + text.length()).tokens()));
+    }
+    return matches;
   }
 
   /**
@@ -296,7 +364,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     if (pos == -1) {
       return Fragments.empty(document());
     }
-    return new Fragment(document(), start() + pos, start() + text.length());
+    return union(new Fragment(document(), start() + pos, start() + text.length()).tokens());
   }
 
   @Override
@@ -351,14 +419,17 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Gets the lemmatized version of this HString.
+   * Gets the lemmatized version of the HString. Lemmas of longer phrases are constructed from token
+   * lemmas.
    *
-   * @return the lemmatized version of this HString
+   * @return The lemmatized version of the HString.
    */
   public String getLemma() {
     if (isInstance(Types.TOKEN)) {
-      putIfAbsent(Attrs.LEMMA, Lemmatizers.getLemmatizer(getLanguage()).lemmatize(this));
-      return get(Attrs.LEMMA).asString();
+      if (contains(Attrs.LEMMA)) {
+        return get(Attrs.LEMMA).asString();
+      }
+      return toLowerCase();
     }
     return tokens().stream()
       .map(HString::getLemma)
@@ -368,9 +439,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Gets the part of speech of the HString
+   * Gets the part-of-speech of the HString
    *
-   * @return The best part of speech for the HString
+   * @return The best part-of-speech for the HString
    */
   public POS getPOS() {
     return POS.forText(this);
@@ -390,10 +461,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Index of.
+   * Returns the index within this string of the first occurrence of the specified substring.
    *
-   * @param text the text
-   * @return the int
+   * @param text the substring to search for.
+   * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
    * @see String#indexOf(String)
    */
   public int indexOf(String text) {
@@ -401,11 +472,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Index of.
+   * Returns the index within this string of the first occurrence of the specified substring.
    *
-   * @param text  the text
-   * @param start the start
-   * @return the int
+   * @param text  the substring to search for.
+   * @param start the index to to start searching from
+   * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
    * @see String#indexOf(String, int)
    */
   public int indexOf(String text, int start) {
@@ -461,10 +532,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Matches boolean.
+   * Tells whether or not this string matches the given regular expression.
    *
-   * @param regex the regex
-   * @return the boolean
+   * @param regex the regular expression
+   * @return true if, and only if, this string matches the given regular expression
    * @see String#matches(String)
    */
   public boolean matches(String regex) {
@@ -472,46 +543,54 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Ngrams list.
+   * <p>
+   * Extracts ngrams of the given annotation and order (e.g. unigram, bigram, trigram, etc.)
+   * </p>
    *
-   * @param order          the order
-   * @param annotationType the annotation type
-   * @return the list
+   * @param order          the order, i.e. number of annotations in the ngarm
+   * @param annotationType the type of annotation to extract
+   * @return the ngrams
    */
   public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType) {
     return ngrams(order, annotationType, true);
   }
 
   /**
-   * Ngrams list.
+   * <p>
+   * Extracts ngrams of the given annotation and order (e.g. unigram, bigram, trigram, etc.)
+   * </p>
    *
-   * @param order            the order
-   * @param annotationType   the annotation type
-   * @param includeStopWords the include stop words
-   * @return the list
+   * @param order           the order, i.e. number of annotations in the ngarm
+   * @param annotationType  the type of annotation to extract
+   * @param removeStopWords true ignore stop words using the StopWords class associated with the language of this
+   *                        HString
+   * @return the ngrams
    */
-  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, boolean includeStopWords) {
-    if (includeStopWords) {
+  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, boolean removeStopWords) {
+    if (removeStopWords) {
       return ngrams(
         order,
         annotationType,
-        t -> true
+        StopWords.getInstance(getLanguage())
       );
     }
     return ngrams(
       order,
       annotationType,
-      StopWords.getInstance(getLanguage())
+      t -> true
     );
   }
 
   /**
-   * Ngrams list.
+   * <p>
+   * Extracts ngrams of the given annotation and order (e.g. unigram, bigram, trigram, etc.) that satisfy the given
+   * filter.
+   * </p>
    *
-   * @param order          the order
-   * @param annotationType the annotation type
-   * @param filter         the filter
-   * @return the list
+   * @param order          the order, i.e. number of annotations in the ngarm
+   * @param annotationType the type of annotation to extract
+   * @param filter         the filter to use to accept ngrams
+   * @return the ngrams
    */
   public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, @Nonnull Predicate<? super HString> filter) {
     if (order <= 0) {
@@ -585,19 +664,17 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Replace string.
+   * Converts this string to a new character array.
    *
-   * @param oldChar the old char
-   * @param newChar the new char
-   * @return the string
-   * @see String#replace(char, char)
+   * @return a newly allocated character array whose length is the length of this string and whose contents are
+   * initialized to contain the character sequence represented by this string.
    */
-  public String replace(char oldChar, char newChar) {
-    return toString().replace(oldChar, newChar);
+  public char[] toCharArray() {
+    return toString().toCharArray();
   }
 
   /**
-   * Replace string.
+   * Replaces all substrings of this string that matches the given string with the given replacement.
    *
    * @param oldString the old string
    * @param newString the new string
@@ -609,11 +686,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Replace all.
+   * Replaces all substrings of this string that matches the given regular expression with the given replacement.
    *
-   * @param regex       the regex
-   * @param replacement the replacement
-   * @return the string
+   * @param regex       the regular expression
+   * @param replacement the string to be substituted
+   * @return the resulting string
    * @see String#replaceAll(String, String)
    */
   public String replaceAll(String regex, String replacement) {
@@ -621,11 +698,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Replace first.
+   * Replaces the first substring of this string that matches the given regular expression with the given replacement.
    *
-   * @param regex       the regex
-   * @param replacement the replacement
-   * @return the string
+   * @param regex       the regular expression
+   * @param replacement the string to be substituted
+   * @return the resulting string
    * @see String#replaceFirst(String, String)
    */
   public String replaceFirst(String regex, String replacement) {
@@ -633,14 +710,23 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Starts with.
+   * Tests if this string starts with the specified prefix.
    *
    * @param prefix the prefix
-   * @return the boolean
-   * @see String#startsWith(String)
+   * @return true if the HString starts with the specified prefix
    */
   public boolean startsWith(String prefix) {
     return toString().startsWith(prefix);
+  }
+
+  /**
+   * Returns true if and only if this string contains the specified sequence of char values.
+   *
+   * @param string the sequence to search for
+   * @return true if this string contains s, false otherwise
+   */
+  public boolean contains(@Nonnull String string) {
+    return toString().contains(string);
   }
 
   @Override
@@ -649,13 +735,17 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Sub string.
+   * Returns a new HString that is a substring of this one. The substring begins at the specified relativeStart and
+   * extends to the character at index relativeEnd - 1. Thus the length of the substring is relativeEnd-relativeStart.
    *
-   * @param relativeStart the start
-   * @param relativeEnd   the end
-   * @return the h string
+   * @param relativeStart the relative start within in this HString
+   * @param relativeEnd   the relative end within this HString
+   * @return the specified substring.
+   * @throws IndexOutOfBoundsException - if the relativeStart is negative, or relativeEnd is larger than the length of
+   *                                   this HString object, or relativeStart is larger than relativeEnd.
    */
   public HString substring(int relativeStart, int relativeEnd) {
+    Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
     return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
   }
 
@@ -670,13 +760,23 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * To pOS string.
+   * Converts the HString to a string with part-of-speech information attached using <code>_</code> as the delimiter
    *
-   * @return the string
+   * @return the HString with part-of-speech information attached to tokens
    */
   public String toPOSString() {
+    return toPOSString('_');
+  }
+
+  /**
+   * Converts the HString to a string with part-of-speech information attached using the given delimiter
+   *
+   * @param delimiter the delimiter to use to separate word and part-of-speech
+   * @return the HString with part-of-speech information attached to tokens
+   */
+  public String toPOSString(char delimiter) {
     return tokens().stream()
-      .map(t -> t.toString() + "/" + t.get(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
+      .map(t -> t.toString() + delimiter + t.get(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
       .collect(Collectors.joining(" "));
   }
 
@@ -689,9 +789,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * To upper case.
+   * Converts the HString to upper case
    *
-   * @return the string
+   * @return the upper case version of the HString
    * @see String#toUpperCase(Locale) NOTE: Uses locale associated with the HString's langauge
    */
   public String toUpperCase() {
@@ -699,32 +799,38 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   /**
-   * Token n grams.
+   * <p>
+   * Extracts token level NGrams
+   * </p>
    *
-   * @param order the order
-   * @return the list
+   * @param order the order of the ngram
+   * @return the ngrams
    */
   public List<HString> tokenNGrams(int order) {
-    return ngrams(order, Types.TOKEN, true);
+    return ngrams(order, Types.TOKEN, false);
   }
 
   /**
-   * Token n grams.
+   * <p>
+   * Extracts token level NGrams
+   * </p>
    *
-   * @param order            the order
-   * @param includeStopWords the include stop words
-   * @return the list
+   * @param order           the order of the ngram
+   * @param removeStopWords True remove stop words using the stop words associated with the language of the HString.
+   * @return the ngrams
    */
-  public List<HString> tokenNGrams(int order, boolean includeStopWords) {
-    return ngrams(order, Types.TOKEN, includeStopWords);
+  public List<HString> tokenNGrams(int order, boolean removeStopWords) {
+    return ngrams(order, Types.TOKEN, removeStopWords);
   }
 
   /**
-   * Token n grams.
+   * <p>
+   * Extracts token level NGrams that satisfy the given filter
+   * </p>
    *
-   * @param order  the order
-   * @param filter the filter
-   * @return the list
+   * @param order  the order of the ngram
+   * @param filter the filter to use to accept tokens
+   * @return the ngrams
    */
   public List<HString> tokenNGrams(int order, @Nonnull Predicate<? super HString> filter) {
     return ngrams(order, Types.TOKEN, filter);
@@ -743,11 +849,12 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return HString.union(this, other, evenMore);
   }
 
-
   /**
-   * Gets stem.
+   * Gets the stemmed version of the HString. Stems of token are determined using the <code>Stemmer</code> associated
+   * with the language that the token is in. Tokens store their stem using the <code>STEM</code> attribute, so that the
+   * stem only needs to be calculated once.Stems of longer phrases are constructed from token stems.
    *
-   * @return the stem
+   * @return The stemmed version of the HString.
    */
   public String getStem() {
     if (isInstance(Types.TOKEN)) {

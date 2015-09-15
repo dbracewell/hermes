@@ -34,7 +34,9 @@ import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The type Open nLPPOS annotator.
@@ -77,8 +79,8 @@ public class OpenNLPPOSAnnotator extends SentenceLevelAnnotator {
   }
 
   @Override
-  public Set<AnnotationType> requires() {
-    return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN));
+  public Set<AnnotationType> furtherRequires() {
+    return Collections.singleton(Types.TOKEN);
   }
 
   @Override

@@ -28,11 +28,17 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 /**
- * <p>In the TIPSTER architecture an <code>AnnotationSet</code> acts as the storage mechanism for annotations
- * associated with a document. It provides methods for adding, removing, and navigating the annotations. In particular,
- * a TIPSTER <code>AnnotationSet</code> defines sequential methods of accessing annotations ({@link
- * #next(Annotation, AnnotationType)}*, {@link #previous(Annotation, AnnotationType)}) and based on criteria {@link
- * #select(Predicate)}* and {@link #select(Span, Predicate)}.
+ * <p>
+ * An <code>AnnotationSet</code> acts as the storage mechanism for annotations associated with a document. It
+ * provides methods for adding, removing, and navigating the annotations. In particular, a <code>AnnotationSet</code>
+ * defines sequential methods of accessing annotations ({@link #next(Annotation, AnnotationType)}, {@link
+ * #previous(Annotation, AnnotationType)}), based on criteria {@link #select(Predicate)} and {@link #select(Span,
+ * Predicate)}, and by id {@link #get(long)}.
+ * </p>
+ * <p>
+ * Annotation sets also keep track of completed annotation types, i.e. those processed using a <code>Pipeline</code>.
+ * This allows the pipeline to ignore further attempts to annotate a type that is marked complete. In addition to being
+ * marked complete, information about the annotator is stored.
  * </p>
  *
  * @author David B. Bracewell

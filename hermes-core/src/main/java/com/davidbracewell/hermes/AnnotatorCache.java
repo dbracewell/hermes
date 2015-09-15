@@ -104,7 +104,8 @@ public class AnnotatorCache {
 
 
   /**
-   * Manually caches an annotator for an annotation type / language pair
+   * Manually caches an annotator for an annotation type / language pair. Note that this will not be safe in a
+   * distributed environment like Spark or Map Reduce, but is useful for testing annotators.
    *
    * @param annotationType the annotation type
    * @param language       the language
