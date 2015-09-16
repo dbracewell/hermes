@@ -64,8 +64,7 @@ public class QueryParser {
 
   private enum Types implements ParserTokenType, HasLexicalPattern {
     NOT("-"),
-    FIELD("\\[[^\\]]+\\]:"),
-    MUST("\\+");
+    FIELD("\\[[^\\]]+\\]:");
     private final String lexicalPattern;
 
     Types(String lexicalPattern) {
@@ -95,19 +94,20 @@ public class QueryParser {
     @Override
     public Expression parse(Parser parser, ParserToken token) throws ParseException {
       if (
-        parser.hasNext() &&
-          !parser.tokenStream().lookAheadType(0).equals(Operator.AND) &&
-          !parser.tokenStream().lookAheadType(0).equals(Operator.OR) &&
-          !parser.tokenStream().lookAheadType(0).equals(CommonTypes.CLOSEPARENS)
-        ) {
+          parser.hasNext() &&
+              !parser.tokenStream().lookAheadType(0).equals(Operator.AND) &&
+              !parser.tokenStream().lookAheadType(0).equals(Operator.OR) &&
+              !parser.tokenStream().lookAheadType(0).equals(CommonTypes.CLOSEPARENS)
+          ) {
         return new BinaryOperatorExpression(
-          new ValueExpression(token.text, token.type),
-          new ParserToken(defaultOperator.toString(), defaultOperator),
-          parser.next()
+            new ValueExpression(token.text, token.type),
+            new ParserToken(defaultOperator.toString(), defaultOperator),
+            parser.next()
         );
       }
       return new ValueExpression(token.text, token.getType());
     }
+
   }
 
   private final Lexer lexer;
@@ -120,18 +120,16 @@ public class QueryParser {
 
   public QueryParser(@NonNull Operator defaultOperator) {
     this.lexer = RegularExpressionLexer.builder()
-      .add(CommonTypes.OPENPARENS)
-      .add(CommonTypes.CLOSEPARENS)
-      .add(Types.MUST)
-      .add(Operator.AND)
-      .add(Operator.OR)
-      .add(Types.NOT)
-      .add(Types.FIELD)
-      .add(CommonTypes.WORD, "(\"([^\"]|\\\\\")*\"|\\S+)")
-      .build();
+        .add(CommonTypes.OPENPARENS)
+        .add(CommonTypes.CLOSEPARENS)
+        .add(Operator.AND)
+        .add(Operator.OR)
+        .add(Types.NOT)
+        .add(Types.FIELD)
+        .add(CommonTypes.WORD, "(\"([^\"]|\\\\\")*\"|\\S+)")
+        .build();
     this.grammar = new Grammar() {{
       register(CommonTypes.OPENPARENS, new GroupHandler(CommonTypes.CLOSEPARENS));
-      register(Types.MUST, new PrefixOperatorHandler(100));
       register(Types.NOT, new PrefixOperatorHandler(100));
       register(CommonTypes.WORD, new WordHandler(5, defaultOperator));
       register(Types.FIELD, new PrefixOperatorHandler(20));
@@ -159,19 +157,24 @@ public class QueryParser {
     return finalPredicate;
   }
 
-  public Predicate<HString> generate(Expression e) {
+  private Predicate<HString> generate(Expression e) {
     if (e.isInstance(ValueExpression.class)) {
+      System.err.println("contains(" + e.as(ValueExpression.class).value + ")");
       return s -> s.contains(e.as(ValueExpression.class).value);
     } else if (e.isInstance(PrefixExpression.class)) {
       PrefixExpression pe = e.as(PrefixExpression.class);
       if (pe.operator.getType().isInstance(Types.NOT)) {
+        System.err.print("not\t");
         return generate(pe.right).negate();
       } else if (pe.operator.getType().isInstance(Types.FIELD)) {
+        System.err.print("FIELD\n\t");
         return generate(pe.right);
       }
+      System.err.print("OTHER\n\t");
       return generate(pe.right);
     }
     BinaryOperatorExpression boe = e.as(BinaryOperatorExpression.class);
+    System.err.print(boe.operator.type + "\n\t");
     Predicate<HString> left = generate(boe.left);
     Predicate<HString> right = generate(boe.right);
     return boe.operator.getType().isInstance(Operator.AND) ? left.and(right) : left.or(right);

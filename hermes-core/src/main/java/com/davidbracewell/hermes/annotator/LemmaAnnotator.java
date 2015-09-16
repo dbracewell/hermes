@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * The type Lemma annotator.
+ * <p>Sets the lemma attribute of each token in the document</p>
  *
  * @author David B. Bracewell
  */
@@ -39,10 +39,10 @@ public class LemmaAnnotator implements Annotator {
   @Override
   public void annotate(Document document) {
     document.tokens().stream()
-      .forEach(token -> {
-        String lemma = Lemmatizers.getLemmatizer(token.getLanguage()).lemmatize(token);
-        token.put(Attrs.LEMMA, lemma.toLowerCase());
-      });
+        .forEach(token -> {
+          String lemma = Lemmatizers.getLemmatizer(token.getLanguage()).lemmatize(token);
+          token.put(Attrs.LEMMA, lemma.toLowerCase());
+        });
   }
 
   @Override

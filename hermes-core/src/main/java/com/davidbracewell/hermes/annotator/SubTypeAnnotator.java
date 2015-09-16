@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.hermes.*;
+import lombok.NonNull;
 
 import java.util.*;
 
@@ -42,29 +43,12 @@ public class SubTypeAnnotator implements Annotator {
    * @param annotationType the annotation type
    * @param nonOverlapping the non overlapping
    * @param subTypes       the sub types
+   * @throws IllegalArgumentException - If one or more of the sub types is not an instance of annotationType
    */
-  public SubTypeAnnotator(AnnotationType annotationType, boolean nonOverlapping, AnnotationType... subTypes) {
-    this(annotationType, nonOverlapping, Arrays.asList(subTypes));
-  }
-
-  /**
-   * Instantiates a new Sub type annotator.
-   *
-   * @param annotationType the annotation type
-   * @param subTypes       the sub types
-   */
-  public SubTypeAnnotator(AnnotationType annotationType, AnnotationType... subTypes) {
-    this(annotationType, true, Arrays.asList(subTypes));
-  }
-
-  /**
-   * Instantiates a new Sub type annotator.
-   *
-   * @param annotationType the annotation type
-   * @param nonOverlapping the non overlapping
-   * @param subTypes       the sub types
-   */
-  public SubTypeAnnotator(AnnotationType annotationType, boolean nonOverlapping, Collection<AnnotationType> subTypes) {
+  public SubTypeAnnotator(@NonNull AnnotationType annotationType, boolean nonOverlapping, @NonNull Collection<AnnotationType> subTypes) {
+    if (!subTypes.stream().allMatch(type -> type.isInstance(annotationType))) {
+      throw new IllegalArgumentException("One or more of the sub types are not an instance of " + annotationType.name());
+    }
     this.annotationType = annotationType;
     this.subTypes = new HashSet<>(subTypes);
     this.nonOverlapping = nonOverlapping;
@@ -76,7 +60,7 @@ public class SubTypeAnnotator implements Annotator {
    * @param annotationType the annotation type
    * @param subTypes       the sub types
    */
-  public SubTypeAnnotator(AnnotationType annotationType, Collection<AnnotationType> subTypes) {
+  public SubTypeAnnotator(@NonNull AnnotationType annotationType, @NonNull Collection<AnnotationType> subTypes) {
     this(annotationType, true, subTypes);
   }
 
@@ -136,11 +120,6 @@ public class SubTypeAnnotator implements Annotator {
   @Override
   public Set<AnnotationType> satisfies() {
     return Collections.singleton(annotationType);
-  }
-
-  @Override
-  public Set<AnnotationType> requires() {
-    return Collections.singleton(Types.TOKEN);
   }
 
 }//END OF SubTypeAnnotator

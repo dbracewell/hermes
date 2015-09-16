@@ -50,10 +50,7 @@ public class LanguageFilter implements Predicate<HString>, Serializable {
 
   @Override
   public boolean test(HString hString) {
-    if (hString == null) {
-      return false;
-    }
-    return hString.getLanguage() == language;
+    return hString != null && hString.getLanguage() == language;
   }
 
 }//END OF LanguageFilter

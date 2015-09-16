@@ -314,7 +314,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
   @Override
   public Collection<Document> query(String query) throws ParseException {
     List<Document> documents = new ArrayList<>();
-    filter(new QueryParser().parse(query)).forEach(
+    filter(new QueryParser(QueryParser.Operator.AND).parse(query)).forEach(
       documents::add
     );
     return documents;

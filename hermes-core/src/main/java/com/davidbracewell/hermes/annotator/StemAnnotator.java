@@ -29,7 +29,9 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * The type Lemma annotator.
+ * <p>
+ * Sets the stem attribute of each token in the document
+ * </p>
  *
  * @author David B. Bracewell
  */
@@ -39,10 +41,10 @@ public class StemAnnotator implements Annotator {
   @Override
   public void annotate(Document document) {
     document.tokens().parallelStream()
-      .forEach(token -> {
-        String stem = Stemmers.getStemmer(token.getLanguage()).stem(token);
-        token.put(Attrs.STEM, stem);
-      });
+        .forEach(token -> {
+          String stem = Stemmers.getStemmer(token.getLanguage()).stem(token);
+          token.put(Attrs.STEM, stem);
+        });
   }
 
   @Override
@@ -55,5 +57,5 @@ public class StemAnnotator implements Annotator {
     return Sets.newHashSet(Types.TOKEN);
   }
 
-}//END OF LemmaAnnotator
+}//END OF StemAnnotator
 
