@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.collection.InvertedIndex;
 import com.davidbracewell.collection.NormalizedStringMap;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.hermes.Document;
@@ -28,6 +29,7 @@ import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.spi.OnePerLineFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
+import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -37,6 +39,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,7 +56,7 @@ import java.util.stream.Stream;
  *
  * @author David B. Bracewell
  */
-public abstract class Corpus implements Iterable<Document>, Serializable {
+public abstract class Corpus implements DocumentStore, Serializable {
   private static final long serialVersionUID = 1L;
   private static final Map<String, CorpusFormat> corpusFormats = new NormalizedStringMap<>();
 
@@ -70,7 +73,7 @@ public abstract class Corpus implements Iterable<Document>, Serializable {
   /**
    * Creates a corpus object by loading documents in the given format from the given resource
    *
-   * @param format the format the documents are in
+   * @param format   the format the documents are in
    * @param resource the resource containing the documents
    * @return the corpus
    * @throws IOException something went wrong reading in the corpus
@@ -82,8 +85,8 @@ public abstract class Corpus implements Iterable<Document>, Serializable {
   /**
    * Creates a corpus object by loading documents in the given format from the given resource
    *
-   * @param format the format the documents are in
-   * @param resource the resource containing the documents
+   * @param format          the format the documents are in
+   * @param resource        the resource containing the documents
    * @param documentFactory The document factory to use
    * @return the corpus
    * @throws IOException something went wrong reading in the corpus
@@ -103,7 +106,7 @@ public abstract class Corpus implements Iterable<Document>, Serializable {
    * @param documentCollection the document collection
    * @return the corpus
    */
-  public static Corpus from(@Nonnull Iterable<Document> documentCollection) {
+  public static Corpus from(@Nonnull Collection<Document> documentCollection) {
     return new InMemoryCorpus(documentCollection);
   }
 
@@ -118,6 +121,16 @@ public abstract class Corpus implements Iterable<Document>, Serializable {
     return new FilteredCorpus(this, filter);
   }
 
+
+  /**
+   * Concatenate corpus.
+   *
+   * @param other the other
+   * @return the corpus
+   */
+  public Corpus concatenate(@Nonnull Corpus other) {
+    return new ConcatenatedCorpus(this, other);
+  }
 
   private static class FilteredCorpus extends Corpus {
     private static final long serialVersionUID = 1L;
@@ -137,6 +150,28 @@ public abstract class Corpus implements Iterable<Document>, Serializable {
     @Override
     public Iterator<Document> iterator() {
       return Iterators.filter(subCorpus.iterator(), filter::test);
+    }
+
+  }
+
+  private static class ConcatenatedCorpus extends Corpus {
+    private static final long serialVersionUID = 1L;
+    private final Corpus subCorpus1;
+    private final Corpus subCorpus2;
+
+    private ConcatenatedCorpus(Corpus subCorpus1, Corpus subCorpus2) {
+      this.subCorpus1 = subCorpus1;
+      this.subCorpus2 = subCorpus2;
+    }
+
+    @Override
+    public DocumentFactory getDocumentFactory() {
+      return subCorpus1.getDocumentFactory();
+    }
+
+    @Override
+    public Iterator<Document> iterator() {
+      return Iterators.concat(subCorpus1.iterator(), subCorpus2.iterator());
     }
 
   }
@@ -170,7 +205,7 @@ public abstract class Corpus implements Iterable<Document>, Serializable {
   /**
    * Writes the corpus to given the format
    *
-   * @param format the format to write in
+   * @param format   the format to write in
    * @param resource the resource to write to
    * @return the corpus
    * @throws IOException something went wrong writing
@@ -188,13 +223,19 @@ public abstract class Corpus implements Iterable<Document>, Serializable {
    */
   public abstract DocumentFactory getDocumentFactory();
 
-  /**
-   * Size int.
-   *
-   * @return the int
-   */
+  @Override
   public int size() {
     return Iterables.size(this);
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return size() == 0;
+  }
+
+  @Override
+  public boolean put(Document document) {
+    throw new UnsupportedOperationException();
   }
 
   /**
@@ -231,7 +272,7 @@ public abstract class Corpus implements Iterable<Document>, Serializable {
   /**
    * Sample corpus.
    *
-   * @param count the count
+   * @param count  the count
    * @param random the random
    * @return the corpus
    */
@@ -251,15 +292,32 @@ public abstract class Corpus implements Iterable<Document>, Serializable {
   }
 
 
-  /**
-   * Gets by id.
-   *
-   * @param id the id
-   * @return the by id
-   */
-  public Optional<Document> getById(String id) {
+  @Override
+  public Optional<Document> get(String id) {
     return stream().filter(document -> document.getId().equals(id)).findFirst();
   }
 
+
+  /**
+   * Index inverted index.
+   *
+   * @param <T>     the type parameter
+   * @param indexer the indexer
+   * @return the inverted index
+   */
+  public <T> InvertedIndex<Document, T> index(@Nonnull Function<Document, Collection<T>> indexer) {
+    InvertedIndex<Document, T> invertedIndex = new InvertedIndex<>(indexer);
+    invertedIndex.addAll(this);
+    return invertedIndex;
+  }
+
+  @Override
+  public Collection<Document> query(String query) throws ParseException {
+    List<Document> documents = new ArrayList<>();
+    filter(new QueryParser().parse(query)).forEach(
+      documents::add
+    );
+    return documents;
+  }
 
 }//END OF Corpus

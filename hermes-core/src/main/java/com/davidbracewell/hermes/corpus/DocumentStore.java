@@ -22,45 +22,54 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.parsing.ParseException;
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.stream.Stream;
+import java.util.Optional;
 
 /**
- * The type In memory corpus.
- *
+ * The interface Document store.
  * @author David B. Bracewell
  */
-public class InMemoryCorpus extends Corpus {
-  private static final long serialVersionUID = 1L;
-  private final Collection<Document> documentCollection;
+public interface DocumentStore extends Iterable<Document> {
 
   /**
-   * Instantiates a new In memory corpus.
+   * Size int.
    *
-   * @param documentCollection the document collection
+   * @return the int
    */
-  public InMemoryCorpus(Collection<Document> documentCollection) {
-    this.documentCollection = documentCollection;
-  }
+  int size();
+
+  /**
+   * Is empty.
+   *
+   * @return the boolean
+   */
+  boolean isEmpty();
+
+  /**
+   * Put boolean.
+   *
+   * @param document the document
+   * @return the boolean
+   */
+  boolean put(Document document);
+
+  /**
+   * Get optional.
+   *
+   * @param id the id
+   * @return the optional
+   */
+  Optional<Document> get(String id);
+
+  /**
+   * Query collection.
+   *
+   * @param query the query
+   * @return the collection
+   */
+  Collection<Document> query(String query) throws ParseException;
 
 
-  @Override
-  public Iterator<Document> iterator() {
-    return documentCollection.iterator();
-  }
-
-
-  @Override
-  public DocumentFactory getDocumentFactory() {
-    return DocumentFactory.getInstance();
-  }
-
-  @Override
-  public Stream<Document> stream() {
-    return documentCollection.parallelStream();
-  }
-
-}//END OF InMemoryCorpus
+}//END OF DocumentStore

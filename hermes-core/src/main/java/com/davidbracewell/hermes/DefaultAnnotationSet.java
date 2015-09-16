@@ -47,7 +47,6 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
   private NavigableSet<Annotation> endSorted = new TreeSet<>(AnnotationOrdering.END_ORDERING);
   private Map<AnnotationType, String> completed = new HashMap<>(4);
   private Map<Long, Annotation> idAnnotationMap = new HashMap<>(4);
-  private TreeSet<Integer> tokenStarts = new TreeSet<>();
 
   @Override
   public void add(Annotation annotation) {
@@ -55,9 +54,6 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
       startSorted.add(annotation);
       endSorted.add(annotation);
       idAnnotationMap.put(annotation.getId(), annotation);
-      if (annotation.isInstance(Types.TOKEN)) {
-        tokenStarts.add(annotation.start());
-      }
     }
   }
 
@@ -122,8 +118,11 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
 
   @Override
   public List<Annotation> select(@Nonnull Span range, @Nonnull Predicate<? super Annotation> criteria) {
-    int start = tokenStarts.lower(range.start());
-    int end = tokenStarts.higher(range.end());
+    Annotation a = startSorted.lower(Fragments.detachedAnnotation(null, range.start(), range.end()));
+    int start = a == null ? range.start() : a.start() - 1;
+    a = endSorted.higher(Fragments.detachedAnnotation(null, range.end(), range.end() + 1));
+    int end = a == null ? range.end() : a.end() + 1;
+
     Annotation dummy = Fragments.detachedAnnotation(null, start, end);
     return Sets.union(startSorted.tailSet(dummy, true), endSorted.headSet(dummy, true))
       .stream()
