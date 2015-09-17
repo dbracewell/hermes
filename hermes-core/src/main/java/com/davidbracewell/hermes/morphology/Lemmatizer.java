@@ -22,14 +22,11 @@
 package com.davidbracewell.hermes.morphology;
 
 
-import com.davidbracewell.collection.Streams;
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.POS;
-import com.google.common.collect.Iterables;
 import lombok.NonNull;
 
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +43,7 @@ public interface Lemmatizer {
    * @return the lemmatized version of the string
    */
   default String lemmatize(@NonNull String string) {
-    return Iterables.getFirst(getBaseForms(string), string);
+    return lemmatize(string, POS.ANY);
   }
 
   /**
@@ -56,9 +53,7 @@ public interface Lemmatizer {
    * @param partOfSpeech the part of speech
    * @return the lemmatized version of the string
    */
-  default String lemmatize(@NonNull String string, @NonNull POS partOfSpeech) {
-    return Iterables.getFirst(getBaseForms(string, partOfSpeech), string);
-  }
+  String lemmatize(@NonNull String string, @NonNull POS partOfSpeech);
 
   /**
    * Lemmatizes a token.
@@ -67,57 +62,17 @@ public interface Lemmatizer {
    * @return the lemmatized version of the token
    */
   default String lemmatize(@NonNull HString fragment) {
-    return Iterables.getFirst(getBaseForms(fragment), fragment.toString());
-  }
-
-  /**
-   * lemmatizes the given token (string) without consideration of the part of speech
-   *
-   * @param string The token
-   * @return The lemmatized version
-   */
-  default Iterable<String> getBaseForms(@NonNull String string) {
-    return getBaseForms(string, POS.ANY);
-  }
-
-  /**
-   * lemmatizes the given token (string)
-   *
-   * @param string       The token
-   * @param partOfSpeech the part of speech
-   * @return The lemmatized version
-   */
-  Iterable<String> getBaseForms(String string, POS partOfSpeech);
-
-  /**
-   * lemmatizes the given token.
-   *
-   * @param fragment The fragment
-   * @return The lemmatized version
-   */
-  default Iterable<String> getBaseForms(@NonNull HString fragment) {
+    if (fragment.isInstance(Types.TOKEN)) {
+      POS pos = fragment.getPOS();
+      if (pos == null) {
+        pos = POS.ANY;
+      }
+      return lemmatize(fragment.toString(), pos);
+    }
     return fragment.tokens().stream()
-      .flatMap(token -> Streams.from(getBaseForms(token.toString(), token.get(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).getUniversalTag())))
-      .collect(Collectors.toList());
+      .map(this::lemmatize)
+      .collect(Collectors.joining(fragment.getLanguage().usesWhitespace() ? " " : ""));
   }
-
-
-  /**
-   * Gets prefix base form.
-   *
-   * @param string       the string
-   * @param partOfSpeech the part of speech
-   * @return the prefix base form
-   */
-  Set<String> getPrefixBaseForms(String string, POS partOfSpeech);
-
-  /**
-   * Is lemma.
-   *
-   * @param word the word
-   * @return the boolean
-   */
-  boolean isLemma(String word);
 
 
 }//END OF Lemmatizer

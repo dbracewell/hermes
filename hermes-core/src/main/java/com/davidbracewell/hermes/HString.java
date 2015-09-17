@@ -364,7 +364,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     if (pos == -1) {
       return Fragments.empty(document());
     }
-    return union(new Fragment(document(), start() + pos, start() + text.length()).tokens());
+    return union(substring(pos, pos + text.length()).tokens());
   }
 
   @Override

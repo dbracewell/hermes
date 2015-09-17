@@ -29,9 +29,9 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.common.io.LineProcessor;
 import lombok.NonNull;
 
@@ -52,7 +52,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
   private static final long serialVersionUID = -6093027604295026727L;
   private static EnglishLemmatizer INSTANCE = null;
   private final Multimap<POS, DetachmentRule> rules = ArrayListMultimap.create();
-  private final Multimap<Tuple2<POS, String>, String> exceptions = HashMultimap.create();
+  private final Multimap<Tuple2<POS, String>, String> exceptions = LinkedHashMultimap.create();
   private final PatriciaTrie<Set<POS>> lemmas;
 
   /**
@@ -146,6 +146,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     if (tokenLemmas.isEmpty()) {
       return Collections.singleton(string);
     }
+
     return tokenLemmas;
   }
 
@@ -178,35 +179,20 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     }
     for (DetachmentRule rule : rules.get(partOfSpeech.getUniversalTag())) {
       String output = rule.apply(string);
-      if (output != null && lemmas.containsKey(output.toLowerCase()) && lemmas.get(output.toLowerCase()).contains(partOfSpeech)) {
+      if (output != null && lemmas.containsKey(output) && lemmas.get(output).contains(partOfSpeech.getUniversalTag())) {
         set.add(output);
       }
     }
   }
 
   @Override
-  public Iterable<String> getBaseForms(@NonNull String string, @NonNull POS partOfSpeech) {
+  public String lemmatize(@NonNull String string, @NonNull POS partOfSpeech) {
     if (partOfSpeech == POS.ANY) {
-      return doLemmatization(string, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB);
+      return Iterables.getFirst(doLemmatization(string, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB), string).toLowerCase();
     } else if (partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)) {
-      return doLemmatization(string, partOfSpeech);
+      return Iterables.getFirst(doLemmatization(string, partOfSpeech), string).toLowerCase();
     }
-    return Collections.singleton(string);
-  }
-
-  @Override
-  public Set<String> getPrefixBaseForms(@NonNull String string, @NonNull POS partOfSpeech) {
-    Set<String> lemmaSet = Sets.newHashSet();
-    for (String lemma : doLemmatization(string, partOfSpeech)) {
-      lemmaSet.add(lemma);
-      lemmaSet.addAll(lemmas.prefixMap(string + "_").keySet());
-    }
-    return lemmaSet;
-  }
-
-  @Override
-  public boolean isLemma(String word) {
-    return lemmas.containsKey(word.toLowerCase());
+    return string.toLowerCase();
   }
 
   private void loadException(POS tag) {

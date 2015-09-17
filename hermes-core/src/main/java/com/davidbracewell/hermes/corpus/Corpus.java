@@ -24,8 +24,10 @@ package com.davidbracewell.hermes.corpus;
 import com.davidbracewell.collection.InvertedIndex;
 import com.davidbracewell.collection.NormalizedStringMap;
 import com.davidbracewell.collection.Streams;
+import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.corpus.spi.OnePerLineFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
@@ -318,6 +320,17 @@ public abstract class Corpus implements DocumentStore, Serializable {
       documents::add
     );
     return documents;
+  }
+
+  /**
+   * Annotates this corpus with the given annotation types and returns a new corpus with the given annotation types
+   * present
+   *
+   * @param types The annotation types to annotate
+   * @return A new corpus with the given annotation types present.
+   */
+  public Corpus annotate(@Nonnull AnnotationType... types) {
+    return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
   }
 
 }//END OF Corpus

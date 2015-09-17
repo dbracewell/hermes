@@ -23,15 +23,11 @@ package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.tag.POS;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import lombok.NonNull;
 
-import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * <p>Factory class for creating/retrieving lemmatizers for a given language</p>
@@ -51,7 +47,7 @@ public final class Lemmatizers {
    * @return The Lemmatizer for the language
    */
   public static synchronized Lemmatizer getLemmatizer(@NonNull Language language) {
-    if( !lemmatizerMap.containsKey(language)) {
+    if (!lemmatizerMap.containsKey(language)) {
       if (Config.hasProperty("hermes.Lemmatizer", language)) {
         Lemmatizer lemmatizer = Config.get("hermes.Lemmatizer", language).as(Lemmatizer.class);
         lemmatizerMap.put(language, lemmatizer);
@@ -68,49 +64,9 @@ public final class Lemmatizers {
   private enum NoOptLemmatizer implements Lemmatizer {
     INSTANCE;
 
-
-    @Override
-    public String lemmatize(String string) {
-      return string;
-    }
-
     @Override
     public String lemmatize(String string, POS partOfSpeech) {
-      return string;
-    }
-
-    @Override
-    public String lemmatize(HString token) {
-      return token == null ? null : token.toString();
-    }
-
-    @Override
-    public Iterable<String> getBaseForms(String string) {
-      Preconditions.checkNotNull(string);
-      return Collections.singletonList(string);
-    }
-
-    @Override
-    public Iterable<String> getBaseForms(String string, POS partOfSpeech) {
-      Preconditions.checkNotNull(string);
-      return Collections.singletonList(string);
-    }
-
-    @Override
-    public Iterable<String> getBaseForms(HString token) {
-      Preconditions.checkNotNull(token);
-      return Collections.singletonList(token.toString());
-    }
-
-    @Override
-    public Set<String> getPrefixBaseForms(String string, POS partOfSpeech) {
-      Preconditions.checkNotNull(string);
-      return Collections.singleton(string);
-    }
-
-    @Override
-    public boolean isLemma(String word) {
-      return true;
+      return string.toLowerCase();
     }
 
   }//END OF Stemmer$NoOptStemmer

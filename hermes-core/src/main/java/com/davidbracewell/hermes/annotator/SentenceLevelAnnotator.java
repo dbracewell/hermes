@@ -40,7 +40,7 @@ public abstract class SentenceLevelAnnotator implements Annotator, Serializable 
 
   @Override
   public final void annotate(Document document) {
-    document.sentences().parallelStream().forEach(this::annotate);
+    document.sentences().stream().forEach(this::annotate);
   }
 
   /**

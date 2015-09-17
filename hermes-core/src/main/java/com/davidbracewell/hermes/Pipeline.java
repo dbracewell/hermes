@@ -272,7 +272,7 @@ public final class Pipeline implements Serializable {
     Set<AnnotationType> annotationTypes = new HashSet<>();
     int numberOfThreads = Runtime.getRuntime().availableProcessors();
     java.util.function.Consumer<Document> onComplete = NoOpt.INSTANCE;
-    boolean returnCorpus = false;
+    boolean returnCorpus = true;
 
     /**
      * Add annotation.
