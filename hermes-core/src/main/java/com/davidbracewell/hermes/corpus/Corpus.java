@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes.corpus;
 
-import com.davidbracewell.collection.InvertedIndex;
 import com.davidbracewell.collection.NormalizedStringMap;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.hermes.AnnotationType;
@@ -41,7 +40,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -297,20 +295,6 @@ public abstract class Corpus implements DocumentStore, Serializable {
   @Override
   public Optional<Document> get(String id) {
     return stream().filter(document -> document.getId().equals(id)).findFirst();
-  }
-
-
-  /**
-   * Index inverted index.
-   *
-   * @param <T>     the type parameter
-   * @param indexer the indexer
-   * @return the inverted index
-   */
-  public <T> InvertedIndex<Document, T> index(@Nonnull Function<Document, Collection<T>> indexer) {
-    InvertedIndex<Document, T> invertedIndex = new InvertedIndex<>(indexer);
-    invertedIndex.addAll(this);
-    return invertedIndex;
   }
 
   @Override
