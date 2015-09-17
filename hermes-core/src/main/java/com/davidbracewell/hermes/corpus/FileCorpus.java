@@ -32,7 +32,10 @@ import java.util.Collections;
 import java.util.Iterator;
 
 /**
- * The type Single document file corpus.
+ * <p>
+ * An implementation of <code>Corpus</code> that recursively reads files from disk. The full corpus is never loaded
+ * into memory. File based corpora are read only, i.e. they do not support the <code>put</code> operator.
+ * </p>
  *
  * @author David B. Bracewell
  */
@@ -46,11 +49,11 @@ public class FileCorpus extends Corpus {
   private int size = -1;
 
   /**
-   * Instantiates a new Corpus.
+   * Instantiates a new file based corpus
    *
    * @param corpusFormat    the corpus format
-   * @param resource        the resource
-   * @param documentFactory the document factory
+   * @param resource        the resource containing the corpus
+   * @param documentFactory the document factory to use when constructing documents
    */
   public FileCorpus(@Nonnull CorpusFormat corpusFormat, @Nonnull Resource resource, @Nonnull DocumentFactory documentFactory) {
     this.corpusFormat = corpusFormat;
@@ -84,4 +87,5 @@ public class FileCorpus extends Corpus {
     }
     return size;
   }
+
 }//END OF FileCorpus

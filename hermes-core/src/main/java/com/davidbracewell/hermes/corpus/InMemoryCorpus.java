@@ -23,33 +23,37 @@ package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
+import lombok.NonNull;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * The type In memory corpus.
+ * <p>
+ * An implementation of a <code>Corpus</code> that stores documents in memory.
+ * </p>
  *
  * @author David B. Bracewell
  */
 public class InMemoryCorpus extends Corpus {
   private static final long serialVersionUID = 1L;
-  private final Collection<Document> documentCollection;
+  private final Map<String, Document> documentMap = new HashMap<>();
 
   /**
    * Instantiates a new In memory corpus.
    *
    * @param documentCollection the document collection
    */
-  public InMemoryCorpus(Collection<Document> documentCollection) {
-    this.documentCollection = documentCollection;
+  public InMemoryCorpus(@NonNull Collection<Document> documentCollection) {
+    documentCollection.forEach(document -> documentMap.put(document.getId(), document));
   }
-
 
   @Override
   public Iterator<Document> iterator() {
-    return documentCollection.iterator();
+    return documentMap.values().iterator();
   }
 
 
@@ -60,7 +64,21 @@ public class InMemoryCorpus extends Corpus {
 
   @Override
   public Stream<Document> stream() {
-    return documentCollection.parallelStream();
+    return documentMap.values().parallelStream();
+  }
+
+  @Override
+  public int size() {
+    return documentMap.size();
+  }
+
+  @Override
+  public boolean put(Document document) {
+    if (document == null) {
+      return false;
+    }
+    documentMap.put(document.getId(), document);
+    return true;
   }
 
 }//END OF InMemoryCorpus

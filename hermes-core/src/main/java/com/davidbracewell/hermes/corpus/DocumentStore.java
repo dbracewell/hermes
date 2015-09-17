@@ -45,11 +45,48 @@ import java.util.stream.Collectors;
 public interface DocumentStore extends Iterable<Document> {
 
   /**
-   * The number of documents in the document store
+   * Gets the document associated with the given id
    *
-   * @return the number of documents in the store
+   * @param id the id of the document to retrieve
+   * @return An optional containing the document for the given id or absent if no document is found
    */
-  int size();
+  Optional<Document> get(String id);
+
+  /**
+   * Groups documents in the document store using the given function.
+   *
+   * @param <K>         The key type
+   * @param keyFunction Converts the document into a key to group the documents  by
+   * @return A <code>Multimap</code> of key - document pairs.
+   */
+  default <K> Multimap<K, Document> groupBy(@NonNull Function<? super Document, K> keyFunction) {
+    Multimap<K, Document> grouping = ArrayListMultimap.create();
+    forEach(document -> grouping.put(keyFunction.apply(document), document));
+    return grouping;
+  }
+
+  /**
+   * Indexes the documents in the document store using the given indexer function. The indexer function converts
+   * documents into one or more values (e.g. tokens) that can then be used to query documents.
+   *
+   * @param <T>     the type of object the document is indexed by
+   * @param indexer the indexer to index the document by
+   * @return the inverted index
+   */
+  default <T> InvertedIndex<Document, T> index(@Nonnull Function<Document, Collection<T>> indexer) {
+    InvertedIndex<Document, T> invertedIndex = new InvertedIndex<>(indexer);
+    invertedIndex.addAll(this);
+    return invertedIndex;
+  }
+
+  /**
+   * Indexes the documents by their lemmatized tokens
+   *
+   * @return the inverted index
+   */
+  default InvertedIndex<Document, String> index() {
+    return index(document -> document.tokens().stream().map(HString::getLemma).collect(Collectors.toSet()));
+  }
 
   /**
    * True if the document store has no documents
@@ -67,14 +104,6 @@ public interface DocumentStore extends Iterable<Document> {
   boolean put(Document document);
 
   /**
-   * Gets the document associated with the given id
-   *
-   * @param id the id of the document to retrieve
-   * @return An optional containing the document for the given id or absent if no document is found
-   */
-  Optional<Document> get(String id);
-
-  /**
    * Queries the document store for documents matching the given query. The syntax of the query language is defined in
    * the {@link QueryParser} class.
    *
@@ -85,42 +114,10 @@ public interface DocumentStore extends Iterable<Document> {
   Collection<Document> query(String query) throws ParseException;
 
   /**
-   * Groups documents in the document store using the given function.
+   * The number of documents in the document store
    *
-   * @param <K>         The key type
-   * @param keyFunction Converts the document into a key to group the documents  by
-   * @return A <code>Multimap</code> of key - document pairs.
+   * @return the number of documents in the store
    */
-  default <K> Multimap<K, Document> groupBy(@NonNull Function<? super Document, K> keyFunction) {
-    Multimap<K, Document> grouping = ArrayListMultimap.create();
-    forEach(document -> grouping.put(keyFunction.apply(document), document));
-    return grouping;
-  }
-
-
-  /**
-   * Indexes the documents in the document store using the given indexer function. The indexer function converts
-   * documents into one or more values (e.g. tokens) that can then be used to query documents.
-   *
-   * @param <T>     the type of object the document is indexed by
-   * @param indexer the indexer to index the document by
-   * @return the inverted index
-   */
-  default <T> InvertedIndex<Document, T> index(@Nonnull Function<Document, Collection<T>> indexer) {
-    InvertedIndex<Document, T> invertedIndex = new InvertedIndex<>(indexer);
-    invertedIndex.addAll(this);
-    return invertedIndex;
-  }
-
-
-  /**
-   * Indexes the documents by their lemmatized tokens
-   *
-   * @return the inverted index
-   */
-  default InvertedIndex<Document, String> index() {
-    return index(document -> document.tokens().stream().map(HString::getLemma).collect(Collectors.toSet()));
-  }
-
+  int size();
 
 }//END OF DocumentStore
