@@ -294,7 +294,7 @@ public class Attribute extends EnumValue {
         }
         writer.endObject();
       } else {
-        writer.writeKeyValue(name(), val);
+        writer.writeKeyValue(name(), wrapped.get());
       }
     }
 
