@@ -159,22 +159,17 @@ public class QueryParser {
 
   private Predicate<HString> generate(Expression e) {
     if (e.isInstance(ValueExpression.class)) {
-      System.err.println("contains(" + e.as(ValueExpression.class).value + ")");
       return s -> s.contains(e.as(ValueExpression.class).value);
     } else if (e.isInstance(PrefixExpression.class)) {
       PrefixExpression pe = e.as(PrefixExpression.class);
       if (pe.operator.getType().isInstance(Types.NOT)) {
-        System.err.print("not\t");
         return generate(pe.right).negate();
       } else if (pe.operator.getType().isInstance(Types.FIELD)) {
-        System.err.print("FIELD\n\t");
         return generate(pe.right);
       }
-      System.err.print("OTHER\n\t");
       return generate(pe.right);
     }
     BinaryOperatorExpression boe = e.as(BinaryOperatorExpression.class);
-    System.err.print(boe.operator.type + "\n\t");
     Predicate<HString> left = generate(boe.left);
     Predicate<HString> right = generate(boe.right);
     return boe.operator.getType().isInstance(Operator.AND) ? left.and(right) : left.or(right);

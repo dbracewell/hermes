@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.filters;
+package com.davidbracewell.hermes.filter;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;

@@ -26,7 +26,7 @@ import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
-import com.davidbracewell.hermes.filters.StopWords;
+import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.string.StringUtils;

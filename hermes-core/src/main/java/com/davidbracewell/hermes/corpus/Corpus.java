@@ -21,12 +21,11 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.collection.Counter;
+import com.davidbracewell.collection.Counters;
 import com.davidbracewell.collection.NormalizedStringMap;
 import com.davidbracewell.collection.Streams;
-import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.Pipeline;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.corpus.spi.OnePerLineFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
@@ -40,35 +39,27 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * <p>
- * Represents a corpus of documents in the form of an iterable. Provides methods for filtering using a predicate and
- * a convenience method for retrieving the first document. Corpus formats are defined via corresponding
- * <code>CorpusFormat</code> objects, which are registered using Java's service loader functionality. When constructing
- * a corpus the format can be appended with <code>_OPL</code> to denote that individual file will have one document per
- * line in the given format. For example, TEXT_OPL would relate to a format where every line of a file equates to a
- * document in plain text format.
+ * An implementation of a <code>DocumentStore</code> that represents a collection of documents. Corpus formats are
+ * defined
+ * via corresponding <code>CorpusFormat</code> objects, which are registered using Java's service loader functionality.
+ * When constructing a corpus the format can be appended with <code>_OPL</code> to denote that individual file will
+ * have one document per line in the given format. For example, TEXT_OPL would relate to a format where every line of a
+ * file equates to a document in plain text format.
  * </p>
  *
  * @author David B. Bracewell
  */
 public abstract class Corpus implements DocumentStore, Serializable {
-  private static final long serialVersionUID = 1L;
   private static final Map<String, CorpusFormat> corpusFormats = new NormalizedStringMap<>();
-
-  static {
-    for (CorpusFormat format : ServiceLoader.load(CorpusFormat.class)) {
-      corpusFormats.put(format.name(), format);
-    }
-  }
-
-
   private static final Logger log = Logger.getLogger(Corpus.class);
-
+  private static final long serialVersionUID = 1L;
 
   /**
    * Creates a corpus object by loading documents in the given format from the given resource
@@ -99,7 +90,6 @@ public abstract class Corpus implements DocumentStore, Serializable {
     throw new IllegalArgumentException("No corpus format registered for " + format);
   }
 
-
   /**
    * From corpus.
    *
@@ -110,6 +100,54 @@ public abstract class Corpus implements DocumentStore, Serializable {
     return new InMemoryCorpus(documentCollection);
   }
 
+  /**
+   * Gets format.
+   *
+   * @param format the format
+   * @return the format
+   */
+  public static CorpusFormat getFormat(String format) {
+    format = StringUtils.trim(format).toUpperCase();
+    boolean isOPL = format.endsWith("_OPL");
+    final String normFormat = format.replaceAll("_OPL$", "").trim();
+    if (corpusFormats.containsKey(normFormat)) {
+      return isOPL ? new OnePerLineFormat(getFormat(normFormat)) : corpusFormats.get(normFormat);
+    }
+    throw new IllegalArgumentException("No corpus format registered for " + format);
+  }
+
+  /**
+   * Annotates this corpus with the given annotation types and returns a new corpus with the given annotation types
+   * present
+   *
+   * @param types The annotation types to annotate
+   * @return A new corpus with the given annotation types present.
+   */
+  public Corpus annotate(@Nonnull AnnotationType... types) {
+    return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
+  }
+
+  /**
+   * To memory.
+   *
+   * @return the corpus
+   */
+  public Corpus cache() {
+    if (this instanceof InMemoryCorpus) {
+      return this;
+    }
+    return new InMemoryCorpus(Streams.from(this).collect(Collectors.toList()));
+  }
+
+  /**
+   * Concatenate corpus.
+   *
+   * @param other the other
+   * @return the corpus
+   */
+  public Corpus concatenate(@Nonnull Corpus other) {
+    return new ConcatenatedCorpus(this, other);
+  }
 
   /**
    * Filter corpus.
@@ -121,15 +159,155 @@ public abstract class Corpus implements DocumentStore, Serializable {
     return new FilteredCorpus(this, filter);
   }
 
+  /**
+   * Gets the first document
+   *
+   * @return The first document as an Optional
+   */
+  public Optional<Document> first() {
+    return Streams.from(this).findFirst();
+  }
+
+  @Override
+  public Optional<Document> get(String id) {
+    return stream().filter(document -> document.getId().equals(id)).findFirst();
+  }
 
   /**
-   * Concatenate corpus.
+   * Gets document factory.
    *
-   * @param other the other
+   * @return the document factory
+   */
+  public abstract DocumentFactory getDocumentFactory();
+
+  @Override
+  public boolean isEmpty() {
+    return size() == 0;
+  }
+
+  @Override
+  public boolean put(Document document) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Collection<Document> query(String query) throws ParseException {
+    List<Document> documents = new ArrayList<>();
+    filter(new QueryParser(QueryParser.Operator.AND).parse(query)).forEach(
+        documents::add
+    );
+    return documents;
+  }
+
+  /**
+   * Sample corpus.
+   *
+   * @param count the count
    * @return the corpus
    */
-  public Corpus concatenate(@Nonnull Corpus other) {
-    return new ConcatenatedCorpus(this, other);
+  public Corpus sample(int count) {
+    return sample(count, new Random());
+  }
+
+  /**
+   * Sample corpus.
+   *
+   * @param count  the count
+   * @param random the random
+   * @return the corpus
+   */
+  public Corpus sample(int count, @Nonnull Random random) {
+    if (count <= 0) {
+      return Corpus.from(Collections.emptyList());
+    }
+    List<Document> sample = stream().limit(count).collect(Collectors.toList());
+    AtomicInteger k = new AtomicInteger(count + 1);
+    stream().skip(count).forEach(document -> {
+      int rndIndex = random.nextInt(k.getAndIncrement());
+      if (rndIndex < count) {
+        sample.set(rndIndex, document);
+      }
+    });
+    return Corpus.from(sample);
+  }
+
+  /**
+   * Term frequencies.
+   *
+   * @param lemmatize the lemmatize
+   * @return the counter
+   */
+  public Counter<String> termFrequencies(boolean lemmatize) {
+    return termFrequencies(Types.TOKEN, lemmatize ? HString::getLemma : HString::toString);
+  }
+
+  /**
+   * Term frequencies.
+   *
+   * @param type     the type
+   * @param toString the to string
+   * @return the counter
+   */
+  public Counter<String> termFrequencies(@Nonnull AnnotationType type, @Nonnull Function<? super Annotation, String> toString) {
+    Counter<String> counter = Counters.newHashMapCounter();
+    stream().forEach(
+        document -> document.get(type).stream().map(toString).forEach(counter::increment)
+    );
+    return counter;
+  }
+
+  /**
+   * Document frequencies.
+   *
+   * @param lemmatize the lemmatize
+   * @return the counter
+   */
+  public Counter<String> documentFrequencies(boolean lemmatize) {
+    return documentFrequencies(Types.TOKEN, lemmatize ? HString::getLemma : HString::toString);
+  }
+
+  /**
+   * Document frequencies.
+   *
+   * @param type     the type
+   * @param toString the to string
+   * @return the counter
+   */
+  public Counter<String> documentFrequencies(@Nonnull AnnotationType type, @Nonnull Function<? super Annotation, String> toString) {
+    Counter<String> counter = Counters.newHashMapCounter();
+    stream().forEach(
+        document -> document.get(type).stream().map(toString).distinct().forEach(counter::increment)
+    );
+    return counter;
+  }
+
+
+  @Override
+  public int size() {
+    return Iterables.size(this);
+  }
+
+  /**
+   * Stream stream.
+   *
+   * @return the stream
+   */
+  public Stream<Document> stream() {
+    return Streams.from(this);
+  }
+
+  /**
+   * Writes the corpus to given the format
+   *
+   * @param format   the format to write in
+   * @param resource the resource to write to
+   * @return the corpus
+   * @throws IOException something went wrong writing
+   */
+  public Corpus write(@Nonnull String format, @Nonnull Resource resource) throws IOException {
+    CorpusFormat corpusFormat = getFormat(format);
+    corpusFormat.write(resource, this);
+    return from(format, resource, getDocumentFactory());
   }
 
   private static class FilteredCorpus extends Corpus {
@@ -176,145 +354,10 @@ public abstract class Corpus implements DocumentStore, Serializable {
 
   }
 
-
-  /**
-   * Gets format.
-   *
-   * @param format the format
-   * @return the format
-   */
-  public static CorpusFormat getFormat(String format) {
-    format = StringUtils.trim(format).toUpperCase();
-    boolean isOPL = format.endsWith("_OPL");
-    final String normFormat = format.replaceAll("_OPL$", "").trim();
-    if (corpusFormats.containsKey(normFormat)) {
-      return isOPL ? new OnePerLineFormat(getFormat(normFormat)) : corpusFormats.get(normFormat);
+  static {
+    for (CorpusFormat format : ServiceLoader.load(CorpusFormat.class)) {
+      corpusFormats.put(format.name(), format);
     }
-    throw new IllegalArgumentException("No corpus format registered for " + format);
-  }
-
-  /**
-   * Gets the first document
-   *
-   * @return The first document as an Optional
-   */
-  public Optional<Document> first() {
-    return Streams.from(this).findFirst();
-  }
-
-  /**
-   * Writes the corpus to given the format
-   *
-   * @param format   the format to write in
-   * @param resource the resource to write to
-   * @return the corpus
-   * @throws IOException something went wrong writing
-   */
-  public Corpus write(@Nonnull String format, @Nonnull Resource resource) throws IOException {
-    CorpusFormat corpusFormat = getFormat(format);
-    corpusFormat.write(resource, this);
-    return from(format, resource, getDocumentFactory());
-  }
-
-  /**
-   * Gets document factory.
-   *
-   * @return the document factory
-   */
-  public abstract DocumentFactory getDocumentFactory();
-
-  @Override
-  public int size() {
-    return Iterables.size(this);
-  }
-
-  @Override
-  public boolean isEmpty() {
-    return size() == 0;
-  }
-
-  @Override
-  public boolean put(Document document) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * To memory.
-   *
-   * @return the corpus
-   */
-  public Corpus cache() {
-    if (this instanceof InMemoryCorpus) {
-      return this;
-    }
-    return new InMemoryCorpus(Streams.from(this).collect(Collectors.toList()));
-  }
-
-  /**
-   * Stream stream.
-   *
-   * @return the stream
-   */
-  public Stream<Document> stream() {
-    return Streams.from(this);
-  }
-
-  /**
-   * Sample corpus.
-   *
-   * @param count the count
-   * @return the corpus
-   */
-  public Corpus sample(int count) {
-    return sample(count, new Random());
-  }
-
-  /**
-   * Sample corpus.
-   *
-   * @param count  the count
-   * @param random the random
-   * @return the corpus
-   */
-  public Corpus sample(int count, @Nonnull Random random) {
-    if (count <= 0) {
-      return Corpus.from(Collections.emptyList());
-    }
-    List<Document> sample = stream().limit(count).collect(Collectors.toList());
-    AtomicInteger k = new AtomicInteger(count + 1);
-    stream().skip(count).forEach(document -> {
-      int rndIndex = random.nextInt(k.getAndIncrement());
-      if (rndIndex < count) {
-        sample.set(rndIndex, document);
-      }
-    });
-    return Corpus.from(sample);
-  }
-
-
-  @Override
-  public Optional<Document> get(String id) {
-    return stream().filter(document -> document.getId().equals(id)).findFirst();
-  }
-
-  @Override
-  public Collection<Document> query(String query) throws ParseException {
-    List<Document> documents = new ArrayList<>();
-    filter(new QueryParser(QueryParser.Operator.AND).parse(query)).forEach(
-      documents::add
-    );
-    return documents;
-  }
-
-  /**
-   * Annotates this corpus with the given annotation types and returns a new corpus with the given annotation types
-   * present
-   *
-   * @param types The annotation types to annotate
-   * @return A new corpus with the given annotation types present.
-   */
-  public Corpus annotate(@Nonnull AnnotationType... types) {
-    return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
   }
 
 }//END OF Corpus

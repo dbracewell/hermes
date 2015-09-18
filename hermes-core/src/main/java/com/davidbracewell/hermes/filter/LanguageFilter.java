@@ -19,39 +19,38 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.filters;
+package com.davidbracewell.hermes.filter;
 
+import com.davidbracewell.Language;
 import com.davidbracewell.hermes.HString;
+import lombok.Data;
+import lombok.NonNull;
 
+import java.io.Serializable;
 import java.util.function.Predicate;
 
 /**
+ * <p>Filters HString based on their language. Useful in multi-language collections.</p>
+ *
  * @author David B. Bracewell
  */
-public enum EnglishVowelFilter implements Predicate<HString> {
-  INSTANCE;
+@Data
+public class LanguageFilter implements Predicate<HString>, Serializable {
+  private static final long serialVersionUID = 1L;
+  private final Language language;
+
+  /**
+   * Instantiates a new Language filter.
+   *
+   * @param language the language
+   */
+  public LanguageFilter(@NonNull Language language) {
+    this.language = language;
+  }
 
   @Override
   public boolean test(HString hString) {
-    if (hString == null) {
-      return false;
-    }
-    for (int i = 0; i < hString.length(); i++) {
-      char c = Character.toLowerCase(hString.charAt(i));
-      switch (c) {
-        case 'a':
-        case 'i':
-        case 'e':
-        case 'o':
-        case 'u':
-          return true;
-        case 'y':
-          if (i != 0) {
-            return true;
-          }
-      }
-    }
-    return false;
+    return hString != null && hString.getLanguage() == language;
   }
 
-}//END OF ENVowelFilter
+}//END OF LanguageFilter
