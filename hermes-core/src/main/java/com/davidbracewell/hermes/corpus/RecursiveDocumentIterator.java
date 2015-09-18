@@ -24,7 +24,6 @@ package com.davidbracewell.hermes.corpus;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.logging.Logger;
 import lombok.NonNull;
 
 import java.util.*;
@@ -36,7 +35,6 @@ import java.util.function.BiFunction;
  * @author David B. Bracewell
  */
 public class RecursiveDocumentIterator implements Iterator<Document> {
-  private final static Logger log = Logger.getLogger(RecursiveDocumentIterator.class);
   private final Iterator<Resource> resourceIterator;
   private final DocumentFactory documentFactory;
   private final Queue<Document> documentQueue = new LinkedList<>();
@@ -45,9 +43,9 @@ public class RecursiveDocumentIterator implements Iterator<Document> {
   /**
    * Instantiates a new Recursive document iterator.
    *
-   * @param resource the resource
+   * @param resource        the resource
    * @param documentFactory the document factory
-   * @param resourceReader the resource reader
+   * @param resourceReader  the resource reader
    */
   public RecursiveDocumentIterator(@NonNull Resource resource, @NonNull DocumentFactory documentFactory, @NonNull BiFunction<Resource, DocumentFactory, Iterable<Document>> resourceReader) {
     this.documentFactory = documentFactory;
@@ -56,11 +54,15 @@ public class RecursiveDocumentIterator implements Iterator<Document> {
   }
 
   boolean advance() {
-    while (resourceIterator.hasNext() && documentQueue.isEmpty()) {
-      Resource r = resourceIterator.next();
-      if (!r.isDirectory()) {
-        if (r.asFile() == null || !r.asFile().isHidden()) {
-          resourceReader.apply(r, documentFactory).forEach(documentQueue::add);
+    if (documentQueue.isEmpty()) {
+      synchronized (documentQueue) {
+        while (resourceIterator.hasNext() && documentQueue.isEmpty()) {
+          Resource r = resourceIterator.next();
+          if (!r.isDirectory()) {
+            if (r.asFile() == null || !r.asFile().isHidden()) {
+              resourceReader.apply(r, documentFactory).forEach(documentQueue::add);
+            }
+          }
         }
       }
     }

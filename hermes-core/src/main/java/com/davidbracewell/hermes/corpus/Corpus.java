@@ -28,7 +28,6 @@ import com.davidbracewell.collection.Streams;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.corpus.spi.OnePerLineFormat;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.logging.Logger;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.collect.Iterables;
@@ -58,7 +57,6 @@ import java.util.stream.Stream;
  */
 public abstract class Corpus implements DocumentStore, Serializable {
   private static final Map<String, CorpusFormat> corpusFormats = new NormalizedStringMap<>();
-  private static final Logger log = Logger.getLogger(Corpus.class);
   private static final long serialVersionUID = 1L;
 
   /**
@@ -200,21 +198,23 @@ public abstract class Corpus implements DocumentStore, Serializable {
   }
 
   /**
-   * Sample corpus.
+   * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
+   * sampling</a>.
    *
-   * @param count the count
-   * @return the corpus
+   * @param count the number of documents to include in the sample
+   * @return the sampled corpus
    */
   public Corpus sample(int count) {
     return sample(count, new Random());
   }
 
   /**
-   * Sample corpus.
+   * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
+   * sampling</a>.
    *
-   * @param count  the count
-   * @param random the random
-   * @return the corpus
+   * @param count  the number of documents to include in the sample
+   * @param random Random number generator to use for selection
+   * @return the sampled corpus
    */
   public Corpus sample(int count, @Nonnull Random random) {
     if (count <= 0) {
@@ -232,53 +232,51 @@ public abstract class Corpus implements DocumentStore, Serializable {
   }
 
   /**
-   * Term frequencies.
+   * Calculates the total term frequency of the tokens in the corpus.
    *
-   * @param lemmatize the lemmatize
-   * @return the counter
+   * @param lemmatize True - count lemmas, False - count as is
+   * @return A counter containing term frequencies of the given annotation type
    */
   public Counter<String> termFrequencies(boolean lemmatize) {
     return termFrequencies(Types.TOKEN, lemmatize ? HString::getLemma : HString::toString);
   }
 
   /**
-   * Term frequencies.
+   * Calculates the total term frequency of annotations of the given type in the corpus. Annotations are transformed
+   * into strings using the given toString function.
    *
-   * @param type     the type
-   * @param toString the to string
-   * @return the counter
+   * @param type     the annotation type to count.
+   * @param toString the function to convert Annotations into strings
+   * @return A counter containing total term frequencies of the given annotation type
    */
   public Counter<String> termFrequencies(@Nonnull AnnotationType type, @Nonnull Function<? super Annotation, String> toString) {
-    Counter<String> counter = Counters.newHashMapCounter();
-    stream().forEach(
-        document -> document.get(type).stream().map(toString).forEach(counter::increment)
-    );
-    return counter;
+    return parallelStream()
+        .flatMap(document -> document.get(type).parallelStream().map(toString))
+        .collect(Counters.collector());
   }
 
   /**
-   * Document frequencies.
+   * Calculates the document frequency of tokens in the corpus.
    *
-   * @param lemmatize the lemmatize
-   * @return the counter
+   * @param lemmatize True - count lemmas, False - count as is
+   * @return A counter containing document frequencies of the given annotation type
    */
   public Counter<String> documentFrequencies(boolean lemmatize) {
     return documentFrequencies(Types.TOKEN, lemmatize ? HString::getLemma : HString::toString);
   }
 
   /**
-   * Document frequencies.
+   * Calculates the document frequency of annotations of the given annotation type in the corpus. Annotations are
+   * transformed into strings using the given toString function.
    *
-   * @param type     the type
-   * @param toString the to string
-   * @return the counter
+   * @param type     the annotation type to count.
+   * @param toString the function to convert Annotations into strings
+   * @return A counter containing document frequencies of the given annotation type
    */
   public Counter<String> documentFrequencies(@Nonnull AnnotationType type, @Nonnull Function<? super Annotation, String> toString) {
-    Counter<String> counter = Counters.newHashMapCounter();
-    stream().forEach(
-        document -> document.get(type).stream().map(toString).distinct().forEach(counter::increment)
-    );
-    return counter;
+    return parallelStream()
+        .flatMap(document -> document.get(type).parallelStream().map(toString).distinct())
+        .collect(Counters.collector());
   }
 
 
@@ -288,12 +286,21 @@ public abstract class Corpus implements DocumentStore, Serializable {
   }
 
   /**
-   * Stream stream.
+   * Get a stream representation of this corpus
    *
    * @return the stream
    */
   public Stream<Document> stream() {
     return Streams.from(this);
+  }
+
+  /**
+   * Gets a parallel stream representation of this corpus
+   *
+   * @return the stream
+   */
+  public Stream<Document> parallelStream() {
+    return Streams.paralleFrom(this);
   }
 
   /**

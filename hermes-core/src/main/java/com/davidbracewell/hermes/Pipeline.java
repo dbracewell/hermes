@@ -32,6 +32,7 @@ import com.davidbracewell.logging.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
+import lombok.NonNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -75,7 +76,7 @@ public final class Pipeline implements Serializable {
   }
 
   public long getElapsedTime(@Nonnull TimeUnit timeUnit) {
-    return TimeUnit.MILLISECONDS.convert(totalTime, timeUnit) + timer.elapsed(timeUnit);
+    return totalTime + timer.elapsed(timeUnit);
   }
 
   /**
@@ -152,15 +153,16 @@ public final class Pipeline implements Serializable {
     timer.start();
 
     Broker.Builder<Document> builder = Broker.<Document>builder()
-      .addProducer(new Producer(documents))
-      .bufferSize(queueSize);
+        .addProducer(new Producer(documents))
+        .bufferSize(queueSize);
 
     Corpus corpus = Corpus.from(Collections.emptyList());
     if (returnCorpus) {
+
       Resource tempFile = Resources.temporaryFile();
       try (AsyncWriter writer = new AsyncWriter(tempFile.openWriter())) {
         builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer), numberOfThreads)
-          .build().run();
+            .build().run();
         writer.close();
         corpus = Corpus.from(CorpusFormat.JSON_OPL, tempFile);
       } catch (Exception e) {
@@ -171,25 +173,27 @@ public final class Pipeline implements Serializable {
     } else {
 
       builder
-        .addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, null), numberOfThreads)
-        .build()
-        .run();
+          .addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, null), numberOfThreads)
+          .build()
+          .run();
+
     }
 
     timer.stop();
-    totalTime += timer.elapsed(TimeUnit.MILLISECONDS);
+    totalTime += timer.elapsed(TimeUnit.NANOSECONDS);
     timer.reset();
 
     return corpus;
   }
 
-  public void process(Document document) {
+  public Document process(@NonNull Document document) {
     timer.start();
     process(document, annotationTypes);
     timer.stop();
     documentsProcessed.incrementAndGet();
     totalTime += timer.elapsed(TimeUnit.MILLISECONDS);
     timer.reset();
+    return document;
   }
 
   /**
