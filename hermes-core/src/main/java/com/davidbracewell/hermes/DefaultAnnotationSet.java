@@ -90,21 +90,21 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
   @Override
   public Annotation next(Annotation annotation, AnnotationType type) {
     if (annotation == null || type == null) {
-      return null;//Fragments.emptyOrphan();
+      return Fragments.detachedEmptyAnnotation();
     }
     return startSorted.tailSet(annotation, false).stream()
-      .filter(a -> a.isInstance(type) && !a.isDetached())
-      .findFirst().orElse(Fragments.detachedEmptyAnnotation());
+        .filter(a -> a.isInstance(type) && !a.isDetached())
+        .findFirst().orElse(Fragments.detachedEmptyAnnotation());
   }
 
   @Override
   public Annotation previous(Annotation annotation, AnnotationType type) {
     if (annotation == null || type == null) {
-      return null;//Fragments.emptyOrphan();
+      return Fragments.detachedEmptyAnnotation();
     }
     return startSorted.headSet(annotation, false).stream()
-      .filter(a -> a.isInstance(type) && !a.isDetached())
-      .findFirst().orElse(Fragments.detachedEmptyAnnotation());
+        .filter(a -> a.isInstance(type) && !a.isDetached())
+        .findFirst().orElse(Fragments.detachedEmptyAnnotation());
   }
 
   @Override
@@ -125,9 +125,9 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
 
     Annotation dummy = Fragments.detachedAnnotation(null, start, end);
     return Sets.union(startSorted.tailSet(dummy, true), endSorted.headSet(dummy, true))
-      .stream()
-      .filter(criteria)
-      .collect(Collectors.toList());
+        .stream()
+        .filter(criteria)
+        .collect(Collectors.toList());
   }
 
   @Override

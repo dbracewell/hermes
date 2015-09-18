@@ -30,8 +30,10 @@ import com.google.common.base.Preconditions;
 import javax.annotation.Nonnull;
 
 /**
- * <p>Factory with cache for constructing/retrieving annotators for a given annotation class. The cache is managed
+ * <p>
+ * Factory with cache for constructing/retrieving annotators for a given annotation class. The cache is managed
  * using {@link CacheManager} and is named <code>hermes.AnnotatorCache</code>.
+ * </p?
  *
  * @author David B. Bracewell
  */

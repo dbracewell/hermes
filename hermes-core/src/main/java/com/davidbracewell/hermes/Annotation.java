@@ -37,12 +37,12 @@ import java.util.*;
 
 /**
  * <p>
- * An annotation associates a type, e.g. tokens, sentences, named entities, and a set of attributes, e.g. part of
- * speech  and entity type, to  a specific  span of a document, which may include the entire document. Annotation type
- * information is defined via the {@link AnnotationType} class.
+ * Associates a type, e.g. token, sentence, named entity, and a set of attributes, e.g. part of speech and entity type,
+ * to  a specific  span of a document, which may include the entire document. Annotation type information is defined via
+ * the {@link AnnotationType} class.
  * </p>
  * <p>
- * Commonly annotations have an associated <code>Tag</code> attribute which acts as label. Examples of tags include
+ * Commonly, annotations have an associated <code>Tag</code> attribute which acts as label. Examples of tags include
  * part-of-speech and entity type. Tags can be retrieved using the {@link #getTag()} method. Annotation types specify
  * the attribute that represents the tag of an annotation of its type (in some cases annotations may have multiple tags
  * and this definition allows the primary tag to specified). If no tag is specified, a default attribute of

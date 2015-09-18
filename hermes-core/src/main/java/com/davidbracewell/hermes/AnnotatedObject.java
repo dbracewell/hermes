@@ -27,9 +27,7 @@ import java.util.function.Predicate;
 
 /**
  * <p>
- * An <code>AnnotatedObject</code> is an object that is capable of having overlapping <code>Annotations</code>. Thus,
- * the interface defines common methods for retrieving linguistic annotations from an object. Since tokens and
- * sentences are the most commonly used annotations it defines convenience methods for retrieving them.
+ * An object containing linguistic <code>Annotations</code>.
  * </p>
  *
  * @author David B. Bracewell

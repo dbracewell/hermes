@@ -177,7 +177,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   @Override
   public boolean contains(Attribute attribute) {
     return getAttributeMap().containsKey(attribute) ||
-      getAttributeMap().containsKey(attribute.goldStandardVersion());
+        getAttributeMap().containsKey(attribute.goldStandardVersion());
   }
 
   /**
@@ -232,9 +232,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public Counter<String> count(AnnotationType type, @Nonnull Predicate<? super Annotation> predicate, @Nonnull Function<? super Annotation, String> transform) {
     return Counters.newHashMapCounter(get(type).stream()
-        .filter(predicate)
-        .map(transform)
-        .collect(Collectors.toList())
+            .filter(predicate)
+            .map(transform)
+            .collect(Collectors.toList())
     );
   }
 
@@ -259,8 +259,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return false;
     }
     return (document() != null && other.document() != null) &&
-      (document() == other.document())
-      && super.encloses(other);
+        (document() == other.document())
+        && super.encloses(other);
   }
 
   /**
@@ -432,10 +432,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return toLowerCase();
     }
     return tokens().stream()
-      .map(HString::getLemma)
-      .collect(Collectors.joining(
-        getLanguage().usesWhitespace() ? " " : ""
-      ));
+        .map(HString::getLemma)
+        .collect(Collectors.joining(
+            getLanguage().usesWhitespace() ? " " : ""
+        ));
   }
 
   /**
@@ -569,15 +569,15 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, boolean removeStopWords) {
     if (removeStopWords) {
       return ngrams(
-        order,
-        annotationType,
-        StopWords.getInstance(getLanguage())
+          order,
+          annotationType,
+          StopWords.getInstance(getLanguage())
       );
     }
     return ngrams(
-      order,
-      annotationType,
-      t -> true
+        order,
+        annotationType,
+        t -> true
     );
   }
 
@@ -597,9 +597,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return Collections.emptyList();
     } else if (order == 1) {
       return get(annotationType)
-        .stream()
-        .filter(filter)
-        .collect(Collectors.toList());
+          .stream()
+          .filter(filter)
+          .collect(Collectors.toList());
     }
 
 
@@ -642,8 +642,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return false;
     }
     return (document() != null && other.document() != null) &&
-      (document() == other.document()) &&
-      super.overlaps(other);
+        (document() == other.document()) &&
+        super.overlaps(other);
   }
 
   @Override
@@ -776,8 +776,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public String toPOSString(char delimiter) {
     return tokens().stream()
-      .map(t -> t.toString() + delimiter + t.get(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
-      .collect(Collectors.joining(" "));
+        .map(t -> t.toString() + delimiter + t.get(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
+        .collect(Collectors.joining(" "));
   }
 
   @Override
@@ -862,10 +862,58 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return get(Attrs.STEM).asString();
     }
     return tokens().stream()
-      .map(HString::getStem)
-      .collect(Collectors.joining(
-        getLanguage().usesWhitespace() ? " " : ""
-      ));
+        .map(HString::getStem)
+        .collect(Collectors.joining(
+            getLanguage().usesWhitespace() ? " " : ""
+        ));
+  }
+
+
+  /**
+   * <p>
+   * Returns the annotations of the given types that overlap this string in a maximum match fashion. Each token in the
+   * string is examined and the annotation type with the longest span on that token is chosen. If more than one type
+   * has the span length, the first one found will be chose, i.e. the order in which the types are passed in to the
+   * method can effect the outcome.
+   * </p>
+   * <p>
+   * Examples where this is useful is when dealing with multiword expressions. Using the interleaved method you can
+   * retrieve all tokens and mutliword expressions to fully match the span of the string.
+   * </p>
+   *
+   * @param type1  The first type (Must declare at leas one)
+   * @param others The other types to examine
+   * @return The list of interleaved annotations
+   */
+  public List<Annotation> interleaved(@Nonnull AnnotationType type1, AnnotationType... others) {
+    if (others == null || others.length == 0) {
+      return get(type1);
+    }
+
+    List<Annotation> annotations = new ArrayList<>();
+    for (int i = 0; i < tokenLength(); ) {
+      Annotation annotation = Fragments.detachedEmptyAnnotation();
+      for (Annotation temp : tokenAt(i).get(type1)) {
+        if (temp.tokenLength() > annotation.tokenLength()) {
+          annotation = temp;
+        }
+      }
+      for (AnnotationType other : others) {
+        for (Annotation temp : tokenAt(i).get(other)) {
+          if (temp.tokenLength() > annotation.tokenLength()) {
+            annotation = temp;
+          }
+        }
+      }
+
+      if (annotation.isEmpty()) {
+        i++;
+      } else {
+        i += annotation.tokenLength();
+        annotations.add(annotation);
+      }
+    }
+    return annotations;
   }
 
 

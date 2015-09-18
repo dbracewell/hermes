@@ -75,228 +75,6 @@ public class Document extends HString {
     this.annotationSet = Config.get("hermes.AnnotationSetImpl").asOrElse(AnnotationSet.class, DefaultAnnotationSet::new);
   }
 
-  @Override
-  public Set<Attribute> attributes() {
-    return attributes.keySet();
-  }
-
-  @Override
-  public char charAt(int index) {
-    return content.charAt(index);
-  }
-
-  @Override
-  public Document document() {
-    return this;
-  }
-
-  @Override
-  protected Map<Attribute, Val> getAttributeMap() {
-    return attributes;
-  }
-
-  /**
-   * Gets the id of the document
-   *
-   * @return The id of the document
-   */
-  public String getId() {
-    return id;
-  }
-
-  /**
-   * Sets the id of the document. If a null or blank id is given a random id will generated.
-   *
-   * @param id The new id of the document
-   */
-  public void setId(String id) {
-    if (StringUtils.isNullOrBlank(id)) {
-      this.id = UUID.randomUUID().toString();
-    } else {
-      this.id = id;
-    }
-  }
-
-  @Override
-  public String toString() {
-    return content;
-  }
-
-  @Override
-  public boolean isDocument() {
-    return true;
-  }
-
-  @Override
-  public Language getLanguage() {
-    if (contains(Attrs.LANGUAGE)) {
-      return get(Attrs.LANGUAGE).as(Language.class);
-    }
-    return Hermes.defaultLanguage();
-  }
-
-
-  /**
-   * Gets annotations of the given type that overlap with the given span.
-   *
-   * @param type the type of annotation
-   * @param span the span to search for overlapping annotations
-   * @return All annotations of the given type on the document that overlap with the give span.
-   */
-  public List<Annotation> get(AnnotationType type, @Nonnull Span span) {
-    return annotationSet.select(span, a -> a.isInstance(type) && a.overlaps(span));
-  }
-
-  /**
-   * Gets annotations of the given type that overlap with the given span and meet the given filter.
-   *
-   * @param type the type of annotation
-   * @param span the span to search for overlapping annotations
-   * @param filter the filter to use on the annotations
-   * @return All annotations of the given type on the document that overlap with the give span and meet the given
-   * filter.
-   */
-  public List<Annotation> get(AnnotationType type, @Nonnull Span span, @Nonnull Predicate<? super Annotation> filter) {
-    return annotationSet.select(span, a -> filter.test(a) && a.isInstance(type) && a.overlaps(span));
-  }
-
-  @Override
-  public List<Annotation> get(AnnotationType type) {
-    return annotationSet.select(a -> a.isInstance(type));
-  }
-
-  @Override
-  public List<Annotation> get(AnnotationType type, @Nonnull Predicate<? super Annotation> filter) {
-    if (type == null) {
-      return Collections.emptyList();
-    }
-    return annotationSet.select(a -> filter.test(a) && a.isInstance(type));
-  }
-
-  /**
-   * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
-   * has a unique id assigned.
-   *
-   * @param type the type of annotation
-   * @param span the span of the annotation
-   * @return the created annotation
-   */
-  public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull Span span) {
-    return createAnnotation(type, span.start(), span.end(), Collections.emptyMap());
-  }
-
-  /**
-   * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
-   * has a unique id assigned.
-   *
-   * @param type the type of annotation
-   * @param span the span of the annotation
-   * @return the created annotation
-   */
-  public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull HString span) {
-    return createAnnotation(type, span.start(), span.end(), span.getAttributeMap());
-  }
-
-
-  /**
-   * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
-   * has a unique id assigned.
-   *
-   * @param type the type of annotation
-   * @param start the start of the span
-   * @param end the end of the span
-   * @return the created annotation
-   */
-  public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end) {
-    return createAnnotation(type, start, end, Collections.emptyMap());
-  }
-
-  /**
-   * Creates an annotation of the given type encompassing the given span and having the given attributes. The
-   * annotation
-   * is added to the document and has a unique id assigned.
-   *
-   * @param type the type of annotation
-   * @param start the start of the span
-   * @param end the end of the span
-   * @param attributeMap the attributes associated with the annotation
-   * @return the created annotation
-   */
-  public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end, @Nonnull Map<Attribute, ?> attributeMap) {
-    Preconditions.checkArgument(start >= start(), "Annotation must have a starting position >= the start of the document");
-    Preconditions.checkArgument(end <= end(), "Annotation must have a ending position <= the end of the document");
-    Annotation annotation = new Annotation(this, type, start, end);
-    annotation.setId(idGenerator.getAndIncrement());
-    annotation.putAll(attributeMap);
-    annotationSet.add(annotation);
-    return annotation;
-  }
-
-
-  /**
-   * Gets annotation set associated with the document
-   *
-   * @return the annotation set
-   */
-  public AnnotationSet getAnnotationSet() {
-    return annotationSet;
-  }
-
-  /**
-   * Writes the document in a structured format
-   *
-   * @param format the format to write in (supports xml and json)
-   * @param resource the resource to write to
-   * @throws IOException something went wrong writing
-   */
-  public void write(@Nonnull StructuredFormat format, @Nonnull Resource resource) throws IOException {
-    try (StructuredWriter writer = format.createWriter(resource)) {
-      writer.beginDocument();
-      writer.writeKeyValue("id", getId());
-      writer.writeKeyValue("content", toString());
-
-      if (attributes.size() > 0) {
-        writer.beginObject("attributes");
-        for (Map.Entry<Attribute, Val> entry : attributeValues()) {
-          entry.getKey().write(writer, entry.getValue());
-        }
-        writer.endObject();
-      }
-
-      if (annotationSet.size() > 0) {
-
-
-        writer.beginObject("completed");
-        for (AnnotationType type : getAnnotationSet().getCompleted()) {
-          writer.writeKeyValue(type.name(), getAnnotationSet().getAnnotationProvider(type));
-        }
-        writer.endObject();
-
-        writer.beginArray("annotations");
-        for (Annotation annotation : annotationSet) {
-          annotation.write(writer);
-        }
-        writer.endArray();
-      }
-      writer.endDocument();
-    }
-  }
-
-  /**
-   * Converts the document to json
-   *
-   * @return JSON representation of the document
-   */
-  public String toJson() {
-    try {
-      Resource stringResource = Resources.fromString();
-      write(StructuredFormat.JSON, stringResource);
-      return stringResource.readToString().trim();
-    } catch (IOException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
   /**
    * Creates a document from a JSON representation (created by the write or toJson methods)
    *
@@ -396,6 +174,15 @@ public class Document extends HString {
     }
   }
 
+  @Override
+  public Set<Attribute> attributes() {
+    return attributes.keySet();
+  }
+
+  @Override
+  public char charAt(int index) {
+    return content.charAt(index);
+  }
 
   /**
    * Completed annotations.
@@ -404,6 +191,215 @@ public class Document extends HString {
    */
   public Set<AnnotationType> completedAnnotations() {
     return annotationSet.getCompleted();
+  }
+
+  /**
+   * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
+   * has a unique id assigned.
+   *
+   * @param type the type of annotation
+   * @param span the span of the annotation
+   * @return the created annotation
+   */
+  public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull Span span) {
+    return createAnnotation(type, span.start(), span.end(), Collections.emptyMap());
+  }
+
+  /**
+   * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
+   * has a unique id assigned.
+   *
+   * @param type the type of annotation
+   * @param span the span of the annotation
+   * @return the created annotation
+   */
+  public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull HString span) {
+    return createAnnotation(type, span.start(), span.end(), span.getAttributeMap());
+  }
+
+  /**
+   * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
+   * has a unique id assigned.
+   *
+   * @param type the type of annotation
+   * @param start the start of the span
+   * @param end the end of the span
+   * @return the created annotation
+   */
+  public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end) {
+    return createAnnotation(type, start, end, Collections.emptyMap());
+  }
+
+  /**
+   * Creates an annotation of the given type encompassing the given span and having the given attributes. The
+   * annotation
+   * is added to the document and has a unique id assigned.
+   *
+   * @param type the type of annotation
+   * @param start the start of the span
+   * @param end the end of the span
+   * @param attributeMap the attributes associated with the annotation
+   * @return the created annotation
+   */
+  public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end, @Nonnull Map<Attribute, ?> attributeMap) {
+    Preconditions.checkArgument(start >= start(), "Annotation must have a starting position >= the start of the document");
+    Preconditions.checkArgument(end <= end(), "Annotation must have a ending position <= the end of the document");
+    Annotation annotation = new Annotation(this, type, start, end);
+    annotation.setId(idGenerator.getAndIncrement());
+    annotation.putAll(attributeMap);
+    annotationSet.add(annotation);
+    return annotation;
+  }
+
+  @Override
+  public Document document() {
+    return this;
+  }
+
+  /**
+   * Gets annotations of the given type that overlap with the given span.
+   *
+   * @param type the type of annotation
+   * @param span the span to search for overlapping annotations
+   * @return All annotations of the given type on the document that overlap with the give span.
+   */
+  public List<Annotation> get(AnnotationType type, @Nonnull Span span) {
+    return annotationSet.select(span, a -> a.isInstance(type) && a.overlaps(span));
+  }
+
+  /**
+   * Gets annotations of the given type that overlap with the given span and meet the given filter.
+   *
+   * @param type the type of annotation
+   * @param span the span to search for overlapping annotations
+   * @param filter the filter to use on the annotations
+   * @return All annotations of the given type on the document that overlap with the give span and meet the given
+   * filter.
+   */
+  public List<Annotation> get(AnnotationType type, @Nonnull Span span, @Nonnull Predicate<? super Annotation> filter) {
+    return annotationSet.select(span, a -> filter.test(a) && a.isInstance(type) && a.overlaps(span));
+  }
+
+  @Override
+  public List<Annotation> get(AnnotationType type) {
+    return annotationSet.select(a -> a.isInstance(type));
+  }
+
+  @Override
+  public List<Annotation> get(AnnotationType type, @Nonnull Predicate<? super Annotation> filter) {
+    if (type == null) {
+      return Collections.emptyList();
+    }
+    return annotationSet.select(a -> filter.test(a) && a.isInstance(type));
+  }
+
+  /**
+   * Gets annotation set associated with the document
+   *
+   * @return the annotation set
+   */
+  public AnnotationSet getAnnotationSet() {
+    return annotationSet;
+  }
+
+  @Override
+  protected Map<Attribute, Val> getAttributeMap() {
+    return attributes;
+  }
+
+  /**
+   * Gets the id of the document
+   *
+   * @return The id of the document
+   */
+  public String getId() {
+    return id;
+  }
+
+  /**
+   * Sets the id of the document. If a null or blank id is given a random id will generated.
+   *
+   * @param id The new id of the document
+   */
+  public void setId(String id) {
+    if (StringUtils.isNullOrBlank(id)) {
+      this.id = UUID.randomUUID().toString();
+    } else {
+      this.id = id;
+    }
+  }
+
+  @Override
+  public Language getLanguage() {
+    if (contains(Attrs.LANGUAGE)) {
+      return get(Attrs.LANGUAGE).as(Language.class);
+    }
+    return Hermes.defaultLanguage();
+  }
+
+  @Override
+  public boolean isDocument() {
+    return true;
+  }
+
+  /**
+   * Converts the document to json
+   *
+   * @return JSON representation of the document
+   */
+  public String toJson() {
+    try {
+      Resource stringResource = Resources.fromString();
+      write(StructuredFormat.JSON, stringResource);
+      return stringResource.readToString().trim();
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  @Override
+  public String toString() {
+    return content;
+  }
+
+  /**
+   * Writes the document in a structured format
+   *
+   * @param format the format to write in (supports xml and json)
+   * @param resource the resource to write to
+   * @throws IOException something went wrong writing
+   */
+  public void write(@Nonnull StructuredFormat format, @Nonnull Resource resource) throws IOException {
+    try (StructuredWriter writer = format.createWriter(resource)) {
+      writer.beginDocument();
+      writer.writeKeyValue("id", getId());
+      writer.writeKeyValue("content", toString());
+
+      if (attributes.size() > 0) {
+        writer.beginObject("attributes");
+        for (Map.Entry<Attribute, Val> entry : attributeValues()) {
+          entry.getKey().write(writer, entry.getValue());
+        }
+        writer.endObject();
+      }
+
+      if (annotationSet.size() > 0) {
+
+
+        writer.beginObject("completed");
+        for (AnnotationType type : getAnnotationSet().getCompleted()) {
+          writer.writeKeyValue(type.name(), getAnnotationSet().getAnnotationProvider(type));
+        }
+        writer.endObject();
+
+        writer.beginArray("annotations");
+        for (Annotation annotation : annotationSet) {
+          annotation.write(writer);
+        }
+        writer.endArray();
+      }
+      writer.endDocument();
+    }
   }
 
 }//END OF Document
