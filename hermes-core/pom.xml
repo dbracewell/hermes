@@ -41,24 +41,24 @@
     </dependencies>
     <build>
         <plugins>
-            <!--<plugin>-->
-            <!--<groupId>de.jflex</groupId>-->
-            <!--<artifactId>jflex-maven-plugin</artifactId>-->
-            <!--<version>1.5.0</version>-->
-            <!--<executions>-->
-            <!--<execution>-->
-            <!--<goals>-->
-            <!--<goal>generate</goal>-->
-            <!--</goals>-->
-            <!--<configuration>-->
-            <!--<outputDirectory>src/main/java</outputDirectory>-->
-            <!--<lexDefinitions>-->
-            <!--<lexDefinition>src/main/jflex</lexDefinition>-->
-            <!--</lexDefinitions>-->
-            <!--</configuration>-->
-            <!--</execution>-->
-            <!--</executions>-->
-            <!--</plugin>-->
+            <plugin>
+                <groupId>de.jflex</groupId>
+                <artifactId>jflex-maven-plugin</artifactId>
+                <version>1.5.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>src/main/java</outputDirectory>
+                            <lexDefinitions>
+                                <lexDefinition>src/main/jflex</lexDefinition>
+                            </lexDefinitions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
