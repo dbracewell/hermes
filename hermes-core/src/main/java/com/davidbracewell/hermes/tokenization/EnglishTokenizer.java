@@ -38,14 +38,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
+ * The type English tokenizer.
+ *
  * @author David B. Bracewell
  */
 public class EnglishTokenizer implements Tokenizer, Serializable {
   private static final long serialVersionUID = 1L;
   private final Set<String> abbreviations;
   private final Set<String> tlds;
-  public final PatriciaTrie<String> emoticons;
+  private final PatriciaTrie<String> emoticons;
 
+  /**
+   * Instantiates a new English tokenizer.
+   */
   public EnglishTokenizer() {
     try {
       this.abbreviations = Resources.fromClasspath("com/davidbracewell/hermes/tokenization/abbreviations.txt")
@@ -56,17 +61,14 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
         .readLines().stream()
         .map(line -> line.trim().toLowerCase())
         .collect(Collectors.toSet());
-
       this.emoticons = new PatriciaTrie<>();
       Resources.fromClasspath("com/davidbracewell/hermes/tokenization/emoticons.txt").forEach(
         line -> emoticons.put(line.trim().toLowerCase(), line)
       );
-
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
   }
-
 
   @Override
   public Iterable<Token> tokenize(@NonNull Reader reader) {
@@ -78,7 +80,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
     private final LinkedList<Token> buffer = Lists.newLinkedList();
     private final com.davidbracewell.hermes.tokenization.StandardTokenizer tokenizer;
 
-    public TokenIterator(Reader reader) {
+    private TokenIterator(Reader reader) {
       this.tokenizer = new StandardTokenizer(reader);
     }
 
