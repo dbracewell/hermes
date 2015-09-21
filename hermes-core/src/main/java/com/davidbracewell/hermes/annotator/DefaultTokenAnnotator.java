@@ -21,13 +21,11 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.tokenization.TokenType;
-import com.davidbracewell.string.StringUtils;
+import com.davidbracewell.hermes.tokenization.Tokenizer;
+import com.davidbracewell.hermes.tokenization.TokenizerFactory;
 
 import java.io.Serializable;
-import java.text.BreakIterator;
 import java.util.Collections;
 import java.util.Set;
 
@@ -44,38 +42,10 @@ public class DefaultTokenAnnotator implements Annotator, Serializable {
 
   @Override
   public void annotate(Document document) {
-    BreakIterator iterator = BreakIterator.getWordInstance(document.getLanguage().asLocale());
-    iterator.setText(document.toString());
-    int index = 0;
-    for (int end = iterator.next(), start = 0; end != BreakIterator.DONE; end = iterator.next()) {
-      if (!StringUtils.isNullOrBlank(document.subSequence(start, end).toString())) {
-        Annotation token = document.createAnnotation(Types.TOKEN, start, end, Collect.map(Attrs.INDEX, index));
-        String tokenString = token.toString();
-
-
-        //Simplistic Type assignment
-        boolean hasLetter = StringUtils.hasLetter(tokenString);
-        boolean hasDigit = StringUtils.hasDigit(tokenString);
-        TokenType tokenType = TokenType.UNKNOWN;
-        if (hasDigit && hasLetter) {
-          tokenType = TokenType.ALPHA_NUMERIC;
-        } else if (hasDigit) {
-          tokenType = TokenType.NUMBER;
-        } else if (hasLetter && tokenString.contains(".")) {
-          tokenType = TokenType.ACRONYM;
-        } else if (hasLetter && tokenString.contains("'")) {
-          tokenType = TokenType.CONTRACTION;
-        } else if (hasLetter) {
-          tokenType = TokenType.ALPHA_NUMERIC;
-        } else if (StringUtils.isPunctuation(tokenString)) {
-          tokenType = TokenType.PUNCTUATION;
-        }
-
-        token.put(Attrs.TOKEN_TYPE, tokenType);
-
-        index++;
-      }
-      start = end;
+    Tokenizer tokenizer = TokenizerFactory.create(document.getLanguage());
+    for (Tokenizer.Token token : tokenizer.tokenize(document.toString())) {
+      Annotation aToken = document.createAnnotation(Types.TOKEN, token.charStartIndex, token.charEndIndex, token.properties);
+      aToken.put(Attrs.TOKEN_TYPE, token.type);
     }
   }
 

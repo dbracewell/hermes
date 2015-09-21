@@ -22,8 +22,12 @@
 package com.davidbracewell.hermes.tokenization;
 
 
-import com.davidbracewell.collection.NormalizedStringMap;
+import com.davidbracewell.hermes.Attribute;
 
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -31,22 +35,19 @@ import java.util.Objects;
  *
  * @author David B. Bracewell
  */
-public interface StringTokenizer {
+public interface Tokenizer {
 
+  Iterable<Token> tokenize(Reader reader);
 
-  /**
-   * Next string tokenizer . token.
-   *
-   * @return the string tokenizer . token
-   * @throws Exception the exception
-   */
-  public Token next() throws Exception;
+  default Iterable<Token> tokenize(String input) {
+    return tokenize(new StringReader(input));
+  }
 
 
   /**
    * An internal token
    */
-  public static class Token {
+  class Token {
     /**
      * The Text.
      */
@@ -66,16 +67,16 @@ public interface StringTokenizer {
     /**
      * The Properties.
      */
-    public final NormalizedStringMap<String> properties = new NormalizedStringMap<>();
+    public final Map<Attribute, Object> properties = new HashMap<>();
 
     /**
      * Default constructor
      *
-     * @param text The text covered by the token
-     * @param type The type of token
+     * @param text      The text covered by the token
+     * @param type      The type of token
      * @param startChar The first character offset
-     * @param endChar The last character offset
-     * @param index The token index
+     * @param endChar   The last character offset
+     * @param index     The token index
      */
     public Token(String text, TokenType type, int startChar, int endChar, int index) {
       this.text = text;
@@ -101,22 +102,22 @@ public interface StringTokenizer {
       }
       final Token other = (Token) obj;
       return Objects.equals(this.text, other.text) &&
-          Objects.equals(this.type, other.type) &&
-          Objects.equals(this.charStartIndex, other.charStartIndex) &&
-          Objects.equals(this.charEndIndex, other.charEndIndex) &&
-          Objects.equals(this.index, other.index);
+        Objects.equals(this.type, other.type) &&
+        Objects.equals(this.charStartIndex, other.charStartIndex) &&
+        Objects.equals(this.charEndIndex, other.charEndIndex) &&
+        Objects.equals(this.index, other.index);
     }
 
     @Override
     public String toString() {
       return "Token{" +
-          "text='" + text + '\'' +
-          ", charOffset=[" + charStartIndex + ", " + charEndIndex + ") " +
-          ", type=" + type +
-          ", index=" + index +
-          '}';
+        "text='" + text + '\'' +
+        ", charOffset=[" + charStartIndex + ", " + charEndIndex + ") " +
+        ", type=" + type +
+        ", index=" + index +
+        '}';
     }
   }//END OF StringTokenizer$Token
 
 
-}//END OF StringTokenizer
+}//END OF Tokenizer

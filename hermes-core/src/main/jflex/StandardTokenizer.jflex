@@ -28,10 +28,10 @@ import com.davidbracewell.hermes.tokenization.TokenType;
 %class StandardTokenizer
 %public
 %unicode
-%implements com.davidbracewell.hermes.tokenization.StringTokenizer
-%type com.davidbracewell.hermes.tokenization.StringTokenizer.Token
+%type com.davidbracewell.hermes.tokenization.Tokenizer.Token
 %function next
 %pack
+%caseless
 %char
 %{
 
@@ -41,8 +41,8 @@ private final int yychar(){
     return yychar;
 }
 
-private Token attachToken(TokenType type){
-  StringTokenizer.Token token=new StringTokenizer.Token( yytext() , type, yychar(), yychar()+yylength(), index);
+private Tokenizer.Token attachToken(TokenType type){
+  Tokenizer.Token token=new Tokenizer.Token( yytext() , type, yychar(), yychar()+yylength(), index);
   index++;
   return token;
 }
@@ -70,15 +70,14 @@ ALPHA=!(![:letter:]|{CJ})
 //Alphanumeric Character
 ALPHANUM = ({ALPHA}|[:digit:])+
 
-//Special case for peppermint indexing
 UNDERSCORE={ALPHANUM}("_"+){ALPHANUM}
 
 //Common English contractions
 CONTRACTION=({APOS}[sSmMdD]|{APOS}ll|{APOS}re|{APOS}ve|{APOS}LL|{APOS}RE|{APOS}VE|[sS]{APOS}|[nN]{APOS}[tT])
 
-PERSON_TITLE= ("Ms"|"Miss"|"Mrs"|"Mr"|"Master"|"Rev"|"Fr"|"Dr"|"Atty"|"Prof"|"Hon"|"Pres"|"Gov"|"Coach"|"Ofc"|"ms"|"miss"|"mrs"|"mr"|"master"|"rev"|"fr"|"dr"|"atty"|"prof"|"hon"|"pres"|"gov"|"coach"|"ofc"|"MS"|"MISS"|"MRS"|"MR"|"MASTER"|"REV"|"FR"|"DR"|"ATTY"|"PROF"|"HON"|"PRES"|"GOV"|"COACH"|"OFC"|"ph.d"|"Ph.d"|"Ph.D"|"PH.D"|"Phd")"."?
+PERSON_TITLE= ("gen"|"mr"|"ms"|"miss"|"Master"|"Rev"|"Fr"|"Dr"|"Atty"|"Prof"|"Hon"|"Pres"|"Gov"|"Coach"|"Ofc"|"ms"|"miss"|"mrs"|"mr"|"master"|"rev"|"fr"|"dr"|"atty"|"prof"|"hon"|"pres"|"gov"|"coach"|"ofc"|"MS"|"MISS"|"MRS"|"MR"|"MASTER"|"REV"|"FR"|"DR"|"ATTY"|"PROF"|"HON"|"PRES"|"GOV"|"COACH"|"OFC"|"ph.d"|"Ph.d"|"Ph.D"|"PH.D"|"Phd")"."?
 
-ACRONYM =[A-Z0-9]+("."{ALPHANUM}+)+"."?
+ACRONYM =[A-Z]("."{ALPHANUM}+)+"."?
 
 ABBREVIATION = [A-Z]"."
 
@@ -95,7 +94,7 @@ NUMBER=[:digit:]+([\.,][:digit:]+)*("st"|"th"|"rd")?
 EMAIL={ALPHANUM}(("."|"-"|"_"){ALPHANUM})*"@"{ALPHANUM}(("."|"-"){ALPHANUM})+
 
 // Absolute URI (Partial BNF from RFC3986) https://github.com/rdelbru/lucene-uri-preserving-standard-tokenizer
-URI=({ALPHA}+":""//"?({USERINFO}"@")?)?{AUTHORITY}{PATH}("?"{QUERY})?("#"{FRAGMENT})?
+URI=({ALPHA}+"://"?({USERINFO}"@")?)?{AUTHORITY}{PATH}("?"{QUERY})?("#"{FRAGMENT})?
 AUTHORITY={HOST}(":"{PORT})?
 QUERY=({SEGMENT}|"/"|"?")*
 FRAGMENT=({SEGMENT}|"/"|"?")*
@@ -127,6 +126,7 @@ WHITESPACE = [\p{Z}\r\n\p{C}]
 
 %%
 <YYINITIAL>{
+ {ALPHANUM}({HYPHEN}{ALPHANUM})+ {return attachToken(TokenType.ALPHA_NUMERIC);}
  {HYPHEN}               {return attachToken(TokenType.HYPHEN);}
  {CURRENCY}             {return attachToken(TokenType.MONEY);}
  {CONTRACTION}          {return attachToken(TokenType.CONTRACTION);}
@@ -139,11 +139,13 @@ WHITESPACE = [\p{Z}\r\n\p{C}]
  {CJ}                   {return attachToken(TokenType.CHINESE_JAPANESE);}
  {EMAIL}                {return attachToken(TokenType.EMAIL);}
  {PERSON_TITLE}         {return attachToken(TokenType.PERSON_TITLE);}
+ {ALPHANUM}/{PUNCTUATION}{PERSON_TITLE} {return attachToken(TokenType.ALPHA_NUMERIC);}
  {URI}/{WHITESPACE}|{PUNCTUATION}  {return attachToken(TokenType.URL);}
  {ACRONYM}              {return attachToken(TokenType.ACRONYM);}
  {SGML}                 {return attachToken(TokenType.SGML);}
  {COMPANY}              {return attachToken(TokenType.COMPANY);}
  {UNDERSCORE}           {return attachToken(TokenType.ALPHA_NUMERIC);}
+ {URI}                  {return attachToken(TokenType.URL);}
  {WHITESPACE}           {}
 }
 

@@ -19,39 +19,32 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.tag;
+package com.davidbracewell.hermes.tokenization;
+
+import com.davidbracewell.Language;
+import com.davidbracewell.config.Config;
+import lombok.NonNull;
+
+import java.io.Serializable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author David B. Bracewell
  */
-public interface Tag {
+public class TokenizerFactory implements Serializable {
+  private static final long serialVersionUID = 1L;
+  private static final Map<Language, Tokenizer> cache = new ConcurrentHashMap<>();
 
-  /**
-   * Determines if this tag is an instance of a given tag.
-   *
-   * @param tag The given tag
-   * @return True if this tag is an instance of the given tag
-   */
-  boolean isInstance(Tag tag);
-
-  default boolean isInstance(Tag tag1, Tag... others) {
-    if (isInstance(tag1)) {
-      return true;
-    }
-    if (others != null) {
-      for (Tag other : others) {
-        if (isInstance(other)) {
-          return true;
-        }
+  public static Tokenizer create(@NonNull Language language) {
+    if (!cache.containsKey(language)) {
+      if (Config.hasProperty("hermes.Tokenizer", language)) {
+        cache.put(language, Config.get("hermes.Tokenizer", language).as(Tokenizer.class));
+      } else {
+        cache.put(language, new BreakIteratorTokenizer(language.asLocale()));
       }
     }
-    return false;
+    return cache.get(language);
   }
 
-  /**
-   * @return The tag as a string
-   */
-  String asString();
-
-
-}//END OF Tag
+}//END OF TokenizerFactory

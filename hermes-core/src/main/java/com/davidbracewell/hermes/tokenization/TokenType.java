@@ -23,6 +23,7 @@ package com.davidbracewell.hermes.tokenization;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
+import com.davidbracewell.hermes.tag.Tag;
 import com.davidbracewell.string.StringUtils;
 
 import java.io.ObjectStreamException;
@@ -31,7 +32,7 @@ import java.util.Collection;
 /**
  * @author David B. Bracewell
  */
-public final class TokenType extends EnumValue {
+public final class TokenType extends EnumValue implements Tag {
 
   private static final DynamicEnum<TokenType> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
@@ -85,6 +86,19 @@ public final class TokenType extends EnumValue {
     return index.values();
   }
 
+  @Override
+  public boolean isInstance(Tag tag) {
+    if (tag == null) {
+      return false;
+    }
+    return tag instanceof TokenType && asString().equals(tag.asString());
+  }
+
+  @Override
+  public String asString() {
+    return name();
+  }
+
   private Object readResolve() throws ObjectStreamException {
     if (isDefined(name())) {
       return index.valueOf(name());
@@ -108,6 +122,6 @@ public final class TokenType extends EnumValue {
   public static final TokenType PROTOCOL = create("PROTOCOL");
   public static final TokenType URL = create("URL");
   public static final TokenType HYPHEN = create("HYPHEN");
-  public static final TokenType PREFIX = create("PREFIX");
+  public static final TokenType EMOTICON = create("EMOTICON");
 
 }//END OF TokenType
