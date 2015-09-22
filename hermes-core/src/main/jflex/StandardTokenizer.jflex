@@ -68,7 +68,7 @@ CJ=[\u3100-\u312f\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF\u3300-\u337f\u3400-\u4d
 ALPHA=!(![:letter:]|{CJ})
 
 //Alphanumeric Character
-ALPHANUM = ({ALPHA}|[:digit:])+
+ALPHANUM = {ALPHA}({ALPHA}|[:digit:])*
 
 UNDERSCORE={ALPHANUM}("_"+){ALPHANUM}
 
@@ -126,6 +126,7 @@ WHITESPACE = [\p{Z}\r\n\p{C}]
 
 %%
 <YYINITIAL>{
+ {NUMBER}               {return attachToken(TokenType.NUMBER);}
  {ALPHANUM}({HYPHEN}{ALPHANUM})+ {return attachToken(TokenType.ALPHA_NUMERIC);}
  {HYPHEN}               {return attachToken(TokenType.HYPHEN);}
  {CURRENCY}             {return attachToken(TokenType.MONEY);}
@@ -133,7 +134,6 @@ WHITESPACE = [\p{Z}\r\n\p{C}]
  {ABBREVIATION}         {return attachToken(TokenType.ACRONYM);}
  {ALPHANUM}/{CONTRACTION} {return attachToken(TokenType.ALPHA_NUMERIC);}
  {PCT_ENCODED}          {return attachToken(TokenType.NUMBER);}
- {NUMBER}               {return attachToken(TokenType.NUMBER);}
  {ALPHANUM}             {return attachToken(TokenType.ALPHA_NUMERIC);}
  {PUNCTUATION}          {return attachToken(TokenType.PUNCTUATION);}
  {CJ}                   {return attachToken(TokenType.CHINESE_JAPANESE);}

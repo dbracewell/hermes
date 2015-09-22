@@ -70,7 +70,7 @@ import java.util.*;
  *
  * @author David B. Bracewell
  */
-public class Attribute extends EnumValue {
+public final class Attribute extends EnumValue {
 
   private static final DynamicEnum<Attribute> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
@@ -194,7 +194,7 @@ public class Attribute extends EnumValue {
   /**
    * The current collection of known attributes
    *
-   * @return All know attribute names
+   * @return All known attribute names
    */
   public static Collection<Attribute> values() {
     return index.values();

@@ -21,92 +21,117 @@
 
 package com.davidbracewell.hermes.tag;
 
-import com.google.common.collect.Lists;
+import com.davidbracewell.DynamicEnum;
+import com.davidbracewell.EnumValue;
+import com.davidbracewell.config.Config;
 
-import java.util.List;
+import java.io.ObjectStreamException;
+import java.util.Collection;
 
 /**
+ * The type Entity type.
+ *
  * @author David B. Bracewell
  */
-public enum EntityType implements Tag {
-
+public final class EntityType extends EnumValue implements Tag {
+  private static final DynamicEnum<EntityType> index = new DynamicEnum<>();
+  private static final long serialVersionUID = 1L;
   /**
-   * ******************************
-   * Special Root node
-   * *******************************
+   * The constant ENTITY.
    */
-  ENTITY_ROOT(null),
+  public static EntityType ENTITY = new EntityType("ENTITY");
 
-  /**
-   * ******************************
-   * People
-   * *******************************
-   */
-  PERSON(ENTITY_ROOT),
+  private EntityType parent = null;
 
-  /**
-   * ******************************
-   * Organizations
-   * *******************************
-   */
-  ORGANIZATION(ENTITY_ROOT),
-
-  /**
-   * ******************************
-   * Locations
-   * *******************************
-   */
-  LOCATION(ENTITY_ROOT),
-
-  /**
-   * ******************************
-   * Numbers
-   * *******************************
-   */
-  NUMBER(ENTITY_ROOT),
-  MONEY(NUMBER),
-  PERCENTAGE(NUMBER),
-
-  /**
-   * ******************************
-   * Date / Time
-   * *******************************
-   */
-  DATE_TIME(NUMBER),
-  DATE(DATE_TIME),
-  TIME(DATE_TIME),
-
-  /*********************************
-   *  Web Related
-   ********************************/
-  WWW(ENTITY_ROOT),
-  EMAIL(WWW),
-  URL(WWW);
-
-
-  private final EntityType parent;
-
-  EntityType(EntityType parent) {
-    this.parent = parent;
+  private EntityType(String name) {
+    super(name);
   }
 
   /**
-   * @return The path from this entity type to the dummy ENTITY_ROOT
+   * Creates an entity type with the given name.
+   *
+   * @param name the name of the entity type
+   * @return the entity type
+   * @throws IllegalArgumentException If the name is invalid
    */
-  public List<EntityType> getLineage() {
-    List<EntityType> lineage = Lists.newArrayList();
-    EntityType et = this;
-    while (et != null) {
-      lineage.add(et);
-      et = et.parent;
+  public static EntityType create(String name) {
+    if (index.isDefined(name)) {
+      return index.valueOf(name);
     }
-    return lineage;
+    return index.register(new EntityType(name));
   }
 
   /**
-   * @return The parent type of this type
+   * Creates an entity type with the given name.
+   *
+   * @param name   the name of the entity type
+   * @param parent the parent entity of this entity type
+   * @return the entity type
+   * @throws IllegalArgumentException If the name is invalid
+   */
+  public static EntityType create(String name, EntityType parent) {
+    if (index.isDefined(name)) {
+      return index.valueOf(name);
+    }
+    EntityType entityType = index.register(new EntityType(name));
+    if (entityType.parent != null && parent != null && entityType.parent != parent) {
+      throw new IllegalArgumentException("Attempting to create an Entity named [" + name + "] with parent [" + parent + "], but an entity by that name already exists with the parent [" + entityType.parent + "]");
+    }
+    entityType.parent = parent;
+    return entityType;
+  }
+
+  /**
+   * Determine if a name is an existing entity type
+   *
+   * @param name the name
+   * @return True if it exists, otherwise False
+   */
+  public static boolean isDefined(String name) {
+    return index.isDefined(name);
+  }
+
+  /**
+   * Gets the entity type associated with the name.
+   *
+   * @param name the name as a string
+   * @return the entity type for the string
+   * @throws IllegalArgumentException if the name is not a valid entity type
+   */
+  public static EntityType valueOf(String name) {
+    return index.valueOf(name);
+  }
+
+  /**
+   * The current collection of known entity types
+   *
+   * @return All known entity types
+   */
+  public static Collection<EntityType> values() {
+    return index.values();
+  }
+
+  @Override
+  public String asString() {
+    return name();
+  }
+
+  /**
+   * Gets this entity types' parent. The root <code>ENTITY</code> will return <code>null</code> for its parent.
+   *
+   * @return the parent of this entity
    */
   public EntityType getParent() {
+    if (this == ENTITY) {
+      return null;
+    }
+    if (parent == null) {
+      synchronized (this) {
+        if (parent == null) {
+          parent = Config.get("EntityType", name(), "parent").as(EntityType.class, ENTITY);
+        }
+      }
+    }
     return parent;
   }
 
@@ -124,9 +149,11 @@ public enum EntityType implements Tag {
     return false;
   }
 
-  @Override
-  public String asString() {
-    return this.toString();
+  private Object readResolve() throws ObjectStreamException {
+    if (isDefined(name())) {
+      return index.valueOf(name());
+    }
+    return this;
   }
 
 

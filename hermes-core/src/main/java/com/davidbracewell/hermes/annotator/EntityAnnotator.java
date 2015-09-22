@@ -19,46 +19,20 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.tag;
+package com.davidbracewell.hermes.annotator;
+
+import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Types;
 
 /**
- * The interface Tag.
- *
  * @author David B. Bracewell
  */
-public interface Tag {
+public class EntityAnnotator extends SubTypeAnnotator {
+  private static final long serialVersionUID = 1L;
 
-  /**
-   * Determines if this tag is an instance of a given tag.
-   *
-   * @param tag The given tag
-   * @return True if this tag is an instance of the given tag
-   */
-  boolean isInstance(Tag tag);
-
-  /**
-   * Determines if this tag is an instance of any of the given tags.
-   *
-   * @param tags the tags to check against
-   * @return True if this tag is an instance of any one of the given tags
-   */
-  default boolean isInstance(Tag... tags) {
-    if (tags != null) {
-      for (Tag other : tags) {
-        if (isInstance(other)) {
-          return true;
-        }
-      }
-    }
-    return false;
+  public EntityAnnotator() {
+    super(Types.ENTITY, false, Config.get(EntityAnnotator.class, "subTypes").asSet(AnnotationType.class));
   }
 
-  /**
-   * As string.
-   *
-   * @return The tag as a string
-   */
-  String asString();
-
-
-}//END OF Tag
+}//END OF EntityAnnotator

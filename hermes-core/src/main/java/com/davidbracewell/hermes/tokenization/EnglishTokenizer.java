@@ -130,12 +130,12 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
       return buffer.isEmpty() ? null : buffer.remove();
     }
 
-    private boolean peekIsType(int distance, TokenType type, TokenType... types) {
+    private boolean peekIsType(int distance, TokenType... types) {
       Token peeked = peek(distance);
       if (peeked == null) {
         return false;
       }
-      return peeked.type.isInstance(type, types);
+      return peeked.type.isInstance(types);
     }
 
     private Token peek(int distance) {

@@ -22,8 +22,10 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.logging.Logger;
 import lombok.NonNull;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -31,8 +33,9 @@ import java.util.*;
  *
  * @author David B. Bracewell
  */
-public class SubTypeAnnotator implements Annotator {
-
+public class SubTypeAnnotator implements Annotator, Serializable {
+  private static final Logger log = Logger.getLogger(SubTypeAnnotator.class);
+  private static final long serialVersionUID = 1L;
   private final AnnotationType annotationType;
   private final Set<AnnotationType> subTypes;
   private final boolean nonOverlapping;
@@ -47,6 +50,7 @@ public class SubTypeAnnotator implements Annotator {
    */
   public SubTypeAnnotator(@NonNull AnnotationType annotationType, boolean nonOverlapping, @NonNull Collection<AnnotationType> subTypes) {
     if (!subTypes.stream().allMatch(type -> type.isInstance(annotationType))) {
+      log.severe("One or more of the sub types are not an instance of {0}", annotationType.name());
       throw new IllegalArgumentException("One or more of the sub types are not an instance of " + annotationType.name());
     }
     this.annotationType = annotationType;

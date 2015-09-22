@@ -538,20 +538,6 @@ public enum POS implements Tag {
     return tag;
   }
 
-  public boolean isInstance(Tag tag, Tag... others) {
-    if (isInstance(tag)) {
-      return true;
-    }
-    if (others != null) {
-      for (Tag other : others) {
-        if (isInstance(other)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
   @Override
   public boolean isInstance(Tag tag) {
     if (tag == null) {

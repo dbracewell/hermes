@@ -35,6 +35,7 @@ import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -92,7 +93,7 @@ public class Document extends HString {
   /**
    * Reads in a document in structured format (xml and json are supported).
    *
-   * @param format the format of the file
+   * @param format   the format of the file
    * @param resource the resource the file is in
    * @return the document
    * @throws IOException something went wrong reading the file
@@ -214,16 +215,35 @@ public class Document extends HString {
    * @return the created annotation
    */
   public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull HString span) {
-    return createAnnotation(type, span.start(), span.end(), span.getAttributeMap());
+    return createAnnotation(type, span.start(), span.end(),
+      Maps.filterEntries(
+        span.getAttributeMap(),
+        e -> type.getDefinedAttributes().contains(e.getKey())
+      )
+    );
+  }
+
+
+  /**
+   * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
+   * has a unique id assigned.
+   *
+   * @param type         the type of annotation
+   * @param span         the span of the annotation
+   * @param attributeMap the attributes associated with the annotation
+   * @return the created annotation
+   */
+  public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull Span span, @Nonnull Map<Attribute, ?> attributeMap) {
+    return createAnnotation(type, span.start(), span.end(), attributeMap);
   }
 
   /**
    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
    * has a unique id assigned.
    *
-   * @param type the type of annotation
+   * @param type  the type of annotation
    * @param start the start of the span
-   * @param end the end of the span
+   * @param end   the end of the span
    * @return the created annotation
    */
   public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end) {
@@ -235,9 +255,9 @@ public class Document extends HString {
    * annotation
    * is added to the document and has a unique id assigned.
    *
-   * @param type the type of annotation
-   * @param start the start of the span
-   * @param end the end of the span
+   * @param type         the type of annotation
+   * @param start        the start of the span
+   * @param end          the end of the span
    * @param attributeMap the attributes associated with the annotation
    * @return the created annotation
    */
@@ -270,8 +290,8 @@ public class Document extends HString {
   /**
    * Gets annotations of the given type that overlap with the given span and meet the given filter.
    *
-   * @param type the type of annotation
-   * @param span the span to search for overlapping annotations
+   * @param type   the type of annotation
+   * @param span   the span to search for overlapping annotations
    * @param filter the filter to use on the annotations
    * @return All annotations of the given type on the document that overlap with the give span and meet the given
    * filter.
@@ -365,7 +385,7 @@ public class Document extends HString {
   /**
    * Writes the document in a structured format
    *
-   * @param format the format to write in (supports xml and json)
+   * @param format   the format to write in (supports xml and json)
    * @param resource the resource to write to
    * @throws IOException something went wrong writing
    */
