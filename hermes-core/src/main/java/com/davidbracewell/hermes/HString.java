@@ -31,8 +31,8 @@ import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -75,7 +75,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param others the other HStrings to union
    * @return A new HString representing the union over the spans of the given HStrings.
    */
-  public static HString union(@Nonnull HString first, @Nonnull HString second, HString... others) {
+  public static HString union(@NonNull HString first, @NonNull HString second, HString... others) {
     Preconditions.checkArgument(first.document() == second.document(), "Cannot union strings from different documents");
     Document owner = first.document();
     int start = Math.min(first.start(), second.start());
@@ -99,7 +99,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param strings the strings
    * @return the h string
    */
-  public static HString union(@Nonnull Iterable<? extends HString> strings) {
+  public static HString union(@NonNull Iterable<? extends HString> strings) {
     int start = Integer.MAX_VALUE;
     int end = Integer.MIN_VALUE;
     Document owner = null;
@@ -140,7 +140,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param filter the filter
    * @return the list
    */
-  public List<HString> charNGrams(int order, @Nonnull Predicate<Character> filter) {
+  public List<HString> charNGrams(int order, @NonNull Predicate<Character> filter) {
     List<HString> ngrams = new ArrayList<>();
 
     if (order <= 0) {
@@ -217,7 +217,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param transform the function to transform the annotation into a string
    * @return A counter whose key is the content of the annotations of the given type
    */
-  public Counter<String> count(AnnotationType type, @Nonnull Function<? super Annotation, String> transform) {
+  public Counter<String> count(AnnotationType type, @NonNull Function<? super Annotation, String> transform) {
     return count(type, a -> true, transform);
   }
 
@@ -230,7 +230,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param transform the function to transform the annotation into a string
    * @return A counter whose key is the content of the annotations of the given type
    */
-  public Counter<String> count(AnnotationType type, @Nonnull Predicate<? super Annotation> predicate, @Nonnull Function<? super Annotation, String> transform) {
+  public Counter<String> count(AnnotationType type, @NonNull Predicate<? super Annotation> predicate, @NonNull Function<? super Annotation, String> transform) {
     return Counters.newHashMapCounter(get(type).stream()
             .filter(predicate)
             .map(transform)
@@ -284,7 +284,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param regex the regular expression to search for
    * @return the HString for the match or empty if no match is found.
    */
-  public HString findPattern(@Nonnull String regex) {
+  public HString findPattern(@NonNull String regex) {
     return findPattern(Pattern.compile(regex));
   }
 
@@ -294,7 +294,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param regex the regular expression to search for
    * @return the HString for the match or empty if no match is found.
    */
-  public HString findPattern(@Nonnull Pattern regex) {
+  public HString findPattern(@NonNull Pattern regex) {
     Matcher m = matcher(regex);
     if (m.find()) {
       return union(substring(m.start(), m.end()).tokens());
@@ -308,7 +308,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param regex the regular expression to search for
    * @return A list of HString that are matches to the given regular expression
    */
-  public List<HString> findAllPatterns(@Nonnull String regex) {
+  public List<HString> findAllPatterns(@NonNull String regex) {
     return findAllPatterns(Pattern.compile(regex));
   }
 
@@ -318,7 +318,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param regex the regular expression to search for
    * @return A list of HString that are matches to the given regular expression
    */
-  public List<HString> findAllPatterns(@Nonnull Pattern regex) {
+  public List<HString> findAllPatterns(@NonNull Pattern regex) {
     Matcher m = regex.matcher(this);
     List<HString> matches = new ArrayList<>();
     while (m.find()) {
@@ -343,7 +343,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param text the text to search for
    * @return A list of HString that are matches to the given string
    */
-  public List<HString> findAll(@Nonnull String text) {
+  public List<HString> findAll(@NonNull String text) {
     List<HString> matches = new ArrayList<>();
     for (int pos = indexOf(text, 0); pos < length() && pos != -1; pos = indexOf(text, pos)) {
       matches.add(union(substring(pos, pos + text.length()).tokens()));
@@ -358,7 +358,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param start the index to start the search from
    * @return the HString for the match or empty if no match is found.
    */
-  public HString find(@Nonnull String text, int start) {
+  public HString find(@NonNull String text, int start) {
     Preconditions.checkPositionIndex(start, length());
     int pos = indexOf(text, start);
     if (pos == -1) {
@@ -527,7 +527,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param pattern the pattern to search for
    * @return the matcher
    */
-  public Matcher matcher(@Nonnull Pattern pattern) {
+  public Matcher matcher(@NonNull Pattern pattern) {
     return pattern.matcher(this);
   }
 
@@ -551,7 +551,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param annotationType the type of annotation to extract
    * @return the ngrams
    */
-  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType) {
+  public List<HString> ngrams(int order, @NonNull AnnotationType annotationType) {
     return ngrams(order, annotationType, true);
   }
 
@@ -566,7 +566,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    *                        HString
    * @return the ngrams
    */
-  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, boolean removeStopWords) {
+  public List<HString> ngrams(int order, @NonNull AnnotationType annotationType, boolean removeStopWords) {
     if (removeStopWords) {
       return ngrams(
           order,
@@ -592,7 +592,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param filter         the filter to use to accept ngrams
    * @return the ngrams
    */
-  public List<HString> ngrams(int order, @Nonnull AnnotationType annotationType, @Nonnull Predicate<? super HString> filter) {
+  public List<HString> ngrams(int order, @NonNull AnnotationType annotationType, @NonNull Predicate<? super HString> filter) {
     if (order <= 0) {
       return Collections.emptyList();
     } else if (order == 1) {
@@ -725,7 +725,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param string the sequence to search for
    * @return true if this string contains s, false otherwise
    */
-  public boolean contains(@Nonnull String string) {
+  public boolean contains(@NonNull String string) {
     return toString().contains(string);
   }
 
@@ -832,7 +832,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param filter the filter to use to accept tokens
    * @return the ngrams
    */
-  public List<HString> tokenNGrams(int order, @Nonnull Predicate<? super HString> filter) {
+  public List<HString> tokenNGrams(int order, @NonNull Predicate<? super HString> filter) {
     return ngrams(order, Types.TOKEN, filter);
   }
 
@@ -845,7 +845,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param evenMore the other HStrings to union
    * @return A new HString representing the union over the spans of the given HStrings.
    */
-  public HString union(@Nonnull HString other, HString... evenMore) {
+  public HString union(@NonNull HString other, HString... evenMore) {
     return HString.union(this, other, evenMore);
   }
 
@@ -885,7 +885,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param others The other types to examine
    * @return The list of interleaved annotations
    */
-  public List<Annotation> interleaved(@Nonnull AnnotationType type1, AnnotationType... others) {
+  public List<Annotation> interleaved(@NonNull AnnotationType type1, AnnotationType... others) {
     if (others == null || others.length == 0) {
       return get(type1);
     }

@@ -32,8 +32,8 @@ import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
@@ -67,7 +67,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @return the corpus
    * @throws IOException something went wrong reading in the corpus
    */
-  public static Corpus from(@Nonnull String format, @Nonnull final Resource resource) throws IOException {
+  public static Corpus from(@NonNull String format, @NonNull final Resource resource) throws IOException {
     return from(format, resource, DocumentFactory.getInstance());
   }
 
@@ -80,7 +80,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @return the corpus
    * @throws IOException something went wrong reading in the corpus
    */
-  public static Corpus from(@Nonnull String format, @Nonnull final Resource resource, @Nonnull final DocumentFactory documentFactory) throws IOException {
+  public static Corpus from(@NonNull String format, @NonNull final Resource resource, @NonNull final DocumentFactory documentFactory) throws IOException {
     final CorpusFormat corpusFormat = getFormat(format);
     if (corpusFormat != null) {
       return corpusFormat.create(resource, documentFactory);
@@ -94,7 +94,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @param documentCollection the document collection
    * @return the corpus
    */
-  public static Corpus from(@Nonnull Collection<Document> documentCollection) {
+  public static Corpus from(@NonNull Collection<Document> documentCollection) {
     return new InMemoryCorpus(documentCollection);
   }
 
@@ -121,7 +121,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @param types The annotation types to annotate
    * @return A new corpus with the given annotation types present.
    */
-  public Corpus annotate(@Nonnull AnnotationType... types) {
+  public Corpus annotate(@NonNull AnnotationType... types) {
     return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
   }
 
@@ -143,7 +143,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @param other the other
    * @return the corpus
    */
-  public Corpus concatenate(@Nonnull Corpus other) {
+  public Corpus concatenate(@NonNull Corpus other) {
     return new ConcatenatedCorpus(this, other);
   }
 
@@ -153,7 +153,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @param filter the filter
    * @return the corpus
    */
-  public Corpus filter(@Nonnull final Predicate<? super Document> filter) {
+  public Corpus filter(@NonNull final Predicate<? super Document> filter) {
     return new FilteredCorpus(this, filter);
   }
 
@@ -216,7 +216,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @param random Random number generator to use for selection
    * @return the sampled corpus
    */
-  public Corpus sample(int count, @Nonnull Random random) {
+  public Corpus sample(int count, @NonNull Random random) {
     if (count <= 0) {
       return Corpus.from(Collections.emptyList());
     }
@@ -249,7 +249,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @param toString the function to convert Annotations into strings
    * @return A counter containing total term frequencies of the given annotation type
    */
-  public Counter<String> termFrequencies(@Nonnull AnnotationType type, @Nonnull Function<? super Annotation, String> toString) {
+  public Counter<String> termFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
     return parallelStream()
         .flatMap(document -> document.get(type).parallelStream().map(toString))
         .collect(Counters.collector());
@@ -273,7 +273,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @param toString the function to convert Annotations into strings
    * @return A counter containing document frequencies of the given annotation type
    */
-  public Counter<String> documentFrequencies(@Nonnull AnnotationType type, @Nonnull Function<? super Annotation, String> toString) {
+  public Counter<String> documentFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
     return parallelStream()
         .flatMap(document -> document.get(type).parallelStream().map(toString).distinct())
         .collect(Counters.collector());
@@ -311,7 +311,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @return the corpus
    * @throws IOException something went wrong writing
    */
-  public Corpus write(@Nonnull String format, @Nonnull Resource resource) throws IOException {
+  public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
     CorpusFormat corpusFormat = getFormat(format);
     corpusFormat.write(resource, this);
     return from(format, resource, getDocumentFactory());

@@ -34,8 +34,8 @@ import com.davidbracewell.reflection.ValueType;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.util.*;
@@ -89,7 +89,7 @@ public final class Attribute extends EnumValue {
    * @throws IllegalArgumentException If the name is invalid or an attribute exists with this name, but a differenty
    *                                  value type.
    */
-  public static Attribute create(String name, @Nonnull Class<?> valueType) {
+  public static Attribute create(String name, @NonNull Class<?> valueType) {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }

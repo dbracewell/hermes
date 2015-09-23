@@ -29,8 +29,8 @@ import com.davidbracewell.config.Config;
 import com.davidbracewell.reflection.BeanUtils;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.io.ObjectStreamException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -110,7 +110,7 @@ public final class AnnotationType extends EnumValue {
    * @return the annotation type
    * @throws IllegalArgumentException name is invalid, or annotation type already exists with different parent
    */
-  public static AnnotationType create(String name, @Nonnull AnnotationType parent) {
+  public static AnnotationType create(String name, @NonNull AnnotationType parent) {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
@@ -218,7 +218,7 @@ public final class AnnotationType extends EnumValue {
    * @return the annotator for this type and the given langauge
    * @throws IllegalStateException If this type is a gold standard annotation.
    */
-  public Annotator getAnnotator(@Nonnull Language language) {
+  public Annotator getAnnotator(@NonNull Language language) {
     if (isGoldStandard()) {
       throw new IllegalStateException("Gold Standard annotations cannot be annotated");
     }

@@ -26,8 +26,7 @@ import com.davidbracewell.cache.Cache;
 import com.davidbracewell.cache.CacheManager;
 import com.davidbracewell.config.Config;
 import com.google.common.base.Preconditions;
-
-import javax.annotation.Nonnull;
+import lombok.NonNull;
 
 /**
  * <p>
@@ -72,7 +71,7 @@ public class AnnotatorCache {
    * @param language       The language of the annotator we want
    * @return An annotator that can annotate the given annotation class
    */
-  public Annotator get(@Nonnull AnnotationType annotationType, @Nonnull Language language) {
+  public Annotator get(@NonNull AnnotationType annotationType, @NonNull Language language) {
     String key = createKey(annotationType, language);
     if (!cache.containsKey(key)) {
       cache.put(key, annotationType.getAnnotator(language));
@@ -93,7 +92,7 @@ public class AnnotatorCache {
    * @param annotationType the annotation type
    * @param language       The language
    */
-  public void remove(@Nonnull AnnotationType annotationType, @Nonnull Language language) {
+  public void remove(@NonNull AnnotationType annotationType, @NonNull Language language) {
     cache.invalidate(createKey(annotationType, language));
   }
 
@@ -113,7 +112,7 @@ public class AnnotatorCache {
    * @param language       the language
    * @param annotator      the annotator
    */
-  public void setAnnotator(@Nonnull AnnotationType annotationType, @Nonnull Language language, @Nonnull Annotator annotator) {
+  public void setAnnotator(@NonNull AnnotationType annotationType, @NonNull Language language, @NonNull Annotator annotator) {
     Preconditions.checkArgument(annotator.satisfies().contains(annotationType), "Attempting to register " + annotator.getClass().getName() + " for " + annotationType.name() + " which it does not provide");
     cache.put(createKey(annotationType, language), annotator);
 

@@ -25,8 +25,8 @@ import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
@@ -55,7 +55,7 @@ public class FileCorpus extends Corpus {
    * @param resource        the resource containing the corpus
    * @param documentFactory the document factory to use when constructing documents
    */
-  public FileCorpus(@Nonnull CorpusFormat corpusFormat, @Nonnull Resource resource, @Nonnull DocumentFactory documentFactory) {
+  public FileCorpus(@NonNull CorpusFormat corpusFormat, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
     this.corpusFormat = corpusFormat;
     this.resource = resource;
     this.documentFactory = documentFactory;

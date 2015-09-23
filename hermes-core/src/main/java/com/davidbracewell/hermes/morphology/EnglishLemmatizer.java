@@ -35,7 +35,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.io.LineProcessor;
 import lombok.NonNull;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
@@ -228,9 +227,9 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
       this.replacement = replacement;
     }
 
-    @Nullable
+
     @Override
-    public String apply(@Nullable String input) {
+    public String apply( String input) {
       if (input == null) {
         return null;
       }
@@ -250,8 +249,8 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
      * @param input the input
      * @return the string
      */
-    @Nullable
-    public String unapply(@Nullable String input) {
+
+    public String unapply( String input) {
       if (input == null) {
         return null;
       }

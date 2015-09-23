@@ -25,8 +25,8 @@ import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Annotator;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.string.StringUtils;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
@@ -51,7 +51,7 @@ public class RegexAnnotator implements Annotator, Serializable {
    * @param regex        the regex
    * @param providedType the provided type
    */
-  public RegexAnnotator(@Nonnull String regex, @Nonnull AnnotationType providedType) {
+  public RegexAnnotator(@NonNull String regex, @NonNull AnnotationType providedType) {
     regex = StringUtils.trim(regex);
     if (!regex.startsWith("\\b")) {
       regex = "\\b" + regex;
@@ -69,7 +69,7 @@ public class RegexAnnotator implements Annotator, Serializable {
    * @param regex        the regex
    * @param providedType the provided type
    */
-  public RegexAnnotator(@Nonnull String regex, @Nonnull String providedType) {
+  public RegexAnnotator(@NonNull String regex, @NonNull String providedType) {
     this(regex, AnnotationType.create(providedType));
   }
 

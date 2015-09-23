@@ -24,8 +24,8 @@ package com.davidbracewell.hermes;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Predicate;
@@ -117,7 +117,7 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
   }
 
   @Override
-  public List<Annotation> select(@Nonnull Span range, @Nonnull Predicate<? super Annotation> criteria) {
+  public List<Annotation> select(@NonNull Span range, @NonNull Predicate<? super Annotation> criteria) {
     Annotation a = startSorted.lower(Fragments.detachedAnnotation(null, range.start(), range.end()));
     int start = a == null ? range.start() : a.start() - 1;
     a = endSorted.higher(Fragments.detachedAnnotation(null, range.end(), range.end() + 1));
@@ -131,7 +131,7 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
   }
 
   @Override
-  public List<Annotation> select(@Nonnull Predicate<? super Annotation> criteria) {
+  public List<Annotation> select(@NonNull Predicate<? super Annotation> criteria) {
     return startSorted.stream().filter(criteria).collect(Collectors.toList());
   }
 

@@ -29,7 +29,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
@@ -73,7 +72,7 @@ public interface DocumentStore extends Iterable<Document> {
    * @param indexer the indexer to index the document by
    * @return the inverted index
    */
-  default <T> InvertedIndex<Document, T> index(@Nonnull Function<Document, Collection<T>> indexer) {
+  default <T> InvertedIndex<Document, T> index(@NonNull Function<Document, Collection<T>> indexer) {
     InvertedIndex<Document, T> invertedIndex = new InvertedIndex<>(indexer);
     invertedIndex.addAll(this);
     return invertedIndex;

@@ -23,8 +23,8 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.conversion.Val;
 import com.google.common.base.Preconditions;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -89,7 +89,7 @@ public final class Fragments {
    * @param content the content of the string
    * @return the new HString
    */
-  public static HString string(@Nonnull String content) {
+  public static HString string(@NonNull String content) {
     return new HStringImpl(content);
   }
 
@@ -127,7 +127,7 @@ public final class Fragments {
     private final String content;
     private final Map<Attribute, Val> attributes = new HashMap<>(5);
 
-    private HStringImpl(@Nonnull String content) {
+    private HStringImpl(@NonNull String content) {
       super(0, content.length());
       this.content = content;
     }
@@ -153,7 +153,7 @@ public final class Fragments {
     }
 
     @Override
-    public HString find(@Nonnull String text, int start) {
+    public HString find(@NonNull String text, int start) {
       Preconditions.checkPositionIndex(start, length());
       int pos = indexOf(text, start);
       if (pos == -1) {

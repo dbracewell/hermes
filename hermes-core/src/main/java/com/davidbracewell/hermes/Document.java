@@ -36,8 +36,8 @@ import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -63,12 +63,12 @@ public class Document extends HString {
   private final AnnotationSet annotationSet;
   private String id;
 
-  Document(String id, @Nonnull String content) {
+  Document(String id, @NonNull String content) {
     this(id, content, null);
   }
 
 
-  Document(String id, @Nonnull String content, Language language) {
+  Document(String id, @NonNull String content, Language language) {
     super(0, content.length());
     this.content = content;
     setId(id);
@@ -98,7 +98,7 @@ public class Document extends HString {
    * @return the document
    * @throws IOException something went wrong reading the file
    */
-  public static Document read(@Nonnull StructuredFormat format, @Nonnull Resource resource) throws IOException {
+  public static Document read(@NonNull StructuredFormat format, @NonNull Resource resource) throws IOException {
     try (StructuredReader reader = format.createReader(resource)) {
       reader.beginDocument();
 
@@ -202,7 +202,7 @@ public class Document extends HString {
    * @param span the span of the annotation
    * @return the created annotation
    */
-  public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull Span span) {
+  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull Span span) {
     return createAnnotation(type, span.start(), span.end(), Collections.emptyMap());
   }
 
@@ -214,7 +214,7 @@ public class Document extends HString {
    * @param span the span of the annotation
    * @return the created annotation
    */
-  public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull HString span) {
+  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span) {
     return createAnnotation(type, span.start(), span.end(),
       Maps.filterEntries(
         span.getAttributeMap(),
@@ -233,7 +233,7 @@ public class Document extends HString {
    * @param attributeMap the attributes associated with the annotation
    * @return the created annotation
    */
-  public Annotation createAnnotation(@Nonnull AnnotationType type, @Nonnull Span span, @Nonnull Map<Attribute, ?> attributeMap) {
+  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull Span span, @NonNull Map<Attribute, ?> attributeMap) {
     return createAnnotation(type, span.start(), span.end(), attributeMap);
   }
 
@@ -246,7 +246,7 @@ public class Document extends HString {
    * @param end   the end of the span
    * @return the created annotation
    */
-  public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end) {
+  public Annotation createAnnotation(@NonNull AnnotationType type, int start, int end) {
     return createAnnotation(type, start, end, Collections.emptyMap());
   }
 
@@ -261,7 +261,7 @@ public class Document extends HString {
    * @param attributeMap the attributes associated with the annotation
    * @return the created annotation
    */
-  public Annotation createAnnotation(@Nonnull AnnotationType type, int start, int end, @Nonnull Map<Attribute, ?> attributeMap) {
+  public Annotation createAnnotation(@NonNull AnnotationType type, int start, int end, @NonNull Map<Attribute, ?> attributeMap) {
     Preconditions.checkArgument(start >= start(), "Annotation must have a starting position >= the start of the document");
     Preconditions.checkArgument(end <= end(), "Annotation must have a ending position <= the end of the document");
     Annotation annotation = new Annotation(this, type, start, end);
@@ -283,7 +283,7 @@ public class Document extends HString {
    * @param span the span to search for overlapping annotations
    * @return All annotations of the given type on the document that overlap with the give span.
    */
-  public List<Annotation> get(AnnotationType type, @Nonnull Span span) {
+  public List<Annotation> get(AnnotationType type, @NonNull Span span) {
     return annotationSet.select(span, a -> a.isInstance(type) && a.overlaps(span));
   }
 
@@ -296,7 +296,7 @@ public class Document extends HString {
    * @return All annotations of the given type on the document that overlap with the give span and meet the given
    * filter.
    */
-  public List<Annotation> get(AnnotationType type, @Nonnull Span span, @Nonnull Predicate<? super Annotation> filter) {
+  public List<Annotation> get(AnnotationType type, @NonNull Span span, @NonNull Predicate<? super Annotation> filter) {
     return annotationSet.select(span, a -> filter.test(a) && a.isInstance(type) && a.overlaps(span));
   }
 
@@ -306,7 +306,7 @@ public class Document extends HString {
   }
 
   @Override
-  public List<Annotation> get(AnnotationType type, @Nonnull Predicate<? super Annotation> filter) {
+  public List<Annotation> get(AnnotationType type, @NonNull Predicate<? super Annotation> filter) {
     if (type == null) {
       return Collections.emptyList();
     }
@@ -389,7 +389,7 @@ public class Document extends HString {
    * @param resource the resource to write to
    * @throws IOException something went wrong writing
    */
-  public void write(@Nonnull StructuredFormat format, @Nonnull Resource resource) throws IOException {
+  public void write(@NonNull StructuredFormat format, @NonNull Resource resource) throws IOException {
     try (StructuredWriter writer = format.createWriter(resource)) {
       writer.beginDocument();
       writer.writeKeyValue("id", getId());

@@ -34,8 +34,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import lombok.NonNull;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
@@ -75,7 +73,7 @@ public final class Pipeline implements Serializable {
     this.onComplete = Preconditions.checkNotNull(onComplete);
   }
 
-  public long getElapsedTime(@Nonnull TimeUnit timeUnit) {
+  public long getElapsedTime(@NonNull TimeUnit timeUnit) {
     return totalTime + timer.elapsed(timeUnit);
   }
 
@@ -207,7 +205,7 @@ public final class Pipeline implements Serializable {
     return String.format("%.4g s", value);
   }
 
-  public static void setAnnotator(@Nonnull AnnotationType annotationType, @Nonnull Language language, @Nonnull Annotator annotator) {
+  public static void setAnnotator(@NonNull AnnotationType annotationType, @NonNull Language language, @NonNull Annotator annotator) {
     AnnotatorCache.getInstance().setAnnotator(annotationType, language, annotator);
   }
 
@@ -215,7 +213,7 @@ public final class Pipeline implements Serializable {
     INSTANCE;
 
     @Override
-    public void accept(@Nullable Document input) {
+    public void accept( Document input) {
     }
   }
 

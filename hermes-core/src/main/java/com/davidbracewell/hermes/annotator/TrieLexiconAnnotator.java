@@ -25,8 +25,8 @@ import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import com.davidbracewell.io.resource.Resource;
 import com.google.common.base.Preconditions;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -88,7 +88,7 @@ public class TrieLexiconAnnotator implements Annotator {
    * @param tagAttribute  the tag attribute
    * @param lexiconFiles  the lexicon files
    */
-  public TrieLexiconAnnotator(boolean caseSensitive, boolean prefixMatch, @Nonnull AnnotationType type, @Nonnull Attribute tagAttribute, @Nonnull Collection<Resource> lexiconFiles) {
+  public TrieLexiconAnnotator(boolean caseSensitive, boolean prefixMatch, @NonNull AnnotationType type, @NonNull Attribute tagAttribute, @NonNull Collection<Resource> lexiconFiles) {
     this.type = Preconditions.checkNotNull(type);
     this.lexicon = new TrieLexicon(caseSensitive, tagAttribute, lexiconFiles);
     this.lexicon.setFuzzyMatch(prefixMatch);

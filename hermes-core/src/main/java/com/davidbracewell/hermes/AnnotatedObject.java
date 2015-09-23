@@ -21,7 +21,8 @@
 
 package com.davidbracewell.hermes;
 
-import javax.annotation.Nonnull;
+import lombok.NonNull;
+
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -85,7 +86,7 @@ public interface AnnotatedObject {
    * @return the last annotation of the given type overlapping this object or a detached empty annotation if there is
    * none.
    */
-  default Annotation last(@Nonnull AnnotationType type) {
+  default Annotation last(@NonNull AnnotationType type) {
     List<Annotation> annotations = get(type);
     return annotations.isEmpty() ? Fragments.detachedEmptyAnnotation() : annotations.get(annotations.size() - 1);
   }

@@ -23,8 +23,8 @@ package com.davidbracewell.hermes;
 
 
 import com.davidbracewell.conversion.Val;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -48,7 +48,7 @@ class Fragment extends HString {
     this.owner = owner;
   }
 
-  Fragment(@Nonnull HString string) {
+  Fragment(@NonNull HString string) {
     super(string.start(), string.end());
     this.owner = string.document();
   }
@@ -79,7 +79,7 @@ class Fragment extends HString {
   }
 
   @Override
-  public List<Annotation> get(AnnotationType type, @Nonnull Predicate<? super Annotation> filter) {
+  public List<Annotation> get(AnnotationType type, @NonNull Predicate<? super Annotation> filter) {
     if (document() == null) {
       return Collections.emptyList();
     }

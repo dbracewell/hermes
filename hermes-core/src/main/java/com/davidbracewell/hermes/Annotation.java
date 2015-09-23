@@ -29,8 +29,8 @@ import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.google.common.base.Preconditions;
+import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
@@ -70,7 +70,7 @@ public final class Annotation extends Fragment implements Serializable {
    * @param start          the start
    * @param end            the end
    */
-  public Annotation(@Nonnull Document owner, @Nonnull AnnotationType annotationType, int start, int end) {
+  public Annotation(@NonNull Document owner, @NonNull AnnotationType annotationType, int start, int end) {
     super(owner, start, end);
     Preconditions.checkArgument(start <= end, "Annotations must have a start character index that is less than or equal to the ending index.");
     this.annotationType = annotationType;
@@ -83,7 +83,7 @@ public final class Annotation extends Fragment implements Serializable {
    * @param string         the string that this annotation will encompass
    * @param annotationType the annotation type
    */
-  public Annotation(@Nonnull HString string, @Nonnull AnnotationType annotationType) {
+  public Annotation(@NonNull HString string, @NonNull AnnotationType annotationType) {
     super(string);
     this.annotationType = annotationType;
   }
@@ -209,7 +209,7 @@ public final class Annotation extends Fragment implements Serializable {
    * @param type the type of annotation wanted
    * @return the next annotation of the given type or null
    */
-  public Annotation next(@Nonnull AnnotationType type) {
+  public Annotation next(@NonNull AnnotationType type) {
     return document() == null ? Fragments.detachedEmptyAnnotation() : document().getAnnotationSet().next(this, type);
   }
 
