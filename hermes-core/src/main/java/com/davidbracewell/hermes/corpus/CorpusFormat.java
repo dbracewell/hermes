@@ -67,9 +67,9 @@ public interface CorpusFormat {
    */
   String CSV = "CSV";
   /**
-   * CSV Format
+   * TSV Format
    */
-  String CSV_OPL = "CSV_OPL";
+  String TSV = "TSV";
 
   /**
    * Create corpus.

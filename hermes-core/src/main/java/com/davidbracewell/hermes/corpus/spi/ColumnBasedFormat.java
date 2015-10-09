@@ -22,12 +22,20 @@ import java.util.*;
 public abstract class ColumnBasedFormat extends FileBasedFormat {
 
   protected final Index<String> fieldNames;
+  protected final String contentField;
+  protected final String idField;
+  protected final String languageField;
 
   public ColumnBasedFormat(String configProperty) {
     fieldNames = Indexes.newIndex();
-    for (String field : Config.get(configProperty).asList(String.class)) {
-      fieldNames.add(field.toUpperCase());
+    if (Config.hasProperty(configProperty)) {
+      for (String field : Config.get(configProperty).asList(String.class)) {
+        fieldNames.add(field.toUpperCase());
+      }
     }
+    contentField = Config.get(configProperty, "contentField").asString("CONTENT").toUpperCase();
+    idField = Config.get(configProperty, "idField").asString("ID").toUpperCase();
+    languageField = Config.get(configProperty, "languageField").asString("LANGUAGE").toUpperCase();
   }
 
 
@@ -38,19 +46,16 @@ public abstract class ColumnBasedFormat extends FileBasedFormat {
     Map<Attribute, Object> attributeMap = new HashMap<>();
     for (int i = 0; i < row.size() && i < fieldNames.size(); i++) {
       String field = row.get(i);
-      switch (fieldNames.get(i)) {
-        case "ID":
-          id = field;
-          break;
-        case "CONTENT":
-          content = field;
-          break;
-        case "LANGUAGE":
-          language = Language.fromString(field);
-          break;
-        default:
-          Attribute attribute = Attribute.create(field);
-          attributeMap.put(attribute, attribute.getValueType().convert(field));
+      String fieldName = fieldNames.get(i);
+      if (idField.equalsIgnoreCase(fieldName)) {
+        id = field;
+      } else if (contentField.equalsIgnoreCase(fieldName)) {
+        content = field;
+      } else if (languageField.equalsIgnoreCase(fieldName)) {
+        language = Language.fromString(field);
+      } else {
+        Attribute attribute = Attribute.create(fieldName);
+        attributeMap.put(attribute, attribute.getValueType().convert(field));
       }
     }
     return documentFactory.create(id, content, language, attributeMap);

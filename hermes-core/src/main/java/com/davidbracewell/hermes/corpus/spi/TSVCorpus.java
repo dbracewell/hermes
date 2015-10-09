@@ -7,14 +7,14 @@ import org.kohsuke.MetaInfServices;
  * Created by david on 10/9/15.
  */
 @MetaInfServices(CorpusFormat.class)
-public class CSVCorpus extends DSVCorpus {
+public class TSVCorpus extends DSVCorpus {
 
-  public CSVCorpus() {
-    super("CSVCorpus", '\'');
+  public TSVCorpus() {
+    super("TSVCorpus", '\t');
   }
 
   @Override
   public String name() {
-    return "CSV";
+    return "TSV";
   }
 }
