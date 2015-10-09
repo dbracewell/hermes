@@ -23,6 +23,7 @@ package com.davidbracewell.hermes.tokenization;
 
 
 import com.davidbracewell.hermes.Attribute;
+import lombok.NonNull;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -37,9 +38,22 @@ import java.util.Objects;
  */
 public interface Tokenizer {
 
+  /**
+   * Tokenizes an given reader into tokens. All IO errors should be rethrown as runtime exceptions.
+   *
+   * @param reader the reader
+   * @return an iterable of tokens.
+   */
   Iterable<Token> tokenize(Reader reader);
 
-  default Iterable<Token> tokenize(String input) {
+  /**
+   * Tokenizes a given string into token.
+   *
+   * @param input the input String
+   * @return an iterable of tokens
+   * @throws NullPointerException if the String is null
+   */
+  default Iterable<Token> tokenize(@NonNull String input) {
     return tokenize(new StringReader(input));
   }
 
@@ -57,8 +71,14 @@ public interface Tokenizer {
      */
     public TokenType type;
 
+    /**
+     * The Char start index.
+     */
     public final int charStartIndex;
 
+    /**
+     * The Char end index.
+     */
     public final int charEndIndex;
     /**
      * The Index.

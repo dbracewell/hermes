@@ -266,7 +266,8 @@ public final class Attribute extends EnumValue {
     if (isDefined(name())) {
       return index.valueOf(name());
     }
-    return this;
+    Object o = index.register(this);
+    return o;
   }
 
   void write(StructuredWriter writer, Object val) throws IOException {

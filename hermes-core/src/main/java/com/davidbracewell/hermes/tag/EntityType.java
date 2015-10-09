@@ -153,7 +153,8 @@ public final class EntityType extends EnumValue implements Tag {
     if (isDefined(name())) {
       return index.valueOf(name());
     }
-    return this;
+    Object o = index.register(this);
+    return o;
   }
 
 

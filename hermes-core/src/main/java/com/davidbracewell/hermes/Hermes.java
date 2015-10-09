@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.string.StringUtils;
 
 import java.util.Locale;
 
@@ -41,6 +42,39 @@ public interface Hermes {
    */
   static Language defaultLanguage() {
     return Config.get("hermes.DefaultLanguage").as(Language.class, Language.fromLocale(Locale.getDefault()));
+  }
+
+  /**
+   * Initialize application string [ ].
+   *
+   * @param programName the program name
+   * @param args        the args
+   * @return the string [ ]
+   */
+  static String[] initializeApplication(String programName, String[] args) {
+    String[] leftOver = Config.initialize(programName, args);
+    //Ensure that the core hermes config is loaded
+    Config.loadPackageConfig("com.davidbracewell.hermes");
+    return leftOver;
+  }
+
+  /**
+   * Initialize application string [ ].
+   *
+   * @param args the args
+   * @return the string [ ]
+   */
+  static String[] initializeApplication(String[] args) {
+    StackTraceElement[] elements = Thread.currentThread().getStackTrace();
+    String programName = "";
+    for (int i = 0; i < elements.length && StringUtils.isNullOrBlank(programName); i++) {
+      String className = elements[i].getClassName();
+      if (!className.equals(Hermes.class.getName()) && !className.contains("java")) {
+        int idx = className.lastIndexOf('.');
+        programName = className.substring(idx + 1);
+      }
+    }
+    return initializeApplication(programName, args);
   }
 
 }//END OF Hermes
