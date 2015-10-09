@@ -54,7 +54,6 @@ public interface CorpusFormat {
    * Plain text
    */
   String PLAIN_TEXT = "TEXT";
-
   /**
    * One per line JSON format
    */
@@ -63,12 +62,19 @@ public interface CorpusFormat {
    * One per line plain text format
    */
   String PLAIN_TEXT_OPL = "TEXT_OPL";
-
+  /**
+   * CSV Format
+   */
+  String CSV = "CSV";
+  /**
+   * CSV Format
+   */
+  String CSV_OPL = "CSV_OPL";
 
   /**
    * Create corpus.
    *
-   * @param resource the resource
+   * @param resource        the resource
    * @param documentFactory the document factory
    * @return the corpus
    */
@@ -78,7 +84,7 @@ public interface CorpusFormat {
   /**
    * Read iterable.
    *
-   * @param resource the resource
+   * @param resource        the resource
    * @param documentFactory the document factory
    * @return the iterable
    * @throws IOException the iO exception
@@ -88,7 +94,7 @@ public interface CorpusFormat {
   /**
    * Writes the documents in this format from the given resource using the given factory.
    *
-   * @param resource the resource
+   * @param resource  the resource
    * @param documents the documents
    * @throws IOException something went wrong writing
    */
