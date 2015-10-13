@@ -54,6 +54,10 @@ public class SparkCorpus extends Corpus implements Serializable {
     );
   }
 
+  public void test() {
+
+  }
+
   @Override
   public int size() {
     return (int) corpus.count();
