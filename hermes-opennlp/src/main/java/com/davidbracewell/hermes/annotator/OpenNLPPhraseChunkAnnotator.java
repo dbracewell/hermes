@@ -68,7 +68,7 @@ public class OpenNLPPhraseChunkAnnotator implements Annotator, Serializable {
       synchronized (OpenNLPPhraseChunkAnnotator.class) {
         if (!chunkerModels.containsKey(language)) {
           try {
-            chunkerModels.put(language, new ChunkerModel(Config.get("opennlp.phrase_chunk", language, "model").asResource().openInputStream()));
+            chunkerModels.put(language, new ChunkerModel(Config.get("opennlp.phrase_chunk", language, "model").asResource().inputStream()));
           } catch (IOException e) {
             throw Throwables.propagate(e);
           }

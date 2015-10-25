@@ -158,7 +158,7 @@ public final class Pipeline implements Serializable {
     if (returnCorpus) {
 
       Resource tempFile = Resources.temporaryFile();
-      try (AsyncWriter writer = new AsyncWriter(tempFile.openWriter())) {
+      try (AsyncWriter writer = new AsyncWriter(tempFile.writer())) {
         builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer), numberOfThreads)
             .build().run();
         writer.close();

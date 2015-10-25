@@ -83,7 +83,7 @@ public class OnePerLineFormat extends FileBasedFormat {
     private LineIterator(Resource input, CorpusFormat format, DocumentFactory documentFactory) {
       this.documentFactory = documentFactory;
       try {
-        this.reader = new BufferedReader(input.openReader());
+        this.reader = new BufferedReader(input.reader());
         this.format = format;
         advance();
       } catch (IOException e) {
@@ -139,7 +139,7 @@ public class OnePerLineFormat extends FileBasedFormat {
 
   @Override
   public void write(@NonNull Resource resource, @NonNull Iterable<Document> documents) throws IOException {
-    try (BufferedWriter writer = new BufferedWriter(resource.openWriter())) {
+    try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
       for (Document document : documents) {
         Resource stringResource = new StringResource();
         subFormat.write(stringResource, document);

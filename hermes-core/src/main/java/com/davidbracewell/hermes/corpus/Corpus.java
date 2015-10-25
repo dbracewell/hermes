@@ -21,10 +21,10 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
 import com.davidbracewell.collection.NormalizedStringMap;
-import com.davidbracewell.collection.Streams;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.corpus.spi.OnePerLineFormat;
 import com.davidbracewell.io.resource.Resource;
@@ -134,7 +134,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
     if (this instanceof InMemoryCorpus) {
       return this;
     }
-    return new InMemoryCorpus(Streams.from(this).collect(Collectors.toList()));
+    return new InMemoryCorpus(Collect.from(this).collect(Collectors.toList()));
   }
 
   /**
@@ -163,7 +163,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @return The first document as an Optional
    */
   public Optional<Document> first() {
-    return Streams.from(this).findFirst();
+    return Collect.from(this).findFirst();
   }
 
   @Override
@@ -291,7 +291,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @return the stream
    */
   public Stream<Document> stream() {
-    return Streams.from(this);
+    return Collect.from(this);
   }
 
   /**
@@ -300,7 +300,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @return the stream
    */
   public Stream<Document> parallelStream() {
-    return Streams.paralleFrom(this);
+    return Collect.parallelFrom(this);
   }
 
   /**

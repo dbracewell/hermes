@@ -70,7 +70,7 @@ public class OpenNLPTokenAnnotator implements Annotator, Serializable {
       synchronized (OpenNLPTokenAnnotator.class) {
         if (!tokenModels.containsKey(language)) {
           try {
-            tokenModels.put(language, new TokenizerModel(Config.get("opennlp.tokenizer", language, "model").asResource().openInputStream()));
+            tokenModels.put(language, new TokenizerModel(Config.get("opennlp.tokenizer", language, "model").asResource().inputStream()));
           } catch (IOException e) {
             throw Throwables.propagate(e);
           }

@@ -19,12 +19,12 @@ public class SparkFormat implements CorpusFormat {
 
   @Override
   public Corpus create(Resource resource, DocumentFactory documentFactory) {
-    return new SparkCorpus(resource.resourceDescriptor(), Config.get("SparkFormat", "partitions").asIntegerValue(100));
+    return new SparkCorpus(resource.descriptor(), Config.get("SparkFormat", "partitions").asIntegerValue(100));
   }
 
   @Override
   public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
-    return new SparkCorpus(resource.resourceDescriptor());
+    return new SparkCorpus(resource.descriptor());
   }
 
   @Override

@@ -26,13 +26,12 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.logging.Logger;
+import com.davidbracewell.stream.MStream;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.google.common.io.LineProcessor;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -46,29 +45,19 @@ public class EnglishStopWords extends StopWords {
   private final Set<String> stopWords = new HashSet<>();
 
   private EnglishStopWords() {
-    try {
-      if (Config.hasProperty("hermes.StopWords.ENGLISH", "dict")) {
-        Config.get("hermes.StopWords.ENGLISH", "dict").asResource().read(
-          new LineProcessor<Object>() {
-            @Override
-            public boolean processLine(String line) throws IOException {
-              line = CharMatcher.WHITESPACE.trimFrom(line);
-              if (!Strings.isNullOrEmpty(line) && !line.startsWith("#")) {
-                stopWords.add(line);
-              }
-              return true;
-            }
-
-            @Override
-            public Object getResult() {
-              return null;
-            }
-          });
-      } else {
-        Logger.getLogger(EnglishStopWords.class).severe("No dictionary defined for English stop words.");
+    if (Config.hasProperty("hermes.StopWords.ENGLISH", "dict")) {
+      try (MStream<String> stream = Config.get("hermes.StopWords.ENGLISH", "dict").asResource().lines()) {
+        stream.forEach(line -> {
+          line = CharMatcher.WHITESPACE.trimFrom(line);
+          if (!Strings.isNullOrEmpty(line) && !line.startsWith("#")) {
+            stopWords.add(line);
+          }
+        });
+      } catch (Exception e) {
+        throw Throwables.propagate(e);
       }
-    } catch (IOException e) {
-      throw Throwables.propagate(e);
+    } else {
+      Logger.getLogger(EnglishStopWords.class).severe("No dictionary defined for English stop words.");
     }
   }
 

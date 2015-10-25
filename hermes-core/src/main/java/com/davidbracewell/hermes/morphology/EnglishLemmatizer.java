@@ -23,7 +23,9 @@ package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.Resources;
+import com.davidbracewell.io.structured.csv.CSVReader;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
@@ -32,15 +34,11 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.io.LineProcessor;
 import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The type English lemmatizer.
@@ -86,30 +84,19 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
 
     loadException(POS.ADVERB);
 
-    try {
-      this.lemmas = Resources.fromClasspath("com/davidbracewell/hermes/morphology/en/lemmas.dict.gz").read(new LineProcessor<PatriciaTrie<Set<POS>>>() {
-        private PatriciaTrie<Set<POS>> lemmas = new PatriciaTrie<>();
-
-        @Override
-        public PatriciaTrie<Set<POS>> getResult() {
-          return lemmas;
-        }
-
-        @Override
-        public boolean processLine(String line) throws IOException {
-          if (!Strings.isNullOrEmpty(line) && !line.trim().startsWith("#")) {
-            String[] parts = line.trim().split("\t+");
-            String lemma = parts[0].toLowerCase();
-            POS pos = POS.fromString(parts[1].toUpperCase());
-            if (!lemmas.containsKey(lemma)) {
-              lemmas.put(lemma, new HashSet<>());
-            }
-            lemmas.get(lemma).add(pos);
+    this.lemmas = new PatriciaTrie<>();
+    try (CSVReader reader = CSV.builder().delimiter('\t').reader(Resources.fromClasspath("com/davidbracewell/hermes/morphology/en/lemmas.dict.gz"))) {
+      for (List<String> row : reader) {
+        if (row.size() >= 2) {
+          String lemma = row.get(0).toLowerCase();
+          POS pos = POS.fromString(row.get(1).toUpperCase());
+          if (!lemmas.containsKey(lemma)) {
+            lemmas.put(lemma, new HashSet<>());
           }
-          return true;
+          lemmas.get(lemma).add(pos);
         }
-      });
-    } catch (IOException e) {
+      }
+    } catch (Exception e) {
       throw Throwables.propagate(e);
     }
   }
@@ -229,7 +216,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
 
 
     @Override
-    public String apply( String input) {
+    public String apply(String input) {
       if (input == null) {
         return null;
       }
@@ -250,7 +237,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
      * @return the string
      */
 
-    public String unapply( String input) {
+    public String unapply(String input) {
       if (input == null) {
         return null;
       }

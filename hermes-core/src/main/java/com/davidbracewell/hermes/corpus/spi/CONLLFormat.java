@@ -113,7 +113,7 @@ public class CONLLFormat extends FileBasedFormat {
 
     List<List<String>> rows = new ArrayList<>();
 
-    for (String line : resource) {
+    for (String line : resource.readLines()) {
       if (StringUtils.isNullOrBlank(line)) {
         if (!rows.isEmpty()) {
           documents.add(createDocument(rows, documentFactory));
