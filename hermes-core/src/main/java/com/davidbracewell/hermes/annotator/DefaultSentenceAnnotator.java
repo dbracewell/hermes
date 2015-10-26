@@ -22,7 +22,10 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.collection.Collect;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Types;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 

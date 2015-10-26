@@ -19,9 +19,11 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes;
+package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Document;
 
 import java.util.Collections;
 import java.util.Set;

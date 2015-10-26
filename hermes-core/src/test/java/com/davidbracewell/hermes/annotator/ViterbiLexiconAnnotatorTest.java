@@ -61,7 +61,7 @@ public class ViterbiLexiconAnnotatorTest {
     List<Annotation> annotationList = document.get(Types.LEXICON_MATCH);
     assertEquals(5, annotationList.size());
     assertEquals("get very tired", annotationList.get(0).toLowerCase());
-    assertEquals("VERY_SLEEPY", annotationList.get(0).getTag().get().asString());
+    assertEquals("VERY_SLEEPY", annotationList.get(0).getTag().get().name());
     assertEquals("she had peeped", annotationList.get(2).toLowerCase());
     assertEquals("feel very sleepy", annotationList.get(3).toLowerCase());
     assertEquals("rabbit actually took a watch", annotationList.get(4).toLowerCase());

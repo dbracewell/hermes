@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.concurrent.Broker;
+import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.AsyncWriter;

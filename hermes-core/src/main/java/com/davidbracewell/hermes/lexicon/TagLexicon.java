@@ -21,9 +21,9 @@
 
 package com.davidbracewell.hermes.lexicon;
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.tag.Tag;
 import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.io.structured.csv.CSVReader;

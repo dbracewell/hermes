@@ -21,7 +21,10 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import com.davidbracewell.io.resource.Resource;
 import com.google.common.base.Preconditions;

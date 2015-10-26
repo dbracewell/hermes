@@ -21,7 +21,10 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Types;
 import com.google.common.collect.Sets;
 
 import java.io.Serializable;

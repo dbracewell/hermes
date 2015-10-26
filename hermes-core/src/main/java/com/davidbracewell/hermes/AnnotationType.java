@@ -26,6 +26,7 @@ import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.reflection.BeanUtils;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;

@@ -22,7 +22,6 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Annotator;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;

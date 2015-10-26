@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.tag;
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.HString;

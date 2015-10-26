@@ -21,7 +21,10 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Types;
 import com.ibm.icu.text.Transliterator;
 
 import java.util.Collections;

@@ -33,7 +33,7 @@ import java.util.Collection;
  *
  * @author David B. Bracewell
  */
-public final class EntityType extends EnumValue implements Tag {
+public final class EntityType extends EnumValue {
   private static final DynamicEnum<EntityType> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
   /**
@@ -111,11 +111,6 @@ public final class EntityType extends EnumValue implements Tag {
     return index.values();
   }
 
-  @Override
-  public String asString() {
-    return name();
-  }
-
   /**
    * Gets this entity types' parent. The root <code>ENTITY</code> will return <code>null</code> for its parent.
    *
@@ -133,20 +128,6 @@ public final class EntityType extends EnumValue implements Tag {
       }
     }
     return parent;
-  }
-
-  @Override
-  public boolean isInstance(Tag tag) {
-    if (tag instanceof EntityType) {
-      EntityType et = this;
-      while (et != null) {
-        if (et == tag) {
-          return true;
-        }
-        et = et.parent;
-      }
-    }
-    return false;
   }
 
   private Object readResolve() throws ObjectStreamException {

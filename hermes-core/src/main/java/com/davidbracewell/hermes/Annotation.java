@@ -21,10 +21,10 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.tag.EntityType;
-import com.davidbracewell.hermes.tag.Tag;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
@@ -38,7 +38,8 @@ import java.util.*;
 /**
  * <p>
  * Associates a type, e.g. token, sentence, named entity, and a set of attributes, e.g. part of speech and entity type,
- * to  a specific  span of a document, which may include the entire document. Annotation type information is defined via
+ * to  a specific  span of a document, which may include the entire document. Annotation type information is defined
+ * via
  * the {@link AnnotationType} class.
  * </p>
  * <p>
@@ -131,9 +132,9 @@ public final class Annotation extends Fragment implements Serializable {
     }
 
     Annotation annotation = Fragments.detachedAnnotation(
-        AnnotationType.create(annotationProperties.get("type").asString()),
-        annotationProperties.get("start").asIntegerValue(),
-        annotationProperties.get("end").asIntegerValue()
+      AnnotationType.create(annotationProperties.get("type").asString()),
+      annotationProperties.get("start").asIntegerValue(),
+      annotationProperties.get("end").asIntegerValue()
     );
     annotation.setId(annotationProperties.get("id").asLongValue());
     annotation.putAll(attributeValMap);

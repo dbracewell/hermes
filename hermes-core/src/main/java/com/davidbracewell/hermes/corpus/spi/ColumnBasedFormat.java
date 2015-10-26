@@ -5,7 +5,6 @@ import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Index;
 import com.davidbracewell.collection.Indexes;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;

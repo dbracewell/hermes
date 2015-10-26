@@ -25,6 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.cache.Cache;
 import com.davidbracewell.cache.CacheManager;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.annotator.Annotator;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
 

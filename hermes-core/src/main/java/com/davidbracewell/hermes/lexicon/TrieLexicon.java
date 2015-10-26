@@ -21,12 +21,12 @@
 
 package com.davidbracewell.hermes.lexicon;
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.tag.Tag;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.tuple.Tuple2;
 import com.davidbracewell.tuple.Tuple3;

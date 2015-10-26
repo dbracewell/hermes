@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.tag;
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
 
@@ -53,7 +54,7 @@ public class StringTag implements Tag, Serializable {
   }
 
   @Override
-  public String asString() {
+  public String name() {
     return toString();
   }
 
