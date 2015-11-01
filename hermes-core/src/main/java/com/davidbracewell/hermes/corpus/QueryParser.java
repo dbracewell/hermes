@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.parsing.*;
 import com.davidbracewell.parsing.expressions.BinaryOperatorExpression;
@@ -35,7 +36,6 @@ import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * @author David B. Bracewell
@@ -94,15 +94,15 @@ public class QueryParser {
     @Override
     public Expression parse(Parser parser, ParserToken token) throws ParseException {
       if (
-          parser.hasNext() &&
-              !parser.tokenStream().lookAheadType(0).equals(Operator.AND) &&
-              !parser.tokenStream().lookAheadType(0).equals(Operator.OR) &&
-              !parser.tokenStream().lookAheadType(0).equals(CommonTypes.CLOSEPARENS)
-          ) {
+        parser.hasNext() &&
+          !parser.tokenStream().lookAheadType(0).equals(Operator.AND) &&
+          !parser.tokenStream().lookAheadType(0).equals(Operator.OR) &&
+          !parser.tokenStream().lookAheadType(0).equals(CommonTypes.CLOSEPARENS)
+        ) {
         return new BinaryOperatorExpression(
-            new ValueExpression(token.text, token.type),
-            new ParserToken(defaultOperator.toString(), defaultOperator),
-            parser.next()
+          new ValueExpression(token.text, token.type),
+          new ParserToken(defaultOperator.toString(), defaultOperator),
+          parser.next()
         );
       }
       return new ValueExpression(token.text, token.getType());
@@ -120,14 +120,14 @@ public class QueryParser {
 
   public QueryParser(@NonNull Operator defaultOperator) {
     this.lexer = RegularExpressionLexer.builder()
-        .add(CommonTypes.OPENPARENS)
-        .add(CommonTypes.CLOSEPARENS)
-        .add(Operator.AND)
-        .add(Operator.OR)
-        .add(Types.NOT)
-        .add(Types.FIELD)
-        .add(CommonTypes.WORD, "(\"([^\"]|\\\\\")*\"|\\S+)")
-        .build();
+      .add(CommonTypes.OPENPARENS)
+      .add(CommonTypes.CLOSEPARENS)
+      .add(Operator.AND)
+      .add(Operator.OR)
+      .add(Types.NOT)
+      .add(Types.FIELD)
+      .add(CommonTypes.WORD, "(\"([^\"]|\\\\\")*\"|\\S+)")
+      .build();
     this.grammar = new Grammar() {{
       register(CommonTypes.OPENPARENS, new GroupHandler(CommonTypes.CLOSEPARENS));
       register(Types.NOT, new PrefixOperatorHandler(100));
@@ -140,9 +140,9 @@ public class QueryParser {
   }
 
 
-  public Predicate<HString> parse(String query) throws ParseException {
+  public SerializablePredicate<HString> parse(String query) throws ParseException {
     Parser parser = new Parser(grammar, lexer.lex(query));
-    List<Predicate<HString>> predicates = new ArrayList<>();
+    List<SerializablePredicate<HString>> predicates = new ArrayList<>();
     while (parser.hasNext()) {
       Expression expression = parser.next();
       predicates.add(generate(expression));
@@ -150,29 +150,41 @@ public class QueryParser {
     if (predicates.isEmpty()) {
       return d -> true;
     }
-    Predicate<HString> finalPredicate = predicates.get(0);
+    SerializablePredicate<HString> finalPredicate = predicates.get(0);
     for (int i = 1; i < predicates.size(); i++) {
-      finalPredicate = defaultOperator == Operator.AND ? finalPredicate.and(predicates.get(i)) : finalPredicate.or(predicates.get(i));
+      finalPredicate = defaultOperator == Operator.AND ? and(finalPredicate, predicates.get(i)) : or(finalPredicate, predicates.get(i));
     }
     return finalPredicate;
   }
 
-  private Predicate<HString> generate(Expression e) {
+  private SerializablePredicate<HString> generate(Expression e) {
     if (e.isInstance(ValueExpression.class)) {
       return s -> s.contains(e.as(ValueExpression.class).value);
     } else if (e.isInstance(PrefixExpression.class)) {
       PrefixExpression pe = e.as(PrefixExpression.class);
       if (pe.operator.getType().isInstance(Types.NOT)) {
-        return generate(pe.right).negate();
+        return negate(generate(pe.right));
       } else if (pe.operator.getType().isInstance(Types.FIELD)) {
         return generate(pe.right);
       }
       return generate(pe.right);
     }
     BinaryOperatorExpression boe = e.as(BinaryOperatorExpression.class);
-    Predicate<HString> left = generate(boe.left);
-    Predicate<HString> right = generate(boe.right);
-    return boe.operator.getType().isInstance(Operator.AND) ? left.and(right) : left.or(right);
+    SerializablePredicate<HString> left = generate(boe.left);
+    SerializablePredicate<HString> right = generate(boe.right);
+    return boe.operator.getType().isInstance(Operator.AND) ? and(left, right) : or(left, right);
+  }
+
+  SerializablePredicate<HString> negate(SerializablePredicate<HString> p) {
+    return (hString -> !p.test(hString));
+  }
+
+  SerializablePredicate<HString> and(SerializablePredicate<HString> l, SerializablePredicate<HString> r) {
+    return (hString -> l.test(hString) && r.test(hString));
+  }
+
+  SerializablePredicate<HString> or(SerializablePredicate<HString> l, SerializablePredicate<HString> r) {
+    return (hString -> l.test(hString) || r.test(hString));
   }
 
 

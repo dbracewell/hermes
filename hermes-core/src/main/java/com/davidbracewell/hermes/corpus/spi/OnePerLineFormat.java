@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.corpus.spi;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.corpus.CorpusFormat;
+import com.davidbracewell.hermes.corpus.DocumentFormat;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.io.resource.StringResource;
@@ -49,14 +49,14 @@ import java.util.Queue;
 public class OnePerLineFormat extends FileBasedFormat {
   private static final long serialVersionUID = 1L;
 
-  private final CorpusFormat subFormat;
+  private final DocumentFormat subFormat;
 
   /**
    * Instantiates a new One per line format.
    *
    * @param subFormat the sub format
    */
-  public OnePerLineFormat(@NonNull CorpusFormat subFormat) {
+  public OnePerLineFormat(@NonNull DocumentFormat subFormat) {
     this.subFormat = subFormat;
   }
 
@@ -73,14 +73,14 @@ public class OnePerLineFormat extends FileBasedFormat {
   private static class LineIterator implements Iterator<Document> {
 
     final BufferedReader reader;
-    final CorpusFormat format;
+    final DocumentFormat format;
     final DocumentFactory documentFactory;
     final Logger log = Logger.getLogger(LineIterator.class);
     final Queue<Document> documentQueue = new LinkedList<>();
     boolean isClosed = false;
     String line = null;
 
-    private LineIterator(Resource input, CorpusFormat format, DocumentFactory documentFactory) {
+    private LineIterator(Resource input, DocumentFormat format, DocumentFactory documentFactory) {
       this.documentFactory = documentFactory;
       try {
         this.reader = new BufferedReader(input.reader());

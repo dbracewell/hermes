@@ -24,24 +24,23 @@ package com.davidbracewell.hermes.corpus;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
-import com.davidbracewell.collection.NormalizedStringMap;
+import com.davidbracewell.collection.InvertedIndex;
+import com.davidbracewell.function.SerializableFunction;
+import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.corpus.spi.OnePerLineFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
+import com.davidbracewell.stream.MStream;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * <p>
@@ -55,63 +54,18 @@ import java.util.stream.Stream;
  *
  * @author David B. Bracewell
  */
-public abstract class Corpus implements DocumentStore, Serializable {
-  private static final Map<String, CorpusFormat> corpusFormats = new NormalizedStringMap<>();
-  private static final long serialVersionUID = 1L;
+public interface Corpus extends DocumentStore {
+
+
+  Corpus EMPTY = new InMemoryCorpus(Collections.emptyList());
 
   /**
-   * Creates a corpus object by loading documents in the given format from the given resource
+   * Builder corpus builder.
    *
-   * @param format   the format the documents are in
-   * @param resource the resource containing the documents
-   * @return the corpus
-   * @throws IOException something went wrong reading in the corpus
+   * @return the corpus builder
    */
-  public static Corpus from(@NonNull String format, @NonNull final Resource resource) throws IOException {
-    return from(format, resource, DocumentFactory.getInstance());
-  }
-
-  /**
-   * Creates a corpus object by loading documents in the given format from the given resource
-   *
-   * @param format          the format the documents are in
-   * @param resource        the resource containing the documents
-   * @param documentFactory The document factory to use
-   * @return the corpus
-   * @throws IOException something went wrong reading in the corpus
-   */
-  public static Corpus from(@NonNull String format, @NonNull final Resource resource, @NonNull final DocumentFactory documentFactory) throws IOException {
-    final CorpusFormat corpusFormat = getFormat(format);
-    if (corpusFormat != null) {
-      return corpusFormat.create(resource, documentFactory);
-    }
-    throw new IllegalArgumentException("No corpus format registered for " + format);
-  }
-
-  /**
-   * From corpus.
-   *
-   * @param documentCollection the document collection
-   * @return the corpus
-   */
-  public static Corpus from(@NonNull Collection<Document> documentCollection) {
-    return new InMemoryCorpus(documentCollection);
-  }
-
-  /**
-   * Gets format.
-   *
-   * @param format the format
-   * @return the format
-   */
-  public static CorpusFormat getFormat(String format) {
-    format = StringUtils.trim(format).toUpperCase();
-    boolean isOPL = format.endsWith("_OPL");
-    final String normFormat = format.replaceAll("_OPL$", "").trim();
-    if (corpusFormats.containsKey(normFormat)) {
-      return isOPL ? new OnePerLineFormat(getFormat(normFormat)) : corpusFormats.get(normFormat);
-    }
-    throw new IllegalArgumentException("No corpus format registered for " + format);
+  static CorpusBuilder builder() {
+    return new CorpusBuilder();
   }
 
   /**
@@ -121,138 +75,18 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @param types The annotation types to annotate
    * @return A new corpus with the given annotation types present.
    */
-  public Corpus annotate(@NonNull AnnotationType... types) {
-    return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
-  }
+  Corpus annotate(@NonNull AnnotationType... types);
 
   /**
    * To memory.
    *
    * @return the corpus
    */
-  public Corpus cache() {
+  default Corpus cache() {
     if (this instanceof InMemoryCorpus) {
       return this;
     }
     return new InMemoryCorpus(Collect.from(this).collect(Collectors.toList()));
-  }
-
-  /**
-   * Concatenate corpus.
-   *
-   * @param other the other
-   * @return the corpus
-   */
-  public Corpus concatenate(@NonNull Corpus other) {
-    return new ConcatenatedCorpus(this, other);
-  }
-
-  /**
-   * Filter corpus.
-   *
-   * @param filter the filter
-   * @return the corpus
-   */
-  public Corpus filter(@NonNull final Predicate<? super Document> filter) {
-    return new FilteredCorpus(this, filter);
-  }
-
-  /**
-   * Gets the first document
-   *
-   * @return The first document as an Optional
-   */
-  public Optional<Document> first() {
-    return Collect.from(this).findFirst();
-  }
-
-  @Override
-  public Optional<Document> get(String id) {
-    return stream().filter(document -> document.getId().equals(id)).findFirst();
-  }
-
-  /**
-   * Gets document factory.
-   *
-   * @return the document factory
-   */
-  public abstract DocumentFactory getDocumentFactory();
-
-  @Override
-  public boolean isEmpty() {
-    return size() == 0;
-  }
-
-  @Override
-  public boolean put(Document document) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Collection<Document> query(String query) throws ParseException {
-    List<Document> documents = new ArrayList<>();
-    filter(new QueryParser(QueryParser.Operator.AND).parse(query)).forEach(
-        documents::add
-    );
-    return documents;
-  }
-
-  /**
-   * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
-   * sampling</a>.
-   *
-   * @param count the number of documents to include in the sample
-   * @return the sampled corpus
-   */
-  public Corpus sample(int count) {
-    return sample(count, new Random());
-  }
-
-  /**
-   * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
-   * sampling</a>.
-   *
-   * @param count  the number of documents to include in the sample
-   * @param random Random number generator to use for selection
-   * @return the sampled corpus
-   */
-  public Corpus sample(int count, @NonNull Random random) {
-    if (count <= 0) {
-      return Corpus.from(Collections.emptyList());
-    }
-    List<Document> sample = stream().limit(count).collect(Collectors.toList());
-    AtomicInteger k = new AtomicInteger(count + 1);
-    stream().skip(count).forEach(document -> {
-      int rndIndex = random.nextInt(k.getAndIncrement());
-      if (rndIndex < count) {
-        sample.set(rndIndex, document);
-      }
-    });
-    return Corpus.from(sample);
-  }
-
-  /**
-   * Calculates the total term frequency of the tokens in the corpus.
-   *
-   * @param lemmatize True - count lemmas, False - count as is
-   * @return A counter containing term frequencies of the given annotation type
-   */
-  public Counter<String> termFrequencies(boolean lemmatize) {
-    return termFrequencies(Types.TOKEN, lemmatize ? HString::getLemma : HString::toString);
-  }
-
-  /**
-   * Calculates the total term frequency of annotations of the given type in the corpus. Annotations are transformed
-   * into strings using the given toString function.
-   *
-   * @param type     the annotation type to count.
-   * @param toString the function to convert Annotations into strings
-   * @return A counter containing total term frequencies of the given annotation type
-   */
-  public Counter<String> termFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
-    return parallelStream()
-        .flatMap(document -> document.get(type).parallelStream().map(toString))
-        .collect(Counters.collector());
   }
 
   /**
@@ -261,7 +95,7 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @param lemmatize True - count lemmas, False - count as is
    * @return A counter containing document frequencies of the given annotation type
    */
-  public Counter<String> documentFrequencies(boolean lemmatize) {
+  default Counter<String> documentFrequencies(boolean lemmatize) {
     return documentFrequencies(Types.TOKEN, lemmatize ? HString::getLemma : HString::toString);
   }
 
@@ -273,98 +107,191 @@ public abstract class Corpus implements DocumentStore, Serializable {
    * @param toString the function to convert Annotations into strings
    * @return A counter containing document frequencies of the given annotation type
    */
-  public Counter<String> documentFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
-    return parallelStream()
-        .flatMap(document -> document.get(type).parallelStream().map(toString).distinct())
-        .collect(Counters.collector());
+  default Counter<String> documentFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
+    return Counters.newHashMapCounter(
+      stream()
+        .flatMap(document -> document.get(type).stream().map(toString).distinct().collect(Collectors.toList()))
+        .countByValue()
+    );
   }
 
+  /**
+   * Filter corpus.
+   *
+   * @param filter the filter
+   * @return the corpus
+   */
+  default Corpus filter(@NonNull SerializablePredicate<Document> filter) {
+    return new MStreamCorpus(stream().filter(filter), getDocumentFactory());
+  }
 
   @Override
-  public int size() {
-    return Iterables.size(this);
+  default Optional<Document> get(String id) {
+    return stream().filter(document -> StringUtils.safeEquals(id, document.getId(), true)).first();
   }
 
   /**
-   * Get a stream representation of this corpus
+   * Gets document factory.
    *
-   * @return the stream
+   * @return the document factory
    */
-  public Stream<Document> stream() {
-    return Collect.from(this);
-  }
+  DocumentFactory getDocumentFactory();
 
   /**
-   * Gets a parallel stream representation of this corpus
+   * Groups documents in the document store using the given function.
    *
-   * @return the stream
+   * @param <K>         The key type
+   * @param keyFunction Converts the document into a key to group the documents  by
+   * @return A <code>Multimap</code> of key - document pairs.
    */
-  public Stream<Document> parallelStream() {
-    return Collect.parallelFrom(this);
+  default <K> Multimap<K, Document> groupBy(@NonNull SerializableFunction<? super Document, K> keyFunction) {
+    Multimap<K, Document> grouping = ArrayListMultimap.create();
+    forEach(document -> grouping.put(keyFunction.apply(document), document));
+    return grouping;
   }
 
   /**
-   * Writes the corpus to given the format
+   * Indexes the documents in the document store using the given indexer function. The indexer function converts
+   * documents into one or more values (e.g. tokens) that can then be used to query documents.
    *
-   * @param format   the format to write in
-   * @param resource the resource to write to
+   * @param <T>     the type of object the document is indexed by
+   * @param indexer the indexer to index the document by
+   * @return the inverted index
+   */
+  default <T> InvertedIndex<Document, T> index(@NonNull SerializableFunction<Document, Collection<T>> indexer) {
+    InvertedIndex<Document, T> invertedIndex = new InvertedIndex<>(indexer);
+    invertedIndex.addAll(this);
+    return invertedIndex;
+  }
+
+  /**
+   * Indexes the documents by their lemmatized tokens
+   *
+   * @return the inverted index
+   */
+  default InvertedIndex<Document, String> index() {
+    return index(document -> document.tokens().stream().map(HString::getLemma).collect(Collectors.toSet()));
+  }
+
+  @Override
+  default boolean isEmpty() {
+    return stream().isEmpty();
+  }
+
+  @Override
+  default Iterator<Document> iterator() {
+    return stream().iterator();
+  }
+
+  @Override
+  default boolean put(Document document) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  default Collection<Document> query(String query) throws ParseException {
+    return stream().filter(new QueryParser(QueryParser.Operator.AND).parse(query)).collect();
+  }
+
+  /**
+   * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
+   * sampling</a>.
+   *
+   * @param count the number of documents to include in the sample
+   * @return the sampled corpus
+   */
+  default Corpus sample(int count) {
+    return sample(count, new Random());
+  }
+
+  /**
+   * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
+   * sampling</a>.
+   *
+   * @param count  the number of documents to include in the sample
+   * @param random Random number generator to use for selection
+   * @return the sampled corpus
+   */
+  default Corpus sample(int count, @NonNull Random random) {
+    if (count <= 0) {
+      return builder().inMemory().build();
+    }
+    List<Document> sample = stream().limit(count).collect();
+    AtomicInteger k = new AtomicInteger(count + 1);
+    stream().skip(count).forEach(document -> {
+      int rndIndex = random.nextInt(k.getAndIncrement());
+      if (rndIndex < count) {
+        sample.set(rndIndex, document);
+      }
+    });
+    return builder().inMemory().addAll(sample).build();
+  }
+
+  @Override
+  default long size() {
+    return stream().count();
+  }
+
+  /**
+   * Stream m stream.
+   *
+   * @return the m stream
+   */
+  MStream<Document> stream();
+
+  /**
+   * Calculates the total term frequency of the tokens in the corpus.
+   *
+   * @param lemmatize True - count lemmas, False - count as is
+   * @return A counter containing term frequencies of the given annotation type
+   */
+  default Counter<String> termFrequencies(boolean lemmatize) {
+    return termFrequencies(Types.TOKEN, lemmatize ? HString::getLemma : HString::toString);
+  }
+
+  /**
+   * Calculates the total term frequency of annotations of the given type in the corpus. Annotations are transformed
+   * into strings using the given toString function.
+   *
+   * @param type     the annotation type to count.
+   * @param toString the function to convert Annotations into strings
+   * @return A counter containing total term frequencies of the given annotation type
+   */
+  default Counter<String> termFrequencies(@NonNull AnnotationType type, @NonNull SerializableFunction<? super Annotation, String> toString) {
+    return Counters.newHashMapCounter(
+      stream()
+        .flatMap(document -> document.get(type).stream().map(toString).collect(Collectors.toList()))
+        .countByValue()
+    );
+  }
+
+  /**
+   * Write corpus.
+   *
+   * @param format   the format
+   * @param resource the resource
    * @return the corpus
-   * @throws IOException something went wrong writing
+   * @throws IOException the io exception
    */
-  public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
-    CorpusFormat corpusFormat = getFormat(format);
-    corpusFormat.write(resource, this);
-    return from(format, resource, getDocumentFactory());
+  default Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
+    DocumentFormat documentFormat = DocumentFormats.forName(format);
+    documentFormat.write(resource, this);
+    return builder().from(format, resource, getDocumentFactory()).build();
   }
 
-  private static class FilteredCorpus extends Corpus {
-    private static final long serialVersionUID = 1L;
-    private final Corpus subCorpus;
-    private final Predicate<? super Document> filter;
 
-    private FilteredCorpus(Corpus subCorpus, Predicate<? super Document> filter) {
-      this.subCorpus = subCorpus;
-      this.filter = filter;
-    }
-
-    @Override
-    public DocumentFactory getDocumentFactory() {
-      return subCorpus.getDocumentFactory();
-    }
-
-    @Override
-    public Iterator<Document> iterator() {
-      return Iterators.filter(subCorpus.iterator(), filter::test);
-    }
-
+  /**
+   * Union corpus.
+   *
+   * @param other the other
+   * @return the corpus
+   */
+  default Corpus union(@NonNull Corpus other) {
+    List<Document> documents = new LinkedList<>();
+    this.forEach(documents::add);
+    other.forEach(documents::add);
+    return new InMemoryCorpus(documents);
   }
 
-  private static class ConcatenatedCorpus extends Corpus {
-    private static final long serialVersionUID = 1L;
-    private final Corpus subCorpus1;
-    private final Corpus subCorpus2;
 
-    private ConcatenatedCorpus(Corpus subCorpus1, Corpus subCorpus2) {
-      this.subCorpus1 = subCorpus1;
-      this.subCorpus2 = subCorpus2;
-    }
-
-    @Override
-    public DocumentFactory getDocumentFactory() {
-      return subCorpus1.getDocumentFactory();
-    }
-
-    @Override
-    public Iterator<Document> iterator() {
-      return Iterators.concat(subCorpus1.iterator(), subCorpus2.iterator());
-    }
-
-  }
-
-  static {
-    for (CorpusFormat format : ServiceLoader.load(CorpusFormat.class)) {
-      corpusFormats.put(format.name(), format);
-    }
-  }
-
-}//END OF Corpus
+}//END OF Corpus2

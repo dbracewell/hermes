@@ -19,41 +19,54 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.corpus.spi;
+package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormat;
-import com.davidbracewell.hermes.corpus.FileCorpus;
-import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.hermes.Pipeline;
+import com.davidbracewell.stream.MStream;
+import lombok.NonNull;
 
-import java.io.IOException;
 import java.io.Serializable;
 
 /**
  * @author David B. Bracewell
  */
-public abstract class FileBasedFormat implements DocumentFormat, Serializable {
+public class MStreamCorpus implements Corpus, Serializable {
   private static final long serialVersionUID = 1L;
+  private final MStream<Document> stream;
+  private final DocumentFactory documentFactory;
 
-  @Override
-  public final Corpus create(Resource resource, DocumentFactory documentFactory) {
-    return new FileCorpus(this, resource, documentFactory);
+  public MStreamCorpus(MStream<Document> stream, DocumentFactory documentFactory) {
+    this.stream = stream;
+    this.documentFactory = documentFactory;
   }
 
   @Override
-  public void write(Resource resource, Iterable<Document> documents) throws IOException {
-    resource.mkdirs();
-    for (Document document : documents) {
-      write(resource.getChild(document.getId() + extension()), document);
-    }
+  public MStream<Document> stream() {
+    return stream;
   }
 
   @Override
-  public void write(Resource resource, Document document) throws IOException {
-    throw new UnsupportedOperationException();
+  public Corpus annotate(@NonNull AnnotationType... types) {
+    return new MStreamCorpus(stream.map(d -> {
+      Pipeline.process(d, types);
+      return d;
+    }),
+      documentFactory
+    );
   }
 
+  @Override
+  public DocumentFactory getDocumentFactory() {
+    return documentFactory;
+  }
 
-}//END OF FileBasedFormat
+  @Override
+  public Corpus filter(@NonNull SerializablePredicate<Document> filter) {
+    return new MStreamCorpus(stream.filter(filter), documentFactory);
+  }
+
+}//END OF MStreamCorpus

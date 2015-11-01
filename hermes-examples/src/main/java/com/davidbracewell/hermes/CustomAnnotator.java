@@ -25,7 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.annotator.RegexAnnotator;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.CorpusFormat;
+import com.davidbracewell.hermes.corpus.DocumentFormats;
 import com.davidbracewell.io.Resources;
 
 import static com.davidbracewell.hermes.Types.SENTENCE;
@@ -45,10 +45,10 @@ public class CustomAnnotator {
     AnnotationType verbs = AnnotationType.create("VERBS");
     Pipeline.setAnnotator(verbs, Language.ENGLISH, new RegexAnnotator("(is|jumps?|come)", verbs));
 
-    Corpus.from(CorpusFormat.PLAIN_TEXT_OPL, Resources.fromString(
-        "The quick brown fox jumps over the lazy dog.\n" +
-            "Now is the time for all good men to come to aid of their country.\n"
-    )).forEach(document -> {
+    Corpus.builder().source(DocumentFormats.PLAIN_TEXT_OPL, Resources.fromString(
+      "The quick brown fox jumps over the lazy dog.\n" +
+        "Now is the time for all good men to come to aid of their country.\n"
+    )).build().forEach(document -> {
       Pipeline.process(document, TOKEN, SENTENCE, animalMention, verbs);
       document.get(animalMention).forEach(a -> System.out.println("ANIMAL: " + a));
       document.get(verbs).forEach(a -> System.out.println("VERB: " + a));

@@ -36,40 +36,7 @@ import java.io.IOException;
  *
  * @author David B. Bracewell
  */
-public interface CorpusFormat {
-
-  /**
-   * JSON format created by using write or toJson from a Document
-   */
-  String JSON = "JSON";
-  /**
-   * XML format created by using write from a Document
-   */
-  String XML = "XML";
-  /**
-   * CONLL tab delimited format
-   */
-  String CONLL = "CONLL";
-  /**
-   * Plain text
-   */
-  String PLAIN_TEXT = "TEXT";
-  /**
-   * One per line JSON format
-   */
-  String JSON_OPL = "JSON_OPL";
-  /**
-   * One per line plain text format
-   */
-  String PLAIN_TEXT_OPL = "TEXT_OPL";
-  /**
-   * CSV Format
-   */
-  String CSV = "CSV";
-  /**
-   * TSV Format
-   */
-  String TSV = "TSV";
+public interface DocumentFormat {
 
   /**
    * Create corpus.

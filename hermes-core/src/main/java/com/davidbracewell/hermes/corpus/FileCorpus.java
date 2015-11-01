@@ -21,13 +21,18 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
+import com.davidbracewell.stream.JavaMStream;
+import com.davidbracewell.stream.MStream;
 import lombok.NonNull;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -39,24 +44,24 @@ import java.util.Iterator;
  *
  * @author David B. Bracewell
  */
-public class FileCorpus extends Corpus {
+public class FileCorpus implements Corpus, Serializable {
   private static final long serialVersionUID = 1L;
   private static final Logger log = Logger.getLogger(FileCorpus.class);
 
-  private final CorpusFormat corpusFormat;
+  private final DocumentFormat documentFormat;
   private final Resource resource;
   private final DocumentFactory documentFactory;
-  private int size = -1;
+  private long size = -1;
 
   /**
    * Instantiates a new file based corpus
    *
-   * @param corpusFormat    the corpus format
+   * @param documentFormat  the corpus format
    * @param resource        the resource containing the corpus
    * @param documentFactory the document factory to use when constructing documents
    */
-  public FileCorpus(@NonNull CorpusFormat corpusFormat, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
-    this.corpusFormat = corpusFormat;
+  public FileCorpus(@NonNull DocumentFormat documentFormat, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
+    this.documentFormat = documentFormat;
     this.resource = resource;
     this.documentFactory = documentFactory;
   }
@@ -66,7 +71,7 @@ public class FileCorpus extends Corpus {
   public Iterator<Document> iterator() {
     return new RecursiveDocumentIterator(resource, documentFactory, ((resource1, documentFactory1) -> {
       try {
-        return corpusFormat.read(resource1, documentFactory1);
+        return documentFormat.read(resource1, documentFactory1);
       } catch (IOException e) {
         log.warn("Error reading {0} : {1}", resource1, e);
         return Collections.emptyList();
@@ -76,14 +81,24 @@ public class FileCorpus extends Corpus {
   }
 
   @Override
+  public MStream<Document> stream() {
+    return new JavaMStream<>(iterator());
+  }
+
+  @Override
+  public Corpus annotate(@NonNull AnnotationType... types) {
+    return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
+  }
+
+  @Override
   public DocumentFactory getDocumentFactory() {
     return documentFactory;
   }
 
   @Override
-  public int size() {
+  public long size() {
     if (size == -1) {
-      size = super.size();
+      size = stream().count();
     }
     return size;
   }

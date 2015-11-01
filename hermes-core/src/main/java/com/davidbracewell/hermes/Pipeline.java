@@ -25,7 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.concurrent.Broker;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.CorpusFormat;
+import com.davidbracewell.hermes.corpus.DocumentFormats;
 import com.davidbracewell.io.AsyncWriter;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
@@ -152,18 +152,18 @@ public final class Pipeline implements Serializable {
     timer.start();
 
     Broker.Builder<Document> builder = Broker.<Document>builder()
-        .addProducer(new Producer(documents))
-        .bufferSize(queueSize);
+      .addProducer(new Producer(documents))
+      .bufferSize(queueSize);
 
-    Corpus corpus = Corpus.from(Collections.emptyList());
+    Corpus corpus = Corpus.EMPTY;
     if (returnCorpus) {
 
       Resource tempFile = Resources.temporaryFile();
       try (AsyncWriter writer = new AsyncWriter(tempFile.writer())) {
         builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer), numberOfThreads)
-            .build().run();
+          .build().run();
         writer.close();
-        corpus = Corpus.from(CorpusFormat.JSON_OPL, tempFile);
+        corpus = Corpus.builder().source(DocumentFormats.JSON_OPL, tempFile).build();
       } catch (Exception e) {
         throw Throwables.propagate(e);
       }
@@ -172,9 +172,9 @@ public final class Pipeline implements Serializable {
     } else {
 
       builder
-          .addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, null), numberOfThreads)
-          .build()
-          .run();
+        .addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, null), numberOfThreads)
+        .build()
+        .run();
 
     }
 
@@ -214,7 +214,7 @@ public final class Pipeline implements Serializable {
     INSTANCE;
 
     @Override
-    public void accept( Document input) {
+    public void accept(Document input) {
     }
   }
 

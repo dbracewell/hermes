@@ -77,4 +77,9 @@ public interface Hermes {
     return initializeApplication(programName, args);
   }
 
+  static void initializeWorker(Config config) {
+    Configurator.INSTANCE.configure(config);
+  }
+
+
 }//END OF Hermes

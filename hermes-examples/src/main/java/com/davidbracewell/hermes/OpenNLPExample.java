@@ -27,7 +27,7 @@ import com.davidbracewell.hermes.annotator.OpenNLPPOSAnnotator;
 import com.davidbracewell.hermes.annotator.OpenNLPSentenceAnnotator;
 import com.davidbracewell.hermes.annotator.OpenNLPTokenAnnotator;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.CorpusFormat;
+import com.davidbracewell.hermes.corpus.DocumentFormats;
 import com.davidbracewell.io.Resources;
 
 import static com.davidbracewell.hermes.Types.*;
@@ -38,7 +38,7 @@ import static com.davidbracewell.hermes.Types.*;
 public class OpenNLPExample {
 
   public static void main(String[] args) throws Exception {
-    Config.initialize("Sandbox");
+    Config.initialize("OpenNLPExample");
 
     //Load the OpenNLP default.conf file to setup the OPENNLP_ENTITY type
     Config.loadPackageConfig("com.davidbracewell.hermes.opennlp");
@@ -77,26 +77,20 @@ public class OpenNLPExample {
               System.out.println();
               sentence.tokens().forEach(token -> System.out.print(token.getStem() + " "));
               System.out.println();
-
-//              sentence.get(ENTITY).forEach
-//                (
-//                  entity -> System.out.println
-//                    (
-//                      entity.getLemma() + "/" +
-//                        entity.get(Attrs.ENTITY_TYPE) +
-//                        " [" + entity.get(Attrs.CONFIDENCE) + "]"
-//                    )
-//                );
-//              System.out.println();
             }
           )
       )
+      .returnCorpus(false)
+      .build();
+
+
+    Corpus corpus = Corpus.builder()
+      .format(DocumentFormats.PLAIN_TEXT)
+      .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
       .build();
 
     //load in the example docs as one big document and process it.
-    pipeline.process(
-      Corpus.from(CorpusFormat.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
-    );
+    pipeline.process(corpus);
   }
 
 }//END OF Sandbox

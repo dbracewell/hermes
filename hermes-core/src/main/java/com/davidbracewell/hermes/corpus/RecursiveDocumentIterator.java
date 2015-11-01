@@ -26,7 +26,6 @@ import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
-import java.io.File;
 import java.util.*;
 import java.util.function.BiFunction;
 
@@ -60,7 +59,7 @@ public class RecursiveDocumentIterator implements Iterator<Document> {
         while (resourceIterator.hasNext() && documentQueue.isEmpty()) {
           Resource r = resourceIterator.next();
           if (!r.isDirectory()) {
-            if (r.asFile().map(File::isHidden).orElse(true)) {
+            if (r.asFile().map(f -> !f.isHidden()).orElse(true)) {
               resourceReader.apply(r, documentFactory).forEach(documentQueue::add);
             }
           }

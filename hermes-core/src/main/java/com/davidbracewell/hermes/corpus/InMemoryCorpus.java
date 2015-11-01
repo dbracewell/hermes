@@ -21,15 +21,18 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.Pipeline;
+import com.davidbracewell.stream.JavaMStream;
+import com.davidbracewell.stream.MStream;
 import lombok.NonNull;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.stream.Stream;
+import java.io.Serializable;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -38,7 +41,7 @@ import java.util.stream.Stream;
  *
  * @author David B. Bracewell
  */
-public class InMemoryCorpus extends Corpus {
+public class InMemoryCorpus implements Corpus, Serializable {
   private static final long serialVersionUID = 1L;
   private final Map<String, Document> documentMap = new HashMap<>();
 
@@ -52,10 +55,20 @@ public class InMemoryCorpus extends Corpus {
   }
 
   @Override
-  public Iterator<Document> iterator() {
-    return documentMap.values().iterator();
+  public Corpus annotate(@NonNull AnnotationType... types) {
+    Pipeline.builder().addAnnotations(types).returnCorpus(false).build().process(this);
+    return this;
   }
 
+  @Override
+  public Corpus filter(@NonNull SerializablePredicate<Document> filter) {
+    return new InMemoryCorpus(documentMap.values().stream().filter(filter).collect(Collectors.toList()));
+  }
+
+  @Override
+  public Optional<Document> get(String id) {
+    return Optional.ofNullable(documentMap.get(id));
+  }
 
   @Override
   public DocumentFactory getDocumentFactory() {
@@ -63,13 +76,13 @@ public class InMemoryCorpus extends Corpus {
   }
 
   @Override
-  public Stream<Document> stream() {
-    return documentMap.values().parallelStream();
+  public boolean isEmpty() {
+    return documentMap.isEmpty();
   }
 
   @Override
-  public int size() {
-    return documentMap.size();
+  public Iterator<Document> iterator() {
+    return documentMap.values().iterator();
   }
 
   @Override
@@ -81,4 +94,13 @@ public class InMemoryCorpus extends Corpus {
     return true;
   }
 
+  @Override
+  public long size() {
+    return documentMap.size();
+  }
+
+  @Override
+  public MStream<Document> stream() {
+    return new JavaMStream<>(documentMap.values());
+  }
 }//END OF InMemoryCorpus

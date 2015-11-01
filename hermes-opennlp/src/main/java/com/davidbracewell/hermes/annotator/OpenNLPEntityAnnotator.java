@@ -63,7 +63,7 @@ public class OpenNLPEntityAnnotator implements Annotator, Serializable {
               tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
           ).putAll(
             Collect.map(
-              Attrs.ENTITY_TYPE, EntityType.valueOf(span.getType().toUpperCase()),
+              Attrs.ENTITY_TYPE, EntityType.create(span.getType().toUpperCase()),
               Attrs.CONFIDENCE, probs[i]
             )
           );

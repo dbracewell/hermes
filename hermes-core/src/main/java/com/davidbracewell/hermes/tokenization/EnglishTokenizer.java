@@ -66,6 +66,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
         line -> emoticons.put(line.trim().toLowerCase(), line)
       );
     } catch (IOException e) {
+      e.printStackTrace();
       throw Throwables.propagate(e);
     }
   }
