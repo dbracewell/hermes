@@ -96,4 +96,14 @@ public interface DocumentFormat {
     return name().toLowerCase();
   }
 
+
+  /**
+   * Is one per line boolean.
+   *
+   * @return the boolean
+   */
+  default boolean isOnePerLine() {
+    return false;
+  }
+
 }//END OF CorpusFormat

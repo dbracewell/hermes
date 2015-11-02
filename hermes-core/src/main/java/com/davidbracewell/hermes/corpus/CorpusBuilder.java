@@ -99,7 +99,7 @@ public class CorpusBuilder {
     if (isDistributed) {
       Corpus corpus = null;
       if (resource != null) {
-        corpus = new SparkCorpus(resource.descriptor());
+        corpus = new SparkCorpus(resource.descriptor(), documentFormat, documentFactory);
       }
 
       if (corpus == null) {

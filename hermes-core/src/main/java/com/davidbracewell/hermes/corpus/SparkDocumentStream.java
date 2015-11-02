@@ -31,6 +31,7 @@ import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Hermes;
 import com.davidbracewell.hermes.Pipeline;
+import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.stream.MDoubleStream;
 import com.davidbracewell.stream.MPairStream;
 import com.davidbracewell.stream.MStream;
@@ -65,6 +66,10 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
 
   private SparkDocumentStream of(@NonNull MStream<String> source) {
     return new SparkDocumentStream(source, configBroadcast);
+  }
+
+  protected MStream<String> getSource() {
+    return source;
   }
 
   public SparkDocumentStream annotate(@NonNull AnnotationType... types) {
@@ -259,5 +264,14 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
     return of(source.union(other.map(doc -> doc.toJson())));
   }
 
+  @Override
+  public void saveAsTextFile(@NonNull Resource location) {
+    source.saveAsTextFile(location);
+  }
+
+  @Override
+  public void saveAsTextFile(@NonNull String location) {
+    source.saveAsTextFile(location);
+  }
 
 }//END OF SparkDocumentStream

@@ -28,6 +28,7 @@ import com.davidbracewell.collection.InvertedIndex;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
@@ -277,6 +278,18 @@ public interface Corpus extends DocumentStore {
     DocumentFormat documentFormat = DocumentFormats.forName(format);
     documentFormat.write(resource, this);
     return builder().from(format, resource, getDocumentFactory()).build();
+  }
+
+  default Corpus write(@NonNull Resource resource) throws IOException {
+    return write(DocumentFormats.JSON_OPL, resource);
+  }
+
+  default Corpus write(@NonNull String format, @NonNull String resource) throws IOException {
+    return write(format, Resources.from(resource));
+  }
+
+  default Corpus write(@NonNull String resource) throws IOException {
+    return write(DocumentFormats.JSON_OPL, resource);
   }
 
 

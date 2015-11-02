@@ -160,4 +160,9 @@ public class OnePerLineFormat extends FileBasedFormat {
     return subFormat.extension() + "_opl";
   }
 
+  @Override
+  public boolean isOnePerLine() {
+    return true;
+  }
+
 }//END OF OnePerLineFormat

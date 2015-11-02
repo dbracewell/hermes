@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  */
 public class InMemoryCorpus implements Corpus, Serializable {
   private static final long serialVersionUID = 1L;
-  private final Map<String, Document> documentMap = new HashMap<>();
+  private final List<Document> documents = new LinkedList<>();
 
   /**
    * Instantiates a new In memory corpus.
@@ -51,7 +51,7 @@ public class InMemoryCorpus implements Corpus, Serializable {
    * @param documentCollection the document collection
    */
   public InMemoryCorpus(@NonNull Collection<Document> documentCollection) {
-    documentCollection.forEach(document -> documentMap.put(document.getId(), document));
+    documents.addAll(documentCollection);
   }
 
   @Override
@@ -62,12 +62,12 @@ public class InMemoryCorpus implements Corpus, Serializable {
 
   @Override
   public Corpus filter(@NonNull SerializablePredicate<Document> filter) {
-    return new InMemoryCorpus(documentMap.values().stream().filter(filter).collect(Collectors.toList()));
+    return new InMemoryCorpus(documents.stream().filter(filter).collect(Collectors.toList()));
   }
 
   @Override
   public Optional<Document> get(String id) {
-    return Optional.ofNullable(documentMap.get(id));
+    return documents.stream().filter(d -> d.getId().equals(id)).findFirst();
   }
 
   @Override
@@ -77,12 +77,12 @@ public class InMemoryCorpus implements Corpus, Serializable {
 
   @Override
   public boolean isEmpty() {
-    return documentMap.isEmpty();
+    return documents.isEmpty();
   }
 
   @Override
   public Iterator<Document> iterator() {
-    return documentMap.values().iterator();
+    return documents.iterator();
   }
 
   @Override
@@ -90,17 +90,18 @@ public class InMemoryCorpus implements Corpus, Serializable {
     if (document == null) {
       return false;
     }
-    documentMap.put(document.getId(), document);
+    documents.add(document);
     return true;
   }
 
   @Override
   public long size() {
-    return documentMap.size();
+    return documents.size();
   }
 
   @Override
   public MStream<Document> stream() {
-    return new JavaMStream<>(documentMap.values());
+    return new JavaMStream<>(documents);
   }
+
 }//END OF InMemoryCorpus
