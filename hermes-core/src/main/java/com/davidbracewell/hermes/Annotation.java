@@ -28,6 +28,7 @@ import com.davidbracewell.hermes.tag.EntityType;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
+import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
@@ -62,6 +63,7 @@ public final class Annotation extends Fragment implements Serializable {
   private final AnnotationType annotationType;
   private long id = DETACHED_ID;
   private transient Annotation[] tokens;
+  private final LinkedList<Link> links = new LinkedList<>();
 
   /**
    * Instantiates a new Annotation.
@@ -114,9 +116,20 @@ public final class Annotation extends Fragment implements Serializable {
 
     Map<String, Val> annotationProperties = new HashMap<>();
     Map<Attribute, Val> attributeValMap = Collections.emptyMap();
+    LinkedList<Tuple2<Long, Map<Attribute, Val>>> links = new LinkedList<>();
 
     while (reader.peek() != ElementType.END_OBJECT) {
-      if (reader.peek() == ElementType.NAME) {
+      if (reader.peek() == ElementType.BEGIN_ARRAY) {
+        String name = reader.beginArray();
+        if (name.equals("links")) {
+          while (reader.peek() != ElementType.END_ARRAY) {
+            links.add(Link.read(reader));
+          }
+        } else {
+          throw new IOException("Unexpected array named [" + name + "]");
+        }
+        reader.endArray();
+      } else if (reader.peek() == ElementType.NAME) {
         Collect.put(annotationProperties, reader.nextKeyValue());
       } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
         String name = reader.beginObject();
@@ -138,11 +151,16 @@ public final class Annotation extends Fragment implements Serializable {
     );
     annotation.setId(annotationProperties.get("id").asLongValue());
     annotation.putAll(attributeValMap);
-
-
+    links.forEach(link -> annotation.links.add(new Link(link.v1, link.v2)));
     reader.endObject();
     return annotation;
   }
+
+  public List<Link> getLinks() {
+    links.forEach(l -> l.setDocument(document()));
+    return Collections.unmodifiableList(links);
+  }
+
 
   /**
    * Gets the unique id associated with the annotation.

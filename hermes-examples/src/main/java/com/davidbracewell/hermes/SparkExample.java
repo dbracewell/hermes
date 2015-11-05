@@ -2,6 +2,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
+import com.davidbracewell.hermes.corpus.DocumentFormats;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.logging.Logger;
 
@@ -15,12 +16,13 @@ public class SparkExample implements Serializable {
   public static void main(String[] args) throws Exception {
     Config.initialize("");
     Config.setProperty("TESTING", "IT WORKED");
+
     Corpus corpus = Corpus.builder()
       .distributed()
-      .source(Resources.fromFile("/home/david/test.json_opl")).build();
+      .format(DocumentFormats.PLAIN_TEXT_OPL)
+      .source(Resources.fromFile("/data/corpora/en/eng_news_2005_10K-text/eng_news_2005_10K-sentences.txt")).build()
+      .annotate(Types.TOKEN);
 
-
-    corpus.stream().forEach(d -> log.info(Config.get("TESTING").asString("FAIL")));
 
     Map<String, Double> map = corpus.stream()
       .flatMapToPair(document -> document.count(Types.TOKEN, HString::toLowerCase).entries())
@@ -28,10 +30,6 @@ public class SparkExample implements Serializable {
       .collectAsMap();
 
     map.forEach((word, value) -> System.out.println(word + " = " + value));
-
-
-    corpus.write("XML_OPL", "hdfs://yaguchi:54310/user/david/tmp/");
-
 
   }
 

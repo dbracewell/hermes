@@ -27,6 +27,7 @@ import com.davidbracewell.logging.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
@@ -37,7 +38,8 @@ import java.util.logging.Level;
  *
  * @author David B. Bracewell
  */
-public class TextNormalization {
+public class TextNormalization implements Serializable{
+  private static final long serialVersionUID = 1L;
 
   private static TextNormalization INSTANCE;
 

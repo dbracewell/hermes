@@ -25,17 +25,21 @@ package com.davidbracewell.hermes.preprocessing;
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
 
+import java.io.Serializable;
+
 /**
  * The type Text normalizer.
+ *
  * @author David B. Bracewell
  */
-public abstract class TextNormalizer {
+public abstract class TextNormalizer implements Serializable {
+  private static final long serialVersionUID = 1L;
 
 
   /**
    * Performs a pre-processing operation on the input string in the given input language
    *
-   * @param input The input text
+   * @param input         The input text
    * @param inputLanguage The language of the input
    * @return The post-processed text
    */
@@ -49,7 +53,7 @@ public abstract class TextNormalizer {
   /**
    * Performs a pre-processing operation on the input string in the given input language
    *
-   * @param input The input text
+   * @param input    The input text
    * @param language The language of the input
    * @return The post-processed text
    */

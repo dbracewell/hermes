@@ -28,6 +28,7 @@ import com.davidbracewell.hermes.preprocessing.TextNormalizer;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -43,7 +44,8 @@ import java.util.*;
  *
  * @author David B. Bracewell
  */
-public class DocumentFactory {
+public class DocumentFactory implements Serializable {
+  private static final long serialVersionUID = 1L;
 
   private static volatile DocumentFactory CONFIGURED_INSTANCE;
   private final TextNormalization normalizer;
