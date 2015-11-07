@@ -90,7 +90,7 @@ public final class TokenType extends EnumValue {
     if (isDefined(name())) {
       return index.valueOf(name());
     }
-    return this;
+    return index.register(this);
   }
 
 
@@ -110,5 +110,6 @@ public final class TokenType extends EnumValue {
   public static final TokenType URL = create("URL");
   public static final TokenType HYPHEN = create("HYPHEN");
   public static final TokenType EMOTICON = create("EMOTICON");
+  public static final TokenType HASH_TAG = create("HASH_TAG");
 
 }//END OF TokenType

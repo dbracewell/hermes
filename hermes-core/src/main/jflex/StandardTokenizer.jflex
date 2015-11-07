@@ -85,6 +85,7 @@ COMPANY = {ALPHANUM} ("&"|"@") {ALPHANUM}
 
 NUMBER=[:digit:]+([\.,][:digit:]+)*("st"|"th"|"rd")?
 
+HASHTAG="#" {ALPHANUM}+
 
 //===================================================================================================================
 // Internet Related
@@ -126,6 +127,7 @@ WHITESPACE = [\p{Z}\r\n\p{C}]
 
 %%
 <YYINITIAL>{
+ {HASHTAG}              {return attachToken(TokenType.HASH_TAG);}
  {NUMBER}               {return attachToken(TokenType.NUMBER);}
  {ALPHANUM}({HYPHEN}{ALPHANUM})+ {return attachToken(TokenType.ALPHA_NUMERIC);}
  {HYPHEN}               {return attachToken(TokenType.HYPHEN);}

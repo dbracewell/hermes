@@ -35,7 +35,12 @@ import com.google.common.base.Preconditions;
  */
 public enum POS implements Tag {
 
-  ANY(null, "UNKNOWN"),
+  ANY(null, "UNKNOWN") {
+    @Override
+    public boolean isUniversal() {
+      return true;
+    }
+  },
 
   /**
    * Universal Tag Set
@@ -530,7 +535,7 @@ public enum POS implements Tag {
    */
   public com.davidbracewell.hermes.tag.POS getUniversalTag() {
     if (this == ANY) {
-      return null;
+      return ANY;
     }
     com.davidbracewell.hermes.tag.POS tag = this;
     while (tag != null && tag.getParentType() != ANY && !tag.isUniversal()) {
