@@ -31,10 +31,20 @@ import com.davidbracewell.parsing.ParserTokenType;
 enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
   SCRIPT("<\\s*script\\s*(language\\s*=\\s*\"(?<LANGUAGE>[^\"]+)?\")?\\s*>(?<SCRIPTCONTENT>.*?)<\\s*/\\s*script\\s*>"),
   PATTERNTOKEN("<[@#]?(\\\\.|[^<>])+>[\\+\\?\\*]?"),
+  TAGMATCH("#(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{\\)\\]]+)"),
+  ATTRMATCH("\\#(\"[^\"]+\"|[^\\p{Z}:]+):(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{:\\)\\]]+)"),
+  LEXICON("\\%(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{\\)\\]]+)"),
+  ANNOTATION("\\$\\{(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{:\\)\\]]+)\\}"),
+  PUNCTUATION("\\{PUNCT\\}"),
+  NUMBER("\\{NUMBER\\}"),
+  STOPWORD("\\{STOPWORD\\}"),
+  ANY("\\~(\\d+)?"),
+  NOT("\\^"),
   PATTERNSTART("PATTERN:"),
   MATCHSTART("MATCH:"),
   REGISTER("@REGISTER"),
-  RANGE("\\{\\d+\\s*,\\s*(\\d+|\\*)\\}");
+  RANGE("\\{\\d+\\s*,\\s*(\\d+|\\*)\\}"),
+  PARENT("\\/>");
   private final String pattern;
 
 
@@ -52,3 +62,4 @@ enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
     return pattern;
   }
 }//END OF TokenTypes
+

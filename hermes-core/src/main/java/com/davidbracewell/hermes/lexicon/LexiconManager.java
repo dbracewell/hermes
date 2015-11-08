@@ -21,10 +21,12 @@
 
 package com.davidbracewell.hermes.lexicon;
 
+import com.davidbracewell.logging.Logger;
 import com.google.common.collect.Maps;
 import lombok.NonNull;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -32,8 +34,11 @@ import java.util.concurrent.ConcurrentMap;
  */
 public final class LexiconManager implements Serializable {
   private static final long serialVersionUID = 1L;
+  private static final Logger log = Logger.getLogger(LexiconManager.class);
   private static final ConcurrentMap<String, Lexicon> lexicons = Maps.newConcurrentMap();
 
+
+  private static final Lexicon EMPTY = new SetLexicon(false, Collections.emptySet());
 
   private LexiconManager() {
     throw new IllegalAccessError();
@@ -41,7 +46,13 @@ public final class LexiconManager implements Serializable {
 
 
   public static Lexicon getLexicon(@NonNull String name) {
-    return lexicons.get(name.toLowerCase());
+    String norm = name.toLowerCase();
+    if (lexicons.containsKey(norm)) {
+      return lexicons.get(norm);
+    }
+    log.warn("'{0}' does not exists returning an empty lexicon.", name);
+    lexicons.put(norm, EMPTY);
+    return EMPTY;
   }
 
   public static void register(@NonNull String name, @NonNull Lexicon lexicon) {

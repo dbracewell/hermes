@@ -23,8 +23,10 @@ package com.davidbracewell.hermes.filter;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.Types;
 import com.google.common.collect.Maps;
 
 import java.io.Serializable;
@@ -76,10 +78,10 @@ public abstract class StopWords implements Predicate<HString> {
   public boolean isStopWord(HString text) {
     if (text == null) {
       return true;
+    } else if (text.isInstance(Types.TOKEN)) {
+      return isTokenStopWord(Cast.as(text));
     }
-
-    return text.isEmpty() ||
-      text.tokens().stream().allMatch(this::isTokenStopWord);
+    return text.tokens().stream().allMatch(this::isTokenStopWord);
 
   }
 

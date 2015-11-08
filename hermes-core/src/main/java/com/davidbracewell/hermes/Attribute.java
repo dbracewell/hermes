@@ -75,6 +75,8 @@ public final class Attribute extends EnumValue {
   private static final DynamicEnum<Attribute> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
 
+  public static Attribute ROOT = Attribute.create("ROOT");
+
   private Attribute(String name) {
     super(name);
   }

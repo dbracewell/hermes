@@ -40,6 +40,8 @@ public final class EntityType extends EnumValue {
    * The constant ENTITY.
    */
   public static EntityType ENTITY = new EntityType("ENTITY");
+  public static EntityType PERSON = new EntityType("PERSON");
+  public static EntityType NUMBER = new EntityType("NUMBER");
 
   private EntityType parent = null;
 
@@ -137,6 +139,5 @@ public final class EntityType extends EnumValue {
     Object o = index.register(this);
     return o;
   }
-
 
 }//END OF EntityType

@@ -21,15 +21,13 @@
 
 package com.davidbracewell.hermes.regex;
 
-import com.davidbracewell.Tag;
-import com.davidbracewell.conversion.Val;
+import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attribute;
-import com.davidbracewell.hermes.lexicon.Lexicon;
-import com.davidbracewell.hermes.lexicon.LexiconManager;
-import com.davidbracewell.string.StringPredicates;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Types;
 
 import java.io.Serializable;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -40,10 +38,12 @@ interface TransitionFunction extends Serializable {
   /**
    * Determines if the consumer matches on a given token.
    *
-   * @param token the token to check
+   * @param input the token to check
    * @return True if the consumer matches, i.e. can consume, the given token
    */
-  int matches(Annotation token);
+  int matches(Annotation input);
+
+  int nonMatch(Annotation input);
 
   /**
    * Construct an NFA for the consumer.
@@ -52,147 +52,95 @@ interface TransitionFunction extends Serializable {
    */
   NFA construct();
 
-
-  final class ContentEquals implements TransitionFunction, Serializable {
+  final class PredicateMatcher implements TransitionFunction, Serializable {
     private static final long serialVersionUID = 1L;
-    final Predicate<CharSequence> matcher;
+    final AnnotationType type;
+    final boolean isParent;
+    final String pattern;
+    final Predicate<Annotation> predicate;
 
-    public ContentEquals(String token) {
-      if (token.startsWith("(?i)")) {
-        matcher = StringPredicates.MATCHES(token.substring(4), false);
-      } else {
-        matcher = StringPredicates.MATCHES(token);
+    public PredicateMatcher(AnnotationType type, String pattern, SerializablePredicate<Annotation> predicate, boolean isParent) {
+      this.isParent = isParent;
+      this.type = type;
+      this.pattern = pattern;
+      this.predicate = predicate;
+    }
+
+    @Override
+    public int matches(Annotation input) {
+      int m = 0;
+      if (isParent && input != null) {
+        input = input.getParent();
       }
-    }
-
-    @Override
-    public int matches(Annotation input) {
-      return matcher.test(input) ? 1 : 0;
-    }
-
-    public NFA construct() {
-      NFA nfa = new NFA();
-      nfa.start.connect(nfa.end, this);
-      return nfa;
-    }
-
-    @Override
-    public String toString() {
-      return "\"" + matcher.toString() + "\"";
-    }
-
-  }//END OF ContentEquals
-
-  final class LexiconMatch implements TransitionFunction, Serializable {
-    private static final long serialVersionUID = 1L;
-    final Lexicon lexicon;
-    final String lexiconName;
-
-    public LexiconMatch(String token) {
-      this.lexicon = LexiconManager.getLexicon(token);
-      this.lexiconName = token;
-    }
-
-    @Override
-    public int matches(Annotation input) {
-      if (lexicon == null) {
+      if (input == null) {
         return 0;
       }
-      return lexicon.contains(input) ? 1 : 0;
-    }
-
-    public NFA construct() {
-      NFA nfa = new NFA();
-      nfa.start.connect(nfa.end, this);
-      return nfa;
-    }
-
-    @Override
-    public String toString() {
-      return "\"%" + lexiconName + "\"";
-    }
-
-  }//END OF ContentEquals
-
-  final class ContentRegexMatch implements TransitionFunction, Serializable {
-    private static final long serialVersionUID = 1L;
-    final Predicate<CharSequence> matcher;
-
-    public ContentRegexMatch(String token) {
-      matcher = StringPredicates.REGEX_MATCH(token);
-    }
-
-    @Override
-    public int matches(Annotation input) {
-      return matcher.test(input) ? 1 : 0;
-    }
-
-    public NFA construct() {
-      NFA nfa = new NFA();
-      nfa.start.connect(nfa.end, this);
-      return nfa;
-    }
-
-    @Override
-    public String toString() {
-      return "\"@" + matcher.toString() + "\"";
-    }
-
-  }//END OF ContentRegexMatch
-
-  final class TagMatch implements TransitionFunction, Serializable {
-    private static final long serialVersionUID = 1L;
-    final Tag tag;
-
-    public TagMatch(Tag tag) {
-      this.tag = tag;
-    }
-
-    @Override
-    public int matches(Annotation input) {
-      return input.getTag().filter(t -> t.isInstance(tag)).isPresent() ? 1 : 0;
-    }
-
-    public NFA construct() {
-      NFA nfa = new NFA();
-      nfa.start.connect(nfa.end, this);
-      return nfa;
-    }
-
-    @Override
-    public String toString() {
-      String tagClass = tag.getClass().getName().replaceFirst("\\$\\d*$", "");
-      return "\"#" + tagClass + "." + tag.name() + "\"";
-    }
-
-  }//END OF TagMatch
-
-  final class AttributeMatch implements TransitionFunction, Serializable {
-    private static final long serialVersionUID = 1L;
-    final Attribute attribute;
-    final String value;
-
-    public AttributeMatch(Attribute attribute, String value) {
-      this.attribute = attribute;
-      this.value = value;
-    }
-
-    @Override
-    public int matches(Annotation input) {
-      if (input.contains(attribute)) {
-        Val v = input.get(attribute);
-        if (v.equals(value)) {
-          return 1;
+      for (Annotation a : input.getStartingHere(type)) {
+        if (predicate.test(a)) {
+          m = Math.max(m, a.tokenLength());
         }
+      }
+      return m;
+    }
 
-        if (v.getWrappedClass() != String.class) {
-          Object o = Val.of(value).as(v.getWrappedClass());
-          return v.equals(o) ? 1 : 0;
+    @Override
+    public int nonMatch(Annotation input) {
+      int m = 0;
+      if (isParent && input != null) {
+        input = input.getParent();
+      }
+      if (input == null) {
+        return 1;
+      }
+      for (Annotation a : input.getStartingHere(type)) {
+        if (!predicate.test(a)) {
+          m = Math.max(m, a.tokenLength());
         }
+      }
+      return m;
+    }
 
+    @Override
+    public NFA construct() {
+      NFA nfa = new NFA();
+      nfa.start.connect(nfa.end, this);
+      return nfa;
+    }
+
+    @Override
+    public String toString() {
+      String str = "";
+      if (isParent) {
+        str = "/> ";
+      }
+      if (!type.equals(Types.TOKEN)) {
+        str += "{" + type.name() + "} ";
+      }
+      return str + pattern;
+    }
+  }
+
+  final class LogicStatement implements TransitionFunction, Serializable {
+    private static final long serialVersionUID = 1L;
+    final Function<Annotation, Integer> matcher;
+    final String pattern;
+
+    public LogicStatement(String pattern, Function<Annotation, Integer> matcher) {
+      this.pattern = pattern;
+      this.matcher = matcher;
+    }
+
+    @Override
+    public int matches(Annotation input) {
+      return matcher.apply(input);
+    }
+
+    @Override
+    public int nonMatch(Annotation input) {
+      if (matcher.apply(input) > 0) {
         return 0;
       }
-      return 0;
+      return 1;
     }
 
     public NFA construct() {
@@ -203,10 +151,44 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public String toString() {
-      return "\"$" + attribute.name() + ":" + value + "\"";
+      return "[" + pattern + "]";
+    }
+  }//END OF LogicStatement
+
+  final class Not implements TransitionFunction, Serializable {
+    private static final long serialVersionUID = 1L;
+    TransitionFunction c1;
+
+    public Not(TransitionFunction c1) {
+      this.c1 = c1;
     }
 
-  }//END OF TagMatch
+    @Override
+    public int matches(Annotation token) {
+      return c1.nonMatch(token);
+    }
+
+    @Override
+    public int nonMatch(Annotation input) {
+      return c1.matches(input);
+    }
+
+    @Override
+    public NFA construct() {
+      NFA parent = new NFA();
+      NFA child1 = c1.construct();
+      child1.end.isAccept = false;
+      parent.start.connect(child1.start);
+      child1.start.connect(parent.end, this);
+      return parent;
+    }
+
+    @Override
+    public String toString() {
+      return "^(" + c1 + ")";
+    }
+
+  }//END OF Alternation
 
   final class Alternation implements TransitionFunction, Serializable {
     private static final long serialVersionUID = 1L;
@@ -222,6 +204,11 @@ interface TransitionFunction extends Serializable {
     @Override
     public int matches(Annotation token) {
       return Math.max(c1.matches(token), c2.matches(token));
+    }
+
+    @Override
+    public int nonMatch(Annotation input) {
+      return Math.max(c1.nonMatch(input), c2.nonMatch(input));
     }
 
     @Override
@@ -265,6 +252,28 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
+    public int nonMatch(Annotation input) {
+      int i = c1.matches(input);
+      if (i > 0) {
+        Annotation next = input.next();
+        for (int j = 1; j < i; j++) {
+          next = next.next();
+        }
+        if (next.isEmpty()) {
+          return i;
+        }
+        return c2.nonMatch(next);
+      }
+
+      i = c1.nonMatch(input);
+      Annotation next = input.next();
+      for (int j = 1; j < i; j++) {
+        next = next.next();
+      }
+      return i + Math.max(c2.matches(next), c2.nonMatch(next));
+    }
+
+    @Override
     public NFA construct() {
       NFA base = new NFA();
       NFA nfa1 = c1.construct();
@@ -304,6 +313,11 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
+    public int nonMatch(Annotation input) {
+      return child.nonMatch(input);
+    }
+
+    @Override
     public NFA construct() {
       NFA nfa = new NFA();
 
@@ -336,6 +350,12 @@ interface TransitionFunction extends Serializable {
     @Override
     public int matches(Annotation input) {
       return child.matches(input);
+    }
+
+
+    @Override
+    public int nonMatch(Annotation input) {
+      return child.nonMatch(input);
     }
 
     public NFA construct() {
@@ -372,6 +392,13 @@ interface TransitionFunction extends Serializable {
     public int matches(Annotation token) {
       return child.matches(token);
     }
+
+
+    @Override
+    public int nonMatch(Annotation input) {
+      return child.nonMatch(input);
+    }
+
 
     @Override
     public NFA construct() {
@@ -411,6 +438,13 @@ interface TransitionFunction extends Serializable {
     public int matches(Annotation token) {
       return child.matches(token);
     }
+
+
+    @Override
+    public int nonMatch(Annotation input) {
+      return child.nonMatch(input);
+    }
+
 
     @Override
     public NFA construct() {

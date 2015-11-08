@@ -95,7 +95,7 @@ public class EnglishStopWords extends StopWords {
   public boolean isStopWord(String word) {
     return Strings.isNullOrEmpty(word) ||
       stopWords.contains(word.toLowerCase()) ||
-      StringUtils.isNonAlphaNumeric(word);
+      !StringUtils.hasLetter(word);
   }
 
 
