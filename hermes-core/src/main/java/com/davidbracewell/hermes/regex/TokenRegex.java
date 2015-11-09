@@ -87,7 +87,7 @@ public final class TokenRegex implements Serializable {
       register(CommonTypes.OPENBRACKET, new LogicGroupHandler(14));
       register(CommonTypes.PIPE, new BinaryOperatorHandler(7, false));
       register(CommonTypes.AMPERSAND, new BinaryOperatorHandler(7, false));
-      register(RegexTokenTypes.PARENT, new PrefixOperatorHandler(12));
+      register(RegexTokenTypes.PARENT, new PrefixOperatorHandler(1));
       register(RegexTokenTypes.RANGE, new PostfixOperatorHandler(8));
     }
   };
