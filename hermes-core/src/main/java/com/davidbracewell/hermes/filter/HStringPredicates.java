@@ -5,6 +5,7 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableBiPredicate;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.tag.StringTag;
 import com.davidbracewell.string.StringPredicates;
 import lombok.NonNull;
 
@@ -69,6 +70,13 @@ public interface HStringPredicates {
     return contentMatch(cs -> regex.matcher(cs).find());
   }
 
+  static SerializablePredicate<HString> contentRegexMatch(@NonNull final String pattern, boolean caseSensitive) {
+    if (caseSensitive) {
+      return contentRegexMatch(pattern);
+    }
+    return contentRegexMatch(pattern, Pattern.CASE_INSENSITIVE);
+  }
+
   /**
    * Content regex match serializable predicate.
    *
@@ -92,6 +100,17 @@ public interface HStringPredicates {
     return hString -> {
       if (hString.isAnnotation()) {
         return Cast.<Annotation>as(hString).getTag().filter(tag -> tag.isInstance(target)).isPresent();
+      }
+      return hString.get(Attrs.TAG).equals(target);
+    };
+  }
+
+  static SerializablePredicate<HString> hasTagInstance(@NonNull final String target) {
+    return hString -> {
+      if (hString.isAnnotation()) {
+        Annotation annotation = Cast.as(hString);
+        Tag tag = (annotation.getType().getTagAttribute() == null) ? new StringTag(target) : annotation.getType().getTagAttribute().getValueType().convert(target);
+        return annotation.getTag().filter(t -> tag.isInstance(tag)).isPresent();
       }
       return hString.get(Attrs.TAG).equals(target);
     };

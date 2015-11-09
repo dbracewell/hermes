@@ -24,7 +24,6 @@ package com.davidbracewell.hermes.regex;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Types;
 
 import java.io.Serializable;
 import java.util.function.Function;
@@ -52,52 +51,23 @@ interface TransitionFunction extends Serializable {
    */
   NFA construct();
 
-  final class PredicateMatcher implements TransitionFunction, Serializable {
-    private static final long serialVersionUID = 1L;
-    final AnnotationType type;
-    final boolean isParent;
-    final String pattern;
-    final Predicate<Annotation> predicate;
 
-    public PredicateMatcher(AnnotationType type, String pattern, SerializablePredicate<Annotation> predicate, boolean isParent) {
-      this.isParent = isParent;
-      this.type = type;
-      this.pattern = pattern;
-      this.predicate = predicate;
+  final class ParentMatcher implements TransitionFunction, Serializable {
+    private static final long serialVersionUID = 1L;
+    final TransitionFunction child;
+
+    public ParentMatcher(TransitionFunction child) {
+      this.child = child;
     }
 
     @Override
     public int matches(Annotation input) {
-      int m = 0;
-      if (isParent && input != null) {
-        input = input.getParent();
-      }
-      if (input == null) {
-        return 0;
-      }
-      for (Annotation a : input.getStartingHere(type)) {
-        if (predicate.test(a)) {
-          m = Math.max(m, a.tokenLength());
-        }
-      }
-      return m;
+      return input.getParent().map(child::matches).orElse(0);
     }
 
     @Override
     public int nonMatch(Annotation input) {
-      int m = 0;
-      if (isParent && input != null) {
-        input = input.getParent();
-      }
-      if (input == null) {
-        return 1;
-      }
-      for (Annotation a : input.getStartingHere(type)) {
-        if (!predicate.test(a)) {
-          m = Math.max(m, a.tokenLength());
-        }
-      }
-      return m;
+      return input.getParent().map(child::nonMatch).orElse(1);
     }
 
     @Override
@@ -109,14 +79,81 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public String toString() {
-      String str = "";
-      if (isParent) {
-        str = "/> ";
+      return "/> " + child.toString();
+    }
+  }
+
+  final class AnnotationMatcher implements TransitionFunction, Serializable {
+    private static final long serialVersionUID = 1L;
+    final AnnotationType type;
+    final TransitionFunction child;
+
+    public AnnotationMatcher(AnnotationType type, TransitionFunction child) {
+      this.child = child;
+      this.type = type;
+    }
+
+    @Override
+    public int matches(Annotation input) {
+      int max = 0;
+      for (Annotation a : input.get(type)) {
+        max = Math.max(child.matches(a), max);
       }
-      if (!type.equals(Types.TOKEN)) {
-        str += "{" + type.name() + "} ";
+      return max;
+    }
+
+    @Override
+    public int nonMatch(Annotation input) {
+      int max = 0;
+      for (Annotation a : input.get(type)) {
+        max = Math.max(child.nonMatch(a), max);
       }
-      return str + pattern;
+      return max;
+    }
+
+    @Override
+    public NFA construct() {
+      NFA nfa = new NFA();
+      nfa.start.connect(nfa.end, this);
+      return nfa;
+    }
+
+    @Override
+    public String toString() {
+      return "${" + type.name() + "} " + child.toString();
+    }
+  }
+
+  final class PredicateMatcher implements TransitionFunction, Serializable {
+    private static final long serialVersionUID = 1L;
+    final String pattern;
+    final Predicate<? super Annotation> predicate;
+
+    public PredicateMatcher(String pattern, SerializablePredicate<? super Annotation> predicate) {
+      this.pattern = pattern;
+      this.predicate = predicate;
+    }
+
+    @Override
+    public int matches(Annotation input) {
+      return predicate.test(input) ? input.tokenLength() : 0;
+    }
+
+    @Override
+    public int nonMatch(Annotation input) {
+      return predicate.test(input) ? 0 : input.tokenLength();
+    }
+
+    @Override
+    public NFA construct() {
+      NFA nfa = new NFA();
+      nfa.start.connect(nfa.end, this);
+      return nfa;
+    }
+
+    @Override
+    public String toString() {
+      return pattern;
     }
   }
 

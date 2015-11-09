@@ -41,6 +41,7 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class EnglishStopWords extends StopWords {
+  private static final long serialVersionUID = 1L;
   private static volatile StopWords INSTANCE;
   private final Set<String> stopWords = new HashSet<>();
 

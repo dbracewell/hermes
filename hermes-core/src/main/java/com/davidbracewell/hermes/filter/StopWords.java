@@ -24,6 +24,7 @@ package com.davidbracewell.hermes.filter;
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
@@ -38,7 +39,8 @@ import java.util.function.Predicate;
  *
  * @author David B. Bracewell
  */
-public abstract class StopWords implements Predicate<HString> {
+public abstract class StopWords implements SerializablePredicate<HString> {
+  private static final long serialVersionUID = 1L;
 
   private static volatile Map<Language, StopWords> stopWordLists = Maps.newConcurrentMap();
 

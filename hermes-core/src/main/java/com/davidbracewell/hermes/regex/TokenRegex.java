@@ -21,15 +21,14 @@
 
 package com.davidbracewell.hermes.regex;
 
-import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
-import com.davidbracewell.function.Serialized;
+import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.filter.HStringPredicates;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.tag.POS;
-import com.davidbracewell.hermes.tag.StringTag;
 import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.parsing.*;
 import com.davidbracewell.parsing.expressions.*;
@@ -42,8 +41,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 
 /**
@@ -70,7 +67,6 @@ public final class TokenRegex implements Serializable {
   private static final Grammar RPGrammar = new Grammar() {
     {
       register(CommonTypes.OPENPARENS, new SequenceGroupHandler(CommonTypes.CLOSEPARENS));
-      register(CommonTypes.OPENBRACKET, new GroupHandler(CommonTypes.CLOSEBRACKET));
       register(CommonTypes.PLUS, new PostfixOperatorHandler(8));
       register(CommonTypes.MULTIPLY, new PostfixOperatorHandler(8));
       register(CommonTypes.QUESTION, new PostfixOperatorHandler(8));
@@ -125,6 +121,7 @@ public final class TokenRegex implements Serializable {
     this.pattern = transitionFunction.toString();
   }
 
+
   /**
    * Compiles the regular expression
    *
@@ -141,21 +138,21 @@ public final class TokenRegex implements Serializable {
     TransitionFunction top = null;
     while ((exp = p.next()) != null) {
       if (top == null) {
-        top = consumerize(exp, Types.TOKEN, false);
+        top = consumerize(exp);
       } else {
-        top = new TransitionFunction.Sequence(top, consumerize(exp, Types.TOKEN, false));
+        top = new TransitionFunction.Sequence(top, consumerize(exp));
       }
     }
     return new TokenRegex(top);
   }
 
-  private static TransitionFunction handleMultivalue(MultivalueExpression exp, AnnotationType type, boolean isParent) throws ParseException {
+  private static TransitionFunction handleMultivalue(MultivalueExpression exp) throws ParseException {
     if (exp.match(CommonTypes.OPENPARENS)) {
       List<Expression> expressions = exp.expressions;
       Preconditions.checkState(!expressions.isEmpty());
       TransitionFunction c = null;
       for (Expression e : expressions) {
-        TransitionFunction cprime = consumerize(e, type, isParent);
+        TransitionFunction cprime = consumerize(e);
         if (c == null) {
           c = cprime;
         } else {
@@ -163,29 +160,26 @@ public final class TokenRegex implements Serializable {
         }
       }
       return c;
-    } else if (exp.match(CommonTypes.OPENBRACKET)) {
-      Expression child = exp.expressions.get(0);
-      return new TransitionFunction.LogicStatement(child.toString(), toFunction(child, type, isParent));
     }
     throw new ParseException("Unknown expression: " + exp.toString());
   }
 
-  private static SerializableFunction<Annotation, Integer> toFunction(Expression exp, AnnotationType type, boolean isParent) throws ParseException {
+  private static SerializableFunction<Annotation, Integer> toFunction(Expression exp) throws ParseException {
     if (exp.isInstance(ValueExpression.class)) {
-      TransitionFunction tf = consumerize(exp, type, isParent);
+      TransitionFunction tf = consumerize(exp);
       return a -> tf.matches(a);
     } else if (exp.match(RegexTokenTypes.NOT)) {
-      TransitionFunction tf = consumerize(exp.as(PrefixExpression.class).right, type, isParent);
+      TransitionFunction tf = consumerize(exp.as(PrefixExpression.class).right);
       return a -> tf.nonMatch(a);
     } else if (exp.match(CommonTypes.PIPE)) {
       BinaryOperatorExpression boe = exp.as(BinaryOperatorExpression.class);
-      TransitionFunction tf1 = consumerize(boe.left, type, isParent);
-      TransitionFunction tf2 = consumerize(boe.right, type, isParent);
+      TransitionFunction tf1 = consumerize(boe.left);
+      TransitionFunction tf2 = consumerize(boe.right);
       return a -> Math.max(tf1.matches(a), tf2.matches(a));
     } else if (exp.match(CommonTypes.AMPERSAND)) {
       BinaryOperatorExpression boe = exp.as(BinaryOperatorExpression.class);
-      TransitionFunction tf1 = consumerize(boe.left, type, isParent);
-      TransitionFunction tf2 = consumerize(boe.right, type, isParent);
+      TransitionFunction tf1 = consumerize(boe.left);
+      TransitionFunction tf2 = consumerize(boe.right);
       return a -> {
         int i = tf1.matches(a);
         int j = tf2.matches(a);
@@ -195,21 +189,67 @@ public final class TokenRegex implements Serializable {
         return 0;
       };
     } else if (exp.match(RegexTokenTypes.ANNOTATION)) {
-      PrefixExpression pe = exp.as(PrefixExpression.class);
-      String typeName = pe.operator.getText().substring(2);
-      TransitionFunction tf = consumerize(pe.right, AnnotationType.create(typeName.substring(0, typeName.length() - 1)), isParent);
+      TransitionFunction tf = consumerize(exp);
       return a -> tf.matches(a);
     }
     throw new ParseException("Unknown expression: " + exp.toString());
   }
 
-  private static TransitionFunction handlePostfix(PostfixExpression postfix, AnnotationType type, boolean isParent) throws ParseException {
+
+  private static SerializablePredicate<? super Annotation> valueExpressionToPredicate(Expression exp) throws ParseException {
+
+    if (exp.match(RegexTokenTypes.NUMBER)) {
+      return a -> StringPredicates.IS_DIGIT.test(a) || a.getPOS().isInstance(POS.NUMBER) || TokenType.NUMBER.equals(a.get(Attrs.TOKEN_TYPE).cast());
+    }
+
+    if (exp.match(RegexTokenTypes.LEXICON)) {
+      String lexiconName = exp.toString().substring(1).replaceFirst("^\"", "").replaceFirst("\"$", "");
+      return a -> LexiconManager.getLexicon(lexiconName).contains(a);
+    }
+
+    if (exp.match(RegexTokenTypes.PATTERNTOKEN)) {
+      String pattern = exp.toString();
+      pattern = pattern.substring(1, pattern.length() - 1);
+      boolean isRegex = pattern.startsWith("@") && pattern.length() > 1;
+      if (isRegex) pattern = pattern.substring(1);
+      boolean isCaseSensitive = !pattern.startsWith("(?i)");
+      if (!isCaseSensitive) pattern = pattern.substring(4);
+
+      if (isRegex) {
+        return HStringPredicates.contentRegexMatch(pattern, isCaseSensitive);
+      }
+      return HStringPredicates.contentMatch(pattern, isCaseSensitive);
+    }
+
+    if (exp.match(RegexTokenTypes.TAGMATCH)) {
+      return HStringPredicates.hasTagInstance(exp.toString().substring(1));
+    }
+
+    if (exp.match(RegexTokenTypes.ATTRMATCH)) {
+      List<String> parts = StringUtils.split(exp.toString().substring(1), ':');
+      Attribute attrName = Attribute.create(parts.get(0));
+      Object attrValue = attrName.getValueType().convert(parts.get(1));
+      return HStringPredicates.attributeMatch(attrName, attrValue);
+    }
+
+    if (exp.match(RegexTokenTypes.PUNCTUATION)) {
+      return StringPredicates.IS_PUNCTUATION;
+    }
+
+    if (exp.match(RegexTokenTypes.STOPWORD)) {
+      return a -> StopWords.getInstance(a.getLanguage()).isStopWord(a);
+    }
+
+    throw new ParseException("Unknown expression: " + exp.toString());
+  }
+
+  private static TransitionFunction handlePostfix(PostfixExpression postfix) throws ParseException {
     if (postfix.operator.type.isInstance(CommonTypes.QUESTION)) {
-      return new TransitionFunction.ZeroOrOne(consumerize(postfix.left, type, isParent));
+      return new TransitionFunction.ZeroOrOne(consumerize(postfix.left));
     } else if (postfix.operator.type.isInstance(CommonTypes.PLUS)) {
-      return new TransitionFunction.OneOrMore(consumerize(postfix.left, type, isParent));
+      return new TransitionFunction.OneOrMore(consumerize(postfix.left));
     } else if (postfix.operator.type.isInstance(CommonTypes.MULTIPLY)) {
-      return new TransitionFunction.KleeneStar(consumerize(postfix.left, type, isParent));
+      return new TransitionFunction.KleeneStar(consumerize(postfix.left));
     } else if (postfix.operator.type.isInstance(RegexTokenTypes.RANGE)) {
       String text = postfix.operator.getText().replace("{", "").replace("}", "");
       String[] parts = text.split("\\s*,\\s*");
@@ -237,121 +277,54 @@ public final class TokenRegex implements Serializable {
       }
 
       if (low == 0 && high == Integer.MAX_VALUE) {
-        return new TransitionFunction.KleeneStar(consumerize(postfix.left, type, isParent));
+        return new TransitionFunction.KleeneStar(consumerize(postfix.left));
       } else if (low == 0 && high == 1) {
-        return new TransitionFunction.ZeroOrOne(consumerize(postfix.left, type, isParent));
+        return new TransitionFunction.ZeroOrOne(consumerize(postfix.left));
       } else if (low == 1 && high == Integer.MAX_VALUE) {
-        return new TransitionFunction.OneOrMore(consumerize(postfix.left, type, isParent));
+        return new TransitionFunction.OneOrMore(consumerize(postfix.left));
       }
-      return new TransitionFunction.Range(consumerize(postfix.left, type, isParent), low, high);
+      return new TransitionFunction.Range(consumerize(postfix.left), low, high);
     }
     throw new ParseException("Error in regular expression");
   }
 
-  private static TransitionFunction handleToken(Expression exp, AnnotationType type, boolean isParent) throws ParseException {
-    //unescape escaped characters
-    String token = exp.toString().replaceAll("\\\\(.)", "$1");
-    if (token.length() == 2) {
-      throw new ParseException("Illegal Parse Token " + token);
-    }
-    token = token.substring(1, token.length() - 1);
-
-    boolean caseSensitive = !token.startsWith("(?i)");
-    if (!caseSensitive) {
-      token = token.substring(4);
-    }
-
-    Predicate<CharSequence> predicate;
-
-    if (StringPredicates.HAS_LETTER_OR_DIGIT.test(token) || (token.startsWith("@") && token.length() > 1)) {
-      switch (token.charAt(0)) {
-        case '@':
-          token = token.substring(1);
-          Pattern pattern = (caseSensitive ? Pattern.compile(token) : Pattern.compile(token, Pattern.CASE_INSENSITIVE));
-          predicate = Serialized.predicate(s -> pattern.matcher(s).find());
-          break;
-        default:
-          predicate = StringPredicates.MATCHES(token, caseSensitive);
-      }
-    } else {
-      predicate = StringPredicates.MATCHES(token, caseSensitive);
-    }
-
-    return new TransitionFunction.PredicateMatcher(type, exp.toString(), a -> predicate.test(a), isParent);
-  }
-
-  private static TransitionFunction handleAlternation(BinaryOperatorExpression boe, AnnotationType type, boolean isParent) throws ParseException {
-    return new TransitionFunction.Alternation(consumerize(boe.left, type, isParent), consumerize(boe.right, type, isParent));
-  }
-
-  private static TransitionFunction consumerize(Expression exp, AnnotationType type, boolean isParent) throws ParseException {
-
-    if (exp.isInstance(MultivalueExpression.class)) {
-      return handleMultivalue(exp.as(MultivalueExpression.class), type, isParent);
-    }
-
-    if (exp.isInstance(PostfixExpression.class)) {
-      return handlePostfix(exp.as(PostfixExpression.class), type, isParent);
-    }
-
+  private static TransitionFunction handlePrefix(PrefixExpression exp) throws ParseException {
     if (exp.match(RegexTokenTypes.PARENT)) {
-      PrefixExpression pe = exp.as(PrefixExpression.class);
-      return consumerize(pe.right, type, true);
+      return new TransitionFunction.ParentMatcher(consumerize(exp.right));
     }
-
 
     if (exp.match(RegexTokenTypes.NOT)) {
-      PrefixExpression pe = exp.as(PrefixExpression.class);
-      return new TransitionFunction.Not(consumerize(pe.right, type, isParent));
+      return new TransitionFunction.Not(consumerize(exp.right));
     }
 
     if (exp.match(RegexTokenTypes.ANNOTATION)) {
-      PrefixExpression pe = exp.as(PrefixExpression.class);
-      String typeName = pe.operator.getText().substring(2);
-      return consumerize(pe.right, AnnotationType.create(typeName.substring(0, typeName.length() - 1)), isParent);
+      String typeName = exp.operator.getText().substring(2).replaceFirst("\\}$", "");
+      return new TransitionFunction.AnnotationMatcher(AnnotationType.create(typeName), consumerize(exp.right));
     }
 
-    if (exp.match(RegexTokenTypes.PATTERNTOKEN)) {
-      return handleToken(exp, type, isParent);
+    throw new ParseException("Unknown expression: " + exp.toString());
+  }
+
+  private static TransitionFunction consumerize(Expression exp) throws ParseException {
+
+    //Handle Sequences
+    if (exp.isInstance(MultivalueExpression.class)) {
+      return handleMultivalue(exp.as(MultivalueExpression.class));
     }
 
-    if (exp.match(RegexTokenTypes.TAGMATCH)) {
-      String strTag = exp.toString().substring(1);
-      Tag tag = (type.getTagAttribute() == null) ? new StringTag(strTag) : type.getTagAttribute().getValueType().convert(strTag);
-      return new TransitionFunction.PredicateMatcher(type, exp.toString(), a -> a.getTag().filter(t -> t.isInstance(tag)).isPresent(), isParent);
+    //Handle +, ?, *, {n,m}
+    if (exp.isInstance(PostfixExpression.class)) {
+      return handlePostfix(exp.as(PostfixExpression.class));
     }
 
-    if (exp.match(RegexTokenTypes.ATTRMATCH)) {
-      List<String> parts = StringUtils.split(exp.toString().substring(1), ':');
-      Attribute attrName = Attribute.create(parts.get(0));
-      Object attrValue = attrName.getValueType().convert(parts.get(1));
-      boolean isTag = Tag.class.isAssignableFrom(attrName.getValueType().getType());
-
-      return new TransitionFunction.PredicateMatcher(type, exp.toString(), a -> {
-        if (!a.contains(attrName)) {
-          return false;
-        } else if (isTag) {
-          return a.get(attrName).as(Tag.class).isInstance(Cast.<Tag>as(attrValue));
-        }
-        return a.get(attrName).equals(attrValue);
-      }, isParent);
+    //Handle Parent, Annotation, Not
+    if (exp.isInstance(PrefixExpression.class)) {
+      return handlePrefix(exp.as(PrefixExpression.class));
     }
 
-    if (exp.match(RegexTokenTypes.PUNCTUATION)) {
-      return new TransitionFunction.PredicateMatcher(type, "{PUNCT}", a -> StringPredicates.IS_PUNCTUATION.test(a), isParent);
-    }
-
-    if (exp.match(RegexTokenTypes.NUMBER)) {
-      return new TransitionFunction.PredicateMatcher(
-        type,
-        "{NUMBER}",
-        a -> StringPredicates.IS_DIGIT.test(a) || a.getPOS().isInstance(POS.NUMBER) || TokenType.NUMBER.equals(a.get(Attrs.TOKEN_TYPE).cast()),
-        isParent
-      );
-    }
-
-    if (exp.match(RegexTokenTypes.STOPWORD)) {
-      return new TransitionFunction.PredicateMatcher(type, "{STOPWORD}", a -> StopWords.getInstance(a.getLanguage()).isStopWord(a), isParent);
+    if (exp.match(CommonTypes.PIPE)) {
+      BinaryOperatorExpression boe = Cast.as(exp);
+      return new TransitionFunction.Alternation(consumerize(boe.left), consumerize(boe.right));
     }
 
     if (exp.match(RegexTokenTypes.ANY)) {
@@ -360,17 +333,14 @@ public final class TokenRegex implements Serializable {
       if (s.length() > 1) {
         high = Integer.parseInt(s.substring(1));
       }
-      return new TransitionFunction.Range(new TransitionFunction.PredicateMatcher(type, "<.*>", a -> true, isParent), 0, high);
+      return new TransitionFunction.Range(new TransitionFunction.PredicateMatcher("<.*>", a -> true), 0, high);
     }
 
-    if (exp.match(RegexTokenTypes.LEXICON)) {
-      String lexiconName = exp.toString().substring(1).replaceFirst("^\"", "").replaceFirst("\"$", "");
-      return new TransitionFunction.PredicateMatcher(type, exp.toString(), a -> LexiconManager.getLexicon(lexiconName).contains(a), isParent);
+
+    if (exp.isInstance(ValueExpression.class)) {
+      return new TransitionFunction.PredicateMatcher(exp.toString(), valueExpressionToPredicate(exp));
     }
 
-    if (exp.match(CommonTypes.PIPE)) {
-      return handleAlternation(exp.as(BinaryOperatorExpression.class), type, isParent);
-    }
 
     throw new IllegalArgumentException("Unknown expression: " + exp.toString());
   }
