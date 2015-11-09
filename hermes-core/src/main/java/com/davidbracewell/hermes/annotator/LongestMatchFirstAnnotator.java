@@ -12,7 +12,7 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public abstract class LongestMatchFirstAnnotator extends SentenceLevelAnnotator {
-
+  private static final long serialVersionUID = 1L;
   final int maxSpanLength;
 
   public LongestMatchFirstAnnotator(int maxSpanLength) {
