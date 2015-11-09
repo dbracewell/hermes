@@ -28,6 +28,7 @@ import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.google.common.collect.Sets;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
 
@@ -38,7 +39,7 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public class StemAnnotator implements Annotator {
+public class StemAnnotator implements Annotator, Serializable {
   private static final long serialVersionUID = 1L;
 
   @Override

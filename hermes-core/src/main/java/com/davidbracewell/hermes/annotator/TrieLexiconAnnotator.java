@@ -30,6 +30,7 @@ import com.davidbracewell.io.resource.Resource;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,8 +41,8 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public class TrieLexiconAnnotator implements Annotator {
-
+public class TrieLexiconAnnotator implements Annotator, Serializable{
+  private static final long serialVersionUID = 1L;
   private final AnnotationType type;
   private final TrieLexicon lexicon;
 

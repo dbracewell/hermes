@@ -27,6 +27,7 @@ import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.ibm.icu.text.Transliterator;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
 
@@ -37,8 +38,8 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public class TransliterationAnnotator implements Annotator {
-
+public class TransliterationAnnotator implements Annotator, Serializable {
+  private static final long serialVersionUID = 1L;
   private final String ID;
 
   /**
