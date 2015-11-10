@@ -23,16 +23,19 @@ package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
+import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.parsing.*;
+import com.davidbracewell.parsing.CommonTypes;
+import com.davidbracewell.parsing.ParseException;
+import com.davidbracewell.parsing.Parser;
 import com.davidbracewell.parsing.expressions.*;
-import com.davidbracewell.parsing.handlers.*;
 import com.google.common.base.Preconditions;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -56,55 +59,6 @@ import java.util.List;
 public final class TokenRegex implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private static final Grammar RPGrammar = new Grammar() {
-    {
-      register(CommonTypes.OPENPARENS, new SequenceGroupHandler(CommonTypes.CLOSEPARENS));
-      register(CommonTypes.PLUS, new PostfixOperatorHandler(8));
-      register(CommonTypes.MULTIPLY, new PostfixOperatorHandler(8));
-      register(CommonTypes.QUESTION, new PostfixOperatorHandler(8));
-      register(RegexTokenTypes.TAGMATCH, new ValueHandler());
-      register(RegexTokenTypes.PATTERNTOKEN, new ValueHandler());
-      register(RegexTokenTypes.ATTRMATCH, new ValueHandler());
-      register(RegexTokenTypes.LEXICON, new ValueHandler());
-      register(RegexTokenTypes.PUNCTUATION, new ValueHandler());
-      register(RegexTokenTypes.NUMBER, new ValueHandler());
-      register(RegexTokenTypes.ANY, new ValueHandler());
-      register(RegexTokenTypes.STOPWORD, new ValueHandler());
-      register(RegexTokenTypes.ANNOTATION, new PrefixOperatorHandler(12));
-      register(RegexTokenTypes.NOT, new PrefixOperatorHandler(12));
-      register(CommonTypes.OPENBRACKET, new LogicGroupHandler(14));
-      register(CommonTypes.PIPE, new BinaryOperatorHandler(7, false));
-      register(CommonTypes.AMPERSAND, new BinaryOperatorHandler(7, false));
-      register(RegexTokenTypes.PARENT, new PrefixOperatorHandler(1));
-      register(RegexTokenTypes.RANGE, new PostfixOperatorHandler(8));
-    }
-  };
-
-  private static final RegularExpressionLexer lexer = RegularExpressionLexer.builder()
-    .add(RegexTokenTypes.ATTRMATCH)
-    .add(RegexTokenTypes.PATTERNTOKEN, "<(\\\\.|[^<>])+>")
-    .add(CommonTypes.OPENPARENS)
-    .add(CommonTypes.CLOSEPARENS)
-    .add(CommonTypes.OPENBRACKET)
-    .add(CommonTypes.CLOSEBRACKET)
-    .add(CommonTypes.PLUS)
-    .add(CommonTypes.MULTIPLY)
-    .add(CommonTypes.QUESTION)
-    .add(CommonTypes.PIPE)
-    .add(RegexTokenTypes.LEXICON)
-    .add(RegexTokenTypes.RANGE)
-    .add(RegexTokenTypes.TAGMATCH)
-    .add(RegexTokenTypes.ANNOTATION)
-    .add(RegexTokenTypes.PUNCTUATION)
-    .add(RegexTokenTypes.NUMBER)
-    .add(RegexTokenTypes.NOT)
-    .add(RegexTokenTypes.ANY)
-    .add(RegexTokenTypes.STOPWORD)
-    .add(CommonTypes.OPENBRACKET)
-    .add(CommonTypes.CLOSEBRACKET)
-    .add(CommonTypes.AMPERSAND)
-    .add(RegexTokenTypes.PARENT)
-    .build();
   private final NFA nfa;
   private final String pattern;
 
@@ -119,12 +73,12 @@ public final class TokenRegex implements Serializable {
    *
    * @param pattern The token regex pattern
    * @return A compiled TokenRegex
-   * @throws com.davidbracewell.parsing.ParseException Something went wrong parsing the regular expression
+   * @throws ParseException the parse exception
    */
   public static TokenRegex compile(String pattern) throws ParseException {
     Parser p = new Parser(
-      RPGrammar,
-      lexer.lex(pattern)
+      QueryToPredicate.RPGrammar,
+      QueryToPredicate.lexer.lex(pattern)
     );
     Expression exp;
     TransitionFunction top = null;
@@ -152,39 +106,38 @@ public final class TokenRegex implements Serializable {
         }
       }
       return c;
+    } else if (exp.match(CommonTypes.OPENBRACKET)) {
+      Expression child = exp.expressions.get(0);
+      SerializablePredicate<HString> p = QueryToPredicate.parse(child);
+      return new TransitionFunction.LogicStatement(child.toString(), (Annotation a) -> p.test(a) ? a.tokenLength() : 0);
     }
     throw new ParseException("Unknown expression: " + exp.toString());
   }
 
   private static SerializableFunction<Annotation, Integer> toFunction(Expression exp) throws ParseException {
-    if (exp.isInstance(ValueExpression.class)) {
-      TransitionFunction tf = consumerize(exp);
-      return a -> tf.matches(a);
-    } else if (exp.match(RegexTokenTypes.NOT)) {
-      TransitionFunction tf = consumerize(exp.as(PrefixExpression.class).right);
-      return a -> tf.nonMatch(a);
-    } else if (exp.match(CommonTypes.PIPE)) {
-      BinaryOperatorExpression boe = exp.as(BinaryOperatorExpression.class);
+    if (exp.isInstance(BinaryOperatorExpression.class)) {
+      BinaryOperatorExpression boe = Cast.as(exp);
       TransitionFunction tf1 = consumerize(boe.left);
       TransitionFunction tf2 = consumerize(boe.right);
-      return a -> Math.max(tf1.matches(a), tf2.matches(a));
-    } else if (exp.match(CommonTypes.AMPERSAND)) {
-      BinaryOperatorExpression boe = exp.as(BinaryOperatorExpression.class);
-      TransitionFunction tf1 = consumerize(boe.left);
-      TransitionFunction tf2 = consumerize(boe.right);
-      return a -> {
-        int i = tf1.matches(a);
-        int j = tf2.matches(a);
-        if (i > 0 && j > 0) {
-          return Math.max(i, j);
-        }
-        return 0;
-      };
-    } else if (exp.match(RegexTokenTypes.ANNOTATION)) {
-      TransitionFunction tf = consumerize(exp);
-      return a -> tf.matches(a);
+      if (exp.match(CommonTypes.PIPE)) {
+        return a -> Math.max(tf1.matches(a), tf2.matches(a));
+      } else if (exp.match(CommonTypes.AMPERSAND)) {
+        return a -> {
+          int i = tf1.matches(a);
+          int j = tf2.matches(a);
+          if (i > 0 && j > 0) {
+            return Math.max(i, j);
+          }
+          return 0;
+        };
+      }
     }
-    throw new ParseException("Unknown expression: " + exp.toString());
+    if (exp.match(RegexTokenTypes.NOT)) {
+      TransitionFunction tf = consumerize(Cast.<PrefixExpression>as(exp).right);
+      return a -> tf.nonMatch(a);
+    }
+    TransitionFunction tf = consumerize(exp);
+    return a -> tf.matches(a);
   }
 
   private static TransitionFunction handlePostfix(PostfixExpression postfix) throws ParseException {
@@ -307,7 +260,34 @@ public final class TokenRegex implements Serializable {
     return new TokenMatcher(nfa, text, start);
   }
 
+
   /**
+   * Matches boolean.
+   *
+   * @param text the text
+   * @return the boolean
+   */
+  public boolean matches(HString text) {
+    return new TokenMatcher(nfa, text).find();
+  }
+
+  /**
+   * Match first optional.
+   *
+   * @param text the text
+   * @return the optional
+   */
+  public Optional<HString> matchFirst(HString text) {
+    TokenMatcher matcher = new TokenMatcher(nfa, text);
+    if (matcher.find()) {
+      return Optional.of(matcher.group());
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Pattern string.
+   *
    * @return The token regex pattern as a string
    */
   public String pattern() {

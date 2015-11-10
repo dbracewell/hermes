@@ -35,6 +35,7 @@ import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.parsing.*;
 import com.davidbracewell.parsing.expressions.*;
 import com.davidbracewell.parsing.handlers.BinaryOperatorHandler;
+import com.davidbracewell.parsing.handlers.PostfixOperatorHandler;
 import com.davidbracewell.parsing.handlers.PrefixOperatorHandler;
 import com.davidbracewell.parsing.handlers.ValueHandler;
 import com.davidbracewell.string.StringPredicates;
@@ -47,13 +48,12 @@ import java.util.List;
  */
 public final class QueryToPredicate {
 
-  private QueryToPredicate() {
-    throw new IllegalAccessError();
-  }
-
-  private static final Grammar RPGrammar = new Grammar() {
+  protected static final Grammar RPGrammar = new Grammar() {
     {
       register(CommonTypes.OPENPARENS, new SequenceGroupHandler(CommonTypes.CLOSEPARENS));
+      register(CommonTypes.PLUS, new PostfixOperatorHandler(8));
+      register(CommonTypes.MULTIPLY, new PostfixOperatorHandler(8));
+      register(CommonTypes.QUESTION, new PostfixOperatorHandler(8));
       register(RegexTokenTypes.TAGMATCH, new ValueHandler());
       register(RegexTokenTypes.PATTERNTOKEN, new ValueHandler());
       register(RegexTokenTypes.ATTRMATCH, new ValueHandler());
@@ -64,21 +64,26 @@ public final class QueryToPredicate {
       register(RegexTokenTypes.STOPWORD, new ValueHandler());
       register(RegexTokenTypes.ANNOTATION, new PrefixOperatorHandler(12));
       register(RegexTokenTypes.NOT, new PrefixOperatorHandler(12));
+      register(CommonTypes.OPENBRACKET, new LogicGroupHandler(14));
       register(CommonTypes.PIPE, new BinaryOperatorHandler(7, false));
       register(CommonTypes.AMPERSAND, new BinaryOperatorHandler(7, false));
       register(RegexTokenTypes.PARENT, new PrefixOperatorHandler(1));
+      register(RegexTokenTypes.RANGE, new PostfixOperatorHandler(8));
     }
   };
-
-  private static final RegularExpressionLexer lexer = RegularExpressionLexer.builder()
+  protected static final RegularExpressionLexer lexer = RegularExpressionLexer.builder()
     .add(RegexTokenTypes.ATTRMATCH)
     .add(RegexTokenTypes.PATTERNTOKEN, "<(\\\\.|[^<>])+>")
     .add(CommonTypes.OPENPARENS)
     .add(CommonTypes.CLOSEPARENS)
     .add(CommonTypes.OPENBRACKET)
     .add(CommonTypes.CLOSEBRACKET)
+    .add(CommonTypes.PLUS)
+    .add(CommonTypes.MULTIPLY)
+    .add(CommonTypes.QUESTION)
     .add(CommonTypes.PIPE)
     .add(RegexTokenTypes.LEXICON)
+    .add(RegexTokenTypes.RANGE)
     .add(RegexTokenTypes.TAGMATCH)
     .add(RegexTokenTypes.ANNOTATION)
     .add(RegexTokenTypes.PUNCTUATION)
@@ -92,6 +97,9 @@ public final class QueryToPredicate {
     .add(RegexTokenTypes.PARENT)
     .build();
 
+  private QueryToPredicate() {
+    throw new IllegalAccessError();
+  }
 
   public static SerializablePredicate<HString> parse(String query) throws ParseException {
     Parser p = new Parser(
@@ -128,6 +136,7 @@ public final class QueryToPredicate {
         AnnotationType aType = AnnotationType.create(pe.operator.getText().substring(2).replaceFirst("\\}$", ""));
         return hString -> hString.get(aType).stream().anyMatch(child);
       }
+
     } else if (exp.isInstance(BinaryOperatorExpression.class)) {
       BinaryOperatorExpression boe = Cast.as(exp);
       SerializablePredicate<HString> left = parse(boe.left);
@@ -137,7 +146,7 @@ public final class QueryToPredicate {
       } else if (boe.match(CommonTypes.AMPERSAND)) {
         return left.and(right);
       }
-    } else if (exp.isInstance(MultivalueExpression.class)) {
+    } else if (exp.isInstance(MultivalueExpression.class) && exp.match(CommonTypes.OPENPARENS)) {
       MultivalueExpression mve = Cast.as(exp);
       SerializablePredicate<HString> predicate = parse(mve.expressions.get(0));
       for (int i = 1; i < mve.expressions.size(); i++) {
@@ -190,6 +199,13 @@ public final class QueryToPredicate {
 
     if (exp.match(RegexTokenTypes.STOPWORD)) {
       return a -> StopWords.getInstance(a.getLanguage()).isStopWord(a);
+    }
+
+    if (exp.match(RegexTokenTypes.ANY)) {
+      String s = exp.toString();
+      if (s.length() == 1) {
+        return a -> true;
+      }
     }
 
     throw new ParseException("Unknown expression: " + exp.toString());

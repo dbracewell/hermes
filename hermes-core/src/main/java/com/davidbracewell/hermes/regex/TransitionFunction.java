@@ -159,10 +159,10 @@ interface TransitionFunction extends Serializable {
 
   final class LogicStatement implements TransitionFunction, Serializable {
     private static final long serialVersionUID = 1L;
-    final Function<Annotation, Integer> matcher;
+    final Function<? super Annotation, Integer> matcher;
     final String pattern;
 
-    public LogicStatement(String pattern, Function<Annotation, Integer> matcher) {
+    public LogicStatement(String pattern, Function<? super Annotation, Integer> matcher) {
       this.pattern = pattern;
       this.matcher = matcher;
     }
