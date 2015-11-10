@@ -23,11 +23,13 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Tag;
 import com.davidbracewell.collection.Collect;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.tag.EntityType;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
+import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
@@ -96,7 +98,7 @@ public final class Annotation extends Fragment implements Serializable {
     this.annotationType = AnnotationType.ROOT;
   }
 
-  public Optional<Annotation> getParent(){
+  public Optional<Annotation> getParent() {
     return Optional.empty();
   }
 
@@ -294,6 +296,20 @@ public final class Annotation extends Fragment implements Serializable {
       return Optional.ofNullable(get(Attrs.TAG).as(Tag.class));
     }
     return Optional.ofNullable(get(tagAttribute).as(Tag.class));
+  }
+
+  public boolean isInstanceOfTag(String tag) {
+    if (StringUtils.isNullOrBlank(tag)) {
+      return false;
+    }
+    return isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute().getValueType().convert(tag)));
+  }
+
+  public boolean isInstanceOfTag(Tag tag) {
+    if (tag == null) {
+      return false;
+    }
+    return getTag().filter(t -> t.isInstance(tag)).isPresent();
   }
 
 }//END OF Annotation

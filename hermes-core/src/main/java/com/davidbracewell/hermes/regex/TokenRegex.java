@@ -23,23 +23,15 @@ package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
-import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.filter.HStringPredicates;
-import com.davidbracewell.hermes.filter.StopWords;
-import com.davidbracewell.hermes.lexicon.LexiconManager;
-import com.davidbracewell.hermes.tag.POS;
-import com.davidbracewell.hermes.tokenization.TokenType;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.HString;
 import com.davidbracewell.parsing.*;
 import com.davidbracewell.parsing.expressions.*;
 import com.davidbracewell.parsing.handlers.*;
-import com.davidbracewell.string.StringPredicates;
-import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -195,54 +187,6 @@ public final class TokenRegex implements Serializable {
     throw new ParseException("Unknown expression: " + exp.toString());
   }
 
-
-  private static SerializablePredicate<? super Annotation> valueExpressionToPredicate(Expression exp) throws ParseException {
-
-    if (exp.match(RegexTokenTypes.NUMBER)) {
-      return a -> StringPredicates.IS_DIGIT.test(a) || a.getPOS().isInstance(POS.NUMBER) || TokenType.NUMBER.equals(a.get(Attrs.TOKEN_TYPE).cast());
-    }
-
-    if (exp.match(RegexTokenTypes.LEXICON)) {
-      String lexiconName = exp.toString().substring(1).replaceFirst("^\"", "").replaceFirst("\"$", "");
-      return a -> LexiconManager.getLexicon(lexiconName).contains(a);
-    }
-
-    if (exp.match(RegexTokenTypes.PATTERNTOKEN)) {
-      String pattern = exp.toString();
-      pattern = pattern.substring(1, pattern.length() - 1);
-      boolean isRegex = pattern.startsWith("@") && pattern.length() > 1;
-      if (isRegex) pattern = pattern.substring(1);
-      boolean isCaseSensitive = !pattern.startsWith("(?i)");
-      if (!isCaseSensitive) pattern = pattern.substring(4);
-
-      if (isRegex) {
-        return HStringPredicates.contentRegexMatch(pattern, isCaseSensitive);
-      }
-      return HStringPredicates.contentMatch(pattern, isCaseSensitive);
-    }
-
-    if (exp.match(RegexTokenTypes.TAGMATCH)) {
-      return HStringPredicates.hasTagInstance(exp.toString().substring(1));
-    }
-
-    if (exp.match(RegexTokenTypes.ATTRMATCH)) {
-      List<String> parts = StringUtils.split(exp.toString().substring(1), ':');
-      Attribute attrName = Attribute.create(parts.get(0));
-      Object attrValue = attrName.getValueType().convert(parts.get(1));
-      return HStringPredicates.attributeMatch(attrName, attrValue);
-    }
-
-    if (exp.match(RegexTokenTypes.PUNCTUATION)) {
-      return StringPredicates.IS_PUNCTUATION;
-    }
-
-    if (exp.match(RegexTokenTypes.STOPWORD)) {
-      return a -> StopWords.getInstance(a.getLanguage()).isStopWord(a);
-    }
-
-    throw new ParseException("Unknown expression: " + exp.toString());
-  }
-
   private static TransitionFunction handlePostfix(PostfixExpression postfix) throws ParseException {
     if (postfix.operator.type.isInstance(CommonTypes.QUESTION)) {
       return new TransitionFunction.ZeroOrOne(consumerize(postfix.left));
@@ -292,16 +236,13 @@ public final class TokenRegex implements Serializable {
     if (exp.match(RegexTokenTypes.PARENT)) {
       return new TransitionFunction.ParentMatcher(consumerize(exp.right));
     }
-
     if (exp.match(RegexTokenTypes.NOT)) {
       return new TransitionFunction.Not(consumerize(exp.right));
     }
-
     if (exp.match(RegexTokenTypes.ANNOTATION)) {
-      String typeName = exp.operator.getText().substring(2).replaceFirst("\\}$", "");
-      return new TransitionFunction.AnnotationMatcher(AnnotationType.create(typeName), consumerize(exp.right));
+      AnnotationType typeName = AnnotationType.create(exp.operator.getText().substring(2).replaceFirst("\\}$", ""));
+      return new TransitionFunction.AnnotationMatcher(typeName, consumerize(exp.right));
     }
-
     throw new ParseException("Unknown expression: " + exp.toString());
   }
 
@@ -338,7 +279,7 @@ public final class TokenRegex implements Serializable {
 
 
     if (exp.isInstance(ValueExpression.class)) {
-      return new TransitionFunction.PredicateMatcher(exp.toString(), valueExpressionToPredicate(exp));
+      return new TransitionFunction.PredicateMatcher(exp.toString(), QueryToPredicate.valueExpressionToPredicate(exp));
     }
 
 
@@ -371,51 +312,6 @@ public final class TokenRegex implements Serializable {
    */
   public String pattern() {
     return pattern;
-  }
-
-  private static class SequenceGroupHandler extends PrefixHandler {
-
-    private final ParserTokenType closeGroupType;
-
-    /**
-     * Default Constructor
-     *
-     * @param closeGroupType The token type that indicates the end of the group
-     */
-    public SequenceGroupHandler(ParserTokenType closeGroupType) {
-      super(100);
-      this.closeGroupType = closeGroupType;
-    }
-
-    @Override
-    public Expression parse(Parser parser, ParserToken token) throws ParseException {
-      List<Expression> results = new ArrayList<>();
-      while (!parser.tokenStream().nonConsumingMatch(closeGroupType)) {
-        results.add(parser.next());
-      }
-      parser.tokenStream().consume(closeGroupType);
-      return new MultivalueExpression(results, token.type);
-    }
-
-  }
-
-  private static class LogicGroupHandler extends PrefixHandler {
-
-    /**
-     * Default constructor
-     *
-     * @param precedence The precedence of the handler
-     */
-    public LogicGroupHandler(int precedence) {
-      super(precedence);
-    }
-
-    @Override
-    public Expression parse(Parser parser, ParserToken token) throws ParseException {
-      Expression exp = parser.next();
-      parser.tokenStream().consume(CommonTypes.CLOSEBRACKET);
-      return new MultivalueExpression(Collections.singletonList(exp), token.type);
-    }
   }
 
 }//END OF TokenRegex

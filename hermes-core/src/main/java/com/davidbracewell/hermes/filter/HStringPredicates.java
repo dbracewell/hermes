@@ -4,8 +4,12 @@ import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableBiPredicate;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.tag.StringTag;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.regex.QueryToPredicate;
+import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringPredicates;
 import lombok.NonNull;
 
@@ -99,7 +103,7 @@ public interface HStringPredicates {
   static SerializablePredicate<HString> hasTagInstance(@NonNull final Tag target) {
     return hString -> {
       if (hString.isAnnotation()) {
-        return Cast.<Annotation>as(hString).getTag().filter(tag -> tag.isInstance(target)).isPresent();
+        return hString.asAnnotation().filter(a -> a.isInstanceOfTag(target)).isPresent();
       }
       return hString.get(Attrs.TAG).equals(target);
     };
@@ -108,9 +112,9 @@ public interface HStringPredicates {
   static SerializablePredicate<HString> hasTagInstance(@NonNull final String target) {
     return hString -> {
       if (hString.isAnnotation()) {
-        Annotation annotation = Cast.as(hString);
-        Tag tag = (annotation.getType().getTagAttribute() == null) ? new StringTag(target) : annotation.getType().getTagAttribute().getValueType().convert(target);
-        return annotation.getTag().filter(t -> tag.isInstance(tag)).isPresent();
+        return hString.asAnnotation()
+          .filter(a -> a.isInstanceOfTag(target))
+          .isPresent();
       }
       return hString.get(Attrs.TAG).equals(target);
     };
@@ -199,6 +203,11 @@ public interface HStringPredicates {
    */
   static SerializableBiPredicate<HString, HString> isNonOverlapping() {
     return isOverlapping().negate();
+  }
+
+
+  static SerializablePredicate<HString> parse(@NonNull String query) throws ParseException {
+    return QueryToPredicate.parse(query);
   }
 
 

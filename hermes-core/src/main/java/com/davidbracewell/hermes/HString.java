@@ -177,7 +177,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   @Override
   public boolean contains(Attribute attribute) {
     return getAttributeMap().containsKey(attribute) ||
-        getAttributeMap().containsKey(attribute.goldStandardVersion());
+      getAttributeMap().containsKey(attribute.goldStandardVersion());
   }
 
   /**
@@ -232,9 +232,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public Counter<String> count(AnnotationType type, @NonNull Predicate<? super Annotation> predicate, @NonNull Function<? super Annotation, String> transform) {
     return Counters.newHashMapCounter(get(type).stream()
-            .filter(predicate)
-            .map(transform)
-            .collect(Collectors.toList())
+      .filter(predicate)
+      .map(transform)
+      .collect(Collectors.toList())
     );
   }
 
@@ -259,8 +259,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return false;
     }
     return (document() != null && other.document() != null) &&
-        (document() == other.document())
-        && super.encloses(other);
+      (document() == other.document())
+      && super.encloses(other);
   }
 
   /**
@@ -432,10 +432,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return toLowerCase();
     }
     return tokens().stream()
-        .map(HString::getLemma)
-        .collect(Collectors.joining(
-            getLanguage().usesWhitespace() ? " " : ""
-        ));
+      .map(HString::getLemma)
+      .collect(Collectors.joining(
+        getLanguage().usesWhitespace() ? " " : ""
+      ));
   }
 
   /**
@@ -490,6 +490,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public boolean isAnnotation() {
     return false;
+  }
+
+  public Optional<Annotation> asAnnotation() {
+    return Optional.ofNullable(Cast.<Annotation>as(this));
   }
 
   /**
@@ -569,15 +573,15 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   public List<HString> ngrams(int order, @NonNull AnnotationType annotationType, boolean removeStopWords) {
     if (removeStopWords) {
       return ngrams(
-          order,
-          annotationType,
-          StopWords.getInstance(getLanguage())
+        order,
+        annotationType,
+        StopWords.getInstance(getLanguage())
       );
     }
     return ngrams(
-        order,
-        annotationType,
-        t -> true
+      order,
+      annotationType,
+      t -> true
     );
   }
 
@@ -597,9 +601,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return Collections.emptyList();
     } else if (order == 1) {
       return get(annotationType)
-          .stream()
-          .filter(filter)
-          .collect(Collectors.toList());
+        .stream()
+        .filter(filter)
+        .collect(Collectors.toList());
     }
 
 
@@ -642,8 +646,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return false;
     }
     return (document() != null && other.document() != null) &&
-        (document() == other.document()) &&
-        super.overlaps(other);
+      (document() == other.document()) &&
+      super.overlaps(other);
   }
 
   @Override
@@ -776,8 +780,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public String toPOSString(char delimiter) {
     return tokens().stream()
-        .map(t -> t.toString() + delimiter + t.get(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
-        .collect(Collectors.joining(" "));
+      .map(t -> t.toString() + delimiter + t.get(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
+      .collect(Collectors.joining(" "));
   }
 
   @Override
@@ -862,10 +866,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return get(Attrs.STEM).asString();
     }
     return tokens().stream()
-        .map(HString::getStem)
-        .collect(Collectors.joining(
-            getLanguage().usesWhitespace() ? " " : ""
-        ));
+      .map(HString::getStem)
+      .collect(Collectors.joining(
+        getLanguage().usesWhitespace() ? " " : ""
+      ));
   }
 
 

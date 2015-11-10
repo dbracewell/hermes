@@ -28,7 +28,7 @@ import com.davidbracewell.parsing.ParserTokenType;
 /**
  * @author David B. Bracewell
  */
-enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
+public enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
   SCRIPT("<\\s*script\\s*(language\\s*=\\s*\"(?<LANGUAGE>[^\"]+)?\")?\\s*>(?<SCRIPTCONTENT>.*?)<\\s*/\\s*script\\s*>"),
   PATTERNTOKEN("<[@#]?(\\\\.|[^<>])+>[\\+\\?\\*]?"),
   TAGMATCH("#(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{\\)\\]]+)"),
