@@ -23,6 +23,7 @@ package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.string.StringUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import lombok.NonNull;
 
@@ -34,7 +35,7 @@ import java.util.Set;
 /**
  * @author David B. Bracewell
  */
-public class SetLexicon extends BaseLexicon {
+public class SetLexicon extends BaseLexicon implements MutableLexicon {
   private static final long serialVersionUID = 1L;
   private final Set<String> lexicon = new HashSet<>();
 
@@ -62,24 +63,23 @@ public class SetLexicon extends BaseLexicon {
     if (hString == null) {
       return Optional.empty();
     }
-    if (lexicon.contains(hString.toString())) {
-      return Optional.of(hString.toString());
-    }
-    if (!isCaseSensitive() && lexicon.contains(hString.toLowerCase())) {
-      return Optional.of(hString.toLowerCase());
+    String norm = normalize(hString.toString());
+    if (lexicon.contains(norm)) {
+      return Optional.of(norm);
     }
     return Optional.empty();
   }
 
+  @Override
   public void add(String lexicalItem) {
-    if (!StringUtils.isNullOrBlank(lexicalItem)) {
-      lexicon.add((isCaseSensitive() ? lexicalItem : lexicalItem.toLowerCase()));
-    }
+    Preconditions.checkArgument(!StringUtils.isNullOrBlank(lexicalItem), "lexical item must not be null or blank");
+    lexicon.add(normalize(lexicalItem));
   }
 
-  public void addAll(Iterable<String> lexicalItems) {
-    if (lexicalItems != null) {
-      lexicalItems.forEach(this::add);
+  @Override
+  public void remove(String lexicalItem) {
+    if (!StringUtils.isNullOrBlank(lexicalItem)) {
+      lexicon.remove(normalize(lexicalItem));
     }
   }
 

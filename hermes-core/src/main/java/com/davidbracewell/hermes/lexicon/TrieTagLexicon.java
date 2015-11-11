@@ -25,10 +25,18 @@ import com.davidbracewell.Tag;
 import com.davidbracewell.collection.trie.TrieMatch;
 import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.io.CSV;
+import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.io.structured.csv.CSVReader;
+import com.davidbracewell.reflection.ValueType;
+import com.davidbracewell.string.StringUtils;
+import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * <p>Implementation of <code>Lexicon</code> usng a Trie data structure.</p>
@@ -51,6 +59,45 @@ public class TrieTagLexicon extends BaseTrieLexicon<Tag> implements TagLexicon {
     this.tagAttribute = tagAttribute;
   }
 
+  public TrieTagLexicon(@NonNull Attribute tagAttribute, boolean isCaseSensitive) {
+    super(isCaseSensitive);
+    this.tagAttribute = tagAttribute;
+  }
+
+
+  public static TrieTagLexicon read(@NonNull Resource resource, boolean isCaseSensitive, @NonNull Attribute tagAttribute) throws IOException {
+    TrieTagLexicon lexicon = new TrieTagLexicon(tagAttribute, isCaseSensitive);
+    ValueType tagType = tagAttribute.getValueType();
+    try (CSVReader reader = CSV.builder().reader(resource)) {
+      reader.forEach(row -> {
+        if (row.size() > 1) {
+          Tag tag = tagType.convert(row.get(1));
+          lexicon.put(lexicon.normalize(row.get(0)), tag);
+        }
+      });
+    }
+    return lexicon;
+  }
+
+  public void put(String lexicalItem, Tag tag) {
+    Preconditions.checkArgument(!StringUtils.isNullOrBlank(lexicalItem), "lexical item must not be null or blank");
+    Preconditions.checkNotNull(tag, "Tag must not be null");
+    trie.put(normalize(lexicalItem), tag);
+  }
+
+  public void putAll(TagLexicon lexicon) {
+    if (lexicon != null) {
+      lexicon.entrySet().forEach(e -> this.put(e.getKey(), e.getValue()));
+    }
+  }
+
+  public void putAll(Map<String, ? extends Tag> map) {
+    if (map != null) {
+      map.forEach(this::put);
+    }
+  }
+
+
   @Override
   protected HString createMatch(HString source, TrieMatch<Tag> match) {
     HString hString = source.substring(match.start, match.end);
@@ -63,6 +110,10 @@ public class TrieTagLexicon extends BaseTrieLexicon<Tag> implements TagLexicon {
     return getMatch(fragment).map(trie::get);
   }
 
+  @Override
+  public Set<Map.Entry<String, Tag>> entrySet() {
+    return trie.entrySet();
+  }
 }//END OF TrieTagLexicon
 
 

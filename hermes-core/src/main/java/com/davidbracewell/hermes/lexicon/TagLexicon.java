@@ -24,7 +24,9 @@ package com.davidbracewell.hermes.lexicon;
 import com.davidbracewell.Tag;
 import com.davidbracewell.hermes.HString;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The type Tag lexicon.
@@ -41,5 +43,7 @@ public interface TagLexicon extends Lexicon {
    */
   Optional<Tag> getTag(HString fragment);
 
+
+  Set<Map.Entry<String, Tag>> entrySet();
 
 }//END OF TagLexicon

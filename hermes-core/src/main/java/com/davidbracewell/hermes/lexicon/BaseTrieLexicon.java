@@ -52,6 +52,10 @@ public abstract class BaseTrieLexicon<V> extends BaseLexicon {
     lexicon.entrySet().forEach(e -> trie.put(normalize(e.getKey()), e.getValue()));
   }
 
+  public BaseTrieLexicon(boolean isCaseSensitive) {
+    super(isCaseSensitive);
+    this.trie = new PatriciaTrie<>();
+  }
 
   /**
    * Find matches list.
@@ -91,7 +95,7 @@ public abstract class BaseTrieLexicon<V> extends BaseLexicon {
 
   @Override
   public Optional<String> getMatch(HString hString) {
-    if( trie.containsKey(normalize(hString))){
+    if (trie.containsKey(normalize(hString))) {
       return Optional.of(hString.toLowerCase());
     }
     if (trie.containsKey(hString.toString())) {

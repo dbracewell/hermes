@@ -21,6 +21,10 @@
 
 package com.davidbracewell.hermes.lexicon;
 
+import com.davidbracewell.cache.Cache;
+import com.davidbracewell.cache.CacheManager;
+import com.davidbracewell.cache.CacheSpec;
+import com.davidbracewell.cache.GuavaLoadingCache;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.HString;
@@ -29,7 +33,6 @@ import com.davidbracewell.logging.Logger;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -38,7 +41,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author David B. Bracewell
@@ -46,9 +48,13 @@ import java.util.concurrent.ConcurrentMap;
 public final class LexiconManager implements Serializable {
   private static final long serialVersionUID = 1L;
   private static final Logger log = Logger.getLogger(LexiconManager.class);
-  private static final ConcurrentMap<String, Lexicon> lexicons = Maps.newConcurrentMap();
-
   private static final Map<Class<?>, LexiconSupplier> lexiconSupplierMap;
+  private static final Cache<String, Lexicon> lexiconCache = CacheManager.getInstance().register(
+    CacheSpec.<String, Lexicon>create()
+      .engine(GuavaLoadingCache.class.getName())
+      .maxSize(50)
+      .loadingFunction(name -> createLexicon(name.toLowerCase()))
+  );
 
   static {
     ImmutableMap.Builder<Class<?>, LexiconSupplier> builder = ImmutableMap.builder();
@@ -64,15 +70,7 @@ public final class LexiconManager implements Serializable {
   }
 
   public static <T extends Lexicon> T getLexicon(@NonNull String name) {
-    String norm = name.toLowerCase();
-    if (!lexicons.containsKey(norm)) {
-      synchronized (lexicons) {
-        if (!lexicons.containsKey(norm)) {
-          lexicons.put(norm, createLexicon(norm));
-        }
-      }
-    }
-    return Cast.as(lexicons.get(norm));
+    return Cast.as(lexiconCache.get(name));
   }
 
   private static Lexicon createLexicon(String name) {
@@ -90,7 +88,7 @@ public final class LexiconManager implements Serializable {
   }
 
   public static void register(@NonNull String name, @NonNull Lexicon lexicon) {
-    lexicons.put(name.toLowerCase(), lexicon);
+    lexiconCache.put(name.toLowerCase(), lexicon);
   }
 
   private enum EmptyLexicon implements Lexicon {
