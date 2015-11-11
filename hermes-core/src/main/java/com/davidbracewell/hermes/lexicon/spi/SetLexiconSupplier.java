@@ -19,31 +19,35 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lexicon;
+package com.davidbracewell.hermes.lexicon.spi;
 
-import com.davidbracewell.collection.trie.TrieMatch;
-import com.davidbracewell.hermes.HString;
-import lombok.NonNull;
+import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.lexicon.Lexicon;
+import com.davidbracewell.hermes.lexicon.SetLexicon;
+import com.davidbracewell.io.CSV;
+import com.davidbracewell.io.structured.csv.CSVReader;
+import org.kohsuke.MetaInfServices;
 
-import java.util.Map;
+import java.io.IOException;
 
 /**
  * @author David B. Bracewell
  */
-public class TrieLexicon extends BaseTrieLexicon<Boolean> {
+@MetaInfServices(LexiconSupplier.class)
+public class SetLexiconSupplier implements LexiconSupplier {
   private static final long serialVersionUID = 1L;
-  /**
-   * Instantiates a new Trie lexicon.
-   *
-   * @param lexicon         the lexicon
-   * @param isCaseSensitive the is case sensitive
-   */
-  public TrieLexicon(@NonNull Map<String, Boolean> lexicon, boolean isCaseSensitive) {
-    super(lexicon, isCaseSensitive);
+
+  @Override
+  public Lexicon get(String lexiconName) throws IOException {
+    SetLexicon lexicon = new SetLexicon(Config.get(lexiconName, "caseSensitive").asBooleanValue(true));
+    try (CSVReader reader = CSV.builder().reader(Config.get(lexiconName, "resource").asResource())) {
+      reader.forEach(row -> lexicon.add(row.get(0)));
+    }
+    return lexicon;
   }
 
   @Override
-  protected HString createMatch(HString source, TrieMatch<Boolean> match) {
-    return source.substring(match.start, match.end);
+  public Class<?> getLexiconClass() {
+    return SetLexicon.class;
   }
-}//END OF TrieLexicon
+}//END OF SetLexiconSupplier

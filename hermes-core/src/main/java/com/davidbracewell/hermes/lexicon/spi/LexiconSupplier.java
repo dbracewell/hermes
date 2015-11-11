@@ -19,25 +19,20 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lexicon;
+package com.davidbracewell.hermes.lexicon.spi;
+
+import com.davidbracewell.hermes.lexicon.Lexicon;
+
+import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * @author David B. Bracewell
  */
-public abstract class ProbabilisticTagLexicon extends TagLexicon{
+public interface LexiconSupplier extends Serializable {
 
-  private static final long serialVersionUID = 1L;
+  Lexicon get(String lexiconName) throws IOException;
 
-  /**
-   * Instantiates a new Tag lexicon.
-   *
-   * @param caseSensitive the case sensitive
-   */
-  protected ProbabilisticTagLexicon(boolean caseSensitive) {
-    super(caseSensitive);
-  }
+  Class<?> getLexiconClass();
 
-
-
-
-}//END OF ProbabilisticLexicon
+}//END OF LexiconSupplier

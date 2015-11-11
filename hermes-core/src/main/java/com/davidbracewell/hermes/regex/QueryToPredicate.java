@@ -165,7 +165,7 @@ public final class QueryToPredicate {
 
     if (exp.match(RegexTokenTypes.LEXICON)) {
       String lexiconName = exp.toString().substring(1).replaceFirst("^\"", "").replaceFirst("\"$", "");
-      return a -> LexiconManager.getLexicon(lexiconName).contains(a);
+      return a -> LexiconManager.getLexicon(lexiconName).test(a);
     }
 
     if (exp.match(RegexTokenTypes.PATTERNTOKEN)) {

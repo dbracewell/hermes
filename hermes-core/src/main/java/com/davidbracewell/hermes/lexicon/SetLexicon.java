@@ -21,45 +21,67 @@
 
 package com.davidbracewell.hermes.lexicon;
 
-import lombok.Builder;
-import lombok.Singular;
+import com.davidbracewell.hermes.HString;
+import com.davidbracewell.string.StringUtils;
+import com.google.common.collect.Iterators;
+import lombok.NonNull;
 
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 
 /**
  * @author David B. Bracewell
  */
-public class SetLexicon extends Lexicon {
+public class SetLexicon extends BaseLexicon {
   private static final long serialVersionUID = 1L;
-  private final Set<String> elements = new HashSet<>();
+  private final Set<String> lexicon = new HashSet<>();
 
-  /**
-   * Instantiates a new Tag lexicon.
-   *
-   * @param caseSensitive the case sensitive
-   */
-  @Builder
-  protected SetLexicon(boolean caseSensitive, @Singular Set<String> elements) {
+  public SetLexicon(boolean caseSensitive) {
+    this(caseSensitive, new HashSet<>(0));
+  }
+
+  public SetLexicon(boolean caseSensitive, @NonNull Set<String> set) {
     super(caseSensitive);
-    this.elements.addAll(elements);
-  }
-
-
-  @Override
-  protected boolean containsImpl(String nonNullLexicalItem) {
-    return elements.contains(nonNullLexicalItem);
+    set.forEach(this::add);
   }
 
   @Override
-  public Set<String> lexicalItems() {
-    return Collections.unmodifiableSet(elements);
+  public Iterator<String> iterator() {
+    return Iterators.unmodifiableIterator(lexicon.iterator());
   }
 
   @Override
   public int size() {
-    return elements.size();
+    return lexicon.size();
   }
+
+  @Override
+  public Optional<String> getMatch(HString hString) {
+    if (hString == null) {
+      return Optional.empty();
+    }
+    if (lexicon.contains(hString.toString())) {
+      return Optional.of(hString.toString());
+    }
+    if (!isCaseSensitive() && lexicon.contains(hString.toLowerCase())) {
+      return Optional.of(hString.toLowerCase());
+    }
+    return Optional.empty();
+  }
+
+  public void add(String lexicalItem) {
+    if (!StringUtils.isNullOrBlank(lexicalItem)) {
+      lexicon.add((isCaseSensitive() ? lexicalItem : lexicalItem.toLowerCase()));
+    }
+  }
+
+  public void addAll(Iterable<String> lexicalItems) {
+    if (lexicalItems != null) {
+      lexicalItems.forEach(this::add);
+    }
+  }
+
 
 }//END OF SetLexicon

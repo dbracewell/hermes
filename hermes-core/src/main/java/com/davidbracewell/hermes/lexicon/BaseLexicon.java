@@ -21,15 +21,43 @@
 
 package com.davidbracewell.hermes.lexicon;
 
-import com.davidbracewell.hermes.HString;
+import java.io.Serializable;
 
 /**
- * The type Probabilistic lexicon.
+ * The type Base lexicon.
  *
  * @author David B. Bracewell
  */
-public interface ProbabilisticLexicon extends Lexicon {
+public abstract class BaseLexicon implements Lexicon, Serializable {
+  private static final long serialVersionUID = 1L;
+  private final boolean caseSensitive;
 
-  double getProbability(HString hString);
+  /**
+   * Instantiates a new Base lexicon.
+   *
+   * @param caseSensitive the case sensitive
+   */
+  public BaseLexicon(boolean caseSensitive) {
+    this.caseSensitive = caseSensitive;
+  }
 
-}//END OF ProbabilisticLexicon
+
+  /**
+   * Is case sensitive boolean.
+   *
+   * @return the boolean
+   */
+  public final boolean isCaseSensitive() {
+    return caseSensitive;
+  }
+
+
+  protected String normalize(CharSequence sequence) {
+    if (isCaseSensitive()) {
+      return sequence.toString().toLowerCase();
+    }
+    return sequence.toString();
+  }
+
+
+}//END OF BaseLexicon

@@ -21,18 +21,15 @@
 
 package com.davidbracewell.hermes.annotator;
 
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.lexicon.TrieLexicon;
-import com.davidbracewell.io.resource.Resource;
-import com.google.common.base.Preconditions;
+import com.davidbracewell.hermes.lexicon.BaseTrieLexicon;
+import com.davidbracewell.hermes.lexicon.LexiconManager;
 import lombok.NonNull;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -41,61 +38,15 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public class TrieLexiconAnnotator implements Annotator, Serializable{
+public class TrieLexiconAnnotator implements Annotator, Serializable {
   private static final long serialVersionUID = 1L;
   private final AnnotationType type;
-  private final TrieLexicon lexicon;
+  private final BaseTrieLexicon<?> lexicon;
 
 
-  /**
-   * Instantiates a new Trie lexicon annotator.
-   *
-   * @param type         the type
-   * @param tagAttribute the tag attribute
-   * @param lexiconFiles the lexicon files
-   */
-  public TrieLexiconAnnotator(AnnotationType type, Attribute tagAttribute, Resource... lexiconFiles) {
-    this(false, false, type, tagAttribute, Arrays.asList(lexiconFiles));
-  }
-
-  /**
-   * Instantiates a new Trie lexicon annotator.
-   *
-   * @param caseSensitive the case sensitive
-   * @param type          the type
-   * @param tagAttribute  the tag attribute
-   * @param lexiconFiles  the lexicon files
-   */
-  public TrieLexiconAnnotator(boolean caseSensitive, AnnotationType type, Attribute tagAttribute, Resource... lexiconFiles) {
-    this(caseSensitive, false, type, tagAttribute, Arrays.asList(lexiconFiles));
-  }
-
-
-  /**
-   * Instantiates a new Trie lexicon annotator.
-   *
-   * @param type         the type
-   * @param tagAttribute the tag attribute
-   * @param lexiconFiles the lexicon files
-   */
-  public TrieLexiconAnnotator(AnnotationType type, Attribute tagAttribute, Collection<Resource> lexiconFiles) {
-    this(false, false, type, tagAttribute, lexiconFiles);
-  }
-
-
-  /**
-   * Instantiates a new Trie lexicon annotator.
-   *
-   * @param caseSensitive the case sensitive
-   * @param prefixMatch   the fuzzy
-   * @param type          the type
-   * @param tagAttribute  the tag attribute
-   * @param lexiconFiles  the lexicon files
-   */
-  public TrieLexiconAnnotator(boolean caseSensitive, boolean prefixMatch, @NonNull AnnotationType type, @NonNull Attribute tagAttribute, @NonNull Collection<Resource> lexiconFiles) {
-    this.type = Preconditions.checkNotNull(type);
-    this.lexicon = new TrieLexicon(caseSensitive, tagAttribute, lexiconFiles);
-    this.lexicon.setFuzzyMatch(prefixMatch);
+  private TrieLexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName) {
+    this.lexicon = Cast.as(LexiconManager.getLexicon(lexiconName));
+    this.type = type;
   }
 
   @Override

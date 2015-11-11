@@ -24,8 +24,7 @@ package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.hermes.HString;
 
-import java.io.Serializable;
-import java.util.Set;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -33,83 +32,26 @@ import java.util.function.Predicate;
  *
  * @author David B. Bracewell
  */
-public abstract class Lexicon implements Serializable, Predicate<CharSequence> {
-  private static final long serialVersionUID = 1L;
-
-  /**
-   * Is the lookup case sensitive or insensitive
-   */
-  protected final boolean caseSensitive;
-
-  /**
-   * Instantiates a new Tag lexicon.
-   *
-   * @param caseSensitive the case sensitive
-   */
-  protected Lexicon(boolean caseSensitive) {
-    this.caseSensitive = caseSensitive;
-
-  }
-
-  /**
-   * Determines if a lexical item is contained in the lexicon or not
-   *
-   * @param lexicalItem the lexical item to lookup
-   * @return true if the lexical item is in the lexicon, false otherwise
-   */
-  public final boolean contains(String lexicalItem) {
-    return lexicalItem != null &&
-      (containsImpl(lexicalItem) || (!isCaseSensitive() && containsImpl(lexicalItem.toLowerCase())));
-  }
-
-  /**
-   * Determines if a content in the fragment is contained in the lexicon or not
-   *
-   * @param fragment the fragment to lookup
-   * @return true if the fragment is in the lexicon, false otherwise
-   */
-  public final boolean contains(HString fragment) {
-    return fragment != null && (contains(fragment.toString()) || contains(fragment.getLemma()));
-  }
-
-  /**
-   * Contains implementation. Lexical item will non-null and in format that should be in backing dictionary.
-   *
-   * @param nonNullLexicalItem the non null lexical item
-   * @return True if the lexicon contains the lexical item, false if not
-   */
-  protected abstract boolean containsImpl(String nonNullLexicalItem);
-
-  /**
-   * Is the lookup of lexical items case sensitive.
-   *
-   * @return True if case sensitive, False if case insensitive
-   */
-  public final boolean isCaseSensitive() {
-    return caseSensitive;
-  }
-
-  /**
-   * Gets the lexical items in the lexicom
-   *
-   * @return the set of lexical items
-   */
-  public abstract Set<String> lexicalItems();
+public interface Lexicon extends Predicate<HString>, Iterable<String> {
 
   /**
    * The number of lexical items in the lexicon
    *
    * @return the number of lexical items in the lexicon
    */
-  public abstract int size();
+  int size();
 
+  /**
+   * Gets match.
+   *
+   * @param hString the h string
+   * @return the match
+   */
+  Optional<String> getMatch(HString hString);
 
   @Override
-  public final boolean test(CharSequence sequence) {
-    if (sequence == null) {
-      return false;
-    }
-    return contains(sequence.toString());
+  default boolean test(HString hString) {
+    return getMatch(hString).isPresent();
   }
 
 }//END OF Lexicon

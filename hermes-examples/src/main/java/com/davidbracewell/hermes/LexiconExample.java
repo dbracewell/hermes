@@ -21,14 +21,7 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.annotator.TrieLexiconAnnotator;
-import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
-import com.davidbracewell.io.Resources;
-
-import static com.davidbracewell.hermes.Types.*;
 
 /**
  * @author David B. Bracewell
@@ -39,32 +32,32 @@ public class LexiconExample {
     Config.initialize("LexiconExample");
 
 
-    TrieLexiconAnnotator annotator = new TrieLexiconAnnotator(
-      false, Types.LEXICON_MATCH,
-      Attrs.TAG,
-      Resources.fromClasspath("com/davidbracewell/hermes/people.dict")
-    );
-    annotator.setPrefixMatch(true);
-    Pipeline.setAnnotator(Types.LEXICON_MATCH, Language.ENGLISH, annotator);
-
-    Pipeline pipeline = Pipeline.builder()
-      .addAnnotations(TOKEN, SENTENCE, LEXICON_MATCH)
-      .onComplete(document -> {
-        document.get(Types.LEXICON_MATCH)
-          .forEach(m -> System.out.println(
-            m +
-              " [" + m.get(Attrs.TAG) + "] " +
-              " [" + m.get(Attrs.CONFIDENCE) + "]"
-          ));
-      })
-      .build();
-
-    Corpus corpus = Corpus.builder()
-      .format(DocumentFormats.PLAIN_TEXT_OPL)
-      .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
-      .build();
-
-    pipeline.process(corpus);
+//    TrieLexiconAnnotator annotator = new TrieLexiconAnnotator(
+//      false, Types.LEXICON_MATCH,
+//      Attrs.TAG,
+//      Resources.fromClasspath("com/davidbracewell/hermes/people.dict")
+//    );
+//    annotator.setPrefixMatch(true);
+//    Pipeline.setAnnotator(Types.LEXICON_MATCH, Language.ENGLISH, annotator);
+//
+//    Pipeline pipeline = Pipeline.builder()
+//      .addAnnotations(TOKEN, SENTENCE, LEXICON_MATCH)
+//      .onComplete(document -> {
+//        document.get(Types.LEXICON_MATCH)
+//          .forEach(m -> System.out.println(
+//            m +
+//              " [" + m.get(Attrs.TAG) + "] " +
+//              " [" + m.get(Attrs.CONFIDENCE) + "]"
+//          ));
+//      })
+//      .build();
+//
+//    Corpus corpus = Corpus.builder()
+//      .format(DocumentFormats.PLAIN_TEXT_OPL)
+//      .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
+//      .build();
+//
+//    pipeline.process(corpus);
   }
 
 }//END OF LexiconExample
