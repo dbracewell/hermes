@@ -43,6 +43,9 @@ public interface TagLexicon extends Lexicon {
    */
   Optional<Tag> getTag(HString fragment);
 
+  default boolean hasTag(HString hString, Tag tag) {
+    return getTag(hString).filter(tag1 -> tag1.isInstance(tag)).isPresent();
+  }
 
   Set<Map.Entry<String, Tag>> entrySet();
 

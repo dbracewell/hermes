@@ -65,7 +65,7 @@ public class TrieTagLexicon extends BaseTrieLexicon<Tag> implements TagLexicon {
   }
 
 
-  public static TrieTagLexicon read(@NonNull Resource resource, boolean isCaseSensitive, @NonNull Attribute tagAttribute) throws IOException {
+  public static TrieTagLexicon read(@NonNull Resource resource, boolean isCaseSensitive, @NonNull Attribute tagAttribute, Tag defaultTag) throws IOException {
     TrieTagLexicon lexicon = new TrieTagLexicon(tagAttribute, isCaseSensitive);
     ValueType tagType = tagAttribute.getValueType();
     try (CSVReader reader = CSV.builder().reader(resource)) {
@@ -73,6 +73,8 @@ public class TrieTagLexicon extends BaseTrieLexicon<Tag> implements TagLexicon {
         if (row.size() > 1) {
           Tag tag = tagType.convert(row.get(1));
           lexicon.put(lexicon.normalize(row.get(0)), tag);
+        } else {
+          lexicon.put(lexicon.normalize(row.get(0)), defaultTag);
         }
       });
     }

@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.lexicon;
 
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.io.resource.Resource;
@@ -67,7 +68,8 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
     private boolean hasConstraints;
     private boolean isCaseSensitive;
     private Attribute tagAttribute;
-
+    private Tag defaultTag;
+    private boolean useResourceNameAsTag;
 
     public LexiconLoader probabilisitic() {
       isProbabilistic = true;
@@ -104,7 +106,25 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
       return this;
     }
 
+    public LexiconLoader useResourceNameAsTag() {
+      this.useResourceNameAsTag = true;
+      this.defaultTag = null;
+      return this;
+    }
+
+    public LexiconLoader defaultTag(Tag tag) {
+      this.defaultTag = tag;
+      this.useResourceNameAsTag = false;
+      return this;
+    }
+
     public Lexicon load(@NonNull Resource resource) throws IOException {
+
+      Tag dTag = defaultTag;
+      if (useResourceNameAsTag && tagAttribute != null) {
+        String tagV = resource.baseName().replaceFirst("\\.*$", "");
+        dTag = tagAttribute.getValueType().convert(tagV);
+      }
 
       if (isProbabilistic && hasConstraints && tagAttribute != null) {
 
@@ -112,13 +132,15 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
 
       } else if (isProbabilistic && tagAttribute != null) {
 
+      } else if( isProbabilistic ){
+        return ProbabilisticTrieLexicon.read(resource,isCaseSensitive);
       } else if (hasConstraints && tagAttribute != null) {
 
       } else if (hasConstraints) {
 
 
       } else if (tagAttribute != null) {
-        return TrieTagLexicon.read(resource, isCaseSensitive, tagAttribute);
+        return TrieTagLexicon.read(resource, isCaseSensitive, tagAttribute, dTag);
       }
 
       return TrieLexicon.read(resource, isCaseSensitive);
