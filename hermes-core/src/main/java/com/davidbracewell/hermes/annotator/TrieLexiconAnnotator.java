@@ -24,9 +24,8 @@ package com.davidbracewell.hermes.annotator;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.lexicon.BaseTrieLexicon;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
+import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -41,7 +40,7 @@ import java.util.Set;
 public class TrieLexiconAnnotator implements Annotator, Serializable {
   private static final long serialVersionUID = 1L;
   private final AnnotationType type;
-  private final BaseTrieLexicon<?> lexicon;
+  private final TrieLexicon lexicon;
 
 
   private TrieLexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName) {
@@ -51,9 +50,9 @@ public class TrieLexiconAnnotator implements Annotator, Serializable {
 
   @Override
   public void annotate(Document document) {
-    for (HString f : lexicon.findMatches(document)) {
-      document.createAnnotation(type, f);
-    }
+//    for (HString f : lexicon.findMatches(document)) {
+//      document.createAnnotation(type, f);
+//    }
   }
 
   @Override

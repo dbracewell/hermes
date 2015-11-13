@@ -29,6 +29,7 @@ import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -62,6 +63,34 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
   default boolean test(HString hString) {
     return getMatch(hString).isPresent();
   }
+
+  default void add(@NonNull String lemma) {
+    add(new LexiconEntry(lemma, 1.0, null, null));
+  }
+
+  default void add(@NonNull String lemma, @NonNull Tag tag) {
+    add(new LexiconEntry(lemma, 1.0, null, tag));
+  }
+
+  default void add(@NonNull String lemma, double probability, @NonNull Tag tag) {
+    add(new LexiconEntry(lemma, probability, null, tag));
+  }
+
+  default void add(@NonNull String lemma, double probability) {
+    add(new LexiconEntry(lemma, probability, null, null));
+  }
+
+  void add(LexiconEntry entry);
+
+  default void addAll(Iterable<LexiconEntry> entries) {
+    if (entries != null) {
+      entries.forEach(this::add);
+    }
+  }
+
+
+  List<HString> find(HString source);
+
 
   final class LexiconLoader {
     private boolean isProbabilistic;
@@ -120,30 +149,32 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
 
     public Lexicon load(@NonNull Resource resource) throws IOException {
 
-      Tag dTag = defaultTag;
-      if (useResourceNameAsTag && tagAttribute != null) {
-        String tagV = resource.baseName().replaceFirst("\\.*$", "");
-        dTag = tagAttribute.getValueType().convert(tagV);
-      }
+//      Tag dTag = defaultTag;
+//      if (useResourceNameAsTag && tagAttribute != null) {
+//        String tagV = resource.baseName().replaceFirst("\\.*$", "");
+//        dTag = tagAttribute.getValueType().convert(tagV);
+//      }
+//
+//      if (isProbabilistic && hasConstraints && tagAttribute != null) {
+//
+//      } else if (isProbabilistic && hasConstraints) {
+//
+//      } else if (isProbabilistic && tagAttribute != null) {
+//
+//      } else if (isProbabilistic) {
+//        return ProbabilisticTrieLexicon.read(resource, isCaseSensitive);
+//      } else if (hasConstraints && tagAttribute != null) {
+//
+//      } else if (hasConstraints) {
+//
+//
+//      } else if (tagAttribute != null) {
+//        return TrieTagLexicon.read(resource, isCaseSensitive, tagAttribute, dTag);
+//      }
+//
+//      return TrieLexicon.read(resource, isCaseSensitive);
 
-      if (isProbabilistic && hasConstraints && tagAttribute != null) {
-
-      } else if (isProbabilistic && hasConstraints) {
-
-      } else if (isProbabilistic && tagAttribute != null) {
-
-      } else if( isProbabilistic ){
-        return ProbabilisticTrieLexicon.read(resource,isCaseSensitive);
-      } else if (hasConstraints && tagAttribute != null) {
-
-      } else if (hasConstraints) {
-
-
-      } else if (tagAttribute != null) {
-        return TrieTagLexicon.read(resource, isCaseSensitive, tagAttribute, dTag);
-      }
-
-      return TrieLexicon.read(resource, isCaseSensitive);
+      return null;
     }
 
 

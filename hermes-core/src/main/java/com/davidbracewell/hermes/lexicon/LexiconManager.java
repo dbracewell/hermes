@@ -25,22 +25,17 @@ import com.davidbracewell.cache.Cache;
 import com.davidbracewell.cache.CacheManager;
 import com.davidbracewell.cache.CacheSpec;
 import com.davidbracewell.cache.GuavaLoadingCache;
-import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.lexicon.spi.LexiconSupplier;
 import com.davidbracewell.logging.Logger;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import lombok.NonNull;
 
-import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
-import java.util.ServiceLoader;
 
 /**
  * @author David B. Bracewell
@@ -48,21 +43,12 @@ import java.util.ServiceLoader;
 public final class LexiconManager implements Serializable {
   private static final long serialVersionUID = 1L;
   private static final Logger log = Logger.getLogger(LexiconManager.class);
-  private static final Map<Class<?>, LexiconSupplier> lexiconSupplierMap;
   private static final Cache<String, Lexicon> lexiconCache = CacheManager.getInstance().register(
     CacheSpec.<String, Lexicon>create()
       .engine(GuavaLoadingCache.class.getName())
       .maxSize(50)
       .loadingFunction(name -> createLexicon(name.toLowerCase()))
   );
-
-  static {
-    ImmutableMap.Builder<Class<?>, LexiconSupplier> builder = ImmutableMap.builder();
-    for (LexiconSupplier supplier : ServiceLoader.load(LexiconSupplier.class)) {
-      builder.put(supplier.getLexiconClass(), supplier);
-    }
-    lexiconSupplierMap = builder.build();
-  }
 
 
   private LexiconManager() {
@@ -74,15 +60,6 @@ public final class LexiconManager implements Serializable {
   }
 
   private static Lexicon createLexicon(String name) {
-    Class<?> clazz = Config.get(name, "class").asClass();
-    if (clazz != null) {
-      try {
-        return lexiconSupplierMap.get(clazz).get(name);
-      } catch (IOException e) {
-        log.severe(e);
-        throw Throwables.propagate(e);
-      }
-    }
     log.warn("'{0}' does not exists returning an empty lexicon.", name);
     return EmptyLexicon.INSTANCE;
   }
@@ -93,6 +70,16 @@ public final class LexiconManager implements Serializable {
 
   private enum EmptyLexicon implements Lexicon {
     INSTANCE;
+
+    @Override
+    public List<HString> find(HString source) {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public void add(LexiconEntry entry) {
+      throw new UnsupportedOperationException();
+    }
 
     @Override
     public Iterator<String> iterator() {
