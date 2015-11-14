@@ -24,6 +24,7 @@ package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.Tag;
 import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.Fragments;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
@@ -77,6 +78,18 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    */
   double getProbability(HString hString);
 
+  Attribute getTagAttribute();
+
+  default double getProbability(String lemma) {
+    return getProbability(Fragments.string(lemma));
+  }
+
+  default Optional<Tag> getTag(String lemma) {
+    return getTag(Fragments.string(lemma));
+  }
+
+  Optional<Tag> getTag(HString hString);
+
   /**
    * Gets probability.
    *
@@ -85,6 +98,10 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @return the probability
    */
   double getProbability(HString hString, Tag tag);
+
+  int getMaxTokenLength();
+
+  boolean isCaseSensitive();
 
   /**
    * Add.

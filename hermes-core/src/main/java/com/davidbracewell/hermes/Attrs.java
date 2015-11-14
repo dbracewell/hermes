@@ -108,4 +108,7 @@ public interface Attrs {
    */
   Attribute TRANSLITERATION = Attribute.create("TRANSLITERATION");
 
+
+  Attribute LEXICON_MATCH = Attribute.create("LEXICON_MATCH");
+
 }//END OF Attrs

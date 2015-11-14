@@ -46,7 +46,7 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
 
   @Override
   public Iterator<String> iterator() {
-    return null;
+    return trie.keySet().iterator();
   }
 
   @Override
@@ -109,6 +109,10 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
     return trie.prefixMap(normalize(hString) + " ").size() > 0 || trie.prefixMap(normalize(hString.getLemma()) + " ").size() > 0;
   }
 
+  @Override
+  public Optional<Tag> getTag(HString hString) {
+    return getEntries(hString).stream().map(LexiconEntry::getTag).findFirst();
+  }
 }//END OF BaseTrieLexicon
 
 

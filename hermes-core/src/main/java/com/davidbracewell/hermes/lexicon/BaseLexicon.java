@@ -59,11 +59,17 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
   }
 
 
+  @Override
+  public Attribute getTagAttribute() {
+    return tagAttribute;
+  }
+
   /**
    * Is case sensitive boolean.
    *
    * @return the boolean
    */
+  @Override
   public final boolean isCaseSensitive() {
     return caseSensitive;
   }
@@ -106,7 +112,7 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
   protected List<HString> viterbi(@NonNull HString source) {
     List<Annotation> tokens = source.tokens();
     int n = tokens.size();
-    int maxLen = longestLemma+1;
+    int maxLen = longestLemma + 1;
     LexiconMatch[] matches = new LexiconMatch[n + 1];
     double[] best = new double[n + 1];
     best[0] = 0;
@@ -138,7 +144,7 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
   private HString createFragment(LexiconMatch match) {
     HString tmp = match.getSpan().document().substring(match.getSpan().start(), match.getSpan().end());
     tmp.put(Attrs.CONFIDENCE, match.getScore());
-    tmp.put(Attrs.SOURCE, match.getMatchedString());
+    tmp.put(Attrs.LEXICON_MATCH, match.getMatchedString());
     if (tagAttribute != null) {
       tmp.put(tagAttribute, match.getTag());
     }
@@ -188,6 +194,11 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
     }
 
     return results;
+  }
+
+  @Override
+  public int getMaxTokenLength() {
+    return longestLemma;
   }
 
 }//END OF BaseLexicon

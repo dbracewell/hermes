@@ -25,7 +25,8 @@ package com.davidbracewell.hermes.annotator;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.tuple.Tuple2;
+import com.davidbracewell.hermes.lexicon.LexiconEntry;
+import com.davidbracewell.hermes.lexicon.LexiconMatch;
 
 import java.util.List;
 
@@ -55,7 +56,7 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
     List<Annotation> tokens = sentence.tokens();
     int n = tokens.size();
     int maxLen = maxSpanSize > 0 ? maxSpanSize : n;
-    Match[] matches = new Match[n + 1];
+    LexiconMatch[] matches = new LexiconMatch[n + 1];
     double[] best = new double[n + 1];
     best[0] = 1.0;
 
@@ -64,18 +65,18 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
       for (int j = i - 1; j >= 0 && j >= (i - maxLen); j--) {
         int w = i - j;
         HString span = HString.union(tokens.subList(j, i));
-        Tuple2<String, Double> score = scoreSpan(span);
-        double segmentScore = combineScore(best[i - w], score.v2);
+        LexiconEntry score = scoreSpan(span);
+        double segmentScore = combineScore(best[i - w], score.getProbability());
         if (segmentScore >= best[i]) {
           best[i] = segmentScore;
-          matches[i] = new Match(span, score.v1, score.v2);
+          matches[i] = new LexiconMatch(span, score);
         }
       }
     }
     int i = n;
     while (i > 0) {
       createAndAttachAnnotation(sentence.document(), matches[i]);
-      i = i - matches[i].span.tokenLength();
+      i = i - matches[i].getSpan().tokenLength();
     }
   }
 
@@ -97,7 +98,7 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
    * @param document the document
    * @param span     The span to check
    */
-  protected abstract void createAndAttachAnnotation(Document document, Match span);
+  protected abstract void createAndAttachAnnotation(Document document, LexiconMatch span);
 
   /**
    * Scores the given span.
@@ -105,38 +106,7 @@ public abstract class ViterbiAnnotator extends SentenceLevelAnnotator {
    * @param span The span
    * @return The score of the span
    */
-  protected abstract Tuple2<String, Double> scoreSpan(HString span);
+  protected abstract LexiconEntry scoreSpan(HString span);
 
-  /**
-   * Class for holding lexicon matches
-   */
-  protected static class Match {
-    /**
-     * The Span.
-     */
-    public final HString span;
-    /**
-     * The Score.
-     */
-    public final double score;
-    /**
-     * The Matched string.
-     */
-    public final String matchedString;
-
-    /**
-     * Instantiates a new Match.
-     *
-     * @param span          the span
-     * @param matchedString the matched string
-     * @param score         the score
-     */
-    public Match(HString span, String matchedString, double score) {
-      this.span = span;
-      this.matchedString = matchedString;
-      this.score = score;
-    }
-
-  }//END OF Match
 
 }//END OF ViterbiAnnotator

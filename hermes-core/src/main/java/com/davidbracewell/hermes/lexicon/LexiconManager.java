@@ -27,6 +27,7 @@ import com.davidbracewell.cache.CacheManager;
 import com.davidbracewell.cache.CacheSpec;
 import com.davidbracewell.cache.GuavaLoadingCache;
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.logging.Logger;
 import com.google.common.collect.Iterators;
@@ -109,8 +110,28 @@ public final class LexiconManager implements Serializable {
     }
 
     @Override
+    public Attribute getTagAttribute() {
+      return null;
+    }
+
+    @Override
+    public Optional<Tag> getTag(HString hString) {
+      return Optional.empty();
+    }
+
+    @Override
     public double getProbability(HString hString, Tag tag) {
       return 0;
+    }
+
+    @Override
+    public int getMaxTokenLength() {
+      return 0;
+    }
+
+    @Override
+    public boolean isCaseSensitive() {
+      return false;
     }
   }
 
