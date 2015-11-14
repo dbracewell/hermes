@@ -63,7 +63,12 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @param hString the h string
    * @return the match
    */
-  Optional<String> getMatch(HString hString);
+  default Optional<String> getMatch(HString hString) {
+    return getEntries(hString)
+      .stream()
+      .map(LexiconEntry::getLemma)
+      .findFirst();
+  }
 
   @Override
   default boolean test(HString hString) {
@@ -76,19 +81,46 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @param hString the h string
    * @return the probability
    */
-  double getProbability(HString hString);
+  default double getProbability(HString hString) {
+    return getEntries(hString).stream().mapToDouble(LexiconEntry::getProbability).max().orElse(0d);
+  }
 
+  /**
+   * Gets tag attribute.
+   *
+   * @return the tag attribute
+   */
   Attribute getTagAttribute();
 
+  /**
+   * Gets probability.
+   *
+   * @param lemma the lemma
+   * @return the probability
+   */
   default double getProbability(String lemma) {
     return getProbability(Fragments.string(lemma));
   }
 
+  /**
+   * Gets tag.
+   *
+   * @param lemma the lemma
+   * @return the tag
+   */
   default Optional<Tag> getTag(String lemma) {
     return getTag(Fragments.string(lemma));
   }
 
-  Optional<Tag> getTag(HString hString);
+  /**
+   * Gets tag.
+   *
+   * @param hString the h string
+   * @return the tag
+   */
+  default Optional<Tag> getTag(HString hString) {
+    return getEntries(hString).stream().map(LexiconEntry::getTag).findFirst();
+  }
 
   /**
    * Gets probability.
@@ -97,10 +129,26 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @param tag     the tag
    * @return the probability
    */
-  double getProbability(HString hString, Tag tag);
+  default double getProbability(HString hString, Tag tag) {
+    return getEntries(hString).stream()
+      .filter(le -> le.getTag() != null && le.getTag().isInstance(tag))
+      .mapToDouble(LexiconEntry::getProbability)
+      .max()
+      .orElse(0d);
+  }
 
+  /**
+   * Gets max token length.
+   *
+   * @return the max token length
+   */
   int getMaxTokenLength();
 
+  /**
+   * Is case sensitive boolean.
+   *
+   * @return the boolean
+   */
   boolean isCaseSensitive();
 
   /**

@@ -37,8 +37,15 @@ import java.util.stream.Collectors;
  */
 public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
   private static final long serialVersionUID = 1L;
-  protected final PatriciaTrie<List<LexiconEntry>> trie;
+  private final PatriciaTrie<List<LexiconEntry>> trie;
 
+  /**
+   * Instantiates a new Trie lexicon.
+   *
+   * @param isCaseSensitive the is case sensitive
+   * @param isProbabilistic the is probabilistic
+   * @param tagAttribute    the tag attribute
+   */
   public TrieLexicon(boolean isCaseSensitive, boolean isProbabilistic, Attribute tagAttribute) {
     super(isCaseSensitive, isProbabilistic, tagAttribute);
     this.trie = new PatriciaTrie<>();
@@ -52,27 +59,6 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
   @Override
   public int size() {
     return trie.size();
-  }
-
-  @Override
-  public Optional<String> getMatch(@NonNull HString hString) {
-    return getEntries(hString)
-      .stream()
-      .map(LexiconEntry::getLemma)
-      .findFirst();
-  }
-
-  @Override
-  public double getProbability(@NonNull HString hString) {
-    return getEntries(hString).stream().mapToDouble(LexiconEntry::getProbability).max().orElse(0d);
-  }
-
-  @Override
-  public double getProbability(@NonNull HString hString, @NonNull Tag tag) {
-    return getEntries(hString).stream()
-      .filter(le -> le.getTag() != null && le.getTag().isInstance(tag))
-      .mapToDouble(LexiconEntry::getProbability)
-      .max().orElse(0d);
   }
 
   @Override
@@ -94,7 +80,6 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
     return Collections.emptyList();
   }
 
-
   @Override
   public void add(@NonNull LexiconEntry entry) {
     if (!trie.containsKey(entry.getLemma())) {
@@ -113,6 +98,7 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
   public Optional<Tag> getTag(HString hString) {
     return getEntries(hString).stream().map(LexiconEntry::getTag).findFirst();
   }
+
 }//END OF BaseTrieLexicon
 
 
