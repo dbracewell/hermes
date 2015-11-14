@@ -196,10 +196,21 @@ public final class TokenRegex implements Serializable {
       AnnotationType typeName = AnnotationType.create(exp.operator.getText().substring(2).replaceFirst("\\}$", ""));
       return new TransitionFunction.AnnotationMatcher(typeName, consumerize(exp.right));
     }
+
+    if (exp.match(RegexTokenTypes.LOOKAHEAD)) {
+      TransitionFunction tr = new TransitionFunction.PredicateMatcher("", a -> true);
+      return new TransitionFunction.LookAhead(tr, consumerize(exp.right), false);
+    }
+
+    if (exp.match(RegexTokenTypes.ANNOTATION)) {
+      TransitionFunction tr = new TransitionFunction.PredicateMatcher("", a -> true);
+      return new TransitionFunction.LookAhead(tr, consumerize(exp.right), true);
+    }
+
     throw new ParseException("Unknown expression: " + exp.toString());
   }
 
-  private static TransitionFunction consumerize(Expression exp) throws ParseException {
+  protected static TransitionFunction consumerize(Expression exp) throws ParseException {
 
     //Handle Sequences
     if (exp.isInstance(MultivalueExpression.class)) {
@@ -219,6 +230,16 @@ public final class TokenRegex implements Serializable {
     if (exp.match(CommonTypes.PIPE)) {
       BinaryOperatorExpression boe = Cast.as(exp);
       return new TransitionFunction.Alternation(consumerize(boe.left), consumerize(boe.right));
+    }
+
+    if (exp.match(RegexTokenTypes.LOOKAHEAD)) {
+      BinaryOperatorExpression boe = Cast.as(exp);
+      return new TransitionFunction.LookAhead(consumerize(boe.left), consumerize(boe.right), false);
+    }
+
+    if (exp.match(RegexTokenTypes.NEGLOOKAHEAD)) {
+      BinaryOperatorExpression boe = Cast.as(exp);
+      return new TransitionFunction.LookAhead(consumerize(boe.left), consumerize(boe.right), true);
     }
 
     if (exp.match(RegexTokenTypes.ANY)) {

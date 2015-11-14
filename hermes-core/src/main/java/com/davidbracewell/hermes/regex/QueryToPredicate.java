@@ -67,6 +67,10 @@ public final class QueryToPredicate {
       register(CommonTypes.OPENBRACKET, new LogicGroupHandler(14));
       register(CommonTypes.PIPE, new BinaryOperatorHandler(7, false));
       register(CommonTypes.AMPERSAND, new BinaryOperatorHandler(7, false));
+      register(RegexTokenTypes.LOOKAHEAD, new BinaryOperatorHandler(7, false));
+      register(RegexTokenTypes.NEGLOOKAHEAD, new BinaryOperatorHandler(7, false));
+      register(RegexTokenTypes.LOOKAHEAD, new PrefixOperatorHandler(12));
+      register(RegexTokenTypes.NEGLOOKAHEAD, new PrefixOperatorHandler(12));
       register(RegexTokenTypes.PARENT, new PrefixOperatorHandler(1));
       register(RegexTokenTypes.RANGE, new PostfixOperatorHandler(8));
     }
@@ -74,6 +78,8 @@ public final class QueryToPredicate {
   protected static final RegularExpressionLexer lexer = RegularExpressionLexer.builder()
     .add(RegexTokenTypes.ATTRMATCH)
     .add(RegexTokenTypes.PATTERNTOKEN, "<(\\\\.|[^<>])+>")
+    .add(RegexTokenTypes.LOOKAHEAD)
+    .add(RegexTokenTypes.NEGLOOKAHEAD)
     .add(CommonTypes.OPENPARENS)
     .add(CommonTypes.CLOSEPARENS)
     .add(CommonTypes.OPENBRACKET)
@@ -134,7 +140,12 @@ public final class QueryToPredicate {
       }
       if (exp.match(RegexTokenTypes.ANNOTATION)) {
         AnnotationType aType = AnnotationType.create(pe.operator.getText().substring(2).replaceFirst("\\}$", ""));
-        return hString -> hString.get(aType).stream().anyMatch(child);
+        return hString -> hString.getStartingHere(aType).stream().anyMatch(child);
+      }
+
+      if (exp.match(RegexTokenTypes.LOOKAHEAD) || exp.match(RegexTokenTypes.NEGLOOKAHEAD)) {
+        TransitionFunction tf = TokenRegex.consumerize(exp);
+        return hString -> tf.matches(hString.asAnnotation().get()) > 0;
       }
 
     } else if (exp.isInstance(BinaryOperatorExpression.class)) {
@@ -145,6 +156,9 @@ public final class QueryToPredicate {
         return left.or(right);
       } else if (boe.match(CommonTypes.AMPERSAND)) {
         return left.and(right);
+      } else if (boe.match(RegexTokenTypes.LOOKAHEAD) || boe.match(RegexTokenTypes.NEGLOOKAHEAD)) {
+        TransitionFunction tf = TokenRegex.consumerize(exp);
+        return hString -> tf.matches(hString.asAnnotation().get()) > 0;
       }
     } else if (exp.isInstance(MultivalueExpression.class) && exp.match(CommonTypes.OPENPARENS)) {
       MultivalueExpression mve = Cast.as(exp);

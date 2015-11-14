@@ -96,7 +96,7 @@ interface TransitionFunction extends Serializable {
     @Override
     public int matches(Annotation input) {
       int max = 0;
-      for (Annotation a : input.get(type)) {
+      for (Annotation a : input.getStartingHere(type)) {
         max = Math.max(child.matches(a), max);
       }
       return max;
@@ -104,11 +104,11 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public int nonMatch(Annotation input) {
-      int max = 0;
-      for (Annotation a : input.get(type)) {
-        max = Math.max(child.nonMatch(a), max);
+      int min = input.tokenLength();
+      for (Annotation a : input.getStartingHere(type)) {
+        min = Math.min(child.nonMatch(a), min);
       }
-      return max;
+      return min;
     }
 
     @Override
@@ -156,6 +156,131 @@ interface TransitionFunction extends Serializable {
       return pattern;
     }
   }
+
+  final class LookAhead implements TransitionFunction, Serializable {
+    private static final long serialVersionUID = 1L;
+
+    final TransitionFunction child;
+    final TransitionFunction lookAhead;
+    final boolean negativeLookAhead;
+
+    public LookAhead(TransitionFunction child, TransitionFunction lookAhead, boolean negativeLookAhead) {
+      this.child = child;
+      this.lookAhead = lookAhead;
+      this.negativeLookAhead = negativeLookAhead;
+    }
+
+    @Override
+    public int matches(Annotation input) {
+      int m = child.matches(input);
+      if (m > 0) {
+        Annotation next = next(input, m);
+        if (negativeLookAhead) {
+          return lookAhead.nonMatch(next) > 0 ? m : 0;
+        }
+        return lookAhead.matches(next) > 0 ? m : 0;
+      }
+      return 0;
+    }
+
+    private Annotation next(Annotation input, int m) {
+      Annotation lToken = input.tokens().get(input.tokenLength() - 1);
+      while (m > 0) {
+        m--;
+        lToken = lToken.next();
+      }
+      return lToken;
+    }
+
+    @Override
+    public int nonMatch(Annotation input) {
+      int m = child.nonMatch(input);
+      if (m > 0) {
+        Annotation next = next(input, m);
+        if (negativeLookAhead) {
+          return lookAhead.matches(next) > 0 ? m : 0;
+        }
+        return lookAhead.nonMatch(next) > 0 ? m : 0;
+      }
+      return 0;
+    }
+
+    @Override
+    public NFA construct() {
+      NFA nEnd = new NFA();
+      nEnd.start.connect(nEnd.end, this);
+      return nEnd;
+    }
+
+    @Override
+    public String toString() {
+      return "(" + child.toString() + ") " + (negativeLookAhead ? "?!>" : "?>") + "(" + lookAhead.toString() + ")";
+    }
+
+  }//END OF LookAhead
+
+
+  final class LookBehind implements TransitionFunction, Serializable {
+    private static final long serialVersionUID = 1L;
+
+    final TransitionFunction child;
+    final TransitionFunction lookBehind;
+    final boolean negativeLookAhead;
+
+    public LookBehind(TransitionFunction child, TransitionFunction lookBehind, boolean negativeLookAhead) {
+      this.child = child;
+      this.lookBehind = lookBehind;
+      this.negativeLookAhead = negativeLookAhead;
+    }
+
+    @Override
+    public int matches(Annotation input) {
+      int m = child.matches(input);
+      if (m > 0) {
+        Annotation next = previous(input, m);
+        if (negativeLookAhead) {
+          return lookBehind.nonMatch(next) > 0 ? m : 0;
+        }
+        return lookBehind.matches(next) > 0 ? m : 0;
+      }
+      return 0;
+    }
+
+    private Annotation previous(Annotation input, int m) {
+      Annotation lToken = input.tokenAt(0);
+      while (m > 0) {
+        m--;
+        lToken = lToken.previous();
+      }
+      return lToken;
+    }
+
+    @Override
+    public int nonMatch(Annotation input) {
+      int m = child.nonMatch(input);
+      if (m > 0) {
+        Annotation next = previous(input, m);
+        if (negativeLookAhead) {
+          return lookBehind.matches(next) > 0 ? m : 0;
+        }
+        return lookBehind.nonMatch(next) > 0 ? m : 0;
+      }
+      return 0;
+    }
+
+    @Override
+    public NFA construct() {
+      NFA nEnd = new NFA();
+      nEnd.start.connect(nEnd.end, this);
+      return nEnd;
+    }
+
+    @Override
+    public String toString() {
+      return "(" + child.toString() + ") " + (negativeLookAhead ? "<>:" : "<:") + "(" + lookBehind.toString() + ")";
+    }
+
+  }//END OF LookBehind
 
   final class LogicStatement implements TransitionFunction, Serializable {
     private static final long serialVersionUID = 1L;
@@ -245,7 +370,12 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public int nonMatch(Annotation input) {
-      return Math.max(c1.nonMatch(input), c2.nonMatch(input));
+      int m1 = c1.nonMatch(input);
+      int m2 = c2.nonMatch(input);
+      if (m1 > 0 && m2 > 0) {
+        return Math.max(m1, m2);
+      }
+      return 0;
     }
 
     @Override

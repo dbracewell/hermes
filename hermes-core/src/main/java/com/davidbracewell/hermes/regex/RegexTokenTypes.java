@@ -44,11 +44,13 @@ public enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
   MATCHSTART("MATCH:"),
   REGISTER("@REGISTER"),
   RANGE("\\{\\d+\\s*,\\s*(\\d+|\\*)\\}"),
+  LOOKAHEAD("\\?>"),
+  NEGLOOKAHEAD("\\?\\!>"),
   PARENT("\\/>");
   private final String pattern;
 
 
-  private RegexTokenTypes(String pattern) {
+  RegexTokenTypes(String pattern) {
     this.pattern = pattern;
   }
 
