@@ -40,6 +40,11 @@ import java.util.function.Predicate;
  */
 public interface Lexicon extends Predicate<HString>, Iterable<String> {
 
+  /**
+   * Loader lexicon loader.
+   *
+   * @return the lexicon loader
+   */
   static LexiconLoader loader() {
     return new LexiconLoader();
   }
@@ -64,24 +69,75 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
     return getMatch(hString).isPresent();
   }
 
+  /**
+   * Gets probability.
+   *
+   * @param hString the h string
+   * @return the probability
+   */
+  double getProbability(HString hString);
+
+  /**
+   * Gets probability.
+   *
+   * @param hString the h string
+   * @param tag     the tag
+   * @return the probability
+   */
+  double getProbability(HString hString, Tag tag);
+
+  /**
+   * Add.
+   *
+   * @param lemma the lemma
+   */
   default void add(@NonNull String lemma) {
     add(new LexiconEntry(lemma, 1.0, null, null));
   }
 
+  /**
+   * Add.
+   *
+   * @param lemma the lemma
+   * @param tag   the tag
+   */
   default void add(@NonNull String lemma, @NonNull Tag tag) {
     add(new LexiconEntry(lemma, 1.0, null, tag));
   }
 
+  /**
+   * Add.
+   *
+   * @param lemma       the lemma
+   * @param probability the probability
+   * @param tag         the tag
+   */
   default void add(@NonNull String lemma, double probability, @NonNull Tag tag) {
     add(new LexiconEntry(lemma, probability, null, tag));
   }
 
+  /**
+   * Add.
+   *
+   * @param lemma       the lemma
+   * @param probability the probability
+   */
   default void add(@NonNull String lemma, double probability) {
     add(new LexiconEntry(lemma, probability, null, null));
   }
 
+  /**
+   * Add.
+   *
+   * @param entry the entry
+   */
   void add(LexiconEntry entry);
 
+  /**
+   * Add all.
+   *
+   * @param entries the entries
+   */
   default void addAll(Iterable<LexiconEntry> entries) {
     if (entries != null) {
       entries.forEach(this::add);
@@ -89,9 +145,26 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
   }
 
 
-  List<HString> find(HString source);
+  /**
+   * Find list.
+   *
+   * @param source the source
+   * @return the list
+   */
+  List<HString> match(HString source);
 
 
+  /**
+   * Gets entries.
+   *
+   * @param hString the h string
+   * @return the entries
+   */
+  List<LexiconEntry> getEntries(HString hString);
+
+  /**
+   * The type Lexicon loader.
+   */
   final class LexiconLoader {
     private boolean isProbabilistic;
     private boolean hasConstraints;
@@ -100,53 +173,107 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
     private Tag defaultTag;
     private boolean useResourceNameAsTag;
 
+    /**
+     * Probabilisitic lexicon loader.
+     *
+     * @return the lexicon loader
+     */
     public LexiconLoader probabilisitic() {
       isProbabilistic = true;
       return this;
     }
 
+    /**
+     * Non probabilisitic lexicon loader.
+     *
+     * @return the lexicon loader
+     */
     public LexiconLoader nonProbabilisitic() {
       isProbabilistic = false;
       return this;
     }
 
+    /**
+     * Constrained lexicon loader.
+     *
+     * @return the lexicon loader
+     */
     public LexiconLoader constrained() {
       this.hasConstraints = true;
       return this;
     }
 
+    /**
+     * Non constrained lexicon loader.
+     *
+     * @return the lexicon loader
+     */
     public LexiconLoader nonConstrained() {
       this.hasConstraints = false;
       return this;
     }
 
+    /**
+     * Case sensitive lexicon loader.
+     *
+     * @return the lexicon loader
+     */
     public LexiconLoader caseSensitive() {
       isCaseSensitive = true;
       return this;
     }
 
+    /**
+     * Case insensitive lexicon loader.
+     *
+     * @return the lexicon loader
+     */
     public LexiconLoader caseInsensitive() {
       isCaseSensitive = false;
       return this;
     }
 
+    /**
+     * Tag attribute lexicon loader.
+     *
+     * @param attribute the attribute
+     * @return the lexicon loader
+     */
     public LexiconLoader tagAttribute(Attribute attribute) {
       this.tagAttribute = attribute;
       return this;
     }
 
+    /**
+     * Use resource name as tag lexicon loader.
+     *
+     * @return the lexicon loader
+     */
     public LexiconLoader useResourceNameAsTag() {
       this.useResourceNameAsTag = true;
       this.defaultTag = null;
       return this;
     }
 
+    /**
+     * Default tag lexicon loader.
+     *
+     * @param tag the tag
+     * @return the lexicon loader
+     */
     public LexiconLoader defaultTag(Tag tag) {
       this.defaultTag = tag;
       this.useResourceNameAsTag = false;
       return this;
     }
 
+    /**
+     * Load lexicon.
+     *
+     * @param resource the resource
+     * @return the lexicon
+     * @throws IOException the io exception
+     */
     public Lexicon load(@NonNull Resource resource) throws IOException {
 
 //      Tag dTag = defaultTag;

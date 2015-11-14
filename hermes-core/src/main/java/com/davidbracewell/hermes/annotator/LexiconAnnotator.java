@@ -22,10 +22,10 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
-import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -37,22 +37,27 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public class TrieLexiconAnnotator implements Annotator, Serializable {
+public class LexiconAnnotator extends SentenceLevelAnnotator implements Serializable {
   private static final long serialVersionUID = 1L;
   private final AnnotationType type;
-  private final TrieLexicon lexicon;
+  private final Lexicon lexicon;
 
 
-  private TrieLexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName) {
-    this.lexicon = Cast.as(LexiconManager.getLexicon(lexiconName));
+  private LexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName) {
+    this(type, Cast.<Lexicon>as(LexiconManager.getLexicon(lexiconName)));
+  }
+
+  public LexiconAnnotator(@NonNull AnnotationType type, @NonNull Lexicon lexicon) {
+    this.lexicon = lexicon;
     this.type = type;
   }
 
   @Override
-  public void annotate(Document document) {
-//    for (HString f : lexicon.findMatches(document)) {
-//      document.createAnnotation(type, f);
-//    }
+  public void annotate(Annotation sentence) {
+    lexicon.match(sentence).forEach(hString -> {
+      Annotation a = sentence.document().createAnnotation(type, hString);
+      hString.attributeValues().forEach(e -> a.put(e.getKey(),e.getValue()));
+    });
   }
 
   @Override
@@ -60,14 +65,4 @@ public class TrieLexiconAnnotator implements Annotator, Serializable {
     return Collections.singleton(type);
   }
 
-
-  /**
-   * Sets prefix match.
-   *
-   * @param fuzzyMatch the fuzzy match
-   */
-  public void setPrefixMatch(boolean fuzzyMatch) {
-    this.lexicon.setFuzzyMatch(fuzzyMatch);
-  }
-
-}//END OF TrieLexiconAnnotator
+}//END OF LexiconAnnotator

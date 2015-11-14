@@ -21,8 +21,9 @@
 
 package com.davidbracewell.hermes.lexicon;
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.collection.trie.PatriciaTrie;
-import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.HString;
 import lombok.NonNull;
 
@@ -34,13 +35,12 @@ import java.util.stream.Collectors;
  *
  * @author David B. Bracewell
  */
-public class TrieLexicon extends BaseLexicon {
+public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
   private static final long serialVersionUID = 1L;
   protected final PatriciaTrie<List<LexiconEntry>> trie;
-  private boolean fuzzyMatch = false;
 
-  public TrieLexicon(boolean isCaseSensitive) {
-    super(isCaseSensitive);
+  public TrieLexicon(boolean isCaseSensitive, boolean isProbabilistic, Attribute tagAttribute) {
+    super(isCaseSensitive, isProbabilistic, tagAttribute);
     this.trie = new PatriciaTrie<>();
   }
 
@@ -62,118 +62,51 @@ public class TrieLexicon extends BaseLexicon {
       .findFirst();
   }
 
+  @Override
   public double getProbability(@NonNull HString hString) {
     return getEntries(hString).stream().mapToDouble(LexiconEntry::getProbability).max().orElse(0d);
   }
 
+  @Override
+  public double getProbability(@NonNull HString hString, @NonNull Tag tag) {
+    return getEntries(hString).stream()
+      .filter(le -> le.getTag() != null && le.getTag().isInstance(tag))
+      .mapToDouble(LexiconEntry::getProbability)
+      .max().orElse(0d);
+  }
+
+  @Override
   public List<LexiconEntry> getEntries(@NonNull HString hString) {
     String str = normalize(hString);
     if (trie.containsKey(str)) {
       return trie.get(str).stream()
         .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
-        .sorted((l1, l2) -> -Double.compare(l1.getProbability(), l2.getProbability()))
+        .sorted()
         .collect(Collectors.toList());
     }
     str = normalize(hString.getLemma());
     if (trie.containsKey(str)) {
       return trie.get(str).stream()
         .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
-        .sorted((l1, l2) -> -Double.compare(l1.getProbability(), l2.getProbability()))
+        .sorted()
         .collect(Collectors.toList());
-    }
-    if (fuzzyMatch) {
-      str = normalize(hString);
-      if (trie.prefixMap(str).size() > 0) {
-        return trie.prefixMap(str).values()
-          .stream()
-          .flatMap(Collection::stream)
-          .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
-          .sorted((l1, l2) -> -Double.compare(l1.getProbability(), l2.getProbability()))
-          .collect(Collectors.toList());
-      }
-      str = normalize(hString.getLemma());
-      if (trie.prefixMap(str).size() > 0) {
-        return trie.prefixMap(str).values()
-          .stream()
-          .flatMap(Collection::stream)
-          .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
-          .sorted((l1, l2) -> -Double.compare(l1.getProbability(), l2.getProbability()))
-          .collect(Collectors.toList());
-      }
     }
     return Collections.emptyList();
   }
+
 
   @Override
   public void add(@NonNull LexiconEntry entry) {
     if (!trie.containsKey(entry.getLemma())) {
       trie.put(entry.getLemma(), new LinkedList<>());
     }
+    ensureLongestLemma(entry.getLemma());
     trie.get(entry.getLemma()).add(entry);
   }
 
-  protected boolean isPrefixMatch(@NonNull HString hString) {
-    return trie.prefixMap(normalize(hString) + " ").size() > 0 || trie.prefixMap(normalize(hString.getLemma()) + " ").size() > 0;
-  }
-
-  /**
-   * Is fuzzy match boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isFuzzyMatch() {
-    return fuzzyMatch;
-  }
-
-  /**
-   * Sets fuzzy match.
-   *
-   * @param fuzzyMatch the fuzzy match
-   */
-  public void setFuzzyMatch(boolean fuzzyMatch) {
-    this.fuzzyMatch = fuzzyMatch;
-  }
-
-
   @Override
-  public List<HString> find(@NonNull HString source) {
-    List<HString> results = new LinkedList<>();
-    List<Annotation> tokens = source.tokens();
-
-    for (int i = 0; i < tokens.size(); ) {
-      Annotation token = tokens.get(i);
-      if (isPrefixMatch(token)) {
-
-        HString bestMatch = null;
-        double bestScore = 0d;
-        for (int j = i + 1; j < tokens.size() && j < (i + 5); j++) {
-          HString temp = HString.union(tokens.subList(i, j));
-          double score = getProbability(temp);
-          if (score >= bestScore) {
-            bestScore = score;
-            bestMatch = temp;
-          }
-          if (!isPrefixMatch(temp)) {
-            break;
-          }
-        }
-
-        if (bestMatch != null) {
-          results.add(bestMatch);
-          i += bestMatch.tokenLength();
-        } else {
-          i++;
-        }
-
-      } else if (test(token)) {
-        results.add(token);
-        i++;
-      } else {
-        i++;
-      }
-    }
-
-    return results;
+  public boolean isPrefixMatch(@NonNull HString hString) {
+    return trie.prefixMap(normalize(hString) + " ").size() > 0 || trie.prefixMap(normalize(hString.getLemma()) + " ").size() > 0;
   }
 
 }//END OF BaseTrieLexicon

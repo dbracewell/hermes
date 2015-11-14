@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.lexicon;
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.cache.Cache;
 import com.davidbracewell.cache.CacheManager;
 import com.davidbracewell.cache.CacheSpec;
@@ -71,8 +72,14 @@ public final class LexiconManager implements Serializable {
   private enum EmptyLexicon implements Lexicon {
     INSTANCE;
 
+
     @Override
-    public List<HString> find(HString source) {
+    public List<HString> match(HString source) {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public List<LexiconEntry> getEntries(HString hString) {
       return Collections.emptyList();
     }
 
@@ -94,6 +101,16 @@ public final class LexiconManager implements Serializable {
     @Override
     public Optional<String> getMatch(HString hString) {
       return Optional.empty();
+    }
+
+    @Override
+    public double getProbability(HString hString) {
+      return 0;
+    }
+
+    @Override
+    public double getProbability(HString hString, Tag tag) {
+      return 0;
     }
   }
 

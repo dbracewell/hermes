@@ -21,7 +21,17 @@
 
 package com.davidbracewell.hermes.lexicon;
 
+import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.HString;
+import lombok.NonNull;
+
 import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * The type Base lexicon.
@@ -31,14 +41,21 @@ import java.io.Serializable;
 public abstract class BaseLexicon implements Lexicon, Serializable {
   private static final long serialVersionUID = 1L;
   private final boolean caseSensitive;
+  private final boolean probabilistic;
+  private final Attribute tagAttribute;
+  private int longestLemma = 0;
 
   /**
    * Instantiates a new Base lexicon.
    *
    * @param caseSensitive the case sensitive
+   * @param probabilistic the probabilistic
+   * @param tagAttribute  the tag attribute
    */
-  public BaseLexicon(boolean caseSensitive) {
+  public BaseLexicon(boolean caseSensitive, boolean probabilistic, Attribute tagAttribute) {
     this.caseSensitive = caseSensitive;
+    this.probabilistic = probabilistic;
+    this.tagAttribute = tagAttribute;
   }
 
 
@@ -52,6 +69,16 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
   }
 
 
+  protected void ensureLongestLemma(String lemma) {
+    this.longestLemma = Math.max(this.longestLemma, lemma.split("\\s+").length);
+  }
+
+  /**
+   * Normalize string.
+   *
+   * @param sequence the sequence
+   * @return the string
+   */
   protected String normalize(CharSequence sequence) {
     if (isCaseSensitive()) {
       return sequence.toString().toLowerCase();
@@ -59,5 +86,108 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
     return sequence.toString();
   }
 
+  public List<HString> match(@NonNull HString source) {
+    if (longestLemma < 3) {
+      this.longestLemma = 3;
+    }
+    if (probabilistic) {
+      return viterbi(source);
+    } else {
+      return longestMatchFirst(source);
+    }
+  }
+
+  /**
+   * Viterbi list.
+   *
+   * @param source the source
+   * @return the list
+   */
+  protected List<HString> viterbi(@NonNull HString source) {
+    List<Annotation> tokens = source.tokens();
+    int n = tokens.size();
+    int maxLen = longestLemma+1;
+    LexiconMatch[] matches = new LexiconMatch[n + 1];
+    double[] best = new double[n + 1];
+    best[0] = 0;
+    for (int end = 1; end <= n; end++) {
+      matches[end] = new LexiconMatch(tokens.get(end - 1), 0d, "", null);
+      for (int start = end - 1; start >= 0 && start >= (end - maxLen); start--) {
+        HString span = HString.union(tokens.subList(start, end));
+        LexiconEntry entry = getEntries(span).stream().findFirst().orElse(new LexiconEntry("", 0, null, null));
+        LexiconMatch score = new LexiconMatch(span, entry.getProbability(), entry.getLemma(), entry.getTag());
+        double segmentScore = score.getScore() + best[start];
+        if (segmentScore >= best[end]) {
+          best[end] = segmentScore;
+          matches[end] = score;
+        }
+      }
+    }
+    int i = n;
+    List<HString> results = new LinkedList<>();
+    while (i > 0) {
+      LexiconMatch match = matches[i];
+      if (match.getScore() > 0) {
+        results.add(createFragment(match));
+      }
+      i = i - matches[i].getSpan().tokenLength();
+    }
+    return results;
+  }
+
+  private HString createFragment(LexiconMatch match) {
+    HString tmp = match.getSpan().document().substring(match.getSpan().start(), match.getSpan().end());
+    tmp.put(Attrs.CONFIDENCE, match.getScore());
+    tmp.put(Attrs.SOURCE, match.getMatchedString());
+    if (tagAttribute != null) {
+      tmp.put(tagAttribute, match.getTag());
+    }
+    return tmp;
+  }
+
+  /**
+   * Longest match first list.
+   *
+   * @param source the source
+   * @return the list
+   */
+  protected List<HString> longestMatchFirst(@NonNull HString source) {
+    List<HString> results = new LinkedList<>();
+    List<Annotation> tokens = source.tokens();
+    Predicate<HString> prefix = (this instanceof PrefixSearchable) ? Cast.<PrefixSearchable>as(this)::isPrefixMatch : h -> true;
+
+    for (int i = 0; i < tokens.size(); ) {
+      Annotation token = tokens.get(i);
+      if (prefix.test(token)) {
+
+        LexiconMatch bestMatch = null;
+        for (int j = i + 1; j < tokens.size() && j < (i + 1 + longestLemma); j++) {
+          HString temp = HString.union(tokens.subList(i, j));
+          List<LexiconEntry> entries = getEntries(temp);
+          if (entries.size() > 0) {
+            bestMatch = new LexiconMatch(temp, entries.get(0));
+          }
+          if (!prefix.test(temp)) {
+            break;
+          }
+        }
+
+        if (bestMatch != null) {
+          results.add(createFragment(bestMatch));
+          i += bestMatch.getSpan().tokenLength();
+        } else {
+          i++;
+        }
+
+      } else if (test(token)) {
+        results.add(createFragment(new LexiconMatch(token, getEntries(token).get(0))));
+        i++;
+      } else {
+        i++;
+      }
+    }
+
+    return results;
+  }
 
 }//END OF BaseLexicon
