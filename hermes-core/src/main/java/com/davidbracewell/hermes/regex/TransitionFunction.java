@@ -24,6 +24,7 @@ package com.davidbracewell.hermes.regex;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.HString;
 
 import java.io.Serializable;
 import java.util.function.Function;
@@ -40,9 +41,9 @@ interface TransitionFunction extends Serializable {
    * @param input the token to check
    * @return True if the consumer matches, i.e. can consume, the given token
    */
-  int matches(Annotation input);
+  int matches(HString input);
 
-  int nonMatch(Annotation input);
+  int nonMatch(HString input);
 
   /**
    * Construct an NFA for the consumer.
@@ -60,12 +61,12 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int matches(Annotation input) {
+    public int matches(HString input) {
       return input.getParent().map(child::matches).orElse(0);
     }
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       return input.getParent().map(child::nonMatch).orElse(1);
     }
 
@@ -93,7 +94,7 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int matches(Annotation input) {
+    public int matches(HString input) {
       int max = 0;
       for (Annotation a : input.getStartingHere(type)) {
         max = Math.max(child.matches(a), max);
@@ -102,7 +103,7 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       int min = input.tokenLength();
       for (Annotation a : input.getStartingHere(type)) {
         min = Math.min(child.nonMatch(a), min);
@@ -126,20 +127,20 @@ interface TransitionFunction extends Serializable {
   final class PredicateMatcher implements TransitionFunction, Serializable {
     private static final long serialVersionUID = 1L;
     final String pattern;
-    final Predicate<? super Annotation> predicate;
+    final Predicate<? super HString> predicate;
 
-    public PredicateMatcher(String pattern, SerializablePredicate<? super Annotation> predicate) {
+    public PredicateMatcher(String pattern, SerializablePredicate<? super HString> predicate) {
       this.pattern = pattern;
       this.predicate = predicate;
     }
 
     @Override
-    public int matches(Annotation input) {
+    public int matches(HString input) {
       return predicate.test(input) ? input.tokenLength() : 0;
     }
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       return predicate.test(input) ? 0 : input.tokenLength();
     }
 
@@ -170,7 +171,7 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int matches(Annotation input) {
+    public int matches(HString input) {
       int m = child.matches(input);
       if (m > 0) {
         Annotation next = next(input, m);
@@ -182,7 +183,7 @@ interface TransitionFunction extends Serializable {
       return 0;
     }
 
-    private Annotation next(Annotation input, int m) {
+    private Annotation next(HString input, int m) {
       Annotation lToken = input.tokens().get(input.tokenLength() - 1);
       while (m > 0) {
         m--;
@@ -192,7 +193,7 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       int m = child.nonMatch(input);
       if (m > 0) {
         Annotation next = next(input, m);
@@ -220,21 +221,21 @@ interface TransitionFunction extends Serializable {
 
   final class LogicStatement implements TransitionFunction, Serializable {
     private static final long serialVersionUID = 1L;
-    final Function<? super Annotation, Integer> matcher;
+    final Function<? super HString, Integer> matcher;
     final String pattern;
 
-    public LogicStatement(String pattern, Function<? super Annotation, Integer> matcher) {
+    public LogicStatement(String pattern, Function<? super HString, Integer> matcher) {
       this.pattern = pattern;
       this.matcher = matcher;
     }
 
     @Override
-    public int matches(Annotation input) {
+    public int matches(HString input) {
       return matcher.apply(input);
     }
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       if (matcher.apply(input) > 0) {
         return 0;
       }
@@ -262,12 +263,12 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int matches(Annotation token) {
+    public int matches(HString token) {
       return c1.nonMatch(token);
     }
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       return c1.matches(input);
     }
 
@@ -300,12 +301,12 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int matches(Annotation token) {
+    public int matches(HString token) {
       return Math.max(c1.matches(token), c2.matches(token));
     }
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       int m1 = c1.nonMatch(input);
       int m2 = c2.nonMatch(input);
       if (m1 > 0 && m2 > 0) {
@@ -350,15 +351,15 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int matches(Annotation token) {
+    public int matches(HString token) {
       return 1;
     }
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       int i = c1.matches(input);
       if (i > 0) {
-        Annotation next = input.next();
+        Annotation next = input.lastToken().next();
         for (int j = 1; j < i; j++) {
           next = next.next();
         }
@@ -367,9 +368,8 @@ interface TransitionFunction extends Serializable {
         }
         return c2.nonMatch(next);
       }
-
       i = c1.nonMatch(input);
-      Annotation next = input.next();
+      Annotation next = input.lastToken().next();
       for (int j = 1; j < i; j++) {
         next = next.next();
       }
@@ -411,12 +411,12 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int matches(Annotation token) {
+    public int matches(HString token) {
       return child.matches(token);
     }
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       return child.nonMatch(input);
     }
 
@@ -451,13 +451,13 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int matches(Annotation input) {
+    public int matches(HString input) {
       return child.matches(input);
     }
 
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       return child.nonMatch(input);
     }
 
@@ -492,13 +492,13 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int matches(Annotation token) {
+    public int matches(HString token) {
       return child.matches(token);
     }
 
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       return child.nonMatch(input);
     }
 
@@ -538,13 +538,13 @@ interface TransitionFunction extends Serializable {
     }
 
     @Override
-    public int matches(Annotation token) {
+    public int matches(HString token) {
       return child.matches(token);
     }
 
 
     @Override
-    public int nonMatch(Annotation input) {
+    public int nonMatch(HString input) {
       return child.nonMatch(input);
     }
 

@@ -920,5 +920,22 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return annotations;
   }
 
+  public Annotation lastToken() {
+    if (tokenLength() > 0) {
+      return tokenAt(tokenLength() - 1);
+    }
+    return Fragments.detachedEmptyAnnotation();
+  }
+
+  public Annotation firstToken() {
+    if (tokenLength() > 0) {
+      return tokenAt(0);
+    }
+    return Fragments.detachedEmptyAnnotation();
+  }
+
+  public Optional<Annotation> getParent() {
+    return Optional.empty();
+  }
 
 }//END OF HString

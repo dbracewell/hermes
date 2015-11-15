@@ -24,11 +24,12 @@ package com.davidbracewell.hermes.lexicon;
 import com.davidbracewell.cache.Cache;
 import com.davidbracewell.cache.CacheManager;
 import com.davidbracewell.cache.CacheSpec;
-import com.davidbracewell.cache.GuavaLoadingCache;
-import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.logging.Logger;
+import com.davidbracewell.reflection.BeanUtils;
+import com.davidbracewell.string.StringPredicates;
 import com.google.common.collect.Iterators;
 import lombok.NonNull;
 
@@ -45,7 +46,7 @@ public final class LexiconManager implements Serializable {
   private static final Logger log = Logger.getLogger(LexiconManager.class);
   private static final Cache<String, Lexicon> lexiconCache = CacheManager.getInstance().register(
     CacheSpec.<String, Lexicon>create()
-      .engine(GuavaLoadingCache.class.getName())
+      .engine("Guava")
       .maxSize(50)
       .loadingFunction(name -> createLexicon(name.toLowerCase()))
   );
@@ -55,13 +56,21 @@ public final class LexiconManager implements Serializable {
     throw new IllegalAccessError();
   }
 
-  public static <T extends Lexicon> T getLexicon(@NonNull String name) {
-    return Cast.as(lexiconCache.get(name));
+  public static Lexicon getLexicon(@NonNull String name) {
+    return lexiconCache.get(name);
   }
 
   private static Lexicon createLexicon(String name) {
-    log.warn("'{0}' does not exists returning an empty lexicon.", name);
-    return EmptyLexicon.INSTANCE;
+    if (Config.getPropertiesMatching(StringPredicates.STARTS_WITH(name,true)).isEmpty()) {
+      log.warn("'{0}' does not exists returning an empty lexicon.", name);
+      return EmptyLexicon.INSTANCE;
+    } else try {
+      return BeanUtils.getNamedBean(name, LexiconSpec.class).create();
+    } catch (Exception e) {
+      log.severe(e);
+      log.warn("'{0}' does not exists returning an empty lexicon.", name);
+      return EmptyLexicon.INSTANCE;
+    }
   }
 
   public static void register(@NonNull String name, @NonNull Lexicon lexicon) {

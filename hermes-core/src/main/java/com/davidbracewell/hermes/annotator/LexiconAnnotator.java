@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.lexicon.Lexicon;
@@ -44,7 +43,7 @@ public class LexiconAnnotator extends SentenceLevelAnnotator implements Serializ
 
 
   private LexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName) {
-    this(type, Cast.<Lexicon>as(LexiconManager.getLexicon(lexiconName)));
+    this(type, LexiconManager.getLexicon(lexiconName));
   }
 
   public LexiconAnnotator(@NonNull AnnotationType type, @NonNull Lexicon lexicon) {
@@ -56,7 +55,7 @@ public class LexiconAnnotator extends SentenceLevelAnnotator implements Serializ
   public void annotate(Annotation sentence) {
     lexicon.match(sentence).forEach(hString -> {
       Annotation a = sentence.document().createAnnotation(type, hString);
-      hString.attributeValues().forEach(e -> a.put(e.getKey(),e.getValue()));
+      hString.attributeValues().forEach(e -> a.put(e.getKey(), e.getValue()));
     });
   }
 

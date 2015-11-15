@@ -98,9 +98,6 @@ public final class Annotation extends Fragment implements Serializable {
     this.annotationType = AnnotationType.ROOT;
   }
 
-  public Optional<Annotation> getParent() {
-    return Optional.empty();
-  }
 
   public List<Annotation> getChildren() {
     return null;

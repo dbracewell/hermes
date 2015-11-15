@@ -30,7 +30,7 @@ import org.junit.Test;
 /**
  * @author David B. Bracewell
  */
-public class GappyLexiconAnnotatorTest {
+public class FuzzyLexiconAnnotatorTest {
 
   @Test
   public void testMatch() {

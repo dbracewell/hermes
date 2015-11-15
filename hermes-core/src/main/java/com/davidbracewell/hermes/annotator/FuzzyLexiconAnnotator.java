@@ -26,11 +26,14 @@ import com.davidbracewell.collection.Counters;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconEntry;
+import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.lexicon.LexiconMatch;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Sets;
+import lombok.NonNull;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,7 +48,7 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public class GappyLexiconAnnotator extends ViterbiAnnotator {
+public class FuzzyLexiconAnnotator extends ViterbiAnnotator {
   private static final long serialVersionUID = 1L;
   private final AnnotationType type;
   private final Lexicon lexicon;
@@ -61,8 +64,9 @@ public class GappyLexiconAnnotator extends ViterbiAnnotator {
    * @param lexicon     the lexicon
    * @param maxDistance the max distance
    */
-  public GappyLexiconAnnotator(AnnotationType type, Lexicon lexicon, int maxDistance) {
+  public FuzzyLexiconAnnotator(@NonNull AnnotationType type, @NonNull Lexicon lexicon, int maxDistance) {
     super(lexicon.getMaxTokenLength() + maxDistance);
+    Preconditions.checkArgument(maxDistance >= 0, "Maximum fuzzy distance must be > 0");
     this.type = type;
     this.lexicon = lexicon;
     this.maxDistance = maxDistance;
@@ -73,6 +77,10 @@ public class GappyLexiconAnnotator extends ViterbiAnnotator {
         suffix.put(parts[parts.length - 1], parts);
       }
     }
+  }
+
+  public FuzzyLexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName, int maxDistance) {
+    this(type, LexiconManager.getLexicon(lexiconName), maxDistance);
   }
 
 
@@ -191,4 +199,4 @@ public class GappyLexiconAnnotator extends ViterbiAnnotator {
     return new LexiconEntry(StringUtils.EMPTY, 0, null, null);
   }
 
-}//END OF ViterbiLexiconAnnotator
+}//END OF FuzzyLexiconAnnotator

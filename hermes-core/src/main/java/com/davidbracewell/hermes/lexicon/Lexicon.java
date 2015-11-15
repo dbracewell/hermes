@@ -26,10 +26,8 @@ import com.davidbracewell.Tag;
 import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.Fragments;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -40,15 +38,6 @@ import java.util.function.Predicate;
  * @author David B. Bracewell
  */
 public interface Lexicon extends Predicate<HString>, Iterable<String> {
-
-  /**
-   * Loader lexicon loader.
-   *
-   * @return the lexicon loader
-   */
-  static LexiconLoader loader() {
-    return new LexiconLoader();
-  }
 
   /**
    * The number of lexical items in the lexicon
@@ -226,150 +215,5 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @return the entries
    */
   List<LexiconEntry> getEntries(HString hString);
-
-  /**
-   * The type Lexicon loader.
-   */
-  final class LexiconLoader {
-    private boolean isProbabilistic;
-    private boolean hasConstraints;
-    private boolean isCaseSensitive;
-    private Attribute tagAttribute;
-    private Tag defaultTag;
-    private boolean useResourceNameAsTag;
-
-    /**
-     * Probabilisitic lexicon loader.
-     *
-     * @return the lexicon loader
-     */
-    public LexiconLoader probabilisitic() {
-      isProbabilistic = true;
-      return this;
-    }
-
-    /**
-     * Non probabilisitic lexicon loader.
-     *
-     * @return the lexicon loader
-     */
-    public LexiconLoader nonProbabilisitic() {
-      isProbabilistic = false;
-      return this;
-    }
-
-    /**
-     * Constrained lexicon loader.
-     *
-     * @return the lexicon loader
-     */
-    public LexiconLoader constrained() {
-      this.hasConstraints = true;
-      return this;
-    }
-
-    /**
-     * Non constrained lexicon loader.
-     *
-     * @return the lexicon loader
-     */
-    public LexiconLoader nonConstrained() {
-      this.hasConstraints = false;
-      return this;
-    }
-
-    /**
-     * Case sensitive lexicon loader.
-     *
-     * @return the lexicon loader
-     */
-    public LexiconLoader caseSensitive() {
-      isCaseSensitive = true;
-      return this;
-    }
-
-    /**
-     * Case insensitive lexicon loader.
-     *
-     * @return the lexicon loader
-     */
-    public LexiconLoader caseInsensitive() {
-      isCaseSensitive = false;
-      return this;
-    }
-
-    /**
-     * Tag attribute lexicon loader.
-     *
-     * @param attribute the attribute
-     * @return the lexicon loader
-     */
-    public LexiconLoader tagAttribute(Attribute attribute) {
-      this.tagAttribute = attribute;
-      return this;
-    }
-
-    /**
-     * Use resource name as tag lexicon loader.
-     *
-     * @return the lexicon loader
-     */
-    public LexiconLoader useResourceNameAsTag() {
-      this.useResourceNameAsTag = true;
-      this.defaultTag = null;
-      return this;
-    }
-
-    /**
-     * Default tag lexicon loader.
-     *
-     * @param tag the tag
-     * @return the lexicon loader
-     */
-    public LexiconLoader defaultTag(Tag tag) {
-      this.defaultTag = tag;
-      this.useResourceNameAsTag = false;
-      return this;
-    }
-
-    /**
-     * Load lexicon.
-     *
-     * @param resource the resource
-     * @return the lexicon
-     * @throws IOException the io exception
-     */
-    public Lexicon load(@NonNull Resource resource) throws IOException {
-
-//      Tag dTag = defaultTag;
-//      if (useResourceNameAsTag && tagAttribute != null) {
-//        String tagV = resource.baseName().replaceFirst("\\.*$", "");
-//        dTag = tagAttribute.getValueType().convert(tagV);
-//      }
-//
-//      if (isProbabilistic && hasConstraints && tagAttribute != null) {
-//
-//      } else if (isProbabilistic && hasConstraints) {
-//
-//      } else if (isProbabilistic && tagAttribute != null) {
-//
-//      } else if (isProbabilistic) {
-//        return ProbabilisticTrieLexicon.read(resource, isCaseSensitive);
-//      } else if (hasConstraints && tagAttribute != null) {
-//
-//      } else if (hasConstraints) {
-//
-//
-//      } else if (tagAttribute != null) {
-//        return TrieTagLexicon.read(resource, isCaseSensitive, tagAttribute, dTag);
-//      }
-//
-//      return TrieLexicon.read(resource, isCaseSensitive);
-
-      return null;
-    }
-
-
-  }// END OF LexiconLoader
 
 }//END OF Lexicon

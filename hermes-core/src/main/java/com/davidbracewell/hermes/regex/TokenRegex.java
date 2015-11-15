@@ -109,7 +109,7 @@ public final class TokenRegex implements Serializable {
     } else if (exp.match(CommonTypes.OPENBRACKET)) {
       Expression child = exp.expressions.get(0);
       SerializablePredicate<HString> p = QueryToPredicate.parse(child);
-      return new TransitionFunction.LogicStatement(child.toString(), (Annotation a) -> p.test(a) ? a.tokenLength() : 0);
+      return new TransitionFunction.LogicStatement(child.toString(), (HString a) -> p.test(a) ? a.tokenLength() : 0);
     }
     throw new ParseException("Unknown expression: " + exp.toString());
   }
