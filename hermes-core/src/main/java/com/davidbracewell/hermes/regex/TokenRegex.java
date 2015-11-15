@@ -232,12 +232,12 @@ public final class TokenRegex implements Serializable {
       return new TransitionFunction.Alternation(consumerize(boe.left), consumerize(boe.right));
     }
 
-    if (exp.match(RegexTokenTypes.LOOKAHEAD)) {
+    if (exp.match(RegexTokenTypes.LOOKAHEAD) || exp.match(RegexTokenTypes.LOOKAHEADPOST)) {
       BinaryOperatorExpression boe = Cast.as(exp);
       return new TransitionFunction.LookAhead(consumerize(boe.left), consumerize(boe.right), false);
     }
 
-    if (exp.match(RegexTokenTypes.NEGLOOKAHEAD)) {
+    if (exp.match(RegexTokenTypes.NEGLOOKAHEAD) || exp.match(RegexTokenTypes.NEGLOOKAHEADPOST)) {
       BinaryOperatorExpression boe = Cast.as(exp);
       return new TransitionFunction.LookAhead(consumerize(boe.left), consumerize(boe.right), true);
     }

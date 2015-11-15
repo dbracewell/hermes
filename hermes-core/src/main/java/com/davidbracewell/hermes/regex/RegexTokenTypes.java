@@ -45,7 +45,9 @@ public enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
   REGISTER("@REGISTER"),
   RANGE("\\{\\d+\\s*,\\s*(\\d+|\\*)\\}"),
   LOOKAHEAD("\\?>"),
+  LOOKAHEADPOST("\\(\\?>"),
   NEGLOOKAHEAD("\\?\\!>"),
+  NEGLOOKAHEADPOST("\\(\\?\\!>"),
   PARENT("\\/>");
   private final String pattern;
 

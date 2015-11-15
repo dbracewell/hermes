@@ -68,9 +68,13 @@ public final class QueryToPredicate {
       register(CommonTypes.PIPE, new BinaryOperatorHandler(7, false));
       register(CommonTypes.AMPERSAND, new BinaryOperatorHandler(7, false));
       register(RegexTokenTypes.LOOKAHEAD, new BinaryOperatorHandler(7, false));
-      register(RegexTokenTypes.NEGLOOKAHEAD, new BinaryOperatorHandler(7, false));
       register(RegexTokenTypes.LOOKAHEAD, new PrefixOperatorHandler(12));
+      register(RegexTokenTypes.LOOKAHEADPOST, new LookAheadHandler(7));
+      register(RegexTokenTypes.LOOKAHEADPOST, new LookAheadPrefixHandler(7));
+      register(RegexTokenTypes.NEGLOOKAHEAD, new BinaryOperatorHandler(7, false));
       register(RegexTokenTypes.NEGLOOKAHEAD, new PrefixOperatorHandler(12));
+      register(RegexTokenTypes.NEGLOOKAHEADPOST, new LookAheadHandler(7));
+      register(RegexTokenTypes.NEGLOOKAHEADPOST, new LookAheadPrefixHandler(7));
       register(RegexTokenTypes.PARENT, new PrefixOperatorHandler(1));
       register(RegexTokenTypes.RANGE, new PostfixOperatorHandler(8));
     }
@@ -79,8 +83,10 @@ public final class QueryToPredicate {
     .add(RegexTokenTypes.ATTRMATCH)
     .add(RegexTokenTypes.PATTERNTOKEN, "<(\\\\.|[^<>])+>")
     .add(RegexTokenTypes.LOOKAHEAD)
+    .add(RegexTokenTypes.LOOKAHEADPOST)
     .add(RegexTokenTypes.NEGLOOKAHEAD)
-    .add(CommonTypes.OPENPARENS)
+    .add(RegexTokenTypes.NEGLOOKAHEADPOST)
+    .add(CommonTypes.OPENPARENS, "\\((?!\\?\\!?>)")
     .add(CommonTypes.CLOSEPARENS)
     .add(CommonTypes.OPENBRACKET)
     .add(CommonTypes.CLOSEBRACKET)
@@ -143,7 +149,8 @@ public final class QueryToPredicate {
         return hString -> hString.getStartingHere(aType).stream().anyMatch(child);
       }
 
-      if (exp.match(RegexTokenTypes.LOOKAHEAD) || exp.match(RegexTokenTypes.NEGLOOKAHEAD)) {
+      if (exp.match(RegexTokenTypes.LOOKAHEAD) || exp.match(RegexTokenTypes.NEGLOOKAHEAD) ||
+        exp.match(RegexTokenTypes.LOOKAHEADPOST) || exp.match(RegexTokenTypes.NEGLOOKAHEADPOST)) {
         TransitionFunction tf = TokenRegex.consumerize(exp);
         return hString -> tf.matches(hString.asAnnotation().get()) > 0;
       }
@@ -156,7 +163,8 @@ public final class QueryToPredicate {
         return left.or(right);
       } else if (boe.match(CommonTypes.AMPERSAND)) {
         return left.and(right);
-      } else if (boe.match(RegexTokenTypes.LOOKAHEAD) || boe.match(RegexTokenTypes.NEGLOOKAHEAD)) {
+      } else if (boe.match(RegexTokenTypes.LOOKAHEAD) || boe.match(RegexTokenTypes.NEGLOOKAHEAD) ||
+        exp.match(RegexTokenTypes.LOOKAHEADPOST) || exp.match(RegexTokenTypes.NEGLOOKAHEADPOST)) {
         TransitionFunction tf = TokenRegex.consumerize(exp);
         return hString -> tf.matches(hString.asAnnotation().get()) > 0;
       }

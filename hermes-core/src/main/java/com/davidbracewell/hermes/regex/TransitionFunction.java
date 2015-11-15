@@ -51,7 +51,6 @@ interface TransitionFunction extends Serializable {
    */
   NFA construct();
 
-
   final class ParentMatcher implements TransitionFunction, Serializable {
     private static final long serialVersionUID = 1L;
     final TransitionFunction child;
@@ -214,73 +213,10 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public String toString() {
-      return "(" + child.toString() + ") " + (negativeLookAhead ? "?!>" : "?>") + "(" + lookAhead.toString() + ")";
+      return "(" + child.toString() + ") (?" + (negativeLookAhead ? "!> " : "> ") + lookAhead.toString() + ")";
     }
 
   }//END OF LookAhead
-
-
-  final class LookBehind implements TransitionFunction, Serializable {
-    private static final long serialVersionUID = 1L;
-
-    final TransitionFunction child;
-    final TransitionFunction lookBehind;
-    final boolean negativeLookAhead;
-
-    public LookBehind(TransitionFunction child, TransitionFunction lookBehind, boolean negativeLookAhead) {
-      this.child = child;
-      this.lookBehind = lookBehind;
-      this.negativeLookAhead = negativeLookAhead;
-    }
-
-    @Override
-    public int matches(Annotation input) {
-      int m = child.matches(input);
-      if (m > 0) {
-        Annotation next = previous(input, m);
-        if (negativeLookAhead) {
-          return lookBehind.nonMatch(next) > 0 ? m : 0;
-        }
-        return lookBehind.matches(next) > 0 ? m : 0;
-      }
-      return 0;
-    }
-
-    private Annotation previous(Annotation input, int m) {
-      Annotation lToken = input.tokenAt(0);
-      while (m > 0) {
-        m--;
-        lToken = lToken.previous();
-      }
-      return lToken;
-    }
-
-    @Override
-    public int nonMatch(Annotation input) {
-      int m = child.nonMatch(input);
-      if (m > 0) {
-        Annotation next = previous(input, m);
-        if (negativeLookAhead) {
-          return lookBehind.matches(next) > 0 ? m : 0;
-        }
-        return lookBehind.nonMatch(next) > 0 ? m : 0;
-      }
-      return 0;
-    }
-
-    @Override
-    public NFA construct() {
-      NFA nEnd = new NFA();
-      nEnd.start.connect(nEnd.end, this);
-      return nEnd;
-    }
-
-    @Override
-    public String toString() {
-      return "(" + child.toString() + ") " + (negativeLookAhead ? "<>:" : "<:") + "(" + lookBehind.toString() + ")";
-    }
-
-  }//END OF LookBehind
 
   final class LogicStatement implements TransitionFunction, Serializable {
     private static final long serialVersionUID = 1L;
