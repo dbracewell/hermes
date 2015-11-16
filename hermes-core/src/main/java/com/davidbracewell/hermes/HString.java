@@ -275,7 +275,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
 
   @Override
   public final boolean equals(Object other) {
-    return super.equals(other);
+    return this == other;
   }
 
   /**

@@ -111,4 +111,7 @@ public interface Attrs {
 
   Attribute LEXICON_MATCH = Attribute.create("LEXICON_MATCH");
 
+  Attribute LYRE_RULE = Attribute.create("LYRE_RULE");
+
+
 }//END OF Attrs
