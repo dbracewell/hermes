@@ -76,7 +76,7 @@ public interface Corpus extends DocumentStore {
    * @param types The annotation types to annotate
    * @return A new corpus with the given annotation types present.
    */
-  Corpus annotate(@NonNull AnnotationType... types);
+  Corpus annotate(AnnotationType... types);
 
   /**
    * To memory.

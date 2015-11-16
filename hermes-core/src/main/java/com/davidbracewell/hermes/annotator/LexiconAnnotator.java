@@ -42,10 +42,22 @@ public class LexiconAnnotator extends SentenceLevelAnnotator implements Serializ
   private final Lexicon lexicon;
 
 
-  private LexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName) {
+  /**
+   * Instantiates a new Lexicon annotator.
+   *
+   * @param type        the type
+   * @param lexiconName the lexicon name
+   */
+  public LexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName) {
     this(type, LexiconManager.getLexicon(lexiconName));
   }
 
+  /**
+   * Instantiates a new Lexicon annotator.
+   *
+   * @param type    the type
+   * @param lexicon the lexicon
+   */
   public LexiconAnnotator(@NonNull AnnotationType type, @NonNull Lexicon lexicon) {
     this.lexicon = lexicon;
     this.type = type;

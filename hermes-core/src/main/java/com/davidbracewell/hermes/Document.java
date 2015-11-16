@@ -214,13 +214,10 @@ public class Document extends HString {
    * @param span the span of the annotation
    * @return the created annotation
    */
-  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span) {
-    return createAnnotation(type, span.start(), span.end(),
-      Maps.filterEntries(
-        span.getAttributeMap(),
-        e -> type.getDefinedAttributes().contains(e.getKey())
-      )
-    );
+  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span, boolean copyAttributes, boolean filterAttributes) {
+    Map<Attribute, ?> map = copyAttributes ? span.getAttributeMap() : Collections.emptyMap();
+    map = filterAttributes ? Maps.filterEntries(map, e -> type.getDefinedAttributes().contains(e.getKey())) : map;
+    return createAnnotation(type, span.start(), span.end(), map);
   }
 
 

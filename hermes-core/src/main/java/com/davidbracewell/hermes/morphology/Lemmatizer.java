@@ -53,7 +53,7 @@ public interface Lemmatizer {
    * @param partOfSpeech the part of speech
    * @return the lemmatized version of the string
    */
-  String lemmatize(@NonNull String string, @NonNull POS partOfSpeech);
+  String lemmatize(String string, POS partOfSpeech);
 
   /**
    * Lemmatizes a token.

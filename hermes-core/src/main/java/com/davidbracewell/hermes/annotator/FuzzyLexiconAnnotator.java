@@ -79,6 +79,13 @@ public class FuzzyLexiconAnnotator extends ViterbiAnnotator {
     }
   }
 
+  /**
+   * Instantiates a new Fuzzy lexicon annotator.
+   *
+   * @param type        the type
+   * @param lexiconName the lexicon name
+   * @param maxDistance the max distance
+   */
   public FuzzyLexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName, int maxDistance) {
     this(type, LexiconManager.getLexicon(lexiconName), maxDistance);
   }
