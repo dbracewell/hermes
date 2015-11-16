@@ -1,0 +1,13 @@
+defaults:
+    annotationType: ENTITY
+    confidence: 1.0
+
+rules:
+    rule1:
+        pattern: <Mr.> (#NNP|#NNPS)+
+        attributes:
+            ENTITY_TYPE: PERSON
+    rule2:
+        pattern: <Mr.> (#NNP|#NNPS)+
+        attributes:
+          ENTITY_TYPE: PERSON
