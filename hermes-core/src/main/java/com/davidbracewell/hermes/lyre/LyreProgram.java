@@ -134,7 +134,6 @@ public final class LyreProgram implements Serializable {
     return program;
   }
 
-
   private static Map<String, Object> ensureMap(Object o) throws IOException {
     Map<String, Object> map = Cast.as(o);
     if (map == null) {
