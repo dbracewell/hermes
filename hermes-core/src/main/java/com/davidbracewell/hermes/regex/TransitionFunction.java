@@ -52,6 +52,40 @@ interface TransitionFunction extends Serializable {
    */
   NFA construct();
 
+  final class GroupMatcher implements TransitionFunction, Serializable {
+    private static final long serialVersionUID = 1L;
+    final TransitionFunction child;
+    final String name;
+
+    public GroupMatcher(TransitionFunction child, String name) {
+      this.child = child;
+      this.name = name;
+    }
+
+    @Override
+    public NFA construct() {
+      NFA nfa = new NFA();
+      nfa.start.connect(nfa.end, this);
+      return nfa;
+    }
+
+    @Override
+    public int matches(HString input) {
+      return child.matches(input);
+    }
+
+    @Override
+    public int nonMatch(HString input) {
+      return child.nonMatch(input);
+    }
+
+    @Override
+    public String toString() {
+      return "(?" + name + " " + child.toString() + ")";
+    }
+
+  }
+
   final class ParentMatcher implements TransitionFunction, Serializable {
     private static final long serialVersionUID = 1L;
     final TransitionFunction child;
@@ -352,7 +386,15 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public int matches(HString token) {
-      return 1;
+      int i = c1.matches(token);
+      if (i == 0) {
+        return 0;
+      }
+      Annotation next = token.lastToken();
+      for (int j = 0; j < i; j++) {
+        next = next.next();
+      }
+      return i + c2.matches(next);
     }
 
     @Override

@@ -22,9 +22,7 @@
 package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.parsing.CommonTypes;
@@ -34,7 +32,7 @@ import com.davidbracewell.parsing.expressions.*;
 import com.google.common.base.Preconditions;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 
@@ -94,51 +92,56 @@ public final class TokenRegex implements Serializable {
 
   private static TransitionFunction handleMultivalue(MultivalueExpression exp) throws ParseException {
     if (exp.match(CommonTypes.OPENPARENS)) {
-      List<Expression> expressions = exp.expressions;
-      Preconditions.checkState(!expressions.isEmpty());
-      TransitionFunction c = null;
-      for (Expression e : expressions) {
-        TransitionFunction cprime = consumerize(e);
-        if (c == null) {
-          c = cprime;
-        } else {
-          c = new TransitionFunction.Sequence(c, cprime);
-        }
-      }
-      return c;
+      Preconditions.checkState(!exp.expressions.isEmpty());
+      return combine(exp.expressions);
     } else if (exp.match(CommonTypes.OPENBRACKET)) {
       Expression child = exp.expressions.get(0);
       SerializablePredicate<HString> p = QueryToPredicate.parse(child);
       return new TransitionFunction.LogicStatement(child.toString(), (HString a) -> p.test(a) ? a.tokenLength() : 0);
+    } else if (exp.match(RegexTokenTypes.GROUP)) {
+      return new TransitionFunction.GroupMatcher(combine(exp.expressions), Cast.<GroupExpression>as(exp).groupName);
     }
     throw new ParseException("Unknown expression: " + exp.toString());
   }
 
-  private static SerializableFunction<Annotation, Integer> toFunction(Expression exp) throws ParseException {
-    if (exp.isInstance(BinaryOperatorExpression.class)) {
-      BinaryOperatorExpression boe = Cast.as(exp);
-      TransitionFunction tf1 = consumerize(boe.left);
-      TransitionFunction tf2 = consumerize(boe.right);
-      if (exp.match(CommonTypes.PIPE)) {
-        return a -> Math.max(tf1.matches(a), tf2.matches(a));
-      } else if (exp.match(CommonTypes.AMPERSAND)) {
-        return a -> {
-          int i = tf1.matches(a);
-          int j = tf2.matches(a);
-          if (i > 0 && j > 0) {
-            return Math.max(i, j);
-          }
-          return 0;
-        };
+  private static TransitionFunction combine(Collection<Expression> expressions) throws ParseException {
+    TransitionFunction c = null;
+    for (Expression e : expressions) {
+      TransitionFunction cprime = consumerize(e);
+      if (c == null) {
+        c = cprime;
+      } else {
+        c = new TransitionFunction.Sequence(c, cprime);
       }
     }
-    if (exp.match(RegexTokenTypes.NOT)) {
-      TransitionFunction tf = consumerize(Cast.<PrefixExpression>as(exp).right);
-      return a -> tf.nonMatch(a);
-    }
-    TransitionFunction tf = consumerize(exp);
-    return a -> tf.matches(a);
+    return c;
   }
+
+//  private static SerializableFunction<Annotation, Integer> toFunction(Expression exp) throws ParseException {
+//    if (exp.isInstance(BinaryOperatorExpression.class)) {
+//      BinaryOperatorExpression boe = Cast.as(exp);
+//      TransitionFunction tf1 = consumerize(boe.left);
+//      TransitionFunction tf2 = consumerize(boe.right);
+//      if (exp.match(CommonTypes.PIPE)) {
+//        return a -> Math.max(tf1.matches(a), tf2.matches(a));
+//      } else if (exp.match(CommonTypes.AMPERSAND)) {
+//        return a -> {
+//          int i = tf1.matches(a);
+//          int j = tf2.matches(a);
+//          if (i > 0 && j > 0) {
+//            return Math.max(i, j);
+//          }
+//          return 0;
+//        };
+//      }
+//    }
+//    if (exp.match(RegexTokenTypes.NOT)) {
+//      TransitionFunction tf = consumerize(Cast.<PrefixExpression>as(exp).right);
+//      return a -> tf.nonMatch(a);
+//    }
+//    TransitionFunction tf = consumerize(exp);
+//    return a -> tf.matches(a);
+//  }
 
   private static TransitionFunction handlePostfix(PostfixExpression postfix) throws ParseException {
     if (postfix.operator.type.isInstance(CommonTypes.QUESTION)) {
@@ -206,6 +209,7 @@ public final class TokenRegex implements Serializable {
       TransitionFunction tr = new TransitionFunction.PredicateMatcher("", a -> true);
       return new TransitionFunction.LookAhead(tr, consumerize(exp.right), true);
     }
+
 
     throw new ParseException("Unknown expression: " + exp.toString());
   }

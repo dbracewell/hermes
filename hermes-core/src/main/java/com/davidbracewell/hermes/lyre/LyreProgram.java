@@ -135,11 +135,10 @@ public final class LyreProgram implements Serializable {
   }
 
   private static Map<String, Object> ensureMap(Object o) throws IOException {
-    Map<String, Object> map = Cast.as(o);
-    if (map == null) {
+    if (!(o instanceof Map)) {
       throw new IOException("Invalid Lyre Format");
     }
-    return map;
+    return Cast.as(o);
   }
 
   private static Map<Attribute, Val> readAttributes(Map<String, Object> map) {

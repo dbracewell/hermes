@@ -7,19 +7,16 @@ rules:
         attributes:
           ENTITY_TYPE: PERSON
           GENDER: MALE
-
     rule2:
         pattern: <Ms.> (<@[A-Z]>)+
         attributes:
           ENTITY_TYPE: PERSON
           GENDER: FEMALE
-
     alice:
         pattern: (<(?i)alice>)
         attributes:
           ENTITY_TYPE: PERSON
           GENDER: FEMALE
-
     rule3:
         pattern: (<@^[A-Z]>)+ ( <(?i)inc> | <(?i)llc> | <(?i)co> )
         attributes:

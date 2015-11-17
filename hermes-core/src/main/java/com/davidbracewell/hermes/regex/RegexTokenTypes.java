@@ -48,6 +48,7 @@ public enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
   LOOKAHEADPOST("\\(\\?>"),
   NEGLOOKAHEAD("\\?\\!>"),
   NEGLOOKAHEADPOST("\\(\\?\\!>"),
+  GROUP("\\(\\?[A-Za-z_]+"),
   PARENT("\\/>");
   private final String pattern;
 

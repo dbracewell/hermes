@@ -22,8 +22,10 @@
 package com.davidbracewell.hermes.regex;
 
 
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
+import com.google.common.collect.ArrayListMultimap;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -51,6 +53,8 @@ final class NFA implements Serializable {
     //The set of states that the NFA is in
     Set<State> states = new HashSet<>();
 
+    ArrayListMultimap<String, HString> namedGroups = ArrayListMultimap.create();
+
     //Add the start state
     states.add(new State(startIndex, start));
 
@@ -76,7 +80,13 @@ final class NFA implements Serializable {
         for (Transition t : s.node.transitions) {
           int len = t.transitionFunction.matches(tokens.get(s.inputPosition));
           if (len > 0) {
-            State next = new State(s.inputPosition + len, t.destination);
+            State next;
+            if (t.transitionFunction instanceof TransitionFunction.GroupMatcher) {
+              next = new State(s.inputPosition + len, t.destination, Cast.<TransitionFunction.GroupMatcher>as(t.transitionFunction).name);
+              namedGroups.put(Cast.<TransitionFunction.GroupMatcher>as(t.transitionFunction).name, HString.union(tokens.subList(s.inputPosition, s.inputPosition + len)));
+            } else {
+              next = new State(s.inputPosition + len, t.destination);
+            }
             newStates.add(next);
           }
         }
@@ -107,6 +117,7 @@ final class NFA implements Serializable {
   static class State {
     final int inputPosition;
     final Node node;
+    final String matchName;
 
     /**
      * Instantiates a new State.
@@ -115,9 +126,13 @@ final class NFA implements Serializable {
      * @param node          the node
      */
     public State(int inputPosition, Node node) {
-      super();
+      this(inputPosition, node, null);
+    }
+
+    public State(int inputPosition, Node node, String matchName) {
       this.inputPosition = inputPosition;
       this.node = node;
+      this.matchName = matchName;
     }
 
   }//END OF NFA$State
@@ -137,9 +152,9 @@ final class NFA implements Serializable {
     /**
      * Instantiates a new Transition.
      *
-     * @param source      the source
-     * @param destination the destination
-     * @param transitionFunction    the consumer
+     * @param source             the source
+     * @param destination        the destination
+     * @param transitionFunction the consumer
      */
     public Transition(Node source, Node destination, TransitionFunction transitionFunction) {
       this.source = source;
@@ -167,7 +182,7 @@ final class NFA implements Serializable {
     /**
      * Connect void.
      *
-     * @param node     the node
+     * @param node               the node
      * @param transitionFunction the consumer
      */
     public void connect(Node node, TransitionFunction transitionFunction) {

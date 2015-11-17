@@ -75,6 +75,7 @@ public final class QueryToPredicate {
       register(RegexTokenTypes.NEGLOOKAHEAD, new PrefixOperatorHandler(12));
       register(RegexTokenTypes.NEGLOOKAHEADPOST, new LookAheadHandler(7));
       register(RegexTokenTypes.NEGLOOKAHEADPOST, new LookAheadPrefixHandler(7));
+      register(RegexTokenTypes.GROUP, new GroupHandler(7));
       register(RegexTokenTypes.PARENT, new PrefixOperatorHandler(1));
       register(RegexTokenTypes.RANGE, new PostfixOperatorHandler(8));
     }
@@ -86,7 +87,8 @@ public final class QueryToPredicate {
     .add(RegexTokenTypes.LOOKAHEADPOST)
     .add(RegexTokenTypes.NEGLOOKAHEAD)
     .add(RegexTokenTypes.NEGLOOKAHEADPOST)
-    .add(CommonTypes.OPENPARENS, "\\((?!\\?\\!?>)")
+    .add(RegexTokenTypes.GROUP)
+    .add(CommonTypes.OPENPARENS, "\\((?!\\?)")
     .add(CommonTypes.CLOSEPARENS)
     .add(CommonTypes.OPENBRACKET)
     .add(CommonTypes.CLOSEBRACKET)
