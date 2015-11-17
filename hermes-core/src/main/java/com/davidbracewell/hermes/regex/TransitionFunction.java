@@ -96,12 +96,18 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public int matches(HString input) {
-      return input.getParent().map(child::matches).orElse(0);
+      if (input.isAnnotation()) {
+        input.asAnnotation().get().getParent().map(child::matches).orElse(0);
+      }
+      return 0;
     }
 
     @Override
     public int nonMatch(HString input) {
-      return input.getParent().map(child::nonMatch).orElse(1);
+      if (input.isAnnotation()) {
+        input.asAnnotation().get().getParent().map(child::nonMatch).orElse(0);
+      }
+      return 0;
     }
 
     @Override

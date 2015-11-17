@@ -164,6 +164,7 @@ public class Document extends HString {
         Annotation newAnnotation = new Annotation(document, annotation.getType(), annotation.start(), annotation.end());
         newAnnotation.putAll(annotation.getAttributeMap());
         newAnnotation.setId(annotation.getId());
+        newAnnotation.addAllRelations(annotation.getRelations());
         document.annotationSet.add(newAnnotation);
       });
       completed.entrySet().forEach(e -> document.annotationSet.setIsCompleted(e.getKey(), true, e.getValue()));

@@ -115,23 +115,36 @@ public final class Annotation extends Fragment implements Serializable {
     this.annotationType = type == null ? AnnotationType.ROOT : type;
   }
 
+  /**
+   * Read annotation.
+   *
+   * @param reader the reader
+   * @return the annotation
+   * @throws IOException the io exception
+   */
   static Annotation read(StructuredReader reader) throws IOException {
     reader.beginObject();
 
     Map<String, Val> annotationProperties = new HashMap<>();
     Map<Attribute, Val> attributeValMap = Collections.emptyMap();
+    List<Relation> relations = new LinkedList<>();
 
     while (reader.peek() != ElementType.END_OBJECT) {
       if (reader.peek() == ElementType.NAME) {
         Collect.put(annotationProperties, reader.nextKeyValue());
       } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
-        String name = reader.beginObject();
-        if (name.equals("attributes")) {
-          attributeValMap = Attribute.readAttributeList(reader);
-        } else {
-          throw new IOException("Unexpected object named [" + name + "]");
-        }
+        reader.beginObject("attributes");
+        attributeValMap = Attribute.readAttributeList(reader);
         reader.endObject();
+      } else if (reader.peek() == ElementType.BEGIN_ARRAY) {
+        reader.beginArray("relations");
+        while (reader.peek() != ElementType.END_ARRAY) {
+          reader.beginObject();
+          Map<String, Val> rel = reader.nextMap();
+          relations.add(new Relation(rel.get("type").as(RelationType.class), rel.get("value").asString(), rel.get("target").asLongValue()));
+          reader.endObject();
+        }
+        reader.endArray();
       } else {
         throw new IOException("Unexpected " + reader.peek());
       }
@@ -142,24 +155,58 @@ public final class Annotation extends Fragment implements Serializable {
       annotationProperties.get("start").asIntegerValue(),
       annotationProperties.get("end").asIntegerValue()
     );
+    annotation.relations.addAll(relations);
     annotation.setId(annotationProperties.get("id").asLongValue());
     annotation.putAll(attributeValMap);
     reader.endObject();
     return annotation;
   }
 
+  /**
+   * Add all relations.
+   *
+   * @param relations the relations
+   */
+  public void addAllRelations(@NonNull Collection<Relation> relations) {
+    this.relations.addAll(relations);
+  }
+
+  /**
+   * Gets relations.
+   *
+   * @param relationType the relation type
+   * @return the relations
+   */
   public List<Relation> getRelations(@NonNull RelationType relationType) {
     return relations.stream().filter(r -> r.getType().equals(relationType)).collect(Collectors.toList());
   }
 
+  /**
+   * Gets relations.
+   *
+   * @return the relations
+   */
   public List<Relation> getRelations() {
     return Collections.unmodifiableList(relations);
   }
 
+  /**
+   * Gets relations.
+   *
+   * @param annotation the annotation
+   * @return the relations
+   */
   public List<Relation> getRelations(@NonNull Annotation annotation) {
     return relations.stream().filter(r -> r.getTarget() == annotation.getId()).collect(Collectors.toList());
   }
 
+  /**
+   * Gets targets.
+   *
+   * @param type  the type
+   * @param value the value
+   * @return the targets
+   */
   public List<Annotation> getTargets(@NonNull RelationType type, @NonNull String value) {
     return relations.stream()
       .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
@@ -167,6 +214,12 @@ public final class Annotation extends Fragment implements Serializable {
       .collect(Collectors.toList());
   }
 
+  /**
+   * Gets targets.
+   *
+   * @param type the type
+   * @return the targets
+   */
   public List<Annotation> getTargets(@NonNull RelationType type) {
     return relations.stream()
       .filter(r -> r.getType().equals(type))
@@ -174,16 +227,31 @@ public final class Annotation extends Fragment implements Serializable {
       .collect(Collectors.toList());
   }
 
+  /**
+   * Remove relation.
+   *
+   * @param relation the relation
+   */
   public void removeRelation(@NonNull Relation relation) {
     relations.remove(relation);
   }
 
+  /**
+   * Add relation.
+   *
+   * @param relation the relation
+   */
   public void addRelation(@NonNull Relation relation) {
     if (!relations.contains(relation)) {
       relations.add(relation);
     }
   }
 
+  /**
+   * Gets children.
+   *
+   * @return the children
+   */
   public List<Annotation> getChildren() {
     return sentences().stream()
       .flatMap(s -> s.tokens().stream())
@@ -191,7 +259,11 @@ public final class Annotation extends Fragment implements Serializable {
       .collect(Collectors.toList());
   }
 
-  @Override
+  /**
+   * Gets parent.
+   *
+   * @return the parent
+   */
   public Optional<Annotation> getParent() {
     return relations.stream()
       .filter(r -> r.getType().equals(Relations.DEPENDENCY))
@@ -202,13 +274,17 @@ public final class Annotation extends Fragment implements Serializable {
   /**
    * Gets the unique id associated with the annotation.
    *
-   * @return the id of the annotation that is unique with in its document or <code>Annotation.DETACHED_ID</code> if the
-   * annotation is not attached to the document.
+   * @return the id of the annotation that is unique with in its document or <code>Annotation.DETACHED_ID</code> if the annotation is not attached to the document.
    */
   public long getId() {
     return id;
   }
 
+  /**
+   * Sets id.
+   *
+   * @param id the id
+   */
   void setId(long id) {
     this.id = id;
   }
@@ -303,6 +379,12 @@ public final class Annotation extends Fragment implements Serializable {
     return tokens == null ? Collections.emptyList() : Arrays.asList(tokens);
   }
 
+  /**
+   * Write.
+   *
+   * @param writer the writer
+   * @throws IOException the io exception
+   */
   void write(StructuredWriter writer) throws IOException {
     writer.beginObject();
 
@@ -317,6 +399,18 @@ public final class Annotation extends Fragment implements Serializable {
         entry.getKey().write(writer, entry.getValue());
       }
       writer.endObject();
+    }
+
+    if (relations.size() > 0) {
+      writer.beginArray("relations");
+      for (Relation relation : relations) {
+        writer.beginObject();
+        writer.writeKeyValue("type", relation.getType());
+        writer.writeKeyValue("value", relation.getValue());
+        writer.writeKeyValue("target", relation.getTarget());
+        writer.endObject();
+      }
+      writer.endArray();
     }
 
     writer.endObject();
@@ -346,6 +440,12 @@ public final class Annotation extends Fragment implements Serializable {
     return Optional.ofNullable(get(tagAttribute).as(Tag.class));
   }
 
+  /**
+   * Is instance of tag boolean.
+   *
+   * @param tag the tag
+   * @return the boolean
+   */
   public boolean isInstanceOfTag(String tag) {
     if (StringUtils.isNullOrBlank(tag)) {
       return false;
@@ -353,6 +453,12 @@ public final class Annotation extends Fragment implements Serializable {
     return isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute().getValueType().convert(tag)));
   }
 
+  /**
+   * Is instance of tag boolean.
+   *
+   * @param tag the tag
+   * @return the boolean
+   */
   public boolean isInstanceOfTag(Tag tag) {
     if (tag == null) {
       return false;

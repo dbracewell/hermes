@@ -467,7 +467,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    *
    * @param text the substring to search for.
    * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
-   * @see String#indexOf(String)
+   * @see String#indexOf(String) String#indexOf(String)
    */
   public int indexOf(String text) {
     return indexOf(text, 0);
@@ -479,7 +479,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param text  the substring to search for.
    * @param start the index to to start searching from
    * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
-   * @see String#indexOf(String, int)
+   * @see String#indexOf(String, int) String#indexOf(String, int)
    */
   public int indexOf(String text, int start) {
     return toString().indexOf(text, start);
@@ -494,6 +494,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return false;
   }
 
+  /**
+   * As annotation optional.
+   *
+   * @return the optional
+   */
   public Optional<Annotation> asAnnotation() {
     return Optional.ofNullable(Cast.<Annotation>as(this));
   }
@@ -542,7 +547,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    *
    * @param regex the regular expression
    * @return true if, and only if, this string matches the given regular expression
-   * @see String#matches(String)
+   * @see String#matches(String) String#matches(String)
    */
   public boolean matches(String regex) {
     return toString().matches(regex);
@@ -568,8 +573,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    *
    * @param order           the order, i.e. number of annotations in the ngarm
    * @param annotationType  the type of annotation to extract
-   * @param removeStopWords true ignore stop words using the StopWords class associated with the language of this
-   *                        HString
+   * @param removeStopWords true ignore stop words using the StopWords class associated with the language of this                        HString
    * @return the ngrams
    */
   public List<HString> ngrams(int order, @NonNull AnnotationType annotationType, boolean removeStopWords) {
@@ -672,8 +676,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   /**
    * Converts this string to a new character array.
    *
-   * @return a newly allocated character array whose length is the length of this string and whose contents are
-   * initialized to contain the character sequence represented by this string.
+   * @return a newly allocated character array whose length is the length of this string and whose contents are initialized to contain the character sequence represented by this string.
    */
   public char[] toCharArray() {
     return toString().toCharArray();
@@ -685,7 +688,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param oldString the old string
    * @param newString the new string
    * @return the string
-   * @see String#replace(CharSequence, CharSequence)
+   * @see String#replace(CharSequence, CharSequence) String#replace(CharSequence, CharSequence)
    */
   public String replace(String oldString, String newString) {
     return toString().replace(oldString, newString);
@@ -697,7 +700,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param regex       the regular expression
    * @param replacement the string to be substituted
    * @return the resulting string
-   * @see String#replaceAll(String, String)
+   * @see String#replaceAll(String, String) String#replaceAll(String, String)
    */
   public String replaceAll(String regex, String replacement) {
     return toString().replaceAll(regex, replacement);
@@ -709,7 +712,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param regex       the regular expression
    * @param replacement the string to be substituted
    * @return the resulting string
-   * @see String#replaceFirst(String, String)
+   * @see String#replaceFirst(String, String) String#replaceFirst(String, String)
    */
   public String replaceFirst(String regex, String replacement) {
     return toString().replaceFirst(regex, replacement);
@@ -747,8 +750,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param relativeStart the relative start within in this HString
    * @param relativeEnd   the relative end within this HString
    * @return the specified substring.
-   * @throws IndexOutOfBoundsException - if the relativeStart is negative, or relativeEnd is larger than the length of
-   *                                   this HString object, or relativeStart is larger than relativeEnd.
+   * @throws IndexOutOfBoundsException - if the relativeStart is negative, or relativeEnd is larger than the length of                                   this HString object, or relativeStart is larger than relativeEnd.
    */
   public HString substring(int relativeStart, int relativeEnd) {
     Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
@@ -759,7 +761,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * To lower case.
    *
    * @return the string
-   * @see String#toLowerCase(Locale) NOTE: Uses locale associated with the HString's langauge
+   * @see String#toLowerCase(Locale) String#toLowerCase(Locale)NOTE: Uses locale associated with the HString's langauge
    */
   public String toLowerCase() {
     return toString().toLowerCase(getLanguage().asLocale());
@@ -798,7 +800,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * Converts the HString to upper case
    *
    * @return the upper case version of the HString
-   * @see String#toUpperCase(Locale) NOTE: Uses locale associated with the HString's langauge
+   * @see String#toUpperCase(Locale) String#toUpperCase(Locale)NOTE: Uses locale associated with the HString's langauge
    */
   public String toUpperCase() {
     return toString().toUpperCase(getLanguage().asLocale());
@@ -922,6 +924,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return annotations;
   }
 
+  /**
+   * Last token annotation.
+   *
+   * @return the annotation
+   */
   public Annotation lastToken() {
     if (tokenLength() > 0) {
       return tokenAt(tokenLength() - 1);
@@ -929,15 +936,16 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return Fragments.detachedEmptyAnnotation();
   }
 
+  /**
+   * First token annotation.
+   *
+   * @return the annotation
+   */
   public Annotation firstToken() {
     if (tokenLength() > 0) {
       return tokenAt(0);
     }
     return Fragments.detachedEmptyAnnotation();
-  }
-
-  public Optional<Annotation> getParent() {
-    return Optional.empty();
   }
 
 }//END OF HString
