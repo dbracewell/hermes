@@ -26,6 +26,8 @@ import com.davidbracewell.collection.Collect;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.tag.EntityType;
+import com.davidbracewell.hermes.tag.RelationType;
+import com.davidbracewell.hermes.tag.Relations;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
@@ -36,6 +38,7 @@ import lombok.NonNull;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -62,6 +65,7 @@ public final class Annotation extends Fragment implements Serializable {
    */
   public static long DETACHED_ID = Long.MIN_VALUE;
   private final AnnotationType annotationType;
+  private final LinkedList<Relation> relations = new LinkedList<>();
   private long id = DETACHED_ID;
   private transient Annotation[] tokens;
 
@@ -98,10 +102,6 @@ public final class Annotation extends Fragment implements Serializable {
     this.annotationType = AnnotationType.ROOT;
   }
 
-
-  public List<Annotation> getChildren() {
-    return null;
-  }
 
   /**
    * Instantiates a new Annotation.
@@ -146,6 +146,57 @@ public final class Annotation extends Fragment implements Serializable {
     annotation.putAll(attributeValMap);
     reader.endObject();
     return annotation;
+  }
+
+  public List<Relation> getRelations(@NonNull RelationType relationType) {
+    return relations.stream().filter(r -> r.getType().equals(relationType)).collect(Collectors.toList());
+  }
+
+  public List<Relation> getRelations() {
+    return Collections.unmodifiableList(relations);
+  }
+
+  public List<Relation> getRelations(@NonNull Annotation annotation) {
+    return relations.stream().filter(r -> r.getTarget() == annotation.getId()).collect(Collectors.toList());
+  }
+
+  public List<Annotation> getTargets(@NonNull RelationType type, @NonNull String value) {
+    return relations.stream()
+      .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
+      .map(r -> document().getAnnotationSet().get(r.getTarget()))
+      .collect(Collectors.toList());
+  }
+
+  public List<Annotation> getTargets(@NonNull RelationType type) {
+    return relations.stream()
+      .filter(r -> r.getType().equals(type))
+      .map(r -> document().getAnnotationSet().get(r.getTarget()))
+      .collect(Collectors.toList());
+  }
+
+  public void removeRelation(@NonNull Relation relation) {
+    relations.remove(relation);
+  }
+
+  public void addRelation(@NonNull Relation relation) {
+    if (!relations.contains(relation)) {
+      relations.add(relation);
+    }
+  }
+
+  public List<Annotation> getChildren() {
+    return sentences().stream()
+      .flatMap(s -> s.tokens().stream())
+      .filter(t -> t.getParent().filter(a -> a == this).isPresent())
+      .collect(Collectors.toList());
+  }
+
+  @Override
+  public Optional<Annotation> getParent() {
+    return relations.stream()
+      .filter(r -> r.getType().equals(Relations.DEPENDENCY))
+      .map(r -> document().getAnnotationSet().get(r.getTarget()))
+      .findFirst();
   }
 
   /**

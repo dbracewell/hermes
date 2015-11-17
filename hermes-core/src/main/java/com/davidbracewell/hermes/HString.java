@@ -29,6 +29,7 @@ import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
@@ -64,6 +65,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   HString(int start, int end) {
     super(start, end);
   }
+
 
   /**
    * Creates a new string by performing a union over the spans of two or more HStrings. The new HString will have a

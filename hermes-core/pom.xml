@@ -43,6 +43,11 @@
             <artifactId>snakeyaml</artifactId>
             <version>1.16</version>
         </dependency>
+        <dependency>
+            <groupId>com.davidbracewell</groupId>
+            <artifactId>mango-annotations</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

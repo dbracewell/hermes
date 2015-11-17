@@ -1,23 +1,44 @@
-defaults:
-    annotationType: ENTITY
-
 rules:
     rule1:
         pattern: <Mr.> (<@[A-Z]>)+
-        attributes:
-          ENTITY_TYPE: PERSON
-          GENDER: MALE
+        annotations:
+          "*":
+            type: ENTITY
+            attributes:
+              ENTITY_TYPE: PERSON
+              GENDER: MALE
+
     rule2:
         pattern: <Ms.> (<@[A-Z]>)+
-        attributes:
-          ENTITY_TYPE: PERSON
-          GENDER: FEMALE
+        annotations:
+          "*":
+            type: ENTITY
+            attributes:
+              ENTITY_TYPE: PERSON
+              GENDER: FEMALE
     alice:
         pattern: (<(?i)alice>)
-        attributes:
-          ENTITY_TYPE: PERSON
-          GENDER: FEMALE
+        annotations:
+          "*":
+            type: ENTITY
+            attributes:
+              ENTITY_TYPE: PERSON
+              GENDER: FEMALE
     rule3:
         pattern: (<@^[A-Z]>)+ ( <(?i)inc> | <(?i)llc> | <(?i)co> )
-        attributes:
-          ENTITY_TYPE: ORGANIZATION
+        annotations:
+          "*":
+            type: ENTITY
+            attributes:
+              ENTITY_TYPE: ORGANIZATION
+    meeting:
+        pattern: "(?PERSON ${ENTITY} #PERSON ) (?EVENT <met> <with>? ) (?PERSON ${ENTITY} #PERSON )"
+        relations:
+          PARTICIPANT:
+            - PERSON
+            - EVENT
+        annotations:
+          EVENT:
+            type: EVENT
+            attributes:
+              EVENT_TYPE: METTING
