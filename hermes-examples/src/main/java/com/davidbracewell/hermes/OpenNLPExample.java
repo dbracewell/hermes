@@ -40,8 +40,7 @@ public class OpenNLPExample {
   public static void main(String[] args) throws Exception {
     Config.initialize("OpenNLPExample");
 
-    //Load the OpenNLP default.conf file to setup the OPENNLP_ENTITY type
-    Config.loadPackageConfig("com.davidbracewell.hermes.opennlp");
+    //Load the OpenNLP English defaults
     Config.loadConfig(Resources.fromClasspath("com/davidbracewell/hermes/opennlp/opennlp-english.conf"));
     //Create a prefix where the models are stored
     Config.setProperty("data.cp", "/data/models");
