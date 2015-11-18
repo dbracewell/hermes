@@ -26,9 +26,12 @@ import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.regex.TokenMatcher;
 import com.davidbracewell.hermes.regex.TokenRegex;
+import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringUtils;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
 import lombok.NonNull;
 import org.yaml.snakeyaml.Yaml;
 
@@ -36,6 +39,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author David B. Bracewell
@@ -52,25 +56,45 @@ public final class LyreProgram implements Serializable {
     this.rules.addAll(rules);
   }
 
-  public void execute(@NonNull HString input) {
-    final Document document = input.document();
+  public void execute(@NonNull Document document) {
     rules.forEach(rule -> {
-      TokenMatcher matcher = rule.getRegex().matcher(input);
+      TokenMatcher matcher = rule.getRegex().matcher(document);
       while (matcher.find()) {
-        Annotation annotation = document.createAnnotation(rule.getAnnotationType(), matcher.start(), matcher.end());
-        if (Double.isFinite(rule.getConfidence()) && rule.getConfidence() > 0) {
-          annotation.put(Attrs.CONFIDENCE, rule.getConfidence());
-        }
-        annotation.putAll(rule.getAttributes());
-        for (Annotation other : annotation.get(rule.getAnnotationType())) {
-          if (!other.equals(annotation)) {
-            Val rName = other.get(Attrs.LYRE_RULE);
-            if (!rName.isNull() && rName.equals(rule.getAttributes().get(Attrs.LYRE_RULE))) {
-              document.getAnnotationSet().remove(annotation);
-              break;
-            }
+
+        ArrayListMultimap<String, Annotation> groups = ArrayListMultimap.create();
+        rule.getAnnotationProviders().forEach(ap -> {
+          if (ap.getGroup().equals("*")) {
+            groups.put(
+              ap.getGroup(),
+              document.createAnnotation(ap.getAnnotationType(), matcher.group(), ap.getAttributes())
+            );
+          } else {
+            matcher.group(ap.getGroup()).forEach(g ->
+              groups.put(
+                ap.getGroup(),
+                document.createAnnotation(ap.getAnnotationType(), g, ap.getAttributes())
+              )
+            );
           }
-        }
+        });
+
+
+        rule.getRelationProviders().forEach(rp -> {
+          List<Annotation> sourceAnnotations = rp.getSourceType() == null ?
+            groups.get(rp.getSource()) :
+            matcher.group(rp.getSource()).stream().flatMap(h -> h.get(rp.getSourceType()).stream()).collect(Collectors.toList());
+
+          List<Annotation> targetAnnotations = rp.getTargetType() == null ?
+            groups.get(rp.getTarget()) :
+            matcher.group(rp.getTarget()).stream().flatMap(h -> h.get(rp.getTargetType()).stream()).collect(Collectors.toList());
+
+          sourceAnnotations.forEach(source ->
+            targetAnnotations.stream().filter(t -> t != source).forEach(target ->
+              source.addRelation(new Relation(rp.getType(), rp.getValue(), target.getId()))
+            )
+          );
+        });
+
       }
     });
   }
@@ -79,50 +103,62 @@ public final class LyreProgram implements Serializable {
     LyreProgram program = new LyreProgram();
     try (Reader reader = resource.reader()) {
 
-      Map<String, Object> map = ensureMap(new Yaml().load(reader));
-      Map<String, Object> defaults = null;
-      if (map.containsKey("defaults")) {
-        defaults = ensureMap(map.get("defaults"));
-      }
-      Map<String, Object> rules = ensureMap(map.get("rules"));
+      Map<String, Object> rules = ensureMap(new Yaml().load(reader));
 
-      AnnotationType defaultAnnotationType = null;
-      double defaultConfidence = -1;
-      Map<Attribute, Val> defaultAttributes = new HashMap<>();
-
-      if (defaults != null) {
-        if (defaults.containsKey("confidence")) {
-          defaultConfidence = Double.valueOf(defaults.get("confidence").toString());
-        }
-        if (defaults.containsKey("annotationType")) {
-          defaultAnnotationType = AnnotationType.create(defaults.get("annotationType").toString());
-        }
-        if (defaults.containsKey("attributes")) {
-          defaultAttributes.putAll(readAttributes(ensureMap(defaults.get("attributes"))));
-        }
-      }
 
       for (Map.Entry<String, Object> entry : rules.entrySet()) {
         Map<String, Object> ruleMap = ensureMap(entry.getValue());
         String pattern = Val.of(ruleMap.get("pattern")).asString();
-        AnnotationType type = Val.of(ruleMap.get("annotationType")).as(AnnotationType.class, defaultAnnotationType);
-        double confidence = Val.of(ruleMap.get("confidence")).asDoubleValue(defaultConfidence);
-        Map<Attribute, Val> attributes = ruleMap.containsKey("attributes") ? readAttributes(ensureMap(ruleMap.get("attributes"))) : defaultAttributes;
-
-        if (StringUtils.isNullOrBlank(pattern) || type == null) {
+        if (StringUtils.isNullOrBlank(pattern)) {
           throw new IOException("Invalid format at: " + entry.getKey() + " : " + entry.getValue());
         }
 
+
+        List<LyreAnnotationProvider> annotationProviders = new LinkedList<>();
+        if (ruleMap.containsKey("annotations")) {
+          Map<String, Object> annotationMap = ensureMap(ruleMap.get("annotations"));
+          for (String groupName : annotationMap.keySet()) {
+            Map<String, Object> groupMap = ensureMap(annotationMap.get(groupName));
+            Preconditions.checkNotNull(groupMap.get("type"), "Annotation must provide type");
+            AnnotationType annotationType = AnnotationType.create(groupMap.get("type").toString());
+            Map<Attribute, Val> attributeValMap = new HashMap<>();
+            if (groupMap.containsKey("attributes")) {
+              attributeValMap = readAttributes(ensureMap(groupMap.get("attributes")));
+            }
+            attributeValMap.put(Attrs.LYRE_RULE, Val.of(resource.descriptor() + "::" + entry.getKey()));
+            annotationProviders.add(new LyreAnnotationProvider(groupName, annotationType, attributeValMap));
+          }
+        }
+
+        List<LyreRelationProvider> relationProviders = new LinkedList<>();
+        if (ruleMap.containsKey("relations")) {
+          Map<String, Object> relationMap = ensureMap(ruleMap.get("relations"));
+          for (String relationValue : relationMap.keySet()) {
+            Map<String, Object> groupMap = ensureMap(relationMap.get(relationValue));
+            Preconditions.checkNotNull(groupMap.get("type"), "Relation must provide type");
+            Preconditions.checkNotNull(groupMap.get("source"), "Relation must provide source");
+            Preconditions.checkNotNull(groupMap.get("target"), "Relation must provide target");
+            RelationType type = RelationType.create(groupMap.get("type").toString());
+
+            Map<String, Object> sourceMap = ensureMap(groupMap.get("source"));
+            AnnotationType sourceType = sourceMap.containsKey("annotation") ? AnnotationType.create(sourceMap.get("annotation").toString()) : null;
+            String source = sourceMap.get("capture").toString();
+
+            Map<String, Object> targetMap = ensureMap(groupMap.get("target"));
+            AnnotationType targetType = targetMap.containsKey("annotation") ? AnnotationType.create(targetMap.get("annotation").toString()) : null;
+            String target = targetMap.get("capture").toString();
+
+            relationProviders.add(new LyreRelationProvider(type, relationValue, source, sourceType, target, targetType));
+          }
+        }
+
         try {
-          Map<Attribute, Val> effective = attributes == null ? new HashMap<>(defaultAttributes) : attributes;
-          effective.put(Attrs.LYRE_RULE, Val.of(resource.descriptor() + "::" + entry.getKey()));
           program.rules.add(new LyreRule(
             resource.descriptor(),
             entry.getKey(),
             TokenRegex.compile(pattern),
-            confidence,
-            type,
-            attributes
+            annotationProviders,
+            relationProviders
           ));
         } catch (ParseException e) {
           throw new IOException("Invalid pattern for rule " + entry.getKey());

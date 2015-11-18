@@ -1,44 +1,40 @@
-rules:
-    rule1:
-        pattern: <Mr.> (<@[A-Z]>)+
-        annotations:
-          "*":
-            type: ENTITY
-            attributes:
-              ENTITY_TYPE: PERSON
-              GENDER: MALE
 
-    rule2:
-        pattern: <Ms.> (<@[A-Z]>)+
-        annotations:
-          "*":
-            type: ENTITY
-            attributes:
-              ENTITY_TYPE: PERSON
-              GENDER: FEMALE
-    alice:
-        pattern: (<(?i)alice>)
-        annotations:
-          "*":
-            type: ENTITY
-            attributes:
-              ENTITY_TYPE: PERSON
-              GENDER: FEMALE
-    rule3:
-        pattern: (<@^[A-Z]>)+ ( <(?i)inc> | <(?i)llc> | <(?i)co> )
-        annotations:
-          "*":
-            type: ENTITY
-            attributes:
-              ENTITY_TYPE: ORGANIZATION
-    meeting:
-        pattern: "(?PERSON ${ENTITY} #PERSON ) (?EVENT <met> <with>? ) (?PERSON ${ENTITY} #PERSON )"
-        relations:
-          PARTICIPANT:
-            - PERSON
-            - EVENT
-        annotations:
-          EVENT:
-            type: EVENT
-            attributes:
-              EVENT_TYPE: METTING
+alice:
+    pattern: (<(?i)alice>)
+    annotations:
+      "*":
+        type: ENTITY
+        attributes:
+          ENTITY_TYPE: PERSON
+          GENDER: FEMALE
+attr:
+    pattern: (?ANIMAL <White> <Rabbit>) <with> (?ATTRIBUTE ~2 <eyes> )
+    relations:
+      ATTRIBUTE:
+        type: ATTRIBUTE
+        source:
+          capture: ANIMAL
+        target:
+          capture: ATTRIBUTE
+    annotations:
+      ANIMAL:
+        type: ENTITY
+        attributes:
+          ENTITY_TYPE: ANIMAL
+          GENDER: FEMALE
+      ATTRIBUTE:
+        type: ATTRIBUTE
+
+attr2:
+    pattern: "(?ENTITY ${ENTITY} #PERSON) (?ATTRIBUTE (<started>|<think>))"
+    relations:
+      ATTRIBUTE:
+        type: ATTRIBUTE
+        source:
+          capture: ENTITY
+          annotation: ENTITY
+        target:
+          capture: ATTRIBUTE
+    annotations:
+      ATTRIBUTE:
+        type: ATTRIBUTE

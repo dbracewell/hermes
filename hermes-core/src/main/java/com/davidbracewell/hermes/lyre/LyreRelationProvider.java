@@ -21,22 +21,22 @@
 
 package com.davidbracewell.hermes.lyre;
 
-import com.davidbracewell.hermes.regex.TokenRegex;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.tag.RelationType;
 import lombok.Value;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * @author David B. Bracewell
  */
 @Value
-class LyreRule implements Serializable {
+public class LyreRelationProvider implements Serializable{
   private static final long serialVersionUID = 1L;
-  private final String ruleFile;
-  private final String ruleName;
-  private final TokenRegex regex;
-  private final List<LyreAnnotationProvider> annotationProviders;
-  private final List<LyreRelationProvider> relationProviders;
-
-}//END OF LyreRule
+  private final RelationType type;
+  private final String value;
+  private final String source;
+  private final AnnotationType sourceType;
+  private final String target;
+  private final AnnotationType targetType;
+}//END OF LyreRelationProvider

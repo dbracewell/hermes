@@ -19,24 +19,20 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lyre;
+package com.davidbracewell.hermes.regex;
 
-import com.davidbracewell.hermes.regex.TokenRegex;
+import com.davidbracewell.hermes.HString;
+import com.google.common.collect.ArrayListMultimap;
 import lombok.Value;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * @author David B. Bracewell
  */
 @Value
-class LyreRule implements Serializable {
+class Match implements Serializable {
   private static final long serialVersionUID = 1L;
-  private final String ruleFile;
-  private final String ruleName;
-  private final TokenRegex regex;
-  private final List<LyreAnnotationProvider> annotationProviders;
-  private final List<LyreRelationProvider> relationProviders;
-
-}//END OF LyreRule
+  private final int endLocation;
+  private final ArrayListMultimap<String, HString> captures;
+}//END OF Match

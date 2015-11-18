@@ -138,8 +138,10 @@ public final class AnnotationType extends EnumValue {
 
   public Attribute getTagAttribute() {
     String attribute = Config.get("Annotation", nonGoldStandardVersion().name(), "tag").asString();
-    if (StringUtils.isNullOrBlank(attribute) && !Attribute.ROOT.equals(getParent())) {
+    if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {
       return getParent().getTagAttribute();
+    } else if (StringUtils.isNullOrBlank(attribute)) {
+      return Attrs.TAG;
     }
     return Attribute.create(attribute);
   }

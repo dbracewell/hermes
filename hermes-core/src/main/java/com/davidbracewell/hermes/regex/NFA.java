@@ -49,7 +49,7 @@ final class NFA implements Serializable {
    * @param startIndex the start index
    * @return the int
    */
-  public int matches(HString input, int startIndex) {
+  public Match matches(HString input, int startIndex) {
     //The set of states that the NFA is in
     Set<State> states = new HashSet<>();
 
@@ -99,7 +99,7 @@ final class NFA implements Serializable {
     }
 
     if (accepts.isEmpty()) {
-      return -1;
+      return new Match(-1, null);
     }
 
     int max = 0;
@@ -111,7 +111,7 @@ final class NFA implements Serializable {
       max++;
     }
 
-    return max;
+    return new Match(max,namedGroups);
   }
 
   static class State {

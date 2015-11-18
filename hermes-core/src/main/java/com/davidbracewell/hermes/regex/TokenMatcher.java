@@ -22,10 +22,13 @@
 package com.davidbracewell.hermes.regex;
 
 
+import com.clearspring.analytics.util.Preconditions;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A token equivalent of <code>java.util.regex.Matcher</code>
@@ -34,20 +37,39 @@ import java.util.List;
  */
 public class TokenMatcher {
 
+  /**
+   * The Automaton.
+   */
   final NFA automaton;
+  /**
+   * The Input.
+   */
   final HString input;
 
   private int start = 0;
-  private int end = 0;
+  private Match match = null;
   private int last = 0;
   private final List<Annotation> tokens;
 
+  /**
+   * Instantiates a new Token matcher.
+   *
+   * @param automaton the automaton
+   * @param input     the input
+   */
   TokenMatcher(NFA automaton, HString input) {
     this.automaton = automaton;
     this.input = input;
     this.tokens = input.tokens();
   }
 
+  /**
+   * Instantiates a new Token matcher.
+   *
+   * @param automaton the automaton
+   * @param input     the input
+   * @param start     the start
+   */
   TokenMatcher(NFA automaton, HString input, int start) {
     this.automaton = automaton;
     this.input = input;
@@ -63,14 +85,14 @@ public class TokenMatcher {
   public boolean find() {
     start = last;
     for (; start < tokens.size(); start++) {
-      end = automaton.matches(input, start);
-      if (end != -1) {
-        last = end;
+      match = automaton.matches(input, start);
+      if (match.getEndLocation() != -1) {
+        last = match.getEndLocation();
         return true;
       }
     }
     start = -1;
-    end = -1;
+    match = new Match(-1, null);
     return false;
   }
 
@@ -80,6 +102,7 @@ public class TokenMatcher {
    * @return The start token of the match
    */
   public int start() {
+    Preconditions.checkState(match != null, "Have not called find()");
     if (start >= 0) {
       return tokens.get(start).start();
     }
@@ -92,8 +115,9 @@ public class TokenMatcher {
    * @return The end end token of the match
    */
   public int end() {
-    if (end >= 0) {
-      return tokens.get(end - 1).end();
+    Preconditions.checkState(match != null, "Have not called find()");
+    if (match.getEndLocation() >= 0) {
+      return tokens.get(match.getEndLocation() - 1).end();
     }
     return -1;
   }
@@ -105,6 +129,25 @@ public class TokenMatcher {
    */
   public HString group() {
     return input.document().substring(start(), end());
+  }
+
+  /**
+   * Group list.
+   *
+   * @param groupName the group name
+   * @return the list
+   */
+  public List<HString> group(String groupName) {
+    return Collections.unmodifiableList(match.getCaptures().get(groupName));
+  }
+
+  /**
+   * Group names set.
+   *
+   * @return the set
+   */
+  public Set<String> groupNames() {
+    return Collections.unmodifiableSet(match.getCaptures().keySet());
   }
 
 
