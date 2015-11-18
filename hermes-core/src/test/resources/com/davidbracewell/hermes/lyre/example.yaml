@@ -12,6 +12,7 @@ attr:
     relations:
       ATTRIBUTE:
         type: ATTRIBUTE
+        value: EYES
         source:
           capture: ANIMAL
         target:

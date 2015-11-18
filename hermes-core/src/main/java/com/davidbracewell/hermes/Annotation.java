@@ -65,7 +65,7 @@ public final class Annotation extends Fragment implements Serializable {
    */
   public static long DETACHED_ID = Long.MIN_VALUE;
   private final AnnotationType annotationType;
-  private final LinkedList<Relation> relations = new LinkedList<>();
+  private final Set<Relation> relations = new HashSet<>();
   private long id = DETACHED_ID;
   private transient Annotation[] tokens;
 
@@ -186,8 +186,8 @@ public final class Annotation extends Fragment implements Serializable {
    *
    * @return the relations
    */
-  public List<Relation> getRelations() {
-    return Collections.unmodifiableList(relations);
+  public Collection<Relation> getRelations() {
+    return Collections.unmodifiableCollection(relations);
   }
 
   /**
@@ -199,6 +199,7 @@ public final class Annotation extends Fragment implements Serializable {
   public List<Relation> getRelations(@NonNull Annotation annotation) {
     return relations.stream().filter(r -> r.getTarget() == annotation.getId()).collect(Collectors.toList());
   }
+
 
   /**
    * Gets targets.

@@ -56,49 +56,6 @@ public final class LyreProgram implements Serializable {
     this.rules.addAll(rules);
   }
 
-  public void execute(@NonNull Document document) {
-    rules.forEach(rule -> {
-      TokenMatcher matcher = rule.getRegex().matcher(document);
-      while (matcher.find()) {
-
-        ArrayListMultimap<String, Annotation> groups = ArrayListMultimap.create();
-        rule.getAnnotationProviders().forEach(ap -> {
-          if (ap.getGroup().equals("*")) {
-            groups.put(
-              ap.getGroup(),
-              document.createAnnotation(ap.getAnnotationType(), matcher.group(), ap.getAttributes())
-            );
-          } else {
-            matcher.group(ap.getGroup()).forEach(g ->
-              groups.put(
-                ap.getGroup(),
-                document.createAnnotation(ap.getAnnotationType(), g, ap.getAttributes())
-              )
-            );
-          }
-        });
-
-
-        rule.getRelationProviders().forEach(rp -> {
-          List<Annotation> sourceAnnotations = rp.getSourceType() == null ?
-            groups.get(rp.getSource()) :
-            matcher.group(rp.getSource()).stream().flatMap(h -> h.get(rp.getSourceType()).stream()).collect(Collectors.toList());
-
-          List<Annotation> targetAnnotations = rp.getTargetType() == null ?
-            groups.get(rp.getTarget()) :
-            matcher.group(rp.getTarget()).stream().flatMap(h -> h.get(rp.getTargetType()).stream()).collect(Collectors.toList());
-
-          sourceAnnotations.forEach(source ->
-            targetAnnotations.stream().filter(t -> t != source).forEach(target ->
-              source.addRelation(new Relation(rp.getType(), rp.getValue(), target.getId()))
-            )
-          );
-        });
-
-      }
-    });
-  }
-
   public static LyreProgram read(@NonNull Resource resource) throws IOException {
     LyreProgram program = new LyreProgram();
     try (Reader reader = resource.reader()) {
@@ -148,6 +105,7 @@ public final class LyreProgram implements Serializable {
             AnnotationType targetType = targetMap.containsKey("annotation") ? AnnotationType.create(targetMap.get("annotation").toString()) : null;
             String target = targetMap.get("capture").toString();
 
+            relationValue = groupMap.containsKey("value") ? groupMap.get("value").toString() : relationValue;
             relationProviders.add(new LyreRelationProvider(type, relationValue, source, sourceType, target, targetType));
           }
         }
@@ -184,6 +142,59 @@ public final class LyreProgram implements Serializable {
       result.put(attribute, Val.of(attribute.getValueType().convert(entry.getValue())));
     });
     return result;
+  }
+
+  private Annotation createOrGet(Document document, AnnotationType type, HString span, Map<Attribute, Val> attributeValMap) {
+    return document.substring(span.start(), span.end()).get(type).stream()
+      .filter(a -> a.getType().equals(type) && a.attributeValues().equals(attributeValMap.entrySet()))
+      .findFirst()
+      .orElseGet(() -> document.createAnnotation(type, span, attributeValMap));
+  }
+
+
+  public void execute(@NonNull Document document) {
+    rules.forEach(rule -> {
+      TokenMatcher matcher = rule.getRegex().matcher(document);
+      while (matcher.find()) {
+
+        ArrayListMultimap<String, Annotation> groups = ArrayListMultimap.create();
+        rule.getAnnotationProviders().forEach(ap -> {
+
+          if (ap.getGroup().equals("*")) {
+            groups.put(
+              ap.getGroup(),
+              createOrGet(document, ap.getAnnotationType(), matcher.group(), ap.getAttributes())
+            );
+
+          } else {
+            matcher.group(ap.getGroup()).forEach(g ->
+              groups.put(
+                ap.getGroup(),
+                createOrGet(document, ap.getAnnotationType(), g, ap.getAttributes())
+              )
+            );
+          }
+        });
+
+
+        rule.getRelationProviders().forEach(rp -> {
+          List<Annotation> sourceAnnotations = rp.getSourceType() == null ?
+            groups.get(rp.getSource()) :
+            matcher.group(rp.getSource()).stream().flatMap(h -> h.get(rp.getSourceType()).stream()).collect(Collectors.toList());
+
+          List<Annotation> targetAnnotations = rp.getTargetType() == null ?
+            groups.get(rp.getTarget()) :
+            matcher.group(rp.getTarget()).stream().flatMap(h -> h.get(rp.getTargetType()).stream()).collect(Collectors.toList());
+
+          sourceAnnotations.forEach(source ->
+            targetAnnotations.stream().filter(t -> t != source).forEach(target ->
+              source.addRelation(new Relation(rp.getType(), rp.getValue(), target.getId()))
+            )
+          );
+        });
+
+      }
+    });
   }
 
 }//END OF LyreProgram
