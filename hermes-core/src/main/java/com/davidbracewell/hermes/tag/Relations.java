@@ -11,9 +11,5 @@ import com.davidbracewell.annotation.DynamicEnumeration;
   configPrefix = "RelationType"
 )
 public interface Relations {
-
   RelationType DEPENDENCY = RelationType.create("DEPENDENCY");
-
-  RelationType EVENT_ROLE = RelationType.create("EVENT_ROLE");
-
 }//END OF Relations

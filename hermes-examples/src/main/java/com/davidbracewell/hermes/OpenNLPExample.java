@@ -42,29 +42,9 @@ public class OpenNLPExample {
 
     //Load the OpenNLP default.conf file to setup the OPENNLP_ENTITY type
     Config.loadPackageConfig("com.davidbracewell.hermes.opennlp");
-
+    Config.loadConfig(Resources.fromClasspath("com/davidbracewell/hermes/opennlp/opennlp-english.conf"));
     //Create a prefix where the models are stored
     Config.setProperty("data.cp", "/data/models");
-
-    //Set config properties for the token annotator to use OpenNLP
-    Config.setProperty("Annotation.TOKEN.annotator", OpenNLPTokenAnnotator.class.getName());
-    //Set where the model is located
-    Config.setProperty("opennlp.tokenizer.model.ENGLISH", "${data.cp}/en/en-token.bin");
-
-    //Set config properties for the sentence annotator to use OpenNLP
-    Config.setProperty("Annotation.SENTENCE.annotator", OpenNLPSentenceAnnotator.class.getName());
-    //Set where the model is located
-    Config.setProperty("opennlp.sentence.model.ENGLISH", "${data.cp}/en/opennlp-sent.bin");
-
-    //Set config properties for the part of speech annotator to use OpenNLP
-    Config.setProperty("Annotation.PART_OF_SPEECH.annotator", OpenNLPPOSAnnotator.class.getName());
-    //Set where the model is located
-    Config.setProperty("opennlp.part_of_speech.model.ENGLISH", "${data.cp}/en/opennlp-pos.bin");
-
-
-    //Set where the model is located
-    Config.setProperty("opennlp.entity.models.ENGLISH", "${data.cp}/en/ner/en-ner-person.bin,${data.cp}/en/ner/en-ner-location.bin,${data.cp}/en/ner/en-ner-organization.bin,${data.cp}/en/ner/en-ner-date.bin, ${data.cp}/en/ner/en-ner-money.bin, ${data.cp}/en/ner/en-ner-percentage.bin, ${data.cp}/en/ner/en-ner-time.bin");
-
 
     //Create a pipeline to do tokenization, sentence segmentation, and part of speech tagging
     Pipeline pipeline = Pipeline.builder()
