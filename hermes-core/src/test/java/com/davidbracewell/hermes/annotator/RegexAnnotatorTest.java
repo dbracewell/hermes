@@ -19,13 +19,11 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.morphology;
+package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
 import org.junit.Test;
 
@@ -34,15 +32,18 @@ import static org.junit.Assert.*;
 /**
  * @author David B. Bracewell
  */
-public class EnglishStemmerTest {
+public class RegexAnnotatorTest {
 
   @Test
-  public void testStem() throws Exception {
+  public void testAnnotate() throws Exception {
     Config.initializeTest();
-    Document document = DocumentFactory.getInstance().create("I was walking to the shore with no shoes.", Language.ENGLISH);
-    Pipeline.process(document, Types.TOKEN, Types.SENTENCE, Types.STEM);
-    assertEquals("wa walk", document.find("was walking").getStem());
-    assertEquals("shoe", document.find("shoes").getStem());
-    assertEquals("no", document.find("no").getStem());
+    Document document = DocumentProvider.getAnnotatedDocument();
+    RegexAnnotator annotator = new RegexAnnotator("(?i)alice", Types.ENTITY);
+    annotator.annotate(document);
+    assertEquals(4.0, document.get(Types.ENTITY).size(), 0d);
+    annotator = new RegexAnnotator("(?i)alice", "PERSON");
+    annotator.annotate(document);
+    assertEquals(4.0, document.get(AnnotationType.create("PERSON")).size(), 0d);
+
   }
 }

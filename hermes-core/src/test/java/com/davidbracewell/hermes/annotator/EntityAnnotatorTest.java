@@ -19,30 +19,41 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.morphology;
+package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.tag.Entities;
 import org.junit.Test;
+
+import java.util.List;
 
 import static org.junit.Assert.*;
 
 /**
  * @author David B. Bracewell
  */
-public class EnglishStemmerTest {
+public class EntityAnnotatorTest {
+
 
   @Test
-  public void testStem() throws Exception {
+  public void testAnnotate() throws Exception {
     Config.initializeTest();
-    Document document = DocumentFactory.getInstance().create("I was walking to the shore with no shoes.", Language.ENGLISH);
-    Pipeline.process(document, Types.TOKEN, Types.SENTENCE, Types.STEM);
-    assertEquals("wa walk", document.find("was walking").getStem());
-    assertEquals("shoe", document.find("shoes").getStem());
-    assertEquals("no", document.find("no").getStem());
+    Document document = DocumentProvider.getAnnotatedEmoticonDocument();
+    Pipeline.process(document, Types.ENTITY);
+    List<Annotation> entities = document.get(Types.ENTITY);
+
+    assertEquals(";-)", entities.get(0).toString());
+    assertEquals(Entities.EMOTICON, entities.get(0).getTag().get());
+
+    assertEquals("http://www.somevideo.com/video.html", entities.get(1).toString());
+    assertEquals(Entities.URL, entities.get(1).getTag().get());
+
+    assertEquals("$100", entities.get(2).toString());
+    assertEquals(Entities.MONEY, entities.get(2).getTag().get());
+
   }
 }

@@ -97,7 +97,6 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
       }
 
       Token token = buffer.remove();
-
       if (token.type.isInstance(TokenType.URL)) {
         token = checkURL(token);
       } else if (peekIsType(0, TokenType.PUNCTUATION) &&
@@ -105,6 +104,10 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
         token = mergeAbbreviationAndAcronym(token);
       } else if (token.type.isInstance(TokenType.PUNCTUATION, TokenType.HYPHEN)) {
         token = handleEmoticon(token);
+      } else if (token.type.isInstance(TokenType.MONEY) && peekIsType(0, TokenType.NUMBER)) {
+        token = mergeMoneyNumber(token);
+      } else if (token.type.isInstance(TokenType.NUMBER) && peekIsType(0, TokenType.MONEY)) {
+        token = mergeMoneyNumber(token);
       }
 
       if (token.type.isInstance(TokenType.HYPHEN)) {
@@ -156,8 +159,16 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
 
     private Token checkURL(Token n) {
       //Ensure that the TLD is valid
-      int dot = n.text.lastIndexOf('.');
-      String tld = n.text.substring(dot + 1);
+
+      if (n.text.contains("://")) {
+        return n;
+      }
+      int slash = n.text.indexOf('/');
+      if (slash == -1) {
+        slash = n.text.length();
+      }
+      int dot = n.text.substring(0, slash).lastIndexOf('.');
+      String tld = n.text.substring(dot + 1, slash);
 
       if (!tlds.contains(tld.toLowerCase())) {
         Token nn = peek(0);
@@ -228,7 +239,8 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
       int peek = 0;
       while ((nn = peek(peek)) != null) {
         String tempLower = emoLower + nn.text.toLowerCase();
-        if (emoticons.prefixMap(tempLower).size() > 0) {
+        if ((emoticons.containsKey(tempLower) && emoticons.prefixMap(tempLower).size() > 1) ||
+          (!emoticons.containsKey(tempLower) && emoticons.prefixMap(tempLower).size() > 0)) {
           end = nn.charEndIndex;
           emo = emo + nn.text;
           emoLower = tempLower;
@@ -236,7 +248,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
         } else if (emoticons.containsKey(tempLower)) {
           consume(peek);
           lastIndex = n.index;
-          return new Token(emo, TokenType.EMOTICON, n.charStartIndex, end, n.index);
+          return new Token(emo, TokenType.EMOTICON, n.charStartIndex, end + 1, n.index);
         } else if (emoLower.length() > 1 && emoticons.containsKey(emoLower.substring(0, emoLower.length() - 1))) {
           Token last = consume(peek - 1);
           lastIndex = n.index;
@@ -246,6 +258,25 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
         }
       }
 
+      return n;
+    }
+
+    private Token mergeMoneyNumber(Token n) {
+      Token nn = peek(0);
+      if (nn == null) {
+        return n;
+      }
+      if (nn.type.isInstance(TokenType.NUMBER) && nn.charStartIndex == n.charEndIndex) {
+        Token token = new Token(
+          n.text + nn.text,
+          TokenType.MONEY,
+          n.charStartIndex,
+          nn.charEndIndex,
+          n.index
+        );
+        consume();
+        return token;
+      }
       return n;
     }
 
