@@ -32,6 +32,10 @@ import com.davidbracewell.hermes.Types;
  */
 public interface DocumentProvider {
 
+  static Document getChineseDocument() {
+    return Document.fromTokens("Chinese", new String[]{"我", "爱", "你"}, Language.CHINESE);
+  }
+
   static Document getAnnotatedEmoticonDocument() {
     Document doc = DocumentFactory.getInstance().create("I had a great time at the party ;-). " +
       "See all the video at http://www.somevideo.com/video.html " +

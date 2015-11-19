@@ -33,6 +33,7 @@ import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
@@ -74,6 +75,21 @@ public class Document extends HString {
     setId(id);
     setLanguage(language);
     this.annotationSet = Config.get("hermes.AnnotationSetImpl").asOrElse(AnnotationSet.class, DefaultAnnotationSet::new);
+  }
+
+
+  public static Document fromTokens(String id, @NonNull String[] tokens, @NonNull Language language) {
+    int delta = language.usesWhitespace() ? 1 : 0;
+    String content = Joiner.on(language.usesWhitespace() ? " " : "").join(tokens);
+    Document doc = new Document(id, content, language);
+    int charStart = 0;
+    for (int i = 0; i < tokens.length; i++) {
+      int charEnd = charStart + tokens[i].length();
+      doc.createAnnotation(Types.TOKEN, charStart, charEnd);
+      charStart = charEnd + delta;
+    }
+    doc.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
+    return doc;
   }
 
   /**
