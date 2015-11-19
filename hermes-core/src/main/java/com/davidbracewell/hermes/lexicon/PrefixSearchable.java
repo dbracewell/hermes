@@ -24,10 +24,18 @@ package com.davidbracewell.hermes.lexicon;
 import com.davidbracewell.hermes.HString;
 
 /**
+ * The interface Prefix searchable.
+ *
  * @author David B. Bracewell
  */
 public interface PrefixSearchable {
 
+  /**
+   * Is prefix match boolean.
+   *
+   * @param hString the h string
+   * @return the boolean
+   */
   boolean isPrefixMatch(HString hString);
 
 }//END OF PrefixSearchable

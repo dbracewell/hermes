@@ -21,13 +21,15 @@
 
 package com.davidbracewell.hermes.lexicon;
 
-import com.davidbracewell.Tag;
 import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.HString;
 import lombok.NonNull;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -94,10 +96,6 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
     return trie.prefixMap(normalize(hString) + " ").size() > 0 || trie.prefixMap(normalize(hString.getLemma()) + " ").size() > 0;
   }
 
-  @Override
-  public Optional<Tag> getTag(HString hString) {
-    return getEntries(hString).stream().map(LexiconEntry::getTag).findFirst();
-  }
 
 }//END OF BaseTrieLexicon
 

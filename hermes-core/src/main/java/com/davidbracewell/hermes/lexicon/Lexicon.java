@@ -52,7 +52,7 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @param hString the h string
    * @return the match
    */
-  default Optional<String> getMatch(HString hString) {
+  default Optional<String> getMatch(@NonNull HString hString) {
     return getEntries(hString)
       .stream()
       .map(LexiconEntry::getLemma)
@@ -70,8 +70,11 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @param hString the h string
    * @return the probability
    */
-  default double getProbability(HString hString) {
-    return getEntries(hString).stream().mapToDouble(LexiconEntry::getProbability).max().orElse(0d);
+  default double getProbability(@NonNull HString hString) {
+    return getEntries(hString).stream()
+      .mapToDouble(LexiconEntry::getProbability)
+      .max()
+      .orElseGet(() -> 0d);
   }
 
   /**
@@ -87,7 +90,7 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @param lemma the lemma
    * @return the probability
    */
-  default double getProbability(String lemma) {
+  default double getProbability(@NonNull String lemma) {
     return getProbability(Fragments.string(lemma));
   }
 
@@ -97,7 +100,7 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @param lemma the lemma
    * @return the tag
    */
-  default Optional<Tag> getTag(String lemma) {
+  default Optional<Tag> getTag(@NonNull String lemma) {
     return getTag(Fragments.string(lemma));
   }
 
@@ -107,8 +110,10 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @param hString the h string
    * @return the tag
    */
-  default Optional<Tag> getTag(HString hString) {
-    return getEntries(hString).stream().map(LexiconEntry::getTag).findFirst();
+  default Optional<Tag> getTag(@NonNull HString hString) {
+    return getEntries(hString).stream()
+      .filter(e -> e.getTag() != null)
+      .map(LexiconEntry::getTag).findFirst();
   }
 
   /**
@@ -118,12 +123,16 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    * @param tag     the tag
    * @return the probability
    */
-  default double getProbability(HString hString, Tag tag) {
+  default double getProbability(@NonNull HString hString, @NonNull Tag tag) {
     return getEntries(hString).stream()
       .filter(le -> le.getTag() != null && le.getTag().isInstance(tag))
       .mapToDouble(LexiconEntry::getProbability)
       .max()
       .orElse(0d);
+  }
+
+  default double getProbability(@NonNull String string, @NonNull Tag tag) {
+    return getProbability(Fragments.string(string), tag);
   }
 
   /**

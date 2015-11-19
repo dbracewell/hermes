@@ -87,9 +87,9 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
    */
   protected String normalize(CharSequence sequence) {
     if (isCaseSensitive()) {
-      return sequence.toString().toLowerCase();
+      return sequence.toString();
     }
-    return sequence.toString();
+    return sequence.toString().toLowerCase();
   }
 
   public List<HString> match(@NonNull HString source) {
