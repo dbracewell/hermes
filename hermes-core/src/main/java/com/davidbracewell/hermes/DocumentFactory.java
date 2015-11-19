@@ -25,6 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.hermes.preprocessing.TextNormalization;
 import com.davidbracewell.hermes.preprocessing.TextNormalizer;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
 
@@ -87,6 +88,27 @@ public class DocumentFactory implements Serializable {
     return CONFIGURED_INSTANCE;
   }
 
+  /**
+   * From tokens document.
+   *
+   * @param id       the id
+   * @param tokens   the tokens
+   * @param language the language
+   * @return the document
+   */
+  public Document fromTokens(String id, @NonNull String[] tokens, @NonNull Language language) {
+    int delta = language.usesWhitespace() ? 1 : 0;
+    String content = Joiner.on(language.usesWhitespace() ? " " : "").join(tokens);
+    Document doc = new Document(id, content, language);
+    int charStart = 0;
+    for (int i = 0; i < tokens.length; i++) {
+      int charEnd = charStart + tokens[i].length();
+      doc.createAnnotation(Types.TOKEN, charStart, charEnd);
+      charStart = charEnd + delta;
+    }
+    doc.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
+    return doc;
+  }
 
   /**
    * Creates a document with the given content.
@@ -160,7 +182,6 @@ public class DocumentFactory implements Serializable {
     return document;
   }
 
-
   /**
    * Create raw.
    *
@@ -178,23 +199,36 @@ public class DocumentFactory implements Serializable {
   }
 
   /**
-   * Creates a document from an iterable of strings that represent tokens.
+   * From tokens document.
    *
    * @param tokens the tokens
    * @return the document
    */
   public Document fromTokens(@NonNull Iterable<String> tokens) {
+    return fromTokens(tokens, getDefaultLanguage());
+  }
+
+  /**
+   * Creates a document from an iterable of strings that represent tokens.
+   *
+   * @param tokens   the tokens
+   * @param language the language
+   * @return the document
+   */
+  public Document fromTokens(@NonNull Iterable<String> tokens, @NonNull Language language) {
     StringBuilder content = new StringBuilder();
     List<Span> tokenSpans = new ArrayList<>();
     for (String token : tokens) {
       tokenSpans.add(new Span(content.length(), content.length() + token.length()));
-      content.append(token).append(" ");
+      content.append(token);
+      if (language.usesWhitespace()) {
+        content.append(" ");
+      }
     }
     Document doc = new Document("", content.toString().trim(), defaultLanguage);
     for (int idx = 0; idx < tokenSpans.size(); idx++) {
       doc.createAnnotation(Types.TOKEN, tokenSpans.get(idx));
       Collect.map(Attrs.INDEX, idx);
-      //Attrs.TOKEN_TYPE, TokenType.UNKNOWN)
     }
     doc.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
     return doc;
@@ -257,6 +291,15 @@ public class DocumentFactory implements Serializable {
   }
 
   /**
+   * Gets default language.
+   *
+   * @return the default language
+   */
+  public Language getDefaultLanguage() {
+    return defaultLanguage;
+  }
+
+  /**
    * <p>Builder for DocumentFactory</p>
    *
    * @author David B. Bracewell
@@ -304,15 +347,5 @@ public class DocumentFactory implements Serializable {
     }
 
   }//END OF DocumentFactory$Builder
-
-
-  /**
-   * Gets default language.
-   *
-   * @return the default language
-   */
-  public Language getDefaultLanguage() {
-    return defaultLanguage;
-  }
 
 }//END OF DocumentFactory

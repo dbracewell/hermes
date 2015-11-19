@@ -78,20 +78,6 @@ public class Document extends HString {
   }
 
 
-  public static Document fromTokens(String id, @NonNull String[] tokens, @NonNull Language language) {
-    int delta = language.usesWhitespace() ? 1 : 0;
-    String content = Joiner.on(language.usesWhitespace() ? " " : "").join(tokens);
-    Document doc = new Document(id, content, language);
-    int charStart = 0;
-    for (int i = 0; i < tokens.length; i++) {
-      int charEnd = charStart + tokens[i].length();
-      doc.createAnnotation(Types.TOKEN, charStart, charEnd);
-      charStart = charEnd + delta;
-    }
-    doc.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
-    return doc;
-  }
-
   /**
    * Creates a document from a JSON representation (created by the write or toJson methods)
    *

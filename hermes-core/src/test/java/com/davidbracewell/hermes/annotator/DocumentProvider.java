@@ -33,7 +33,7 @@ import com.davidbracewell.hermes.Types;
 public interface DocumentProvider {
 
   static Document getChineseDocument() {
-    return Document.fromTokens("Chinese", new String[]{"我", "爱", "你"}, Language.CHINESE);
+    return DocumentFactory.getInstance().fromTokens("Chinese", new String[]{"我", "爱", "你"}, Language.CHINESE);
   }
 
   static Document getAnnotatedEmoticonDocument() {
