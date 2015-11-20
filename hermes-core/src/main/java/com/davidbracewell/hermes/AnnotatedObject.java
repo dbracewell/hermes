@@ -92,6 +92,30 @@ public interface AnnotatedObject {
   }
 
   /**
+   * Last token annotation.
+   *
+   * @return the annotation
+   */
+  default Annotation lastToken() {
+    if (tokenLength() > 0) {
+      return tokenAt(tokenLength() - 1);
+    }
+    return Fragments.detachedEmptyAnnotation();
+  }
+
+  /**
+   * First token annotation.
+   *
+   * @return the annotation
+   */
+  default Annotation firstToken() {
+    if (tokenLength() > 0) {
+      return tokenAt(0);
+    }
+    return Fragments.detachedEmptyAnnotation();
+  }
+
+  /**
    * Gets the sentences overlapping this object
    *
    * @return the sentences overlapping this annotation.

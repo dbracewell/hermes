@@ -88,10 +88,14 @@ public interface AttributedObject {
    * @return The old value of the attribute or null
    */
   default Val putIfAbsent(Attribute attribute, Object value) {
-    if (contains(attribute)) {
-      return get(attribute);
+    if (!contains(attribute)) {
+      synchronized (this) {
+        if (!contains(attribute)) {
+          return put(attribute, value);
+        }
+      }
     }
-    return put(attribute, value);
+    return null;
   }
 
   /**
@@ -103,10 +107,14 @@ public interface AttributedObject {
    * @return The old value of the attribute or null
    */
   default Val putIfAbsent(Attribute attribute, @NonNull Supplier<?> supplier) {
-    if (contains(attribute)) {
-      return get(attribute);
+    if (!contains(attribute)) {
+      synchronized (this) {
+        if (!contains(attribute)) {
+          return put(attribute, supplier.get());
+        }
+      }
     }
-    return put(attribute, supplier.get());
+    return null;
   }
 
   /**

@@ -29,7 +29,6 @@ import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.hermes.tag.POS;
-import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
@@ -924,28 +923,5 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return annotations;
   }
 
-  /**
-   * Last token annotation.
-   *
-   * @return the annotation
-   */
-  public Annotation lastToken() {
-    if (tokenLength() > 0) {
-      return tokenAt(tokenLength() - 1);
-    }
-    return Fragments.detachedEmptyAnnotation();
-  }
-
-  /**
-   * First token annotation.
-   *
-   * @return the annotation
-   */
-  public Annotation firstToken() {
-    if (tokenLength() > 0) {
-      return tokenAt(0);
-    }
-    return Fragments.detachedEmptyAnnotation();
-  }
 
 }//END OF HString

@@ -21,31 +21,38 @@
 
 package com.davidbracewell.hermes.tag;
 
-import static com.davidbracewell.hermes.tag.EntityType.ENTITY;
+import com.davidbracewell.annotation.DynamicEnumeration;
 
+import static com.davidbracewell.hermes.tag.EntityType.ROOT;
 /**
  * The interface Entities.
  *
  * @author David B. Bracewell
  */
+@DynamicEnumeration(
+  className = "EntityType",
+  hierarchical = true,
+  configPrefix = "Entity",
+  rootName = "ENTITY"
+)
 public interface Entities {
 
   /**
    * The constant PERSON.
    */
-  EntityType PERSON = EntityType.create("PERSON", ENTITY);
+  EntityType PERSON = EntityType.create("PERSON", ROOT);
   /**
    * The constant ORGANIZATION.
    */
-  EntityType ORGANIZATION = EntityType.create("ORGANIZATION", ENTITY);
+  EntityType ORGANIZATION = EntityType.create("ORGANIZATION", ROOT);
   /**
    * The constant LOCATION.
    */
-  EntityType LOCATION = EntityType.create("LOCATION", ENTITY);
+  EntityType LOCATION = EntityType.create("LOCATION", ROOT);
   /**
    * The constant NUMBER.
    */
-  EntityType NUMBER = EntityType.create("NUMBER", ENTITY);
+  EntityType NUMBER = EntityType.create("NUMBER", ROOT);
   /**
    * The constant MONEY.
    */
@@ -57,7 +64,7 @@ public interface Entities {
   /**
    * The constant DATE_TIME.
    */
-  EntityType DATE_TIME = EntityType.create("DATE_TIME", ENTITY);
+  EntityType DATE_TIME = EntityType.create("DATE_TIME", ROOT);
   /**
    * The constant DATE.
    */
@@ -69,7 +76,7 @@ public interface Entities {
   /**
    * The constant INTERNET.
    */
-  EntityType INTERNET = EntityType.create("INTERNET", ENTITY);
+  EntityType INTERNET = EntityType.create("INTERNET", ROOT);
   /**
    * The constant EMAIL.
    */

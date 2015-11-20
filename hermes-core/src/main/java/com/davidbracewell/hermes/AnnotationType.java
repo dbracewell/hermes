@@ -23,9 +23,10 @@ package com.davidbracewell.hermes;
 
 
 import com.davidbracewell.DynamicEnum;
-import com.davidbracewell.EnumValue;
+import com.davidbracewell.HierarchicalEnumValue;
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.reflection.BeanUtils;
 import com.davidbracewell.string.StringUtils;
@@ -35,7 +36,9 @@ import lombok.NonNull;
 import java.io.ObjectStreamException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -86,7 +89,7 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public final class AnnotationType extends EnumValue {
+public final class AnnotationType extends HierarchicalEnumValue {
 
   private static final DynamicEnum<AnnotationType> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
@@ -96,11 +99,16 @@ public final class AnnotationType extends EnumValue {
    */
   public static AnnotationType ROOT = create("ROOT");
 
-
   private volatile transient Set<Attribute> definedAttributes = null;
 
   private AnnotationType(String name) {
     super(name);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public List<AnnotationType> getChildren() {
+    return index.values().stream().filter(t -> t.getParent().equals(this)).collect(Collectors.toList());
   }
 
   /**
@@ -182,6 +190,11 @@ public final class AnnotationType extends EnumValue {
    * @return the parent type (ROOT if type is ROOT)
    */
   public AnnotationType getParent() {
+    return Cast.as(super.getParent());
+  }
+
+  @Override
+  protected AnnotationType getParentConfig() {
     return AnnotationType.create(Config.get("Annotation", nonGoldStandardVersion().name(), "parent").asString("ROOT"));
   }
 
@@ -291,8 +304,7 @@ public final class AnnotationType extends EnumValue {
     if (isDefined(name())) {
       return index.valueOf(name());
     }
-    Object o = index.register(this);
-    return o;
+    return index.register(this);
   }
 
 

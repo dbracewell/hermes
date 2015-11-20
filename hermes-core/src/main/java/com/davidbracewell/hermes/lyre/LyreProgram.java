@@ -42,20 +42,37 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * The type Lyre program.
+ *
  * @author David B. Bracewell
  */
 public final class LyreProgram implements Serializable {
   private static final long serialVersionUID = 1L;
   private final List<LyreRule> rules = new LinkedList<>();
 
+  /**
+   * Instantiates a new Lyre program.
+   */
   public LyreProgram() {
 
   }
 
+  /**
+   * Instantiates a new Lyre program.
+   *
+   * @param rules the rules
+   */
   public LyreProgram(Collection<LyreRule> rules) {
     this.rules.addAll(rules);
   }
 
+  /**
+   * Read lyre program.
+   *
+   * @param resource the resource
+   * @return the lyre program
+   * @throws IOException the io exception
+   */
   public static LyreProgram read(@NonNull Resource resource) throws IOException {
     LyreProgram program = new LyreProgram();
     try (Reader reader = resource.reader()) {
@@ -152,6 +169,11 @@ public final class LyreProgram implements Serializable {
   }
 
 
+  /**
+   * Execute.
+   *
+   * @param document the document
+   */
   public void execute(@NonNull Document document) {
     rules.forEach(rule -> {
       TokenMatcher matcher = rule.getRegex().matcher(document);
