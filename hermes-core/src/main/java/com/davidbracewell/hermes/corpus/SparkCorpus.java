@@ -1,6 +1,7 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.config.Config;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
@@ -34,6 +35,7 @@ public class SparkCorpus implements Corpus, Serializable {
    *
    * @param corpusLocation the corpus location
    */
+  @SuppressWarnings("unchecked")
   public SparkCorpus(@NonNull String corpusLocation, @NonNull DocumentFormat documentFormat, @NonNull DocumentFactory documentFactory) {
     if (documentFormat.isOnePerLine() && documentFormat.extension().toUpperCase().startsWith("JSON")) {
       this.stream = new SparkDocumentStream(Streams.textFile(corpusLocation, true));
@@ -51,7 +53,7 @@ public class SparkCorpus implements Corpus, Serializable {
     } else {
       Broadcast<Config> configBroadcast = Spark.context().broadcast(Config.getInstance());
       this.stream = new SparkDocumentStream(
-        new SparkStream<>(
+        new SparkStream<String>(
           Spark.context()
             .wholeTextFiles(corpusLocation)
             .values()
@@ -74,6 +76,10 @@ public class SparkCorpus implements Corpus, Serializable {
     ));
   }
 
+  protected SparkCorpus(SparkDocumentStream stream) {
+    this.stream = stream;
+  }
+
   @Override
   public DocumentFactory getDocumentFactory() {
     return DocumentFactory.getInstance();
@@ -88,6 +94,11 @@ public class SparkCorpus implements Corpus, Serializable {
   public Corpus annotate(@NonNull AnnotationType... types) {
     stream.annotate(types);
     return this;
+  }
+
+  @Override
+  public Corpus cache() {
+    return new SparkCorpus(new SparkDocumentStream(stream.getSource().cache()));
   }
 
   @Override
@@ -123,5 +134,13 @@ public class SparkCorpus implements Corpus, Serializable {
         .saveAsTextFile(resource);
     }
     return this;
+  }
+
+  @Override
+  public Corpus union(@NonNull Corpus other) {
+    if (other instanceof SparkCorpus) {
+      return new SparkCorpus(new SparkDocumentStream(this.stream.getSource().union(Cast.<SparkCorpus>as(other).stream.getSource())));
+    }
+    return union(new SparkCorpus(other.stream().collect()));
   }
 }

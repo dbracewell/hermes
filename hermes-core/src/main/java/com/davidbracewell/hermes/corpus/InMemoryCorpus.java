@@ -90,6 +90,7 @@ public class InMemoryCorpus implements Corpus, Serializable {
     if (document == null) {
       return false;
     }
+    get(document.getId()).ifPresent(documents::remove);
     documents.add(document);
     return true;
   }
