@@ -33,7 +33,7 @@ import lombok.NonNull;
  * <p>
  * Factory with cache for constructing/retrieving annotators for a given annotation class. The cache is managed
  * using {@link CacheManager} and is named <code>hermes.AnnotatorCache</code>.
- * </p?
+ * </p>
  *
  * @author David B. Bracewell
  */

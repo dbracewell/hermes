@@ -58,6 +58,9 @@ import java.util.stream.Collectors;
 public interface Corpus extends DocumentStore {
 
 
+  /**
+   * The constant EMPTY.
+   */
   Corpus EMPTY = new InMemoryCorpus(Collections.emptyList());
 
   /**
@@ -280,14 +283,36 @@ public interface Corpus extends DocumentStore {
     return builder().from(format, resource, getDocumentFactory()).build();
   }
 
+  /**
+   * Write corpus.
+   *
+   * @param resource the resource
+   * @return the corpus
+   * @throws IOException the io exception
+   */
   default Corpus write(@NonNull Resource resource) throws IOException {
     return write(DocumentFormats.JSON_OPL, resource);
   }
 
+  /**
+   * Write corpus.
+   *
+   * @param format   the format
+   * @param resource the resource
+   * @return the corpus
+   * @throws IOException the io exception
+   */
   default Corpus write(@NonNull String format, @NonNull String resource) throws IOException {
     return write(format, Resources.from(resource));
   }
 
+  /**
+   * Write corpus.
+   *
+   * @param resource the resource
+   * @return the corpus
+   * @throws IOException the io exception
+   */
   default Corpus write(@NonNull String resource) throws IOException {
     return write(DocumentFormats.JSON_OPL, resource);
   }

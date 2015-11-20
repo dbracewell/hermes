@@ -43,9 +43,8 @@ public class GroupExpression extends MultivalueExpression {
   /**
    * Default Constructor
    *
-   * @param value     The value
-   * @param type      The type of the value
-   * @param groupName the group name
+   * @param value The value
+   * @param token the token
    */
   public GroupExpression(Collection<Expression> value, @NonNull ParserToken token) {
     super(value, token.type);

@@ -33,7 +33,6 @@ import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
@@ -64,11 +63,24 @@ public class Document extends HString {
   private final AnnotationSet annotationSet;
   private String id;
 
+  /**
+   * Instantiates a new Document.
+   *
+   * @param id      the id
+   * @param content the content
+   */
   Document(String id, @NonNull String content) {
     this(id, content, null);
   }
 
 
+  /**
+   * Instantiates a new Document.
+   *
+   * @param id       the id
+   * @param content  the content
+   * @param language the language
+   */
   Document(String id, @NonNull String content, Language language) {
     super(0, content.length());
     this.content = content;
@@ -213,8 +225,10 @@ public class Document extends HString {
    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
    * has a unique id assigned.
    *
-   * @param type the type of annotation
-   * @param span the span of the annotation
+   * @param type             the type of annotation
+   * @param span             the span of the annotation
+   * @param copyAttributes   the copy attributes
+   * @param filterAttributes the filter attributes
    * @return the created annotation
    */
   public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span, boolean copyAttributes, boolean filterAttributes) {

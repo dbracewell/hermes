@@ -33,7 +33,9 @@ public class SparkCorpus implements Corpus, Serializable {
   /**
    * Instantiates a new Spark corpus.
    *
-   * @param corpusLocation the corpus location
+   * @param corpusLocation  the corpus location
+   * @param documentFormat  the document format
+   * @param documentFactory the document factory
    */
   @SuppressWarnings("unchecked")
   public SparkCorpus(@NonNull String corpusLocation, @NonNull DocumentFormat documentFormat, @NonNull DocumentFactory documentFactory) {
@@ -69,6 +71,11 @@ public class SparkCorpus implements Corpus, Serializable {
     }
   }
 
+  /**
+   * Instantiates a new Spark corpus.
+   *
+   * @param documents the documents
+   */
   public SparkCorpus(@NonNull Collection<Document> documents) {
     this.stream = new SparkDocumentStream(Streams.of(
       documents.stream().map(Document::toJson).collect(Collectors.toList()),
@@ -76,6 +83,11 @@ public class SparkCorpus implements Corpus, Serializable {
     ));
   }
 
+  /**
+   * Instantiates a new Spark corpus.
+   *
+   * @param stream the stream
+   */
   protected SparkCorpus(SparkDocumentStream stream) {
     this.stream = stream;
   }
