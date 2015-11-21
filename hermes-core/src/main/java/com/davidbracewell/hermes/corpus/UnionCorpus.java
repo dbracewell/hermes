@@ -25,72 +25,64 @@ import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.Pipeline;
-import com.davidbracewell.stream.JavaMStream;
 import com.davidbracewell.stream.MStream;
+import com.google.common.collect.Iterators;
 import lombok.NonNull;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * <p>
- * An implementation of a <code>Corpus</code> that stores documents in memory.
- * </p>
- *
  * @author David B. Bracewell
  */
-public class InMemoryCorpus implements Corpus, Serializable {
+class UnionCorpus implements Corpus, Serializable {
   private static final long serialVersionUID = 1L;
-  private final List<Document> documents = new LinkedList<>();
+  private final Corpus c1;
+  private final Corpus c2;
 
-  /**
-   * Instantiates a new In memory corpus.
-   *
-   * @param documentCollection the document collection
-   */
-  public InMemoryCorpus(@NonNull Collection<Document> documentCollection) {
-    documents.addAll(documentCollection);
+  UnionCorpus(Corpus c1, Corpus c2) {
+    this.c1 = c1;
+    this.c2 = c2;
   }
 
   @Override
-  public Corpus annotate(@NonNull AnnotationType... types) {
-    Pipeline.builder().addAnnotations(types).returnCorpus(false).build().process(this);
-    return this;
-  }
-
-  @Override
-  public Corpus filter(@NonNull SerializablePredicate<Document> filter) {
-    return new InMemoryCorpus(documents.stream().filter(filter).collect(Collectors.toList()));
+  public Corpus annotate(AnnotationType... types) {
+    return new UnionCorpus(c1.annotate(types), c2.annotate(types));
   }
 
   @Override
   public DocumentFactory getDocumentFactory() {
-    return DocumentFactory.getInstance();
-  }
-
-  @Override
-  public boolean isEmpty() {
-    return documents.isEmpty();
-  }
-
-  @Override
-  public Iterator<Document> iterator() {
-    return documents.iterator();
-  }
-
-  @Override
-  public long size() {
-    return documents.size();
+    return c1.getDocumentFactory();
   }
 
   @Override
   public MStream<Document> stream() {
-    return new JavaMStream<>(documents);
+    return c1.stream().union(c2.stream());
   }
 
-}//END OF InMemoryCorpus
+  @Override
+  public Corpus cache() {
+    return new UnionCorpus(c1.cache(), c2.cache());
+  }
+
+  @Override
+  public Corpus filter(@NonNull SerializablePredicate<Document> filter) {
+    return new UnionCorpus(c1.filter(filter), c2.filter(filter));
+  }
+
+  @Override
+  public long size() {
+    return c1.size() + c2.size();
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return c1.isEmpty() && c2.isEmpty();
+  }
+
+  @Override
+  public Iterator<Document> iterator() {
+    return Iterators.concat(c1.iterator(), c2.iterator());
+  }
+
+}//END OF UnionCorpus

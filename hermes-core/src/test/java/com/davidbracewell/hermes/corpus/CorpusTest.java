@@ -64,9 +64,6 @@ public class CorpusTest {
     assertEquals(1, cntr.get("first"), 0d);
     assertEquals(1, cntr.get("second"), 0d);
     assertEquals(1, cntr.get("third"), 0d);
-
-    corpus.put(DocumentFactory.getInstance().create("This is the first long document."));
-    assertEquals(4, corpus.size());
   }
 
   @Test
@@ -128,10 +125,9 @@ public class CorpusTest {
     Config.initializeTest();
     Corpus corpus = Corpus.builder()
       .source(DocumentFormats.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/docs/txt"))
-      .build()
-      .cache();
+      .build();
     assertEquals(3, corpus.size());
-    corpus.annotate(Types.TOKEN);
+    corpus = corpus.annotate(Types.TOKEN);
     Counter<String> cntr = corpus.termFrequencies(false);
     assertEquals(3, cntr.get("the"), 0d);
     assertEquals(3, cntr.get("document"), 0d);
@@ -177,6 +173,22 @@ public class CorpusTest {
     assertEquals(1, cntr.get("second"), 0d);
     assertEquals(1, cntr.get("third"), 0d);
     assertEquals(1, corpus.filter(d -> d.contains("third")).size(), 0d);
+  }
+
+  @Test
+  public void unionTest() {
+    Corpus c1 = Corpus.builder()
+      .source(DocumentFormats.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/docs/txt"))
+      .build();
+    Corpus c2 = Corpus.builder()
+      .inMemory()
+      .add(DocumentFactory.getInstance().create("This is the first document."))
+      .add(DocumentFactory.getInstance().create("This is the second document."))
+      .add(DocumentFactory.getInstance().create("This is the third document."))
+      .add(DocumentFactory.getInstance().create("This is the first long document."))
+      .build();
+
+    assertEquals(7, c1.union(c2).size(), 0d);
   }
 
 }

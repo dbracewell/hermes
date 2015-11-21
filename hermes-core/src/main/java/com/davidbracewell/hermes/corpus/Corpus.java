@@ -32,7 +32,6 @@ import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
-import com.davidbracewell.string.StringUtils;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.NonNull;
@@ -55,7 +54,7 @@ import java.util.stream.Collectors;
  *
  * @author David B. Bracewell
  */
-public interface Corpus extends DocumentStore {
+public interface Corpus extends Iterable<Document> {
 
 
   /**
@@ -100,7 +99,7 @@ public interface Corpus extends DocumentStore {
    * @return A counter containing document frequencies of the given annotation type
    */
   default Counter<String> documentFrequencies(boolean lemmatize) {
-    return documentFrequencies(Types.TOKEN, lemmatize ? HString::getLemma : HString::toString);
+    return documentFrequencies(Types.TOKEN, h -> lemmatize ? h.getLemma() : h.toString());
   }
 
   /**
@@ -127,11 +126,6 @@ public interface Corpus extends DocumentStore {
    */
   default Corpus filter(@NonNull SerializablePredicate<Document> filter) {
     return new MStreamCorpus(stream().filter(filter), getDocumentFactory());
-  }
-
-  @Override
-  default Optional<Document> get(String id) {
-    return stream().filter(document -> StringUtils.safeEquals(id, document.getId(), true)).first();
   }
 
   /**
@@ -177,7 +171,11 @@ public interface Corpus extends DocumentStore {
     return index(document -> document.tokens().stream().map(HString::getLemma).collect(Collectors.toSet()));
   }
 
-  @Override
+  /**
+   * Is empty boolean.
+   *
+   * @return the boolean
+   */
   default boolean isEmpty() {
     return stream().isEmpty();
   }
@@ -187,12 +185,13 @@ public interface Corpus extends DocumentStore {
     return stream().iterator();
   }
 
-  @Override
-  default boolean put(Document document) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
+  /**
+   * Query collection.
+   *
+   * @param query the query
+   * @return the collection
+   * @throws ParseException the parse exception
+   */
   default Collection<Document> query(String query) throws ParseException {
     return stream().filter(new QueryParser(QueryParser.Operator.AND).parse(query)).collect();
   }
@@ -231,7 +230,11 @@ public interface Corpus extends DocumentStore {
     return builder().inMemory().addAll(sample).build();
   }
 
-  @Override
+  /**
+   * Size long.
+   *
+   * @return the long
+   */
   default long size() {
     return stream().count();
   }
@@ -250,7 +253,7 @@ public interface Corpus extends DocumentStore {
    * @return A counter containing term frequencies of the given annotation type
    */
   default Counter<String> termFrequencies(boolean lemmatize) {
-    return termFrequencies(Types.TOKEN, lemmatize ? HString::getLemma : HString::toString);
+    return termFrequencies(Types.TOKEN, h -> lemmatize ? h.getLemma() : h.toString());
   }
 
   /**
@@ -325,10 +328,7 @@ public interface Corpus extends DocumentStore {
    * @return the corpus
    */
   default Corpus union(@NonNull Corpus other) {
-    List<Document> documents = new LinkedList<>();
-    this.forEach(documents::add);
-    other.forEach(documents::add);
-    return new InMemoryCorpus(documents);
+    return new UnionCorpus(this, other);
   }
 
 

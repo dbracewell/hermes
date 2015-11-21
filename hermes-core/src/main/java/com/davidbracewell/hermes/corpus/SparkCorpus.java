@@ -1,7 +1,6 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.config.Config;
-import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
@@ -148,11 +147,4 @@ public class SparkCorpus implements Corpus, Serializable {
     return this;
   }
 
-  @Override
-  public Corpus union(@NonNull Corpus other) {
-    if (other instanceof SparkCorpus) {
-      return new SparkCorpus(new SparkDocumentStream(this.stream.getSource().union(Cast.<SparkCorpus>as(other).stream.getSource())));
-    }
-    return union(new SparkCorpus(other.stream().collect()));
-  }
 }
