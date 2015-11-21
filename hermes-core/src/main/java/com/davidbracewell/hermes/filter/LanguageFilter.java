@@ -22,12 +22,12 @@
 package com.davidbracewell.hermes.filter;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.HString;
 import lombok.Data;
 import lombok.NonNull;
 
 import java.io.Serializable;
-import java.util.function.Predicate;
 
 /**
  * <p>Filters HString based on their language. Useful in multi-language collections.</p>
@@ -35,7 +35,7 @@ import java.util.function.Predicate;
  * @author David B. Bracewell
  */
 @Data
-public class LanguageFilter implements Predicate<HString>, Serializable {
+public class LanguageFilter implements SerializablePredicate<HString>, Serializable {
   private static final long serialVersionUID = 1L;
   private final Language language;
 

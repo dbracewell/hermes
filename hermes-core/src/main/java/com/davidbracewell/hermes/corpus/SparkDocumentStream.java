@@ -47,6 +47,8 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
+ * The type Spark document stream.
+ *
  * @author David B. Bracewell
  */
 class SparkDocumentStream implements MStream<Document>, Serializable {
@@ -55,10 +57,21 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   private volatile MStream<String> source;
   private final Broadcast<Config> configBroadcast;
 
+  /**
+   * Instantiates a new Spark document stream.
+   *
+   * @param source the source
+   */
   public SparkDocumentStream(@NonNull MStream<String> source) {
     this(source, Spark.context(source).broadcast(Config.getInstance()));
   }
 
+  /**
+   * Instantiates a new Spark document stream.
+   *
+   * @param source          the source
+   * @param configBroadcast the config broadcast
+   */
   public SparkDocumentStream(@NonNull MStream<String> source, @NonNull Broadcast<Config> configBroadcast) {
     this.source = source;
     this.configBroadcast = configBroadcast;
@@ -68,10 +81,21 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
     return new SparkDocumentStream(source, configBroadcast);
   }
 
+  /**
+   * Gets source.
+   *
+   * @return the source
+   */
   protected MStream<String> getSource() {
     return source;
   }
 
+  /**
+   * Annotate spark document stream.
+   *
+   * @param types the types
+   * @return the spark document stream
+   */
   public SparkDocumentStream annotate(@NonNull AnnotationType... types) {
     source = source.map(json -> {
       Hermes.initializeWorker(configBroadcast.getValue());

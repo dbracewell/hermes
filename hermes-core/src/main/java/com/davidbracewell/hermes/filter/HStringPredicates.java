@@ -179,12 +179,18 @@ public interface HStringPredicates {
   static SerializablePredicate<HString> attributeMatch(@NonNull final Attribute attribute, final Object value) {
     final Object convertedValue = attribute.getValueType().convert(value);
     final boolean isTag = Tag.class.isAssignableFrom(attribute.getValueType().getType());
+
     return annotation -> {
       if (isTag) {
-        return Cast.<Tag>as(annotation.get(attribute)).isInstance(Cast.<Tag>as(convertedValue));
+        Tag tag = annotation.get(attribute).as(Tag.class);
+        if (tag == null) {
+          return false;
+        }
+        return tag.isInstance(Cast.<Tag>as(convertedValue));
       }
       return annotation.get(attribute).equals(convertedValue);
     };
+
   }
 
   /**

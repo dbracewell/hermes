@@ -34,7 +34,6 @@ import com.google.common.collect.Multimap;
 import org.junit.Test;
 
 import java.util.Collections;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -66,6 +65,7 @@ public class CorpusTest {
     assertEquals(1, cntr.get("third"), 0d);
   }
 
+
   @Test
   public void searchTest() {
     Config.initializeTest();
@@ -79,7 +79,7 @@ public class CorpusTest {
 
     assertFalse(corpus.isEmpty());
     corpus.annotate(Types.TOKEN);
-    InvertedIndex<Document, String> index = corpus.index(d -> d.tokens().stream().map(Object::toString).collect(Collectors.toList()));
+    InvertedIndex<Document, String> index = corpus.index();
     assertEquals(2, index.query(Collections.singleton("first")).size(), 0d);
     try {
       assertEquals(2, corpus.query("first").size(), 0d);
@@ -126,6 +126,8 @@ public class CorpusTest {
     Corpus corpus = Corpus.builder()
       .source(DocumentFormats.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/docs/txt"))
       .build();
+
+    assertFalse(corpus.isEmpty());
     assertEquals(3, corpus.size());
     corpus = corpus.annotate(Types.TOKEN);
     Counter<String> cntr = corpus.termFrequencies(false);
@@ -159,7 +161,8 @@ public class CorpusTest {
       .add(DocumentFactory.getInstance().create("This is the first document."))
       .add(DocumentFactory.getInstance().create("This is the second document."))
       .add(DocumentFactory.getInstance().create("This is the third document."))
-      .build();
+      .build()
+      .cache();
     assertEquals(3, corpus.size());
     assertEquals("This is the first document.", corpus.stream().first().get().toString());
     corpus.annotate(Types.TOKEN);

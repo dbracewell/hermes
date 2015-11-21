@@ -65,7 +65,7 @@ public class MStreamCorpus implements Corpus, Serializable {
   }
 
   @Override
-  public Corpus filter(@NonNull SerializablePredicate<Document> filter) {
+  public Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
     return new MStreamCorpus(stream.filter(filter), documentFactory);
   }
 

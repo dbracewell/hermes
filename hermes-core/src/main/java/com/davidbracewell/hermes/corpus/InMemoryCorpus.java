@@ -64,7 +64,7 @@ public class InMemoryCorpus implements Corpus, Serializable {
   }
 
   @Override
-  public Corpus filter(@NonNull SerializablePredicate<Document> filter) {
+  public Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
     return new InMemoryCorpus(documents.stream().filter(filter).collect(Collectors.toList()));
   }
 

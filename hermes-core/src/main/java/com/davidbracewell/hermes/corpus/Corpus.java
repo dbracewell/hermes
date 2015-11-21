@@ -124,7 +124,7 @@ public interface Corpus extends Iterable<Document> {
    * @param filter the filter
    * @return the corpus
    */
-  default Corpus filter(@NonNull SerializablePredicate<Document> filter) {
+  default Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
     return new MStreamCorpus(stream().filter(filter), getDocumentFactory());
   }
 
@@ -192,8 +192,8 @@ public interface Corpus extends Iterable<Document> {
    * @return the collection
    * @throws ParseException the parse exception
    */
-  default Collection<Document> query(String query) throws ParseException {
-    return stream().filter(new QueryParser(QueryParser.Operator.AND).parse(query)).collect();
+  default Corpus query(String query) throws ParseException {
+    return filter(new QueryParser(QueryParser.Operator.AND).parse(query));
   }
 
   /**
@@ -273,6 +273,16 @@ public interface Corpus extends Iterable<Document> {
   }
 
   /**
+   * Union corpus.
+   *
+   * @param other the other
+   * @return the corpus
+   */
+  default Corpus union(@NonNull Corpus other) {
+    return new UnionCorpus(this, other);
+  }
+
+  /**
    * Write corpus.
    *
    * @param format   the format
@@ -318,17 +328,6 @@ public interface Corpus extends Iterable<Document> {
    */
   default Corpus write(@NonNull String resource) throws IOException {
     return write(DocumentFormats.JSON_OPL, resource);
-  }
-
-
-  /**
-   * Union corpus.
-   *
-   * @param other the other
-   * @return the corpus
-   */
-  default Corpus union(@NonNull Corpus other) {
-    return new UnionCorpus(this, other);
   }
 
 

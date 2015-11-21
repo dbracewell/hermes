@@ -21,14 +21,13 @@
 
 package com.davidbracewell.hermes.filter;
 
+import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.HString;
-
-import java.util.function.Predicate;
 
 /**
  * @author David B. Bracewell
  */
-public enum EnglishVowelFilter implements Predicate<HString> {
+public enum EnglishVowelFilter implements SerializablePredicate<HString> {
   INSTANCE;
 
   @Override

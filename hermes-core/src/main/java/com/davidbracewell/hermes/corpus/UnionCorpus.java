@@ -66,7 +66,7 @@ class UnionCorpus implements Corpus, Serializable {
   }
 
   @Override
-  public Corpus filter(@NonNull SerializablePredicate<Document> filter) {
+  public Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
     return new UnionCorpus(c1.filter(filter), c2.filter(filter));
   }
 
