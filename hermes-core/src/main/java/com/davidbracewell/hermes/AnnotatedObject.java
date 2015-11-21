@@ -50,7 +50,7 @@ public interface AnnotatedObject {
    * none.
    */
   default Annotation first(AnnotationType type) {
-    return get(type).stream().findFirst().orElse(Fragments.detachedEmptyAnnotation());
+    return get(type).stream().findFirst().orElseGet(Fragments::detachedEmptyAnnotation);
   }
 
   /**
@@ -60,7 +60,6 @@ public interface AnnotatedObject {
    * @param filter The filter that annotations must pass in order to be accepted
    * @return the list of annotations of given type meeting the given filter that overlap with this object
    */
-
   List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter);
 
   /**

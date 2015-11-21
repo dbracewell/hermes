@@ -63,7 +63,7 @@ public class OpenNLPPOSAnnotator extends SentenceLevelAnnotator {
       synchronized (OpenNLPPOSAnnotator.class) {
         if (!posModels.containsKey(language)) {
           try {
-            posModels.put(language, new POSModel(Config.get("opennlp.part_of_speech", language, "model").asResource().inputStream()));
+            posModels.put(language, new POSModel(Config.get("opennlp", language, "part_of_speech", "model").asResource().inputStream()));
           } catch (IOException e) {
             throw Throwables.propagate(e);
           }

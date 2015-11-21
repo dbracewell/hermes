@@ -56,8 +56,8 @@ public class OpenNLPPhraseChunkAnnotator implements Annotator, Serializable {
       Span[] chunks = chunker.chunkAsSpans(tokens, pos);
       for (Span span : chunks) {
         sentence.document().createAnnotation(
-            Types.PHRASE_CHUNK,
-            tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
+          Types.PHRASE_CHUNK,
+          tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
         ).put(Attrs.PART_OF_SPEECH, POS.valueOf(span.getType()));
       }
     }
@@ -68,7 +68,7 @@ public class OpenNLPPhraseChunkAnnotator implements Annotator, Serializable {
       synchronized (OpenNLPPhraseChunkAnnotator.class) {
         if (!chunkerModels.containsKey(language)) {
           try {
-            chunkerModels.put(language, new ChunkerModel(Config.get("opennlp.phrase_chunk", language, "model").asResource().inputStream()));
+            chunkerModels.put(language, new ChunkerModel(Config.get("opennlp", language, "phrase_chunk", "model").asResource().inputStream()));
           } catch (IOException e) {
             throw Throwables.propagate(e);
           }

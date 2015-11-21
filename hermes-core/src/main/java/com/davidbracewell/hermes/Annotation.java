@@ -254,9 +254,8 @@ public final class Annotation extends Fragment implements Serializable {
    * @return the children
    */
   public List<Annotation> getChildren() {
-    return sentences().stream()
-      .flatMap(s -> s.tokens().stream())
-      .filter(t -> t.getParent().filter(a -> a == this).isPresent())
+    return first(Types.SENTENCE).tokens().stream()
+      .filter(t -> t.getParent().filter(p -> p == this).isPresent())
       .collect(Collectors.toList());
   }
 
@@ -275,7 +274,8 @@ public final class Annotation extends Fragment implements Serializable {
   /**
    * Gets the unique id associated with the annotation.
    *
-   * @return the id of the annotation that is unique with in its document or <code>Annotation.DETACHED_ID</code> if the annotation is not attached to the document.
+   * @return the id of the annotation that is unique with in its document or <code>Annotation.DETACHED_ID</code> if the
+   * annotation is not attached to the document.
    */
   public long getId() {
     return id;

@@ -28,6 +28,8 @@ import com.davidbracewell.io.structured.StructuredFormat;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -36,6 +38,18 @@ import static org.junit.Assert.*;
  */
 public class AnnotationTest {
 
+  @Test
+  public void nextPreviousTest() {
+    Document document = DocumentFactory.getInstance().fromTokens(Arrays.asList("This", "is", "simple"));
+    List<Annotation> tokens = document.tokens();
+    assertTrue(tokens.get(0).previous().isEmpty());
+    assertTrue(tokens.get(0).previous().isDetached());
+    assertEquals("is", tokens.get(0).next().toString());
+    assertEquals("This", tokens.get(1).previous().toString());
+    assertEquals("simple", tokens.get(1).next().toString());
+    assertEquals("is", tokens.get(2).previous().toString());
+    assertTrue(tokens.get(2).next().isEmpty());
+  }
 
   @Test
   public void createTest() {
@@ -63,7 +77,7 @@ public class AnnotationTest {
   }
 
   @Test(expected = IOException.class)
-  public void testBadJson2() throws IOException{
+  public void testBadJson2() throws IOException {
     Document.read(StructuredFormat.JSON,
       Resources.fromString(
         "{\"id\":\"2a6de221-8d5f-4dbf-b21f-6c746be1a4a0\",\"content\":\"11\\t\\\"It has much more commercial potential.\\\"\",\"attributes\":{\"LANGUAGE\":\"ENGLISH\"},\"completed\":{\"ENTITY\":\"hermes.annotator.EntityAnnotator::1.0\",\"OPENNLP_ENTITY\":\"hermes.annotator.OpenNLPEntityAnnotator::1.6.0\",\"SENTENCE\":\"hermes.annotator.OpenNLPSentenceAnnotator::1.6.0\",\"TOKEN\":\"hermes.annotator.DefaultTokenAnnotator::1.0\",\"PHRASE_CHUNK\":\"hermes.annotator.OpenNLPPhraseChunkAnnotator::1.6.0\",\"PART_OF_SPEECH\":\"hermes.annotator.OpenNLPPOSAnnotator::1.6.0\",\"TOKEN_TYPE_ENTITY\":\"hermes.annotator.TokenTypeEntityAnnotator::1.0\"},\"annotations\":[{\"type\":\"TOKEN\",\"start\":0,\"end\":2,\"id\":0,\"attributes\":{\"PART_OF_SPEECH\":\"CD\",\"TOKEN_TYPE\":\"NUMBER\"}},{\"type\":\"TOKEN_TYPE_ENTITY\",\"start\":0,\"end\":2,\"id\":11,\"attributes\":{\"ENTITY_TYPE\":\"NUMBER\",\"CONFIDENCE\":1.0}},{\"type\":\"PHRASE_CHUNK\",\"start\":0,\"end\":2,\"id\":12,\"attributes\":{\"PART_OF_SPEECH\":\"NP\"}},{\"type\":\"SENTENCE\",\"start\":0,\"end\":43,\"id\":10,\"attributes\":{\"INDEX\":0}},{\"type\":\"TOKEN\",\"start\":3,\"end\":4,\"id\":1,\"attributes\":{\"PART_OF_SPEECH\":\"OPEN_QUOTE\",\"TOKEN_TYPE\":\"PUNCTUATION\"}},{\"type\":\"TOKEN\",\"start\":4,\"end\":6,\"id\":2,\"attributes\":{\"PART_OF_SPEECH\":\"PRP\",\"TOKEN_TYPE\":\"ALPHA_NUMERIC\"}},{\"type\":\"PHRASE_CHUNK\",\"start\":4,\"end\":6,\"id\":13,\"attributes\":{\"PART_OF_SPEECH\":\"NP\"}},{\"type\":\"TOKEN\",\"start\":7,\"end\":10,\"id\":3,\"attributes\":{\"PART_OF_SPEECH\":\"VBZ\",\"TOKEN_TYPE\":\"ALPHA_NUMERIC\"}},{\"type\":\"PHRASE_CHUNK\",\"start\":7,\"end\":10,\"id\":14,\"attributes\":{\"PART_OF_SPEECH\":\"VP\"}},{\"type\":\"TOKEN\",\"start\":11,\"end\":15,\"id\":4,\"attributes\":{\"PART_OF_SPEECH\":\"RB\",\"TOKEN_TYPE\":\"ALPHA_NUMERIC\"}},{\"type\":\"PHRASE_CHUNK\",\"start\":11,\"end\":41,\"id\":15,\"attributes\":{\"PART_OF_SPEECH\":\"NP\"}},{\"type\":\"TOKEN\",\"start\":16,\"end\":20,\"id\":5,\"attributes\":{\"PART_OF_SPEECH\":\"JJR\",\"TOKEN_TYPE\":\"ALPHA_NUMERIC\"}},{\"type\":\"TOKEN\",\"start\":21,\"end\":31,\"id\":6,\"attributes\":{\"PART_OF_SPEECH\":\"JJ\",\"TOKEN_TYPE\":\"ALPHA_NUMERIC\"}},{\"type\":\"TOKEN\",\"start\":32,\"end\":41,\"id\":7,\"attributes\":{\"PART_OF_SPEECH\":\"NN\",\"TOKEN_TYPE\":\"ALPHA_NUMERIC\"}},{\"type\":\"TOKEN\",\"start\":41,\"end\":42,\"id\":8,\"attributes\":{\"PART_OF_SPEECH\":\"PUNCTUATION\",\"TOKEN_TYPE\":\"PUNCTUATION\"}},{\"type\":\"TOKEN\",\"start\":42,\"end\":43,\"id\":9,\"error\":[\"error\"],\"attributes\":{\"PART_OF_SPEECH\":\"CLOSE_QUOTE\",\"TOKEN_TYPE\":\"PUNCTUATION\"}}]}"

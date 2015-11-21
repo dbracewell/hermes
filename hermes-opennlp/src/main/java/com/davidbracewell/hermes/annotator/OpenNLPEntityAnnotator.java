@@ -76,7 +76,7 @@ public class OpenNLPEntityAnnotator implements Annotator, Serializable {
     if (!models.containsKey(language)) {
       synchronized (OpenNLPEntityAnnotator.class) {
         if (!models.containsKey(language)) {
-          for (Resource resource : Config.get("opennlp.entity", language, "models").asList(Resource.class)) {
+          for (Resource resource : Config.get("opennlp", language, "entity","models").asList(Resource.class)) {
             try {
               models.put(language, new TokenNameFinderModel(resource.inputStream()));
             } catch (IOException e) {

@@ -114,14 +114,14 @@ public class OpenNLPSentenceAnnotator implements Annotator {
           Stopwatch sw = Stopwatch.createStarted();
           SentenceModel model = null;
           try {
-            model = new SentenceModel(Config.get("opennlp.sentence", language, "model").asResource().inputStream());
+            model = new SentenceModel(Config.get("opennlp", language, "sentence", "model").asResource().inputStream());
           } catch (IOException e) {
             throw Throwables.propagate(e);
           }
           sw.stop();
           if (log.isLoggable(Level.FINE)) {
             log.fine("Loaded sentence model [{0}] for {1} in {2}.",
-                Config.get(OpenNLPSentenceAnnotator.class, language, "model").asString(), language, sw
+              Config.get(OpenNLPSentenceAnnotator.class, language, "model").asString(), language, sw
             );
           }
           sentenceDetectors.put(language, model);

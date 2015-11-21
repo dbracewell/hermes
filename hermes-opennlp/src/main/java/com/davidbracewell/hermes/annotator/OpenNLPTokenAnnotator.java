@@ -24,7 +24,10 @@ package com.davidbracewell.hermes.annotator;
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Types;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import opennlp.tools.tokenize.TokenizerME;
@@ -39,6 +42,7 @@ import java.util.Set;
 
 /**
  * The type Open nLP token annotator.
+ *
  * @author David B. Bracewell
  */
 public class OpenNLPTokenAnnotator implements Annotator, Serializable {
@@ -52,9 +56,9 @@ public class OpenNLPTokenAnnotator implements Annotator, Serializable {
     Span[] spans = tokenizer.tokenizePos(document.toString());
     for (int i = 0; i < spans.length; i++) {
       document.createAnnotation(Types.TOKEN, spans[i].getStart(), spans[i].getEnd(),
-          Collect.map(
-              Attrs.INDEX, i
-          )
+        Collect.map(
+          Attrs.INDEX, i
+        )
       );
     }
   }
@@ -70,7 +74,7 @@ public class OpenNLPTokenAnnotator implements Annotator, Serializable {
       synchronized (OpenNLPTokenAnnotator.class) {
         if (!tokenModels.containsKey(language)) {
           try {
-            tokenModels.put(language, new TokenizerModel(Config.get("opennlp.tokenizer", language, "model").asResource().inputStream()));
+            tokenModels.put(language, new TokenizerModel(Config.get("opennlp", language, "tokenizer", "model").asResource().inputStream()));
           } catch (IOException e) {
             throw Throwables.propagate(e);
           }

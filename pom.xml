@@ -32,6 +32,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     </properties>
 
     <developers>
@@ -169,9 +170,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <failOnError>false</failOnError>
-                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -180,6 +178,7 @@
         <module>hermes-core</module>
         <module>hermes-examples</module>
         <module>hermes-opennlp</module>
+        <module>hermes-maltparser</module>
     </modules>
 
     <distributionManagement>

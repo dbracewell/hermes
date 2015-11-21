@@ -71,4 +71,6 @@ public interface Types {
    */
   AnnotationType TRANSLITERATION = AnnotationType.create("TRANSLITERATION");
 
+  AnnotationType DEPENDENCY = AnnotationType.create("DEPENDENCY");
+
 }//END OF AnnotationTypes

@@ -22,13 +22,12 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.annotator.OpenNLPEntityAnnotator;
-import com.davidbracewell.hermes.annotator.OpenNLPPOSAnnotator;
-import com.davidbracewell.hermes.annotator.OpenNLPSentenceAnnotator;
-import com.davidbracewell.hermes.annotator.OpenNLPTokenAnnotator;
+import com.davidbracewell.hermes.annotators.MaltParserAnnotator;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.DocumentFormats;
 import com.davidbracewell.io.Resources;
+
+import java.util.stream.Collectors;
 
 import static com.davidbracewell.hermes.Types.*;
 
@@ -45,31 +44,31 @@ public class OpenNLPExample {
     //Create a prefix where the models are stored
     Config.setProperty("data.cp", "/data/models");
 
-    //Create a pipeline to do tokenization, sentence segmentation, and part of speech tagging
-    Pipeline pipeline = Pipeline.builder()
-      .addAnnotations(TOKEN, SENTENCE, PART_OF_SPEECH, OpenNLPEntityAnnotator.OPENNLP_ENTITY, Types.LEMMA, Types.STEM)
-      .onComplete(document -> document.sentences().forEach
-          (
-            sentence -> {
-              System.out.println(sentence.toPOSString());
-              sentence.tokens().forEach(token -> System.out.print(token.getLemma() + " "));
-              System.out.println();
-              sentence.tokens().forEach(token -> System.out.print(token.getStem() + " "));
-              System.out.println();
-            }
-          )
-      )
-      .returnCorpus(false)
-      .build();
-
-
+    Config.setProperty("Annotation.DEPENDENCY.annotator", MaltParserAnnotator.class.getName());
+    Config.setProperty("MaltParser.ENGLISH.model", "/home/ik/Downloads/engmalt.linear-1.7.mco");
     Corpus corpus = Corpus.builder()
-      .format(DocumentFormats.PLAIN_TEXT)
+      .format(DocumentFormats.PLAIN_TEXT_OPL)
       .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
-      .build();
+      .build()
+      .annotate(TOKEN, SENTENCE, PART_OF_SPEECH, ENTITY, LEMMA, STEM, DEPENDENCY);
 
-    //load in the example docs as one big document and process it.
-    pipeline.process(corpus);
+
+//    List<Document> docs = corpus.stream().collect();
+//
+//    docs.get(2).tokens().forEach(token ->
+//      System.out.println(token + " : " + token.getRelations() + " : " + token.sentences())
+//    );
+
+    corpus.forEach(document -> {
+      document.sentences().forEach(sentence -> {
+        Annotation root = sentence.tokens().stream().filter(a -> !a.getParent().isPresent()).findFirst().get();
+        System.out.println(root + " : " + root.getChildren());
+        System.out.println(sentence.tokens().stream().filter(t -> t.getParent().filter(p -> p == root).isPresent()).collect(Collectors.toList()));
+        System.out.println();
+      });
+    });
+
+
   }
 
 }//END OF Sandbox

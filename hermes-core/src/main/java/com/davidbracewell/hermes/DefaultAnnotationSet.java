@@ -93,8 +93,8 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
       return Fragments.detachedEmptyAnnotation();
     }
     return startSorted.tailSet(annotation, false).stream()
-        .filter(a -> a.isInstance(type) && !a.isDetached())
-        .findFirst().orElse(Fragments.detachedEmptyAnnotation());
+      .filter(a -> a.isInstance(type) && !a.isDetached())
+      .findFirst().orElse(Fragments.detachedEmptyAnnotation());
   }
 
   @Override
@@ -102,9 +102,12 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
     if (annotation == null || type == null) {
       return Fragments.detachedEmptyAnnotation();
     }
-    return startSorted.headSet(annotation, false).stream()
-        .filter(a -> a.isInstance(type) && !a.isDetached())
-        .findFirst().orElse(Fragments.detachedEmptyAnnotation());
+    return startSorted.headSet(annotation, false)
+      .descendingSet()
+      .stream()
+      .filter(a -> a.isInstance(type) && !a.isDetached())
+      .findFirst()
+      .orElse(Fragments.detachedEmptyAnnotation());
   }
 
   @Override
@@ -118,16 +121,12 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
 
   @Override
   public List<Annotation> select(@NonNull Span range, @NonNull Predicate<? super Annotation> criteria) {
-    Annotation a = startSorted.lower(Fragments.detachedAnnotation(null, range.start(), range.end()));
-    int start = a == null ? range.start() : a.start() - 1;
-    a = endSorted.higher(Fragments.detachedAnnotation(null, range.end(), range.end() + 1));
-    int end = a == null ? range.end() : a.end() + 1;
-
-    Annotation dummy = Fragments.detachedAnnotation(null, start, end);
-    return Sets.union(startSorted.tailSet(dummy, true), endSorted.headSet(dummy, true))
-        .stream()
-        .filter(criteria)
-        .collect(Collectors.toList());
+    Annotation startDummy = Fragments.detachedAnnotation(null, range.end(), Integer.MAX_VALUE);
+    Annotation endDummy = Fragments.detachedAnnotation(null, -1, range.start());
+    return Sets.union(startSorted.headSet(startDummy, true), endSorted.tailSet(endDummy, true))
+      .stream()
+      .filter(criteria)
+      .collect(Collectors.toList());
   }
 
   @Override
