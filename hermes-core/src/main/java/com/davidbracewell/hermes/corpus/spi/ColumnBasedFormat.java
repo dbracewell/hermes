@@ -39,7 +39,7 @@ public abstract class ColumnBasedFormat extends FileBasedFormat {
 
 
   final Document createDocument(List<String> row, DocumentFactory documentFactory) {
-    String id = null;
+    String id = StringUtils.EMPTY;
     String content = StringUtils.EMPTY;
     Language language = documentFactory.getDefaultLanguage();
     Map<Attribute, Object> attributeMap = new HashMap<>();
