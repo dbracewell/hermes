@@ -19,15 +19,14 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.corpus.spi;
+package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.annotator.DocumentProvider;
-import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
+import com.davidbracewell.hermes.corpus.spi.CSVCorpus;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import org.junit.Before;

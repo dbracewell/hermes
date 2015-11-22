@@ -27,10 +27,13 @@ import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.io.Resources;
+import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Multimap;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import static org.junit.Assert.*;
 
@@ -115,6 +118,21 @@ public class CorpusTest {
 
 
   @Test
+  public void mStreamTest() {
+    Config.initializeTest();
+    Corpus corpus = Corpus.builder()
+      .source(DocumentFormats.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/docs/txt"))
+      .build()
+      .filter(document -> true);
+
+    corpus = corpus.annotate(Types.TOKEN)
+      .filter(document -> document.tokenLength() > 2);
+
+    assertEquals(3d, corpus.size(), 0d);
+
+  }
+
+  @Test
   public void resourceTest() {
     Config.initializeTest();
     Corpus corpus = Corpus.builder()
@@ -170,6 +188,16 @@ public class CorpusTest {
     assertEquals(1, cntr.get("second"), 0d);
     assertEquals(1, cntr.get("third"), 0d);
     assertEquals(1, corpus.filter(d -> d.contains("third")).size(), 0d);
+
+
+    Resource r = Resources.temporaryDirectory();
+    r.delete();
+    try {
+      corpus.write(r);
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
+
   }
 
   @Test
