@@ -39,9 +39,6 @@ public class AnnotationTypeTest {
     assertTrue(TEST_PARENT.isInstance(AnnotationType.ROOT));
 
     assertTrue(TEST_CHILD1.isInstance(TEST_PARENT));
-    assertTrue(TEST_CHILD1.goldStandardVersion().isInstance(TEST_PARENT));
-    assertTrue(TEST_CHILD1.goldStandardVersion().isInstance(TEST_CHILD1));
-    assertTrue(TEST_CHILD1.isInstance(TEST_CHILD1.goldStandardVersion()));
 
     assertFalse(TEST_CHILD1.isInstance(TEST_CHILD2));
     assertFalse(TEST_PARENT.isInstance(TEST_CHILD2));

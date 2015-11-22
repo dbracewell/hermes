@@ -322,7 +322,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     Matcher m = regex.matcher(this);
     List<HString> matches = new ArrayList<>();
     while (m.find()) {
-      matches.add(union(substring(m.start(), m.end()).tokens()));
+      if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
+        matches.add(union(substring(m.start(), m.end()).tokens()));
+      } else {
+        matches.add(substring(m.start(), m.end()));
+      }
     }
     return matches;
   }
@@ -345,8 +349,12 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public List<HString> findAll(@NonNull String text) {
     List<HString> matches = new ArrayList<>();
-    for (int pos = indexOf(text, 0); pos < length() && pos != -1; pos = indexOf(text, pos)) {
-      matches.add(union(substring(pos, pos + text.length()).tokens()));
+    for (int pos = indexOf(text, 0); pos < length() && pos != -1; pos = indexOf(text, pos + 1)) {
+      if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
+        matches.add(union(substring(pos, pos + text.length()).tokens()));
+      } else {
+        matches.add(substring(pos, pos + text.length()));
+      }
     }
     return matches;
   }
@@ -364,7 +372,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     if (pos == -1) {
       return Fragments.empty(document());
     }
-    return union(substring(pos, pos + text.length()).tokens());
+    if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
+      return union(substring(pos, pos + text.length()).tokens());
+    }
+    return substring(pos, pos + text.length());
   }
 
   @Override
@@ -495,7 +506,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @return the optional
    */
   public Optional<Annotation> asAnnotation() {
-    return Optional.ofNullable(Cast.<Annotation>as(this));
+    if (this instanceof Annotation) {
+      return Optional.of(Cast.as(this));
+    }
+    return Optional.empty();
   }
 
   /**
@@ -558,7 +572,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @return the ngrams
    */
   public List<HString> ngrams(int order, @NonNull AnnotationType annotationType) {
-    return ngrams(order, annotationType, true);
+    return ngrams(order, annotationType, false);
   }
 
   /**

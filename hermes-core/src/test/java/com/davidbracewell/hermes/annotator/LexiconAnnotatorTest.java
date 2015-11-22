@@ -47,6 +47,7 @@ public class LexiconAnnotatorTest {
       Types.ENTITY,
       "testing.lexicon"
     );
+
     annotator.annotate(document);
     List<Annotation> entities = document.get(Types.ENTITY);
     assertEquals("Alice", entities.get(0).toString());

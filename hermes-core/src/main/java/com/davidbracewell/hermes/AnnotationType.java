@@ -35,7 +35,6 @@ import lombok.NonNull;
 
 import java.io.ObjectStreamException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -79,13 +78,6 @@ import java.util.stream.Collectors;
  * beans defined elsewhere in the configuration. Finally, it defines a <code>PATTERN</code> attribute relating to the
  * pattern that was used to identify the entity.
  * </p>
- * <h2>Gold Standard Types</h2>
- * <p>
- * A special annotation type for gold standard annotations can be defined using <code>@</code> prepended to the
- * annotation type name. Gold standard annotations inherit all of their information from their non-gold standard
- * counterparts. The gold standard version of annotation type can be easily obtained via the
- * {@link #goldStandardVersion()} method.
- * </p>
  *
  * @author David B. Bracewell
  */
@@ -127,7 +119,7 @@ public final class AnnotationType extends HierarchicalEnumValue {
       throw new IllegalArgumentException("Attempting to register an existing annotation type with a different parent type.");
     }
     AnnotationType type = index.register(new AnnotationType(name));
-    Config.setProperty("Annotation." + type.nonGoldStandardVersion().name() + ".parent", parent.nonGoldStandardVersion().name());
+    Config.setProperty("Annotation." + type.name() + ".parent", parent.name());
     return type;
   }
 
@@ -150,7 +142,7 @@ public final class AnnotationType extends HierarchicalEnumValue {
    * @return the tag attribute
    */
   public Attribute getTagAttribute() {
-    String attribute = Config.get("Annotation", nonGoldStandardVersion().name(), "tag").asString();
+    String attribute = Config.get("Annotation", name(), "tag").asString();
     if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {
       return getParent().getTagAttribute();
     } else if (StringUtils.isNullOrBlank(attribute)) {
@@ -200,40 +192,7 @@ public final class AnnotationType extends HierarchicalEnumValue {
 
   @Override
   protected AnnotationType getParentConfig() {
-    return AnnotationType.create(Config.get("Annotation", nonGoldStandardVersion().name(), "parent").asString("ROOT"));
-  }
-
-  /**
-   * Gets the gold standard version of this annotation type.
-   *
-   * @return the gold standard version of this annotation type
-   */
-  public AnnotationType goldStandardVersion() {
-    if (isGoldStandard()) {
-      return this;
-    }
-    return AnnotationType.create("@" + name());
-  }
-
-  /**
-   * Gets the non-gold standard version.
-   *
-   * @return the non-gold standard version of this annotation type
-   */
-  public AnnotationType nonGoldStandardVersion() {
-    if (isGoldStandard()) {
-      return AnnotationType.create(name().substring(1));
-    }
-    return this;
-  }
-
-  /**
-   * Determines if this type represents a gold standard annotation.
-   *
-   * @return True if this is a gold standard type, False otherwise
-   */
-  public boolean isGoldStandard() {
-    return name().startsWith("@");
+    return AnnotationType.create(Config.get("Annotation", name(), "parent").asString("ROOT"));
   }
 
   /**
@@ -244,10 +203,6 @@ public final class AnnotationType extends HierarchicalEnumValue {
    * @throws IllegalStateException If this type is a gold standard annotation.
    */
   public Annotator getAnnotator(@NonNull Language language) {
-    if (isGoldStandard()) {
-      throw new IllegalStateException("Gold Standard annotations cannot be annotated");
-    }
-
     String key = Config.closestKey("Annotation", language, name(), "annotator");
     if (StringUtils.isNullOrBlank(key)) {
       throw new IllegalStateException("No annotator is defined for " + name() + " and " + language);
@@ -269,40 +224,17 @@ public final class AnnotationType extends HierarchicalEnumValue {
   public boolean isInstance(AnnotationType type) {
     if (type == null) {
       return false;
-    } else if (this.equals(type) || this.goldStandardVersion().equals(type.goldStandardVersion())) {
+    } else if (this.equals(type)) {
       return true;
     }
     AnnotationType parent = getParent();
     while (!parent.equals(ROOT)) {
-      if (parent.equals(type) || parent.goldStandardVersion().equals(type.goldStandardVersion())) {
+      if (parent.equals(type)) {
         return true;
       }
       parent = parent.getParent();
     }
     return type.equals(ROOT);
-  }
-
-  /**
-   * Gets the attributes defined for this annotation type via configuration.
-   *
-   * @return The set of attributes defined for this annotation type via configuration.
-   */
-  public Set<Attribute> getDefinedAttributes() {
-    if (definedAttributes == null) {
-      synchronized (this) {
-        if (definedAttributes == null) {
-          AnnotationType parent = getParent();
-          this.definedAttributes = Config.get("AnnotationType", nonGoldStandardVersion().name(), "attributes").asCollection(HashSet.class, Attribute.class);
-          if (this.definedAttributes == null) {
-            this.definedAttributes = new HashSet<>(4);
-          }
-          if (parent != this) {
-            this.definedAttributes.addAll(parent.getDefinedAttributes());
-          }
-        }
-      }
-    }
-    return definedAttributes;
   }
 
   private Object readResolve() throws ObjectStreamException {

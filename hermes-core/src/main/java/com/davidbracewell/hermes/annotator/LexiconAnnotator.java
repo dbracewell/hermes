@@ -65,9 +65,7 @@ public class LexiconAnnotator extends SentenceLevelAnnotator implements Serializ
 
   @Override
   public void annotate(Annotation sentence) {
-    lexicon.match(sentence).forEach(hString -> {
-      Annotation a = sentence.document().createAnnotation(type, hString, true, false);
-    });
+    lexicon.match(sentence).forEach(hString -> sentence.document().createAnnotation(type, hString, true));
   }
 
   @Override

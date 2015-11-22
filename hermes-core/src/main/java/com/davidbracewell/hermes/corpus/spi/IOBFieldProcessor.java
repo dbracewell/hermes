@@ -37,7 +37,7 @@ public class IOBFieldProcessor implements FieldProcessor {
 
   public IOBFieldProcessor(int index, AnnotationType annotationType, Attribute attribute) {
     this.index = index;
-    this.annotationType = annotationType.goldStandardVersion();
+    this.annotationType = annotationType;
     this.attribute = attribute;
   }
 
@@ -69,19 +69,19 @@ public class IOBFieldProcessor implements FieldProcessor {
 
   private void addAnnotation(Document document, int start, int end, String tag) {
     document.createAnnotation(
-        annotationType,
-        document.tokenAt(start).start(),
-        document.tokenAt(end - 1).end(),
-        Collect.map(attribute, attribute.getValueType().convert(tag))
+      annotationType,
+      document.tokenAt(start).start(),
+      document.tokenAt(end - 1).end(),
+      Collect.map(attribute, attribute.getValueType().convert(tag))
     );
   }
 
   public static IOBFieldProcessor chunkProcessor(int index) {
-    return new IOBFieldProcessor(index, Types.PHRASE_CHUNK.goldStandardVersion(), Attrs.PART_OF_SPEECH);
+    return new IOBFieldProcessor(index, Types.PHRASE_CHUNK, Attrs.PART_OF_SPEECH);
   }
 
   public static IOBFieldProcessor nameEntityProcessor(int index) {
-    return new IOBFieldProcessor(index, Types.ENTITY.goldStandardVersion(), Attrs.ENTITY_TYPE);
+    return new IOBFieldProcessor(index, Types.ENTITY, Attrs.ENTITY_TYPE);
   }
 
 }//END OF IOBFieldProcessor

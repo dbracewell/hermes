@@ -168,7 +168,7 @@ public final class QueryToPredicate {
       } else if (boe.match(RegexTokenTypes.LOOKAHEAD) || boe.match(RegexTokenTypes.NEGLOOKAHEAD) ||
         exp.match(RegexTokenTypes.LOOKAHEADPOST) || exp.match(RegexTokenTypes.NEGLOOKAHEADPOST)) {
         TransitionFunction tf = TokenRegex.consumerize(exp);
-        return hString -> tf.matches(hString.asAnnotation().get()) > 0;
+        return hString -> tf.matches(hString) > 0;
       }
     } else if (exp.isInstance(MultivalueExpression.class) && exp.match(CommonTypes.OPENPARENS)) {
       MultivalueExpression mve = Cast.as(exp);

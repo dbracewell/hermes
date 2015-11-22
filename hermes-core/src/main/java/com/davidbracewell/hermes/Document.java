@@ -231,12 +231,26 @@ public class Document extends HString {
    * @param filterAttributes the filter attributes
    * @return the created annotation
    */
-  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span, boolean copyAttributes, boolean filterAttributes) {
+  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span, boolean copyAttributes, Set<Attribute> filterAttributes) {
     Map<Attribute, ?> map = copyAttributes ? span.getAttributeMap() : Collections.emptyMap();
-    map = filterAttributes ? Maps.filterEntries(map, e -> type.getDefinedAttributes().contains(e.getKey())) : map;
+    if (filterAttributes != null) {
+      map = Maps.filterEntries(map, e -> filterAttributes.contains(e.getKey()));
+    }
     return createAnnotation(type, span.start(), span.end(), map);
   }
 
+  /**
+   * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
+   * has a unique id assigned.
+   *
+   * @param type           the type of annotation
+   * @param span           the span of the annotation
+   * @param copyAttributes the copy attributes
+   * @return the created annotation
+   */
+  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span, boolean copyAttributes) {
+    return createAnnotation(type, span, copyAttributes, null);
+  }
 
   /**
    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
