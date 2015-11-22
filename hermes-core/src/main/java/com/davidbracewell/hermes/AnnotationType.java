@@ -70,7 +70,7 @@ import java.util.stream.Collectors;
  * attributes = PATTERN
  * }
  * }
- * }
+ * }*
  * <p>
  * In the example shown above, we define the <code>ENTITY</code> and <code>REGEX_ENTITY</code> types. The
  * <code>Entity</code> type has two attributes associated with it which relate to the type of entity and the confidence
@@ -144,6 +144,11 @@ public final class AnnotationType extends HierarchicalEnumValue {
     return index.register(new AnnotationType(name));
   }
 
+  /**
+   * Gets tag attribute.
+   *
+   * @return the tag attribute
+   */
   public Attribute getTagAttribute() {
     String attribute = Config.get("Annotation", nonGoldStandardVersion().name(), "tag").asString();
     if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {

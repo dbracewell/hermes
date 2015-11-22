@@ -147,4 +147,9 @@ public class SparkCorpus implements Corpus, Serializable {
     return this;
   }
 
+  @Override
+  public Corpus updateConfig() {
+    stream.updateConfig();
+    return this;
+  }
 }

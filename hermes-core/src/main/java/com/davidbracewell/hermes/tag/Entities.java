@@ -40,54 +40,61 @@ public interface Entities {
   /**
    * The constant PERSON.
    */
-  EntityType PERSON = EntityType.create("PERSON", ROOT);
+  com.davidbracewell.hermes.tag.EntityType PERSON = com.davidbracewell.hermes.tag.EntityType.create("PERSON", ROOT);
   /**
    * The constant ORGANIZATION.
    */
-  EntityType ORGANIZATION = EntityType.create("ORGANIZATION", ROOT);
+  com.davidbracewell.hermes.tag.EntityType ORGANIZATION = com.davidbracewell.hermes.tag.EntityType.create("ORGANIZATION", ROOT);
   /**
    * The constant LOCATION.
    */
-  EntityType LOCATION = EntityType.create("LOCATION", ROOT);
+  com.davidbracewell.hermes.tag.EntityType LOCATION = com.davidbracewell.hermes.tag.EntityType.create("LOCATION", ROOT);
   /**
    * The constant NUMBER.
    */
-  EntityType NUMBER = EntityType.create("NUMBER", ROOT);
+  com.davidbracewell.hermes.tag.EntityType NUMBER = com.davidbracewell.hermes.tag.EntityType.create("NUMBER", ROOT);
   /**
    * The constant MONEY.
    */
-  EntityType MONEY = EntityType.create("MONEY", NUMBER);
+  com.davidbracewell.hermes.tag.EntityType MONEY = com.davidbracewell.hermes.tag.EntityType.create("MONEY", NUMBER);
   /**
    * The constant PERCENTAGE.
    */
-  EntityType PERCENTAGE = EntityType.create("PERCENTAGE", NUMBER);
+  com.davidbracewell.hermes.tag.EntityType PERCENTAGE = com.davidbracewell.hermes.tag.EntityType.create("PERCENTAGE", NUMBER);
   /**
    * The constant DATE_TIME.
    */
-  EntityType DATE_TIME = EntityType.create("DATE_TIME", ROOT);
+  com.davidbracewell.hermes.tag.EntityType DATE_TIME = com.davidbracewell.hermes.tag.EntityType.create("DATE_TIME", ROOT);
   /**
    * The constant DATE.
    */
-  EntityType DATE = EntityType.create("DATE", DATE_TIME);
+  com.davidbracewell.hermes.tag.EntityType DATE = com.davidbracewell.hermes.tag.EntityType.create("DATE", DATE_TIME);
   /**
    * The constant TIME.
    */
-  EntityType TIME = EntityType.create("TIME", DATE_TIME);
+  com.davidbracewell.hermes.tag.EntityType TIME = com.davidbracewell.hermes.tag.EntityType.create("TIME", DATE_TIME);
   /**
    * The constant INTERNET.
    */
-  EntityType INTERNET = EntityType.create("INTERNET", ROOT);
+  com.davidbracewell.hermes.tag.EntityType INTERNET = com.davidbracewell.hermes.tag.EntityType.create("INTERNET", ROOT);
   /**
    * The constant EMAIL.
    */
-  EntityType EMAIL = EntityType.create("EMAIL", INTERNET);
+  com.davidbracewell.hermes.tag.EntityType EMAIL = com.davidbracewell.hermes.tag.EntityType.create("EMAIL", INTERNET);
   /**
    * The constant URL.
    */
-  EntityType URL = EntityType.create("URL", INTERNET);
+  com.davidbracewell.hermes.tag.EntityType URL = com.davidbracewell.hermes.tag.EntityType.create("URL", INTERNET);
   /**
    * The constant EMOTICON.
    */
-  EntityType EMOTICON = EntityType.create("EMOTICON", INTERNET);
-
+  com.davidbracewell.hermes.tag.EntityType EMOTICON = com.davidbracewell.hermes.tag.EntityType.create("EMOTICON", INTERNET);
+  /**
+   * The constant HASHTAG.
+   */
+  com.davidbracewell.hermes.tag.EntityType HASH_TAG = com.davidbracewell.hermes.tag.EntityType.create("HASH_TAG", INTERNET);
+  /**
+   * The constant HASHTAG.
+   */
+  com.davidbracewell.hermes.tag.EntityType REPLY = com.davidbracewell.hermes.tag.EntityType.create("REPLY", INTERNET);
 }//END OF Entities

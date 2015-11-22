@@ -48,6 +48,9 @@ public class TokenTypeEntityAnnotator extends SentenceLevelAnnotator {
     .put(TokenType.NUMBER, Entities.NUMBER)
     .put(TokenType.EMOTICON, Entities.EMOTICON)
     .put(TokenType.COMPANY, Entities.ORGANIZATION)
+    .put(TokenType.HASH_TAG, Entities.HASH_TAG)
+    .put(TokenType.REPLY, Entities.REPLY)
+    .put(TokenType.TIME, Entities.TIME)
     .build();
 
   @Override

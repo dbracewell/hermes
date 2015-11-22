@@ -25,6 +25,7 @@ import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.io.structured.ElementType;
@@ -55,13 +56,6 @@ import java.util.*;
  * with the name <code>PartOfSpeech</code> are equal (see {@link DynamicEnum} for normalization information).
  * </p>
  * <p>
- * Gold standard attributes can be constructed using the {@link #goldStandardVersion()} method of an attribute.
- * The name of a gold standard attribute has <code>@</code> prepended to the name.
- * Type information for gold standard attributes is taken from the non-gold standard definintion.
- * This means that the gold standard attribute for part of speech (<code>@PART_OF_SPEECH</code> would get its type
- * information from its non-gold standard form <code>PART_OF_SPEECH</code>).
- * </p>
- * <p>
  * When attributes are written to a structured format their type is checked against what is defined. Differences in
  * type will by default cause ignore the attribute and not write it to file. You can set
  * <code>Attribute.ignoreTypeChecks</code> to <code>false</code> to ensure the type and throw an
@@ -75,12 +69,9 @@ public final class Attribute extends EnumValue {
   private static final DynamicEnum<Attribute> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
 
-  public static Attribute ROOT = Attribute.create("ROOT");
-
   private Attribute(String name) {
     super(name);
   }
-
 
   /**
    * Creates a new  attribute with the given name and value type
@@ -95,10 +86,9 @@ public final class Attribute extends EnumValue {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
-    Preconditions.checkArgument(name.charAt(0) != '@', "Cannot create a Gold Standard attribute with a given value type");
     if (index.isDefined(name)) {
       Attribute attribute = index.valueOf(name);
-      Preconditions.checkArgument(attribute.getValueType().equals(valueType), "Attempting to register an existing attribute with a new value type.");
+      Preconditions.checkArgument(attribute.getValueType().getType().equals(valueType), "Attempting to register an existing attribute with a new value type.");
       return attribute;
     }
     Attribute attribute = index.register(new Attribute(name));
@@ -203,22 +193,24 @@ public final class Attribute extends EnumValue {
   }
 
   boolean checkType(Val value) {
-    if (value != null && !Config.get("Attribute", "ignoreTypeChecks").asBoolean(false)) {
-      ValueType valueType = getValueType();
-      if (!valueType.getType().isAssignableFrom(value.getWrappedClass())) {
-        if (Config.get("Attribute.ignoreTypeErrors").asBooleanValue(false)) {
-          return false;
-        }
-        throw new IllegalArgumentException(
-          value + " [" + value.getClass().getName() + "] is of wrong type. " +
-            name() + "'s defined type is " + valueType.getType().getName());
+    if (value == null || value.isNull() || Config.get("Attribute", "ignoreTypeChecks").asBoolean(false)) {
+      return false;
+    }
+    ValueType valueType = getValueType();
+    value = value.getWrappedClass().isInstance(Val.class) ? value.cast() : value;
+    if (!valueType.getType().isAssignableFrom(value.getWrappedClass())) {
+      if (Config.get("Attribute.ignoreTypeErrors").asBooleanValue(false)) {
+        return false;
       }
+      throw new IllegalArgumentException(
+        value + " [" + value.getWrappedClass().getName() + "] is of wrong type. " +
+          name() + "'s defined type is " + valueType.getType().getName());
     }
     return true;
   }
 
   private Optional<AttributeValueCodec> getCodec() {
-    return Optional.ofNullable(Config.get("Attribute", nonGoldStandardVersion().name(), "codec").as(AttributeValueCodec.class));
+    return Optional.ofNullable(Config.get("Attribute", name(), "codec").as(AttributeValueCodec.class));
   }
 
   /**
@@ -228,41 +220,9 @@ public final class Attribute extends EnumValue {
    * @return The class associated with this attributes values
    */
   public ValueType getValueType() {
-    return ValueType.fromConfig("Attribute" + "." + nonGoldStandardVersion().name());
+    return ValueType.fromConfig("Attribute" + "." + name());
   }
 
-  /**
-   * Get the gold standard version of this attribute.
-   *
-   * @return the gold standard version of this attribute
-   */
-  public Attribute goldStandardVersion() {
-    if (isGoldStandard()) {
-      return this;
-    }
-    return Attribute.create("@" + name());
-  }
-
-  /**
-   * Determines if this attribute is a gold standard.
-   *
-   * @return True if this is a gold standard attribute, False otherwise
-   */
-  public boolean isGoldStandard() {
-    return name().startsWith("@");
-  }
-
-  /**
-   * Gets the non-gold standard version.
-   *
-   * @return the non-gold standard version of this attribute
-   */
-  public Attribute nonGoldStandardVersion() {
-    if (isGoldStandard()) {
-      return Attribute.create(name().substring(1));
-    }
-    return this;
-  }
 
   private Object readResolve() throws ObjectStreamException {
     if (isDefined(name())) {
@@ -274,9 +234,9 @@ public final class Attribute extends EnumValue {
   void write(StructuredWriter writer, Object val) throws IOException {
     ValueType valueType = getValueType();
     Optional<AttributeValueCodec> encoder = getCodec();
-    Val wrapped = Val.of(val);
+    Val wrapped = val instanceof Val ? Cast.as(val) : Val.of(val);
 
-    if (checkType(Val.of(val))) {
+    if (checkType(wrapped)) {
       if (valueType.isCollection()) {
         writer.beginArray(name());
         Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);

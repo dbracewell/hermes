@@ -41,7 +41,7 @@ public class POSFieldProcessor implements FieldProcessor {
   @Override
   public void process(Document document, List<List<String>> rows) {
     for (int i = 0; i < rows.size(); i++) {
-      document.tokenAt(i).put(Attrs.PART_OF_SPEECH.goldStandardVersion(), POS.fromString(rows.get(i).get(index)));
+      document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(rows.get(i).get(index)));
     }
   }
 }//END OF POSFieldProcessor

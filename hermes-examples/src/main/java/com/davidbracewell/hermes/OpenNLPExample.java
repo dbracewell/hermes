@@ -26,6 +26,7 @@ import com.davidbracewell.hermes.annotators.MaltParserAnnotator;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.DocumentFormats;
 import com.davidbracewell.io.Resources;
+import com.google.common.base.Stopwatch;
 
 import java.util.stream.Collectors;
 
@@ -53,12 +54,7 @@ public class OpenNLPExample {
       .annotate(TOKEN, SENTENCE, PART_OF_SPEECH, ENTITY, LEMMA, STEM, DEPENDENCY);
 
 
-//    List<Document> docs = corpus.stream().collect();
-//
-//    docs.get(2).tokens().forEach(token ->
-//      System.out.println(token + " : " + token.getRelations() + " : " + token.sentences())
-//    );
-
+    Stopwatch stopwatch = Stopwatch.createStarted();
     corpus.forEach(document -> {
       document.sentences().forEach(sentence -> {
         Annotation root = sentence.tokens().stream().filter(a -> !a.getParent().isPresent()).findFirst().get();
@@ -67,7 +63,8 @@ public class OpenNLPExample {
         System.out.println();
       });
     });
-
+    stopwatch.stop();
+    System.out.println(stopwatch);
 
   }
 

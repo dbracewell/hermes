@@ -177,8 +177,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
 
   @Override
   public boolean contains(Attribute attribute) {
-    return getAttributeMap().containsKey(attribute) ||
-      getAttributeMap().containsKey(attribute.goldStandardVersion());
+    return attribute != null && getAttributeMap().containsKey(attribute);
   }
 
   /**
@@ -373,10 +372,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     if (attribute == null) {
       return Val.NULL;
     }
-    if (getAttributeMap().containsKey(attribute)) {
-      return getAttributeMap().get(attribute);
-    }
-    return Val.of(getAttributeMap().get(attribute.goldStandardVersion()));
+    return getAttributeMap().getOrDefault(attribute, Val.NULL);
   }
 
   @Override
@@ -572,7 +568,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    *
    * @param order           the order, i.e. number of annotations in the ngarm
    * @param annotationType  the type of annotation to extract
-   * @param removeStopWords true ignore stop words using the StopWords class associated with the language of this                        HString
+   * @param removeStopWords true ignore stop words using the StopWords class associated with the language of this
+   *                        HString
    * @return the ngrams
    */
   public List<HString> ngrams(int order, @NonNull AnnotationType annotationType, boolean removeStopWords) {
@@ -675,7 +672,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   /**
    * Converts this string to a new character array.
    *
-   * @return a newly allocated character array whose length is the length of this string and whose contents are initialized to contain the character sequence represented by this string.
+   * @return a newly allocated character array whose length is the length of this string and whose contents are
+   * initialized to contain the character sequence represented by this string.
    */
   public char[] toCharArray() {
     return toString().toCharArray();
@@ -749,7 +747,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param relativeStart the relative start within in this HString
    * @param relativeEnd   the relative end within this HString
    * @return the specified substring.
-   * @throws IndexOutOfBoundsException - if the relativeStart is negative, or relativeEnd is larger than the length of                                   this HString object, or relativeStart is larger than relativeEnd.
+   * @throws IndexOutOfBoundsException - if the relativeStart is negative, or relativeEnd is larger than the length of
+   *                                   this HString object, or relativeStart is larger
+   *                                   than relativeEnd.
    */
   public HString substring(int relativeStart, int relativeEnd) {
     Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());

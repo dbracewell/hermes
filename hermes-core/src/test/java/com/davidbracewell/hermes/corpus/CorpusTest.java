@@ -22,7 +22,6 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.collection.Counter;
-import com.davidbracewell.collection.InvertedIndex;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
@@ -32,8 +31,6 @@ import com.davidbracewell.parsing.ParseException;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Multimap;
 import org.junit.Test;
-
-import java.util.Collections;
 
 import static org.junit.Assert.*;
 
@@ -76,11 +73,8 @@ public class CorpusTest {
       .add(DocumentFactory.getInstance().create("This is the third document."))
       .add(DocumentFactory.getInstance().create("This is the first long document."))
       .build();
-
     assertFalse(corpus.isEmpty());
     corpus.annotate(Types.TOKEN);
-    InvertedIndex<Document, String> index = corpus.index();
-    assertEquals(2, index.query(Collections.singleton("first")).size(), 0d);
     try {
       assertEquals(2, corpus.query("first").size(), 0d);
     } catch (ParseException e) {

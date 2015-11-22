@@ -254,9 +254,19 @@ public final class Annotation extends Fragment implements Serializable {
    * @return the children
    */
   public List<Annotation> getChildren() {
-    return first(Types.SENTENCE).tokens().stream()
-      .filter(t -> t.getParent().filter(p -> p == this).isPresent())
-      .collect(Collectors.toList());
+    if (document().getAnnotationSet().isCompleted(Types.SENTENCE)) {
+      return first(Types.SENTENCE).tokens().stream()
+        .filter(t -> t.getParent().filter(p -> p == this).isPresent())
+        .collect(Collectors.toList());
+
+    }
+    List<Annotation> children = new LinkedList<>();
+    document().tokens().forEach(token -> {
+      if (token.getRelations(this).stream().filter(r -> r.getType().isInstance(Relations.DEPENDENCY)).count() > 0) {
+        children.add(token);
+      }
+    });
+    return children;
   }
 
   /**

@@ -111,5 +111,7 @@ public final class TokenType extends EnumValue {
   public static final TokenType HYPHEN = create("HYPHEN");
   public static final TokenType EMOTICON = create("EMOTICON");
   public static final TokenType HASH_TAG = create("HASH_TAG");
+  public static final TokenType REPLY = create("REPLY");
+  public static final TokenType TIME = create("TIME");
 
 }//END OF TokenType

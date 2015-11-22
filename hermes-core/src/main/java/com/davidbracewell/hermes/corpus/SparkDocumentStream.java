@@ -32,10 +32,7 @@ import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Hermes;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.stream.MDoubleStream;
-import com.davidbracewell.stream.MPairStream;
-import com.davidbracewell.stream.MStream;
-import com.davidbracewell.stream.Spark;
+import com.davidbracewell.stream.*;
 import com.google.common.collect.Iterators;
 import lombok.NonNull;
 import org.apache.spark.broadcast.Broadcast;
@@ -55,7 +52,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   private static final long serialVersionUID = 1L;
 
   private volatile MStream<String> source;
-  private final Broadcast<Config> configBroadcast;
+  private Broadcast<Config> configBroadcast;
 
   /**
    * Instantiates a new Spark document stream.
@@ -296,6 +293,15 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   @Override
   public void saveAsTextFile(@NonNull String location) {
     source.saveAsTextFile(location);
+  }
+
+
+  /**
+   * Updates the config broadcast.
+   */
+  public void updateConfig() {
+    this.configBroadcast.unpersist(true);
+    this.configBroadcast = Cast.<SparkStream>as(source).getContext().broadcast(Config.getInstance());
   }
 
 }//END OF SparkDocumentStream

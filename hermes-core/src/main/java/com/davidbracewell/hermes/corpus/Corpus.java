@@ -24,7 +24,6 @@ package com.davidbracewell.hermes.corpus;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
-import com.davidbracewell.collection.InvertedIndex;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.*;
@@ -37,7 +36,10 @@ import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -146,29 +148,6 @@ public interface Corpus extends Iterable<Document> {
     Multimap<K, Document> grouping = ArrayListMultimap.create();
     forEach(document -> grouping.put(keyFunction.apply(document), document));
     return grouping;
-  }
-
-  /**
-   * Indexes the documents in the document store using the given indexer function. The indexer function converts
-   * documents into one or more values (e.g. tokens) that can then be used to query documents.
-   *
-   * @param <T>     the type of object the document is indexed by
-   * @param indexer the indexer to index the document by
-   * @return the inverted index
-   */
-  default <T> InvertedIndex<Document, T> index(@NonNull SerializableFunction<Document, Collection<T>> indexer) {
-    InvertedIndex<Document, T> invertedIndex = new InvertedIndex<>(indexer);
-    invertedIndex.addAll(this);
-    return invertedIndex;
-  }
-
-  /**
-   * Indexes the documents by their lemmatized tokens
-   *
-   * @return the inverted index
-   */
-  default InvertedIndex<Document, String> index() {
-    return index(document -> document.tokens().stream().map(HString::getLemma).collect(Collectors.toSet()));
   }
 
   /**
@@ -330,5 +309,8 @@ public interface Corpus extends Iterable<Document> {
     return write(DocumentFormats.JSON_OPL, resource);
   }
 
+  default Corpus updateConfig() {
+    return this;
+  }
 
 }//END OF Corpus2

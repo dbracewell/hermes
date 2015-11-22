@@ -38,7 +38,7 @@ public class IOBFieldProcessor implements FieldProcessor {
   public IOBFieldProcessor(int index, AnnotationType annotationType, Attribute attribute) {
     this.index = index;
     this.annotationType = annotationType.goldStandardVersion();
-    this.attribute = attribute.goldStandardVersion();
+    this.attribute = attribute;
   }
 
 
@@ -77,11 +77,11 @@ public class IOBFieldProcessor implements FieldProcessor {
   }
 
   public static IOBFieldProcessor chunkProcessor(int index) {
-    return new IOBFieldProcessor(index, Types.PHRASE_CHUNK.goldStandardVersion(), Attrs.PART_OF_SPEECH.goldStandardVersion());
+    return new IOBFieldProcessor(index, Types.PHRASE_CHUNK.goldStandardVersion(), Attrs.PART_OF_SPEECH);
   }
 
   public static IOBFieldProcessor nameEntityProcessor(int index) {
-    return new IOBFieldProcessor(index, Types.ENTITY.goldStandardVersion(), Attrs.ENTITY_TYPE.goldStandardVersion());
+    return new IOBFieldProcessor(index, Types.ENTITY.goldStandardVersion(), Attrs.ENTITY_TYPE);
   }
 
 }//END OF IOBFieldProcessor

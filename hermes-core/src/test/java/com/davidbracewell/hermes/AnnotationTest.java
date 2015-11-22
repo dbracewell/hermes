@@ -22,9 +22,13 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.annotator.DocumentProvider;
 import com.davidbracewell.hermes.tag.Entities;
+import com.davidbracewell.hermes.tag.Relations;
+import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.structured.StructuredFormat;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -37,6 +41,43 @@ import static org.junit.Assert.*;
  * @author David B. Bracewell
  */
 public class AnnotationTest {
+
+  @Before
+  public void setUp() throws Exception {
+    Config.initializeTest();
+  }
+
+  @Test
+  public void putAttributeTest() {
+    Document document = DocumentProvider.getAnnotatedDocument();
+    List<Annotation> tokens = document.tokens();
+
+    TokenType type = tokens.get(0).get(Attrs.TOKEN_TYPE).cast();
+    tokens.get(0).putIfAbsent(Attrs.TOKEN_TYPE, TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(type, tokens.get(0).get(Attrs.TOKEN_TYPE).get());
+
+    tokens.get(0).putIfAbsent(Attrs.TOKEN_TYPE, () -> TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(type, tokens.get(0).get(Attrs.TOKEN_TYPE).get());
+
+    tokens.get(0).putIfAbsent(Attrs.ENTITY_TYPE, () -> TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(TokenType.create("REALLYSTRANGETYPE"), tokens.get(0).get(Attrs.ENTITY_TYPE).get());
+
+    tokens.get(0).putIfAbsent(Attrs.CATEGORY, TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(TokenType.create("REALLYSTRANGETYPE"), tokens.get(0).get(Attrs.CATEGORY).get());
+
+  }
+
+  @Test
+  public void sentenceTest() {
+    Document document = DocumentProvider.getAnnotatedDocument();
+    for (Annotation token : document.tokens()) {
+      assertEquals(1, token.sentences().size(), 0d);
+      assertEquals(token.sentences().get(0), token.last(Types.SENTENCE));
+      assertEquals(token.sentences().get(0), token.first(Types.SENTENCE));
+      assertEquals(token, token.firstToken());
+      assertEquals(token, token.lastToken());
+    }
+  }
 
   @Test
   public void nextPreviousTest() {
@@ -52,8 +93,34 @@ public class AnnotationTest {
   }
 
   @Test
+  public void parentChildTest() {
+    Document document = DocumentFactory.getInstance().fromTokens(Arrays.asList("This", "is", "simple"));
+    List<Annotation> tokens = document.tokens();
+    tokens.get(0).addRelation(new Relation(Relations.DEPENDENCY, "nsubj", tokens.get(2).getId()));
+    tokens.get(1).addRelation(new Relation(Relations.DEPENDENCY, "cop", tokens.get(2).getId()));
+    assertTrue(tokens.get(0).getParent().isPresent());
+    assertEquals("simple", tokens.get(0).getParent().get().toString());
+    assertEquals(1, tokens.get(0).getRelations(Relations.DEPENDENCY).size(), 0d);
+    assertEquals("simple", tokens.get(0).getTargets(Relations.DEPENDENCY, "nsubj").get(0).toString());
+    assertEquals("simple", tokens.get(0).getTargets(Relations.DEPENDENCY).get(0).toString());
+    assertTrue(tokens.get(1).getParent().isPresent());
+    assertEquals("simple", tokens.get(1).getParent().get().toString());
+    assertEquals(2, tokens.get(2).getChildren().size());
+
+    Pipeline.process(document, Types.SENTENCE);
+    assertEquals(2, tokens.get(2).getChildren().size());
+    tokens.get(0).removeRelation(tokens.get(0).getRelations(Relations.DEPENDENCY).get(0));
+    assertEquals(1, tokens.get(2).getChildren().size());
+
+    Annotation sentence = document.first(Types.SENTENCE);
+    assertFalse(sentence.isEmpty());
+    assertEquals(sentence, tokens.get(0).first(Types.SENTENCE));
+    assertEquals(sentence, tokens.get(1).first(Types.SENTENCE));
+    assertEquals(sentence, tokens.get(2).first(Types.SENTENCE));
+  }
+
+  @Test
   public void createTest() {
-    Config.initializeTest();
     Annotation a = new Annotation(Fragments.string("test"), Types.ENTITY);
     a.put(Attrs.ENTITY_TYPE, Entities.EMAIL);
 

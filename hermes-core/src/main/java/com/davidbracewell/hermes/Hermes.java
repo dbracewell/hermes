@@ -77,6 +77,11 @@ public interface Hermes {
     return initializeApplication(programName, args);
   }
 
+  /**
+   * Initialize worker.
+   *
+   * @param config the config
+   */
   static void initializeWorker(Config config) {
     Configurator.INSTANCE.configure(config);
   }
