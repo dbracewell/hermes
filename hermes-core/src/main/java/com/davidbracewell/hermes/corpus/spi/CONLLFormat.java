@@ -78,19 +78,26 @@ public class CONLLFormat extends FileBasedFormat {
     public abstract FieldProcessor getProcessor(int index);
   }
 
-  private final List<FieldProcessor> processors;
+  private volatile List<FieldProcessor> processors;
   private int wordIndex;
 
-  public CONLLFormat() {
-    processors = new ArrayList<>();
-    int i = 0;
-    for (FieldType fieldType : Config.get(CONLLFormat.class, "fields").as(FieldType[].class, new FieldType[]{FieldType.WORD, FieldType.POS})) {
-      processors.add(fieldType.getProcessor(i));
-      if (fieldType == FieldType.WORD) {
-        wordIndex = i;
+  private List<FieldProcessor> getProcessors() {
+    if (processors == null) {
+      synchronized (this) {
+        if (processors == null) {
+          processors = new ArrayList<>();
+          int i = 0;
+          for (FieldType fieldType : Config.get("CONLL.fields").as(FieldType[].class, new FieldType[]{FieldType.WORD, FieldType.POS})) {
+            processors.add(fieldType.getProcessor(i));
+            if (fieldType == FieldType.WORD) {
+              wordIndex = i;
+            }
+            i++;
+          }
+        }
       }
-      i++;
     }
+    return processors;
   }
 
   private Document createDocument(List<List<String>> rows, DocumentFactory documentFactory) {
@@ -101,7 +108,7 @@ public class CONLLFormat extends FileBasedFormat {
     Document document = documentFactory.fromTokens(tokens);
     document.createAnnotation(Types.SENTENCE, 0, document.length());
     document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "Corpus");
-    for (FieldProcessor processor : processors) {
+    for (FieldProcessor processor : getProcessors()) {
       processor.process(document, rows);
     }
     return document;

@@ -120,6 +120,7 @@ public class CorpusBuilder {
     if (documents.size() > 0) {
       corpus.union(new InMemoryCorpus(documents));
     }
+
     return corpus;
   }
 

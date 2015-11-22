@@ -65,6 +65,7 @@ public class IOBFieldProcessor implements FieldProcessor {
       addAnnotation(document, start, document.tokenLength(), tag);
     }
 
+    document.getAnnotationSet().setIsCompleted(annotationType, true, "PROVIDED");
   }
 
   private void addAnnotation(Document document, int start, int end, String tag) {

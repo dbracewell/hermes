@@ -16,36 +16,66 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by david on 10/9/15.
+ * The type Column based format.
  */
 public abstract class ColumnBasedFormat extends FileBasedFormat {
+  private static final long serialVersionUID = 1L;
+  /**
+   * The Field names.
+   */
+  protected final Index<String> fieldNames = Indexes.newIndex();
+  protected final String configProperty;
 
-  protected final Index<String> fieldNames;
-  protected final String contentField;
-  protected final String idField;
-  protected final String languageField;
-
+  /**
+   * Instantiates a new Column based format.
+   *
+   * @param configProperty the config property
+   */
   public ColumnBasedFormat(String configProperty) {
-    fieldNames = Indexes.newIndex();
-    if (Config.hasProperty(configProperty)) {
-      for (String field : Config.get(configProperty).asList(String.class)) {
-        fieldNames.add(field.toUpperCase());
-      }
-    }
-    contentField = Config.get(configProperty, "contentField").asString("CONTENT").toUpperCase();
-    idField = Config.get(configProperty, "idField").asString("ID").toUpperCase();
-    languageField = Config.get(configProperty, "languageField").asString("LANGUAGE").toUpperCase();
+    this.configProperty = configProperty;
   }
 
 
+  protected Index<String> getFieldNames() {
+    if (fieldNames.isEmpty()) {
+      synchronized (fieldNames) {
+        if (fieldNames.isEmpty()) {
+          if (Config.hasProperty(configProperty, "fields")) {
+            for (String field : Config.get(configProperty, "fields").asList(String.class)) {
+              fieldNames.add(field.toUpperCase());
+            }
+          }
+        }
+      }
+    }
+    return fieldNames;
+  }
+
+  public void clearFields() {
+    this.fieldNames.clear();
+  }
+
+  /**
+   * Create document document.
+   *
+   * @param row             the row
+   * @param documentFactory the document factory
+   * @return the document
+   */
   final Document createDocument(List<String> row, DocumentFactory documentFactory) {
     String id = StringUtils.EMPTY;
     String content = StringUtils.EMPTY;
     Language language = documentFactory.getDefaultLanguage();
     Map<Attribute, Object> attributeMap = new HashMap<>();
+
+    String idField = Config.get(configProperty, "idField").asString("ID").toUpperCase();
+    String contentField = Config.get(configProperty, "contentField").asString("CONTENT").toUpperCase();
+    String languageField = Config.get(configProperty, "languageField").asString("LANGUAGE").toUpperCase();
+    Index<String> fields = getFieldNames();
+
     for (int i = 0; i < row.size() && i < fieldNames.size(); i++) {
       String field = row.get(i);
-      String fieldName = fieldNames.get(i);
+      String fieldName = fields.get(i);
       if (idField.equalsIgnoreCase(fieldName)) {
         id = field;
       } else if (contentField.equalsIgnoreCase(fieldName)) {
@@ -80,6 +110,12 @@ public abstract class ColumnBasedFormat extends FileBasedFormat {
     });
   }
 
+  /**
+   * Rows iterable.
+   *
+   * @param resource the resource
+   * @return the iterable
+   */
   abstract Iterable<List<String>> rows(Resource resource);
 
 }

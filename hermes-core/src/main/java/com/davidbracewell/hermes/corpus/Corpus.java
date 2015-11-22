@@ -309,6 +309,11 @@ public interface Corpus extends Iterable<Document> {
     return write(DocumentFormats.JSON_OPL, resource);
   }
 
+  /**
+   * Update config corpus.
+   *
+   * @return the corpus
+   */
   default Corpus updateConfig() {
     return this;
   }

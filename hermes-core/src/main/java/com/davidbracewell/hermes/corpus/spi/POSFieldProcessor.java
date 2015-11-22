@@ -23,6 +23,7 @@ package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.POS;
 
 import java.util.List;
@@ -43,5 +44,6 @@ public class POSFieldProcessor implements FieldProcessor {
     for (int i = 0; i < rows.size(); i++) {
       document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(rows.get(i).get(index)));
     }
+    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
   }
 }//END OF POSFieldProcessor

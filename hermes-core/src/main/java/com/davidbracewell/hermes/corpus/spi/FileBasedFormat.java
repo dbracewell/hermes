@@ -27,6 +27,7 @@ import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.DocumentFormat;
 import com.davidbracewell.hermes.corpus.FileCorpus;
 import com.davidbracewell.io.resource.Resource;
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -43,15 +44,18 @@ public abstract class FileBasedFormat implements DocumentFormat, Serializable {
   }
 
   @Override
-  public void write(Resource resource, Iterable<Document> documents) throws IOException {
-    resource.mkdirs();
-    for (Document document : documents) {
-      write(resource.getChild(document.getId() + extension()), document);
+  public void write(@NonNull Resource resource, @NonNull Iterable<Document> documents) throws IOException {
+    if ((resource.isDirectory() && resource.exists()) || resource.mkdirs()) {
+      for (Document document : documents) {
+        write(resource.getChild(document.getId() + "." + extension()), document);
+      }
+    } else {
+      throw new IOException("Cannot make directories: " + resource.descriptor());
     }
   }
 
   @Override
-  public void write(Resource resource, Document document) throws IOException {
+  public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
     throw new UnsupportedOperationException();
   }
 

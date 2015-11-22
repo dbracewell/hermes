@@ -10,17 +10,24 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Created by david on 10/9/15.
+ * The type Dsv corpus.
  */
 public abstract class DSVCorpus extends ColumnBasedFormat {
-
+  private static final long serialVersionUID = 1L;
+  /**
+   * The Delimiter.
+   */
   protected final char delimiter;
-  protected final boolean hasHeader;
 
+  /**
+   * Instantiates a new Dsv corpus.
+   *
+   * @param configProperty the config property
+   * @param delimiter      the delimiter
+   */
   public DSVCorpus(String configProperty, char delimiter) {
     super(configProperty);
     this.delimiter = delimiter;
-    this.hasHeader = Config.get(configProperty, "hasHeader").asBooleanValue(false);
   }
 
   @Override
@@ -28,13 +35,13 @@ public abstract class DSVCorpus extends ColumnBasedFormat {
     try {
       com.davidbracewell.io.CSV csv = com.davidbracewell.io.CSV.builder().delimiter(delimiter);
       CSVReader reader;
-      if (hasHeader) {
+      if (Config.get(configProperty, "hasHeader").asBooleanValue(false)) {
         csv.hasHeader();
         fieldNames.clear();
         reader = csv.reader(resource);
         fieldNames.addAll(reader.getHeader().stream().map(String::toUpperCase).collect(Collectors.toList()));
       } else {
-        csv.header(fieldNames.asList());
+        csv.header(getFieldNames().asList());
         reader = csv.reader(resource);
       }
       return reader.readAll();
@@ -43,6 +50,4 @@ public abstract class DSVCorpus extends ColumnBasedFormat {
     }
   }
 
-
-
-}
+}//END OF DSVCorpus

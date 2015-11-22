@@ -86,7 +86,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
 
     this.lemmas = new PatriciaTrie<>();
     try (CSVReader reader = CSV.builder().delimiter('\t').reader(Resources.fromClasspath("com/davidbracewell/hermes/morphology/en/lemmas.dict.gz"))) {
-      for (List<String> row : reader) {
+      reader.forEach(row ->{
         if (row.size() >= 2) {
           String lemma = row.get(0).toLowerCase();
           POS pos = POS.fromString(row.get(1).toUpperCase());
@@ -95,7 +95,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
           }
           lemmas.get(lemma).add(pos);
         }
-      }
+      });
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }

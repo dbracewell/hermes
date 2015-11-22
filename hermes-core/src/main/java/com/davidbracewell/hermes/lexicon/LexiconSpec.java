@@ -37,7 +37,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * The type Lexicon spec.
@@ -94,7 +93,7 @@ public class LexiconSpec implements Serializable {
     if (resource != null) {
       String base = resource.baseName().replaceFirst("\\.[^\\.]*$", "");
       try (CSVReader reader = CSV.builder().reader(resource)) {
-        for (List<String> row : reader) {
+        reader.forEach(row -> {
           String lemma = row.get(0);
           double probability = 1d;
           Tag tag = null;
@@ -105,7 +104,7 @@ public class LexiconSpec implements Serializable {
             tag = tagAttribute.getValueType().convert(row.get(nc));
             if (tag == null) {
               log.warn("{0} is an invalid {1}, skipping entry {2}.", row.get(nc), tagAttribute.name(), row);
-              continue;
+              return;
             }
             nc++;
           } else if (tagAttribute != null) {
@@ -118,19 +117,20 @@ public class LexiconSpec implements Serializable {
             nc++;
           }
 
+
           if (hasConstraints && row.size() > nc) {
             try {
               constraint = QueryToPredicate.parse(row.get(nc));
             } catch (ParseException e) {
               if (tag == null) {
                 log.warn("Error parsing constraint {0}, skipping entry {1}.", row.get(nc), row);
-                continue;
+                return;
               }
             }
           }
 
           lexicon.add(new LexiconEntry(lemma, probability, constraint, tag));
-        }
+        });
       }
     }
     return lexicon;

@@ -4,11 +4,15 @@ import com.davidbracewell.hermes.corpus.DocumentFormat;
 import org.kohsuke.MetaInfServices;
 
 /**
- * Created by david on 10/9/15.
+ * The type Tsv corpus.
  */
 @MetaInfServices(DocumentFormat.class)
 public class TSVCorpus extends DSVCorpus {
+  private static final long serialVersionUID = 1L;
 
+  /**
+   * Instantiates a new Tsv corpus.
+   */
   public TSVCorpus() {
     super("TSVCorpus", '\t');
   }
@@ -17,4 +21,5 @@ public class TSVCorpus extends DSVCorpus {
   public String name() {
     return "TSV";
   }
-}
+
+}//END OF TSVCorpus
