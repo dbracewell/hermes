@@ -31,6 +31,7 @@ import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
+import com.davidbracewell.tuple.*;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.NonNull;
@@ -224,6 +225,40 @@ public interface Corpus extends Iterable<Document> {
    * @return the m stream
    */
   MStream<Document> stream();
+
+
+  default Counter<Tuple> tokenNGrams(int order, boolean lemmatize) {
+    return tokenNGrams(order, false, hString -> lemmatize ? hString.getLemma() : hString.toString());
+  }
+
+  default Counter<Tuple> tokenNGrams(int order, @NonNull SerializableFunction<? super HString, String> toStringFunction) {
+    return tokenNGrams(order, false, toStringFunction);
+  }
+
+  default Counter<Tuple> tokenNGrams(int order, boolean removeStopWords, @NonNull SerializableFunction<? super HString, String> toStringFunction) {
+    return Counters.newHashMapCounter(
+      stream()
+        .flatMap(document -> document.tokenNGrams(order, removeStopWords).stream().map(hString -> {
+          switch (order) {
+            case 1:
+              return Tuple1.of(toStringFunction.apply(hString));
+            case 2:
+              return Tuple2.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)));
+            case 3:
+              return Tuple3.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)), toStringFunction.apply(hString.tokenAt(2)));
+            case 4:
+              return Tuple4.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)), toStringFunction.apply(hString.tokenAt(2)), toStringFunction.apply(hString.tokenAt(3)));
+            default:
+              String[] source = new String[order];
+              for (int i = 0; i < order; i++) {
+                source[i] = toStringFunction.apply(hString.tokenAt(i));
+              }
+              return NTuple.of(source);
+          }
+        }).collect(Collectors.toList()))
+        .countByValue()
+    );
+  }
 
   /**
    * Calculates the total term frequency of the tokens in the corpus.
