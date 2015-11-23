@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.io.resource.Resource;
@@ -36,6 +37,7 @@ import java.util.List;
 public class CorpusBuilder {
 
   private boolean isDistributed = false;
+  private int partitions = -1;
   private boolean isInMemory = false;
   private Resource resource = null;
   private List<Document> documents = new LinkedList<>();
@@ -50,6 +52,13 @@ public class CorpusBuilder {
   }
 
   public CorpusBuilder distributed() {
+    this.isDistributed = true;
+    this.isInMemory = false;
+    return this;
+  }
+
+  public CorpusBuilder distributed(int numPartitions) {
+    this.partitions = numPartitions;
     this.isDistributed = true;
     this.isInMemory = false;
     return this;
@@ -100,10 +109,16 @@ public class CorpusBuilder {
       Corpus corpus = null;
       if (resource != null) {
         corpus = new SparkCorpus(resource.descriptor(), documentFormat, documentFactory);
+        if (partitions > 0) {
+          Cast.<SparkCorpus>as(corpus).repartition(partitions);
+        }
       }
 
       if (corpus == null) {
         corpus = new SparkCorpus(documents);
+        if (partitions > 0) {
+          Cast.<SparkCorpus>as(corpus).repartition(partitions);
+        }
       } else if (documents.size() > 0) {
         corpus = corpus.union(new InMemoryCorpus(documents));
       }

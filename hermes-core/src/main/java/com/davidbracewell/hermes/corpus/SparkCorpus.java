@@ -71,6 +71,15 @@ public class SparkCorpus implements Corpus, Serializable {
   }
 
   /**
+   * Repartition.
+   *
+   * @param numPartitions the num partitions
+   */
+  public void repartition(int numPartitions) {
+    stream.repartition(numPartitions);
+  }
+
+  /**
    * Instantiates a new Spark corpus.
    *
    * @param documents the documents
@@ -103,8 +112,7 @@ public class SparkCorpus implements Corpus, Serializable {
 
   @Override
   public Corpus annotate(@NonNull AnnotationType... types) {
-    stream.annotate(types);
-    return this;
+    return new SparkCorpus(stream.annotate(types));
   }
 
   @Override

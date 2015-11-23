@@ -35,6 +35,8 @@ import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.stream.*;
 import com.google.common.collect.Iterators;
 import lombok.NonNull;
+import org.apache.spark.Accumulator;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 
 import java.io.Serializable;
@@ -53,6 +55,8 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
 
   private volatile MStream<String> source;
   private Broadcast<Config> configBroadcast;
+  final Accumulator<Double> documentsProcessed;
+  final Accumulator<Double> tokensProcessed;
 
   /**
    * Instantiates a new Spark document stream.
@@ -61,6 +65,10 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    */
   public SparkDocumentStream(@NonNull MStream<String> source) {
     this(source, Spark.context(source).broadcast(Config.getInstance()));
+  }
+
+  public void repartition(int numPartition) {
+    source = new SparkStream<>(Cast.<SparkStream<String>>as(source).getRDD().repartition(numPartition));
   }
 
   /**
@@ -72,10 +80,17 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   public SparkDocumentStream(@NonNull MStream<String> source, @NonNull Broadcast<Config> configBroadcast) {
     this.source = source;
     this.configBroadcast = configBroadcast;
+    this.documentsProcessed = getContext().accumulator(0d);
+    this.tokensProcessed = getContext().accumulator(0d);
+
   }
 
   private SparkDocumentStream of(@NonNull MStream<String> source) {
     return new SparkDocumentStream(source, configBroadcast);
+  }
+
+  private JavaSparkContext getContext() {
+    return Cast.<SparkStream>as(source).getContext();
   }
 
   /**
@@ -94,13 +109,16 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    * @return the spark document stream
    */
   public SparkDocumentStream annotate(@NonNull AnnotationType... types) {
-    source = source.map(json -> {
+    documentsProcessed.setValue(0d);
+    tokensProcessed.setValue(0d);
+    return new SparkDocumentStream(source.map(json -> {
       Hermes.initializeWorker(configBroadcast.getValue());
       Document document = Document.fromJson(json);
       Pipeline.process(document, types);
+      documentsProcessed.add(1d);
+      tokensProcessed.add((double) document.tokenLength());
       return document.toJson();
-    });
-    return this;
+    }));
   }
 
   @Override
