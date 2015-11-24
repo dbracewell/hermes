@@ -29,6 +29,7 @@ import com.davidbracewell.hermes.Types;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
+import com.davidbracewell.tuple.*;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Multimap;
 import org.junit.Test;
@@ -153,6 +154,23 @@ public class CorpusTest {
     assertEquals(1, cntr.get("third"), 0d);
     assertEquals(1, corpus.filter(d -> d.contains("third")).size(), 0d);
 
+    Counter<String> ngrams = corpus.tokenNGrams(1, false).mapKeys(tuple -> tuple.get(0).toString());
+    assertEquals(cntr, ngrams);
+
+    Counter<Tuple> bigrams = corpus.tokenNGrams(2, false);
+    assertEquals(3d, bigrams.get(Tuple2.of("This", "is")), 0d);
+    assertEquals(1d, bigrams.get(Tuple2.of("the", "first")), 0d);
+
+    Counter<Tuple> trigrams = corpus.tokenNGrams(3, false);
+    assertEquals(3d, trigrams.get(Tuple3.of("This", "is", "the")), 0d);
+
+    Counter<Tuple> quadgrams = corpus.tokenNGrams(4, false);
+    assertEquals(1d, quadgrams.get(Tuple4.of("This", "is", "the", "first")), 0d);
+
+    Counter<Tuple> fivegrams = corpus.tokenNGrams(5, false);
+    assertEquals(1d, fivegrams.get(NTuple.of("This", "is", "the", "first", "document")), 0d);
+
+
     cntr = corpus.documentFrequencies(false);
     assertEquals(3, cntr.get("the"), 0d);
     assertEquals(3, cntr.get("document"), 0d);
@@ -177,7 +195,7 @@ public class CorpusTest {
       .cache();
     assertEquals(3, corpus.size());
     assertEquals("This is the first document.", corpus.stream().first().get().toString());
-    corpus.annotate(Types.TOKEN);
+    corpus = corpus.annotate(Types.TOKEN);
     Counter<String> cntr = corpus.termFrequencies(false);
     assertEquals(3, cntr.get("the"), 0d);
     assertEquals(3, cntr.get("document"), 0d);
