@@ -30,7 +30,7 @@ import com.davidbracewell.parsing.ParserTokenType;
  */
 public enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
   SCRIPT("<\\s*script\\s*(language\\s*=\\s*\"(?<LANGUAGE>[^\"]+)?\")?\\s*>(?<SCRIPTCONTENT>.*?)<\\s*/\\s*script\\s*>"),
-  PATTERNTOKEN("<[@#]?(\\\\.|[^<>])+>[\\+\\?\\*]?"),
+  PATTERNTOKEN("<@?(\\\\.|[^<>])+>[\\+\\?\\*]?"),
   TAGMATCH("#(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{\\)\\]]+)"),
   ATTRMATCH("\\#(\"[^\"]+\"|[^\\p{Z}:]+):(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{:\\)\\]]+)"),
   LEXICON("\\%(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{\\)\\]]+)"),
@@ -40,16 +40,15 @@ public enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
   STOPWORD("\\{STOPWORD\\}"),
   ANY("\\~(\\d+)?"),
   NOT("\\^"),
-  PATTERNSTART("PATTERN:"),
-  MATCHSTART("MATCH:"),
-  REGISTER("@REGISTER"),
   RANGE("\\{\\d+\\s*,\\s*(\\d+|\\*)\\}"),
   LOOKAHEAD("\\?>"),
   LOOKAHEADPOST("\\(\\?>"),
   NEGLOOKAHEAD("\\?\\!>"),
   NEGLOOKAHEADPOST("\\(\\?\\!>"),
   GROUP("\\(\\?[A-Za-z_]+"),
-  PARENT("\\/>");
+  PARENT("\\/>"),
+
+  ;
   private final String pattern;
 
 
