@@ -21,34 +21,39 @@
 
 package com.davidbracewell.hermes.regex;
 
-import com.davidbracewell.parsing.ParserToken;
+import com.davidbracewell.hermes.tag.RelationType;
+import com.davidbracewell.parsing.ParserTokenType;
 import com.davidbracewell.parsing.expressions.Expression;
 import com.davidbracewell.parsing.expressions.MultivalueExpression;
-import lombok.NonNull;
+import com.davidbracewell.string.StringUtils;
 
 import java.util.Collection;
 
 /**
- * The type Group expression.
- *
  * @author David B. Bracewell
  */
-public class GroupExpression extends MultivalueExpression {
-  /**
-   * The Group name.
-   */
-  public final String groupName;
+public class RelationGroupExpression extends MultivalueExpression {
 
+  public final RelationType relationType;
+  public final String relationValue;
 
   /**
    * Default Constructor
    *
    * @param value The value
-   * @param token the token
+   * @param type  The type of the value
    */
-  public GroupExpression(Collection<Expression> value, @NonNull ParserToken token) {
-    super(value, token.type);
-    this.groupName = token.getText().substring(3, token.getText().length()-1);
+  public RelationGroupExpression(Collection<Expression> value, ParserTokenType type, RelationType relationType, String relationValue) {
+    super(value, type);
+    this.relationType = relationType;
+    this.relationValue = relationValue;
   }
 
-}//END OF GroupExpression
+  @Override
+  public String toString() {
+    String toStr = StringUtils.isNullOrBlank(relationValue) ? StringUtils.EMPTY :
+      ":\"" + relationValue.replace("\"", "\\\"") + "\"";
+    return "{@" + relationType.name() + toStr + " " + super.toString() + "}";
+  }
+
+}//END OF AnnotationExpression

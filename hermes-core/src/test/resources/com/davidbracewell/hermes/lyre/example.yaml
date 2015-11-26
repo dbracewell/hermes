@@ -1,6 +1,6 @@
 
 alice:
-    pattern: (<(?i)alice>)
+    pattern: (?i)alice
     annotations:
       "*":
         type: ENTITY
@@ -8,7 +8,7 @@ alice:
           ENTITY_TYPE: PERSON
           GENDER: FEMALE
 attr:
-    pattern: (?ANIMAL <White> <Rabbit>) <with> (?ATTRIBUTE ~2 <eyes> )
+    pattern: (?ANIMAL White Rabbit) <with> (?ATTRIBUTE ~2 eyes)
     relations:
       ATTRIBUTE:
         type: ATTRIBUTE
@@ -27,7 +27,7 @@ attr:
         type: ATTRIBUTE
 
 attr2:
-    pattern: "(?ENTITY ${ENTITY} #PERSON) (?ATTRIBUTE (<started>|<think>))"
+    pattern: (?ENTITY {ENTITY $PERSON}) (?ATTRIBUTE ( started | think ))
     relations:
       ATTRIBUTE:
         type: ATTRIBUTE

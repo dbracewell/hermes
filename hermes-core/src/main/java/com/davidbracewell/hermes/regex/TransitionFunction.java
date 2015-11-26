@@ -25,8 +25,12 @@ import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.tag.RelationType;
+import com.davidbracewell.string.StringUtils;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -81,7 +85,7 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public String toString() {
-      return "(?" + name + " " + child.toString() + ")";
+      return "(?<" + name + "> " + child.toString() + ")";
     }
 
   }
@@ -160,7 +164,67 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public String toString() {
-      return "${" + type.name() + "} " + child.toString();
+      return "{" + type.name() + " " + child.toString() + "} ";
+    }
+  }
+
+
+  final class RelationMatcher implements TransitionFunction, Serializable {
+    private static final long serialVersionUID = 1L;
+    final RelationType type;
+    final String value;
+    final Function<? super HString, Integer> matcher;
+    final String pattern;
+
+    public RelationMatcher(RelationType type, String value, String pattern, Function<? super HString, Integer> matcher) {
+      this.pattern = pattern;
+      this.matcher = matcher;
+      this.value = value;
+      this.type = type;
+    }
+
+    @Override
+    public int matches(HString input) {
+      for (Annotation a : getTargets(input)) {
+        if (matcher.apply(a) > 0) {
+          return input.tokenLength();
+        }
+      }
+      return 0;
+    }
+
+    private List<Annotation> getTargets(HString input) {
+      if (!input.isAnnotation()) {
+        return Collections.emptyList();
+      }
+      if (StringUtils.isNullOrBlank(value)) {
+        return input.asAnnotation().get().getTargets(type);
+      }
+      return input.asAnnotation().get().getTargets(type, value);
+    }
+
+    @Override
+    public int nonMatch(HString input) {
+      for (Annotation a : getTargets(input)) {
+        if (matcher.apply(a) > 0) {
+          return 0;
+        }
+      }
+      return input.tokenLength();
+    }
+
+    @Override
+    public NFA construct() {
+      NFA nfa = new NFA();
+      nfa.start.connect(nfa.end, this);
+      return nfa;
+    }
+
+    @Override
+    public String toString() {
+      String toStr = StringUtils.isNullOrBlank(value) ? StringUtils.EMPTY :
+        ":\"" + value.replace("\"", "\\\"") + "\"";
+      return "{@" + type.name() + toStr + " " + pattern + "}";
     }
   }
 

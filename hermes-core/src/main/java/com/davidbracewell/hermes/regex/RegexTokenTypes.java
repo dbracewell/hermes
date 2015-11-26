@@ -29,28 +29,27 @@ import com.davidbracewell.parsing.ParserTokenType;
  * @author David B. Bracewell
  */
 public enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
-  SCRIPT("<\\s*script\\s*(language\\s*=\\s*\"(?<LANGUAGE>[^\"]+)?\")?\\s*>(?<SCRIPTCONTENT>.*?)<\\s*/\\s*script\\s*>"),
-  PATTERNTOKEN("<@?(\\\\.|[^<>])+>[\\+\\?\\*]?"),
-  TAGMATCH("#(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{\\)\\]]+)"),
-  ATTRMATCH("\\#(\"[^\"]+\"|[^\\p{Z}:]+):(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{:\\)\\]]+)"),
-  LEXICON("\\%(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{\\)\\]]+)"),
-  ANNOTATION("\\$\\{(\"[^\"]+\"|[^\\p{Z}\\+\\?\\*\\{:\\)\\]]+)\\}"),
+  REGEX("/(\\\\.|[^/>])+?/i?"),
+  PATTERNTOKEN("(\\(\\?i\\))?(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~\\E])+|(\"(\\\\.|[^\"])+?\")"),
+  TAGMATCH("\\$(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~\\E])+"),
+  ATTRMATCH("\\$(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~\\E])+:((\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~\\E])+?|(\"(\\\\.|[^\"])+?\"))"),
+  LEXICON("\\%(\"[^\"]+\"|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~\\E]+)"),
+  ANNOTATION("\\{(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~\\E])+"),
   PUNCTUATION("\\{PUNCT\\}"),
   NUMBER("\\{NUMBER\\}"),
   STOPWORD("\\{STOPWORD\\}"),
-  ANY("\\~(\\d+)?"),
+  ANY("~(\\d+)?"),
   NOT("\\^"),
   RANGE("\\{\\d+\\s*,\\s*(\\d+|\\*)\\}"),
-  LOOKAHEAD("\\?>"),
   LOOKAHEADPOST("\\(\\?>"),
-  NEGLOOKAHEAD("\\?\\!>"),
   NEGLOOKAHEADPOST("\\(\\?\\!>"),
-  GROUP("\\(\\?[A-Za-z_]+"),
-  PARENT("\\/>"),
-
+  GROUP("\\(\\?<[A-Za-z_]+>"),
+  PARENT("/>"),
+  RELATION("@(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~\\E])+(:(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~\\E])+)?"),
+  RELATIONGROUP("\\{@(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~\\E])+(:(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~\\E])+)?"),
   ;
-  private final String pattern;
 
+  private final String pattern;
 
   RegexTokenTypes(String pattern) {
     this.pattern = pattern;

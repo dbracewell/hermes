@@ -23,7 +23,6 @@ package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.HString;
@@ -31,6 +30,7 @@ import com.davidbracewell.hermes.filter.HStringPredicates;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.parsing.*;
 import com.davidbracewell.parsing.expressions.*;
@@ -55,43 +55,44 @@ public final class QueryToPredicate {
       register(CommonTypes.MULTIPLY, new PostfixOperatorHandler(8));
       register(CommonTypes.QUESTION, new PostfixOperatorHandler(8));
       register(RegexTokenTypes.TAGMATCH, new ValueHandler());
+      register(RegexTokenTypes.RELATION, new ValueHandler());
       register(RegexTokenTypes.PATTERNTOKEN, new ValueHandler());
+      register(RegexTokenTypes.REGEX, new ValueHandler());
       register(RegexTokenTypes.ATTRMATCH, new ValueHandler());
       register(RegexTokenTypes.LEXICON, new ValueHandler());
       register(RegexTokenTypes.PUNCTUATION, new ValueHandler());
       register(RegexTokenTypes.NUMBER, new ValueHandler());
       register(RegexTokenTypes.ANY, new ValueHandler());
       register(RegexTokenTypes.STOPWORD, new ValueHandler());
-      register(RegexTokenTypes.ANNOTATION, new PrefixOperatorHandler(12));
+      register(RegexTokenTypes.ANNOTATION, new AnnotationHandler(7));
       register(RegexTokenTypes.NOT, new PrefixOperatorHandler(12));
-      register(CommonTypes.OPENBRACKET, new LogicGroupHandler(14));
+      register(CommonTypes.OPENBRACKET, new LogicGroupHandler(12));
       register(CommonTypes.PIPE, new BinaryOperatorHandler(7, false));
       register(CommonTypes.AMPERSAND, new BinaryOperatorHandler(7, false));
-      register(RegexTokenTypes.LOOKAHEAD, new BinaryOperatorHandler(7, false));
-      register(RegexTokenTypes.LOOKAHEAD, new PrefixOperatorHandler(12));
       register(RegexTokenTypes.LOOKAHEADPOST, new LookAheadHandler(7));
       register(RegexTokenTypes.LOOKAHEADPOST, new LookAheadPrefixHandler(7));
-      register(RegexTokenTypes.NEGLOOKAHEAD, new BinaryOperatorHandler(7, false));
-      register(RegexTokenTypes.NEGLOOKAHEAD, new PrefixOperatorHandler(12));
       register(RegexTokenTypes.NEGLOOKAHEADPOST, new LookAheadHandler(7));
       register(RegexTokenTypes.NEGLOOKAHEADPOST, new LookAheadPrefixHandler(7));
+      register(RegexTokenTypes.RELATIONGROUP, new RelationGroupHandler(7));
       register(RegexTokenTypes.GROUP, new GroupHandler(7));
       register(RegexTokenTypes.PARENT, new PrefixOperatorHandler(1));
       register(RegexTokenTypes.RANGE, new PostfixOperatorHandler(8));
     }
   };
+
   protected static final RegularExpressionLexer lexer = RegularExpressionLexer.builder()
     .add(RegexTokenTypes.ATTRMATCH)
-    .add(RegexTokenTypes.PATTERNTOKEN, "<(\\\\.|[^<>])+>")
-    .add(RegexTokenTypes.LOOKAHEAD)
+    .add(RegexTokenTypes.RELATIONGROUP)
+    .add(RegexTokenTypes.PATTERNTOKEN)
+    .add(RegexTokenTypes.REGEX)
     .add(RegexTokenTypes.LOOKAHEADPOST)
-    .add(RegexTokenTypes.NEGLOOKAHEAD)
     .add(RegexTokenTypes.NEGLOOKAHEADPOST)
     .add(RegexTokenTypes.GROUP)
     .add(CommonTypes.OPENPARENS, "\\((?!\\?)")
     .add(CommonTypes.CLOSEPARENS)
     .add(CommonTypes.OPENBRACKET)
     .add(CommonTypes.CLOSEBRACKET)
+    .add(CommonTypes.CLOSEBRACE)
     .add(CommonTypes.PLUS)
     .add(CommonTypes.MULTIPLY)
     .add(CommonTypes.QUESTION)
@@ -100,6 +101,7 @@ public final class QueryToPredicate {
     .add(RegexTokenTypes.RANGE)
     .add(RegexTokenTypes.TAGMATCH)
     .add(RegexTokenTypes.ANNOTATION)
+    .add(RegexTokenTypes.RELATION)
     .add(RegexTokenTypes.PUNCTUATION)
     .add(RegexTokenTypes.NUMBER)
     .add(RegexTokenTypes.NOT)
@@ -146,16 +148,7 @@ public final class QueryToPredicate {
       if (exp.match(RegexTokenTypes.NOT)) {
         return child.negate();
       }
-      if (exp.match(RegexTokenTypes.ANNOTATION)) {
-        AnnotationType aType = AnnotationType.create(pe.operator.getText().substring(2).replaceFirst("\\}$", ""));
-        return hString -> hString.getStartingHere(aType).stream().anyMatch(child);
-      }
 
-      if (exp.match(RegexTokenTypes.LOOKAHEAD) || exp.match(RegexTokenTypes.NEGLOOKAHEAD) ||
-        exp.match(RegexTokenTypes.LOOKAHEADPOST) || exp.match(RegexTokenTypes.NEGLOOKAHEADPOST)) {
-        TransitionFunction tf = TokenRegex.consumerize(exp);
-        return hString -> tf.matches(hString.asAnnotation().get()) > 0;
-      }
 
     } else if (exp.isInstance(BinaryOperatorExpression.class)) {
       BinaryOperatorExpression boe = Cast.as(exp);
@@ -165,8 +158,7 @@ public final class QueryToPredicate {
         return left.or(right);
       } else if (boe.match(CommonTypes.AMPERSAND)) {
         return left.and(right);
-      } else if (boe.match(RegexTokenTypes.LOOKAHEAD) || boe.match(RegexTokenTypes.NEGLOOKAHEAD) ||
-        exp.match(RegexTokenTypes.LOOKAHEADPOST) || exp.match(RegexTokenTypes.NEGLOOKAHEADPOST)) {
+      } else if (exp.match(RegexTokenTypes.LOOKAHEADPOST) || exp.match(RegexTokenTypes.NEGLOOKAHEADPOST)) {
         TransitionFunction tf = TokenRegex.consumerize(exp);
         return hString -> tf.matches(hString) > 0;
       }
@@ -177,7 +169,22 @@ public final class QueryToPredicate {
         predicate = predicate.and(parse(mve.expressions.get(i)));
       }
       return predicate;
+    } else if (exp.isInstance(MultivalueExpression.class) && exp.match(RegexTokenTypes.ANNOTATION)) {
+      AnnotationExpression mve = Cast.as(exp);
+      SerializablePredicate<HString> predicate = parse(mve.expressions.get(0));
+      for (int i = 1; i < mve.expressions.size(); i++) {
+        predicate = predicate.and(parse(mve.expressions.get(i)));
+      }
+      final SerializablePredicate<HString> fPredicate = predicate;
+      return hString -> hString.getStartingHere(mve.annotationType).stream().anyMatch(fPredicate);
+    } else if (exp.match(RegexTokenTypes.RELATIONGROUP)) {
+      RelationGroupExpression ae = Cast.as(exp);
+      Expression child = ae.expressions.get(0);
+      SerializablePredicate<HString> p = QueryToPredicate.parse(child);
+      TransitionFunction tf = new TransitionFunction.RelationMatcher(ae.relationType, ae.relationValue, child.toString(), (HString a) -> p.test(a) ? a.tokenLength() : 0);
+      return h -> tf.matches(h) > 0;
     }
+
     throw new ParseException("Unknown expression: " + exp.toString());
   }
 
@@ -188,32 +195,33 @@ public final class QueryToPredicate {
     }
 
     if (exp.match(RegexTokenTypes.LEXICON)) {
-      String lexiconName = exp.toString().substring(1).replaceFirst("^\"", "").replaceFirst("\"$", "");
+      String lexiconName = StringUtils.unescape(exp.toString().substring(1).replaceFirst("^\"", "").replaceFirst("\"$", ""), '\\');
       return a -> LexiconManager.getLexicon(lexiconName).test(a);
     }
 
-    if (exp.match(RegexTokenTypes.PATTERNTOKEN)) {
+
+    if (exp.match(RegexTokenTypes.REGEX)) {
       String pattern = exp.toString();
-      pattern = pattern.substring(1, pattern.length() - 1);
-      boolean isRegex = pattern.startsWith("@") && pattern.length() > 1;
-      if (isRegex) pattern = pattern.substring(1);
+      boolean isCaseSensitive = !pattern.endsWith("/i");
+      pattern = pattern.substring(1, pattern.length() - (!isCaseSensitive ? 2 : 1)).replaceAll("\\\\(.)", "\\1");
+      return HStringPredicates.contentRegexMatch(StringUtils.unescape(pattern, '\\'), isCaseSensitive);
+    }
+
+    if (exp.match(RegexTokenTypes.PATTERNTOKEN)) {
+      String pattern = StringUtils.split(exp.toString(), ':').get(0);
       boolean isCaseSensitive = !pattern.startsWith("(?i)");
       if (!isCaseSensitive) pattern = pattern.substring(4);
-
-      if (isRegex) {
-        return HStringPredicates.contentRegexMatch(pattern, isCaseSensitive);
-      }
-      return HStringPredicates.contentMatch(pattern, isCaseSensitive);
+      return HStringPredicates.contentMatch(StringUtils.unescape(pattern, '\\'), isCaseSensitive);
     }
 
     if (exp.match(RegexTokenTypes.TAGMATCH)) {
-      return HStringPredicates.hasTagInstance(exp.toString().substring(1));
+      return HStringPredicates.hasTagInstance(StringUtils.unescape(exp.toString().substring(1), '\\'));
     }
 
     if (exp.match(RegexTokenTypes.ATTRMATCH)) {
       List<String> parts = StringUtils.split(exp.toString().substring(1), ':');
-      Attribute attrName = Attribute.create(parts.get(0));
-      Object attrValue = attrName.getValueType().convert(parts.get(1));
+      Attribute attrName = Attribute.create(StringUtils.unescape(parts.get(0), '\\'));
+      Object attrValue = attrName.getValueType().convert(StringUtils.unescape(parts.get(1), '\\'));
       return HStringPredicates.attributeMatch(attrName, attrValue);
     }
 
@@ -230,6 +238,18 @@ public final class QueryToPredicate {
       if (s.length() == 1) {
         return a -> true;
       }
+    }
+
+    if (exp.match(RegexTokenTypes.RELATION)) {
+      List<String> parts = StringUtils.split(exp.toString().substring(1), ':');
+      RelationType relation = RelationType.create(StringUtils.unescape(parts.get(0), '\\'));
+      String value = parts.size() > 1 ? StringUtils.unescape(parts.get(1), '\\') : null;
+      return h -> h.asAnnotation().filter(a -> {
+        if (value == null) {
+          return a.getTargets(relation).size() > 0;
+        }
+        return a.getTargets(relation, value).size() > 0;
+      }).map(a -> true).orElse(false);
     }
 
     throw new ParseException("Unknown expression: " + exp.toString());

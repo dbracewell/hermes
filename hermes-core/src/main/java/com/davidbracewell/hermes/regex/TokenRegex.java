@@ -23,7 +23,6 @@ package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.parsing.CommonTypes;
 import com.davidbracewell.parsing.ParseException;
@@ -100,6 +99,14 @@ public final class TokenRegex implements Serializable {
       return new TransitionFunction.LogicStatement(child.toString(), (HString a) -> p.test(a) ? a.tokenLength() : 0);
     } else if (exp.match(RegexTokenTypes.GROUP)) {
       return new TransitionFunction.GroupMatcher(combine(exp.expressions), Cast.<GroupExpression>as(exp).groupName);
+    } else if (exp.match(RegexTokenTypes.ANNOTATION)) {
+      AnnotationExpression ae = Cast.as(exp);
+      return new TransitionFunction.AnnotationMatcher(ae.annotationType, combine(ae.expressions));
+    } else if (exp.match(RegexTokenTypes.RELATIONGROUP)) {
+      RelationGroupExpression ae = Cast.as(exp);
+      Expression child = exp.expressions.get(0);
+      SerializablePredicate<HString> p = QueryToPredicate.parse(child);
+      return new TransitionFunction.RelationMatcher(ae.relationType, ae.relationValue, child.toString(), (HString a) -> p.test(a) ? a.tokenLength() : 0);
     }
     throw new ParseException("Unknown expression: " + exp.toString());
   }
@@ -116,32 +123,6 @@ public final class TokenRegex implements Serializable {
     }
     return c;
   }
-
-//  private static SerializableFunction<Annotation, Integer> toFunction(Expression exp) throws ParseException {
-//    if (exp.isInstance(BinaryOperatorExpression.class)) {
-//      BinaryOperatorExpression boe = Cast.as(exp);
-//      TransitionFunction tf1 = consumerize(boe.left);
-//      TransitionFunction tf2 = consumerize(boe.right);
-//      if (exp.match(CommonTypes.PIPE)) {
-//        return a -> Math.max(tf1.matches(a), tf2.matches(a));
-//      } else if (exp.match(CommonTypes.AMPERSAND)) {
-//        return a -> {
-//          int i = tf1.matches(a);
-//          int j = tf2.matches(a);
-//          if (i > 0 && j > 0) {
-//            return Math.max(i, j);
-//          }
-//          return 0;
-//        };
-//      }
-//    }
-//    if (exp.match(RegexTokenTypes.NOT)) {
-//      TransitionFunction tf = consumerize(Cast.<PrefixExpression>as(exp).right);
-//      return a -> tf.nonMatch(a);
-//    }
-//    TransitionFunction tf = consumerize(exp);
-//    return a -> tf.matches(a);
-//  }
 
   private static TransitionFunction handlePostfix(PostfixExpression postfix) throws ParseException {
     if (postfix.operator.type.isInstance(CommonTypes.QUESTION)) {
@@ -195,27 +176,11 @@ public final class TokenRegex implements Serializable {
     if (exp.match(RegexTokenTypes.NOT)) {
       return new TransitionFunction.Not(consumerize(exp.right));
     }
-    if (exp.match(RegexTokenTypes.ANNOTATION)) {
-      AnnotationType typeName = AnnotationType.create(exp.operator.getText().substring(2).replaceFirst("\\}$", ""));
-      return new TransitionFunction.AnnotationMatcher(typeName, consumerize(exp.right));
-    }
-
-    if (exp.match(RegexTokenTypes.LOOKAHEAD)) {
-      TransitionFunction tr = new TransitionFunction.PredicateMatcher("", a -> true);
-      return new TransitionFunction.LookAhead(tr, consumerize(exp.right), false);
-    }
-
-    if (exp.match(RegexTokenTypes.ANNOTATION)) {
-      TransitionFunction tr = new TransitionFunction.PredicateMatcher("", a -> true);
-      return new TransitionFunction.LookAhead(tr, consumerize(exp.right), true);
-    }
-
 
     throw new ParseException("Unknown expression: " + exp.toString());
   }
 
   protected static TransitionFunction consumerize(Expression exp) throws ParseException {
-
     //Handle Sequences
     if (exp.isInstance(MultivalueExpression.class)) {
       return handleMultivalue(exp.as(MultivalueExpression.class));
@@ -236,12 +201,12 @@ public final class TokenRegex implements Serializable {
       return new TransitionFunction.Alternation(consumerize(boe.left), consumerize(boe.right));
     }
 
-    if (exp.match(RegexTokenTypes.LOOKAHEAD) || exp.match(RegexTokenTypes.LOOKAHEADPOST)) {
+    if (exp.match(RegexTokenTypes.LOOKAHEADPOST)) {
       BinaryOperatorExpression boe = Cast.as(exp);
       return new TransitionFunction.LookAhead(consumerize(boe.left), consumerize(boe.right), false);
     }
 
-    if (exp.match(RegexTokenTypes.NEGLOOKAHEAD) || exp.match(RegexTokenTypes.NEGLOOKAHEADPOST)) {
+    if (exp.match(RegexTokenTypes.NEGLOOKAHEADPOST)) {
       BinaryOperatorExpression boe = Cast.as(exp);
       return new TransitionFunction.LookAhead(consumerize(boe.left), consumerize(boe.right), true);
     }
@@ -252,7 +217,7 @@ public final class TokenRegex implements Serializable {
       if (s.length() > 1) {
         high = Integer.parseInt(s.substring(1));
       }
-      return new TransitionFunction.Range(new TransitionFunction.PredicateMatcher("<.*>", a -> true), 0, high);
+      return new TransitionFunction.Range(new TransitionFunction.PredicateMatcher("/.*/", a -> true), 0, high);
     }
 
 
