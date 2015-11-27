@@ -36,21 +36,6 @@ import java.util.Optional;
 
 
 /**
- * <p>A regular expression that matches over <code>Token</code>s on a <code>Text</code>.</p>
- * <p>The format of the regular expression is token matches and regular expression operators.
- * A token match is in the form of <code>"{Text}"</code> where <code>{Text}</code> is the
- * text to match. The content in the token match can be a regular expression, which is
- * denoted by "RE:{Text}". Valid operators on tokens are +, *, ?, and |.
- * </p>
- * <p>An example is as follows:
- * <code>"The" ("man"|"woman") ("is"|"was") "on" "the" "hill"</code>
- * would match
- * "The man is on the hill"
- * "The man was on the hill"
- * "The woman is on the hill"
- * "The woman was on the hill"
- * </p>
- *
  * @author David B. Bracewell
  */
 public final class TokenRegex implements Serializable {
@@ -174,6 +159,9 @@ public final class TokenRegex implements Serializable {
       return new TransitionFunction.ParentMatcher(consumerize(exp.right));
     }
     if (exp.match(RegexTokenTypes.NOT)) {
+      if( exp.right.match(RegexTokenTypes.LOOKAHEADPOST) || exp.right.match(RegexTokenTypes.NEGLOOKAHEADPOST)){
+        throw new ParseException("Cannot negate a lookahead.");
+      }
       return new TransitionFunction.Not(consumerize(exp.right));
     }
 

@@ -28,7 +28,7 @@ import com.davidbracewell.parsing.ParserToken;
 import com.davidbracewell.parsing.expressions.BinaryOperatorExpression;
 import com.davidbracewell.parsing.expressions.Expression;
 import com.davidbracewell.parsing.expressions.MultivalueExpression;
-import com.davidbracewell.parsing.handlers.InfixHandler;
+import com.davidbracewell.parsing.handlers.PostfixOperatorHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ import java.util.List;
 /**
  * @author David B. Bracewell
  */
-public class LookAheadHandler extends InfixHandler {
+public class LookAheadHandler extends PostfixOperatorHandler {
   /**
    * Default constructor
    *

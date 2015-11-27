@@ -27,6 +27,7 @@ import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.parsing.Parser;
 import com.davidbracewell.parsing.ParserToken;
 import com.davidbracewell.parsing.expressions.Expression;
+import com.davidbracewell.parsing.expressions.ValueExpression;
 import com.davidbracewell.parsing.handlers.PrefixHandler;
 import com.davidbracewell.string.StringUtils;
 
@@ -56,6 +57,9 @@ class AnnotationHandler extends PrefixHandler {
         throw new ParseException("Premature end of expression: " + token.getText());
       }
       results.add(next);
+    }
+    if (results.size() == 0) {
+      results.add(new ValueExpression("~", RegexTokenTypes.ANY));
     }
     parser.tokenStream().consume(CommonTypes.CLOSEBRACE);
     AnnotationType type = AnnotationType.create(StringUtils.unescape(token.getText().substring(1), '\\'));

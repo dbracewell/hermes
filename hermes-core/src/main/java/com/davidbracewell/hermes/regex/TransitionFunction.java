@@ -31,6 +31,7 @@ import com.davidbracewell.string.StringUtils;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -100,18 +101,22 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public int matches(HString input) {
-      if (input.isAnnotation()) {
-        input.asAnnotation().get().getParent().map(child::matches).orElse(0);
+      Optional<Annotation> parent = input.asAnnotation().map(Annotation::getParent).get();
+      if (parent.isPresent()) {
+        return child.matches(parent.get());
       }
       return 0;
     }
 
     @Override
     public int nonMatch(HString input) {
-      if (input.isAnnotation()) {
-        input.asAnnotation().get().getParent().map(child::nonMatch).orElse(0);
+      Optional<Annotation> parent = input.asAnnotation().map(Annotation::getParent).get();
+      if (parent.isPresent()) {
+        if (child.matches(parent.get()) > 0) {
+          return 0;
+        }
       }
-      return 0;
+      return 1;
     }
 
     @Override
@@ -167,7 +172,6 @@ interface TransitionFunction extends Serializable {
       return "{" + type.name() + " " + child.toString() + "} ";
     }
   }
-
 
   final class RelationMatcher implements TransitionFunction, Serializable {
     private static final long serialVersionUID = 1L;
@@ -298,15 +302,7 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public int nonMatch(HString input) {
-      int m = child.nonMatch(input);
-      if (m > 0) {
-        Annotation next = next(input, m);
-        if (negativeLookAhead) {
-          return lookAhead.matches(next) > 0 ? m : 0;
-        }
-        return lookAhead.nonMatch(next) > 0 ? m : 0;
-      }
-      return 0;
+      throw new UnsupportedOperationException();
     }
 
     @Override
@@ -480,6 +476,7 @@ interface TransitionFunction extends Serializable {
         }
         return c2.nonMatch(next);
       }
+
       i = c1.nonMatch(input);
       Annotation next = input.lastToken().next();
       for (int j = 1; j < i; j++) {

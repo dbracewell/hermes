@@ -53,7 +53,11 @@ class SequenceGroupHandler extends PrefixHandler {
   public Expression parse(Parser parser, ParserToken token) throws ParseException {
     List<Expression> results = new ArrayList<>();
     while (!parser.tokenStream().nonConsumingMatch(closeGroupType)) {
-      results.add(parser.next());
+      Expression expression = parser.next();
+      if( expression == null ){
+        throw new ParseException("Premature end of expression trying to match closing parenthesis");
+      }
+      results.add(expression);
     }
     parser.tokenStream().consume(closeGroupType);
     return new MultivalueExpression(results, token.type);
