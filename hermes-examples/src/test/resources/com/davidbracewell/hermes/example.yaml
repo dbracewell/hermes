@@ -1,5 +1,5 @@
 - name: lives_with
-  pattern: (/lives?/|/dwells?/) with
+  pattern: /^(live|dwell)s?$/ with
   relations:
     - name: person1
       type: Attribute
@@ -13,3 +13,10 @@
         relation: DEPENDENCY:pobj
         annotation: PHRASE_CHUNK
         constraint: $NOUN
+
+- name: NP
+  pattern: $DETERMINER* $ADJECTIVE* $VBG* $NOUN+
+  annotations:
+    - capture: "*"
+      type: ENTITY
+      attributes: [ENTITY_TYPE: NP]
