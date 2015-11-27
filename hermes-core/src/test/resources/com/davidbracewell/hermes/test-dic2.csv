@@ -1,4 +1,4 @@
 alice,PERSON
 white rabbit,ANIMAL
 rabbit,ANIMAL
-think,ACTION,(?> <it>)
+think,ACTION,(?> it)

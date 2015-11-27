@@ -1,6 +1,6 @@
 alice,PERSON,0.8
 white rabbit,ANIMAL,1.0
 rabbit,ANIMAL,0.9
-think,ACTION,0.7,(?> <it>)
-think,ACTION,0.9,(/> <it>)
+think,ACTION,0.7,(?> it)
+think,ACTION,0.9,(/> it)
 think,ACTION,0.2

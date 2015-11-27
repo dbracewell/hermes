@@ -147,6 +147,7 @@ public final class LyreProgram implements Serializable {
       TokenMatcher matcher = rule.getRegex().matcher(document);
       while (matcher.find()) {
         ArrayListMultimap<String, Annotation> groups = ArrayListMultimap.create();
+
         //Process all the annotation providers
         rule.getAnnotationProviders().forEach(ap -> {
           if (ap.getGroup().equals("*")) {
@@ -171,8 +172,8 @@ public final class LyreProgram implements Serializable {
 
         HashMultimap<String, Tuple2<Annotation, Relation>> relations = HashMultimap.create();
         for (LyreRelationProvider rp : rule.getRelationProviders()) {
-          List<Annotation> sourceAnnotations = rp.getSource().getAnnotations(groups);
-          List<Annotation> targetAnnotations = rp.getTarget().getAnnotations(groups);
+          List<Annotation> sourceAnnotations = rp.getSource().getAnnotations(groups,matcher);
+          List<Annotation> targetAnnotations = rp.getTarget().getAnnotations(groups,matcher);
           for (Annotation source : sourceAnnotations) {
             for (Annotation target : targetAnnotations) {
               relations.put(rp.getName(), Tuple2.of(source, new Relation(rp.getRelationType(), rp.getRelationValue(), target.getId())));
@@ -182,6 +183,7 @@ public final class LyreProgram implements Serializable {
             }
           }
         }
+
 
         rule.getRelationProviders().stream()
           .filter(rp -> StringUtils.isNullOrBlank(rp.getRequires()) || relations.containsKey(rp.getRequires()))

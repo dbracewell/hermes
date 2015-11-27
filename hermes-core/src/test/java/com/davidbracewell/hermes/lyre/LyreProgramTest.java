@@ -22,7 +22,10 @@
 package com.davidbracewell.hermes.lyre;
 
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Pipeline;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.annotator.DocumentProvider;
 import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.io.Resources;
@@ -45,18 +48,22 @@ public class LyreProgramTest {
     Pipeline.process(doc, Types.TOKEN, Types.SENTENCE);
     p.execute(doc);
     List<Annotation> entities = doc.get(Types.ENTITY);
-    assertEquals(5, entities.size());
+    assertEquals(9, entities.size());
 
     assertEquals("Alice", entities.get(0).toString());
     assertEquals("Alice", entities.get(1).toString());
     assertEquals("White Rabbit", entities.get(2).toString());
-    assertEquals("Alice", entities.get(3).toString());
+    assertEquals("eyes", entities.get(3).toString());
     assertEquals("Alice", entities.get(4).toString());
+    assertEquals("Rabbit", entities.get(5).toString());
+    assertEquals("Rabbit", entities.get(6).toString());
+    assertEquals("Alice", entities.get(7).toString());
+    assertEquals("rabbit", entities.get(8).toString());
 
 
     assertEquals(1, entities.get(2).getRelations().size());
     assertEquals(RelationType.create("ATTRIBUTE"), entities.get(2).getRelations().stream().findFirst().get().getType());
-    assertEquals("EYES", entities.get(2).getRelations().stream().findFirst().get().getValue());
+    assertEquals("HAS_A", entities.get(2).getRelations().stream().findFirst().get().getValue());
 
   }
 }

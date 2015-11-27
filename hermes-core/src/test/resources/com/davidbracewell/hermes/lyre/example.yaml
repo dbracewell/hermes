@@ -2,7 +2,7 @@
 - name: person
   pattern: ((?i)alice|(?i)rabbit|((?i)white (?i)rabbit))
   annotations:
-    "*":
+    - capture: '*'
       type: ENTITY
       attributes: [ENTITY_TYPE: PERSON, CONFIDENCE: 1.0]
 
@@ -10,7 +10,7 @@
 - name: body_parts
   pattern: ((?i)eyes|(?i)ears)
   annotations:
-    "*":
+    - capture: '*'
       type: ENTITY
       attributes: [ENTITY_TYPE: BODY_PART, CONFIDENCE: 1.0]
 
@@ -18,7 +18,8 @@
 - name: body_part_attributes
   pattern: (?<PERSON> {ENTITY $PERSON}) with ~3 (?<BODY_PART> {ENTITY $BODY_PART})
   relations:
-    - type: ATTRIBUTE
+    - name: has_a
+      type: ATTRIBUTE
       value: HAS_A
       source:
         capture: PERSON
@@ -26,11 +27,4 @@
       target:
         capture: BODY_PART
         annotation: ENTITY
-
-- name: sov
-  pattern: "{@DEPENDENCY:nsubj $VERB} ~ $VERB ~ {@DEPENDENCY:dobj $VERB}"
-  annotations:
-    "*":
-      type: ENTITY
-      attributes: [ENTITY_TYPE: TRIPLE, CONFIDENCE: 1.0]
 

@@ -26,6 +26,7 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.regex.QueryToPredicate;
+import com.davidbracewell.hermes.regex.TokenMatcher;
 import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.hermes.tag.Relations;
 import com.davidbracewell.parsing.ParseException;
@@ -39,6 +40,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The type Lyre relation point.
@@ -104,27 +106,38 @@ public class LyreRelationPoint {
     return builder.build();
   }
 
-  /**
-   * Gets annotations.
-   *
-   * @param groups the groups
-   * @return the annotations
-   */
-  public List<Annotation> getAnnotations(Multimap<String, Annotation> groups) {
-    if (relationType == null) {
+  private Stream<Annotation> getAnnotationStream(Multimap<String, Annotation> groups, TokenMatcher matcher) {
+    if (groups.containsKey(captureGroup)) {
       return groups.get(captureGroup).stream()
         .flatMap(a -> {
           if (annotationType == null) {
             return Collections.singleton(a).stream();
           }
           return a.get(annotationType).stream();
-        })
-        .filter(constraint)
-        .collect(Collectors.toList());
+        });
+    }
+    return matcher.group(captureGroup).stream()
+      .flatMap(hString -> {
+        if (annotationType == null) {
+          return Stream.empty();
+        }
+        return hString.get(annotationType).stream();
+      });
+  }
+
+  /**
+   * Gets annotations.
+   *
+   * @param groups the groups
+   * @return the annotations
+   */
+  public List<Annotation> getAnnotations(Multimap<String, Annotation> groups, TokenMatcher matcher) {
+    if (relationType == null) {
+      return getAnnotationStream(groups, matcher).filter(constraint).collect(Collectors.toList());
     }
 
     if (StringUtils.isNullOrBlank(relationValue)) {
-      return groups.get(captureGroup).stream()
+      return getAnnotationStream(groups, matcher)
         .flatMap(a -> {
             if (relationType.equals(Relations.DEPENDENCY)) {
               return a.getChildren().stream();
@@ -141,7 +154,7 @@ public class LyreRelationPoint {
         .collect(Collectors.toList());
     }
 
-    return groups.get(captureGroup).stream()
+    return getAnnotationStream(groups, matcher)
       .flatMap(a -> {
           if (relationType.equals(Relations.DEPENDENCY)) {
             return a.getChildren().stream().filter(a2 -> a2.getTargets(Relations.DEPENDENCY, relationValue).contains(a));
