@@ -1,38 +1,10 @@
-
-- name: svo
-  pattern: $VERB
-  relations:
-    - name: subject
-      type: Attribute
-      value: SUBJECT
-      requires: theme
-      source:
-        relation: DEPENDENCY:nsubj
-        annotation: PHRASE_CHUNK
-        constraint: $NOUN
-      target:
-        capture: "*"
-        annotation: PHRASE_CHUNK
-    - name: theme
-      type: Attribute
-      value: THEME
-      requires: subject
-      source:
-        relation: DEPENDENCY:dobj
-        annotation: PHRASE_CHUNK
-        constraint: $NOUN
-      target:
-        capture: "*"
-        annotation: PHRASE_CHUNK
-
-
 - name: lives_with
-  pattern: (lives|dwells) with
+  pattern: (/lives?/|/dwells?/) with
   relations:
     - name: person1
       type: Attribute
       value: LIVES_WITH
-      requires: person2
+      reciprocal: true
       source:
         relation: DEPENDENCY:nsubj
         annotation: PHRASE_CHUNK
@@ -41,22 +13,3 @@
         relation: DEPENDENCY:pobj
         annotation: PHRASE_CHUNK
         constraint: $NOUN
-    - name: person2
-      type: Attribute
-      value: LIVES_WITH
-      requires: person1
-      source:
-        relation: DEPENDENCY:pobj
-        annotation: PHRASE_CHUNK
-        constraint: $NOUN
-      target:
-        relation: DEPENDENCY:nsubj
-        annotation: PHRASE_CHUNK
-        constraint: $NOUN
-
-- name: location
-  pattern: '{PHRASE_CHUNK $PP} (?<LOCATION> {PHRASE_CHUNK $NP} )'
-  annotations:
-    - capture: LOCATION
-      type: ENTITY
-      attributes: [ENTITY_TYPE: LOCATION, CONFIDENCE: 1.0]

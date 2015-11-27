@@ -176,6 +176,9 @@ public final class LyreProgram implements Serializable {
           for (Annotation source : sourceAnnotations) {
             for (Annotation target : targetAnnotations) {
               relations.put(rp.getName(), Tuple2.of(source, new Relation(rp.getRelationType(), rp.getRelationValue(), target.getId())));
+              if (rp.isReciprocal()) {
+                relations.put(rp.getName(), Tuple2.of(target, new Relation(rp.getRelationType(), rp.getRelationValue(), source.getId())));
+              }
             }
           }
         }

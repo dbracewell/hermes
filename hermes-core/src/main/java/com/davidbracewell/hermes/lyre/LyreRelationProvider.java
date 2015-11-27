@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.lyre;
 
+import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.tag.RelationType;
 import lombok.Builder;
 import lombok.Value;
@@ -42,6 +43,7 @@ public class LyreRelationProvider implements Serializable {
   private final String relationValue;
   private final LyreRelationPoint source;
   private final LyreRelationPoint target;
+  private final boolean isReciprocal;
 
 
   protected static LyreRelationProvider fromMap(Map<String, Object> groupMap) throws IOException {
@@ -61,6 +63,7 @@ public class LyreRelationProvider implements Serializable {
       .requires(groupMap.containsKey("requires") ? groupMap.get("requires").toString() : null)
       .relationType(RelationType.create(groupMap.get("type").toString()))
       .relationValue(groupMap.get("value").toString())
+      .isReciprocal(Val.of(groupMap.get("reciprocal")).asBooleanValue(false))
       .source(LyreRelationPoint.fromMap(sourceMap))
       .target(LyreRelationPoint.fromMap(targetMap))
       .build();

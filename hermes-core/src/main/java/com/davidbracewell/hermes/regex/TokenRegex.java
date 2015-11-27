@@ -284,4 +284,9 @@ public final class TokenRegex implements Serializable {
     return pattern;
   }
 
+
+  @Override
+  public String toString() {
+    return pattern;
+  }
 }//END OF TokenRegex
