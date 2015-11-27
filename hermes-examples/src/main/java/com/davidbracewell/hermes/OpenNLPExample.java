@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.annotators.MaltParserAnnotator;
+import com.davidbracewell.hermes.annotator.MaltParserAnnotator;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.DocumentFormats;
 import com.davidbracewell.io.Resources;

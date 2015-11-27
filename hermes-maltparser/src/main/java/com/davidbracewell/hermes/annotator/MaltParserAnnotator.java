@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.annotators;
+package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
@@ -27,7 +27,6 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Relation;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.annotator.SentenceLevelAnnotator;
 import com.davidbracewell.hermes.tag.Relations;
 import com.google.common.base.Throwables;
 import org.maltparser.concurrent.ConcurrentMaltParserModel;

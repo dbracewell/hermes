@@ -16,6 +16,7 @@ public class SparkExample implements Serializable {
   public static void main(String[] args) throws Exception {
     Config.initialize("");
     Config.setProperty("TESTING", "IT WORKED");
+    Config.setProperty("spark.master", "local[*]");
 
     Corpus corpus = Corpus.builder()
       .distributed()
