@@ -24,19 +24,57 @@ package com.davidbracewell.hermes.lyre;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.Attrs;
+import lombok.Builder;
 import lombok.Value;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author David B. Bracewell
  */
 @Value
-class LyreAnnotationProvider implements Serializable{
+@Builder
+class LyreAnnotationProvider implements Serializable {
   private static final long serialVersionUID = 1L;
   private final String group;
   private final AnnotationType annotationType;
   private final Map<Attribute, Val> attributes;
+
+  protected static LyreAnnotationProvider fromMap(Map<String, Object> groupMap, String programName, String ruleName) throws IOException {
+    LyreAnnotationProviderBuilder builder = builder();
+
+    if (!groupMap.containsKey("type")) {
+      throw new IOException("An annotation must provide a type.");
+    }
+
+    builder.annotationType(AnnotationType.create(groupMap.get("type").toString()));
+    builder.group(
+      groupMap.containsKey("capture") ? groupMap.get("capture").toString() : "*"
+    );
+    Map<Attribute, Val> attributeValMap = new HashMap<>();
+    if (groupMap.containsKey("attributes")) {
+      attributeValMap = readAttributes(LyreProgram.ensureList(groupMap.get("attributes"), "Attributes should be specified as a list."));
+    }
+    attributeValMap.put(Attrs.LYRE_RULE, Val.of(programName + "::" + ruleName));
+    builder.attributes(attributeValMap);
+    return builder.build();
+  }
+
+  private static Map<Attribute, Val> readAttributes(List<Object> list) throws IOException {
+    Map<Attribute, Val> result = new HashMap<>();
+    for (Object o : list) {
+      Map<String, Object> m = LyreProgram.ensureMap(o, "Attribute values should be key-value pairs");
+      m.entrySet().forEach(entry -> {
+        Attribute attribute = Attribute.create(entry.getKey());
+        result.put(attribute, Val.of(attribute.getValueType().convert(entry.getValue())));
+      });
+    }
+    return result;
+  }
 
 }//END OF LyreAnnotationProvider

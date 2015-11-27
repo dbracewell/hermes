@@ -229,6 +229,40 @@ public final class Annotation extends Fragment implements Serializable {
   }
 
   /**
+   * Gets sources.
+   *
+   * @param type  the type
+   * @param value the value
+   * @return the sources
+   */
+  public List<Annotation> getSources(@NonNull RelationType type, @NonNull String value) {
+    List<Annotation> sources = new LinkedList<>();
+    document().getAnnotationSet().forEach(a -> {
+      if (a.getTargets(type, value).stream().filter(r -> r == this).count() > 0) {
+        sources.add(a);
+      }
+    });
+    return sources;
+  }
+
+  /**
+   * Gets sources.
+   *
+   * @param type the type
+   * @return the sources
+   */
+  public List<Annotation> getSources(@NonNull RelationType type) {
+    List<Annotation> sources = new LinkedList<>();
+    document().getAnnotationSet().forEach(a -> {
+      if (a.getTargets(type).stream().filter(r -> r == this).count() > 0) {
+        sources.add(a);
+      }
+    });
+    return sources;
+  }
+
+
+  /**
    * Remove relation.
    *
    * @param relation the relation

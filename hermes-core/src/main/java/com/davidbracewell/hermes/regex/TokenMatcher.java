@@ -22,9 +22,9 @@
 package com.davidbracewell.hermes.regex;
 
 
-import com.clearspring.analytics.util.Preconditions;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
+import com.google.common.base.Preconditions;
 
 import java.util.Collections;
 import java.util.List;

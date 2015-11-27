@@ -26,20 +26,21 @@ import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.regex.TokenMatcher;
 import com.davidbracewell.hermes.regex.TokenRegex;
-import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Preconditions;
+import com.davidbracewell.tuple.Tuple2;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import lombok.NonNull;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The type Lyre program.
@@ -58,15 +59,6 @@ public final class LyreProgram implements Serializable {
   }
 
   /**
-   * Instantiates a new Lyre program.
-   *
-   * @param rules the rules
-   */
-  public LyreProgram(Collection<LyreRule> rules) {
-    this.rules.addAll(rules);
-  }
-
-  /**
    * Read lyre program.
    *
    * @param resource the resource
@@ -75,68 +67,47 @@ public final class LyreProgram implements Serializable {
    */
   public static LyreProgram read(@NonNull Resource resource) throws IOException {
     LyreProgram program = new LyreProgram();
+
     try (Reader reader = resource.reader()) {
+      List<Object> rules = ensureList(new Yaml().load(reader), "Lyre rules should be specified in a list");
 
-      Map<String, Object> rules = ensureMap(new Yaml().load(reader));
-
-
-      for (Map.Entry<String, Object> entry : rules.entrySet()) {
-        Map<String, Object> ruleMap = ensureMap(entry.getValue());
+      for (Object entry : rules) {
+        Map<String, Object> ruleMap = ensureMap(entry, "Rule entry should be a map");
+        String ruleName = Val.of(ruleMap.get("name")).asString();
         String pattern = Val.of(ruleMap.get("pattern")).asString();
         if (StringUtils.isNullOrBlank(pattern)) {
-          throw new IOException("Invalid format at: " + entry.getKey() + " : " + entry.getValue());
+          throw new IOException("No pattern specified: " + entry);
         }
-
+        if (StringUtils.isNullOrBlank(ruleName)) {
+          throw new IOException("No rule name specified: " + entry);
+        }
 
         List<LyreAnnotationProvider> annotationProviders = new LinkedList<>();
         if (ruleMap.containsKey("annotations")) {
-          Map<String, Object> annotationMap = ensureMap(ruleMap.get("annotations"));
-          for (String groupName : annotationMap.keySet()) {
-            Map<String, Object> groupMap = ensureMap(annotationMap.get(groupName));
-            Preconditions.checkNotNull(groupMap.get("type"), "Annotation must provide type");
-            AnnotationType annotationType = AnnotationType.create(groupMap.get("type").toString());
-            Map<Attribute, Val> attributeValMap = new HashMap<>();
-            if (groupMap.containsKey("attributes")) {
-              attributeValMap = readAttributes(ensureMap(groupMap.get("attributes")));
-            }
-            attributeValMap.put(Attrs.LYRE_RULE, Val.of(resource.descriptor() + "::" + entry.getKey()));
-            annotationProviders.add(new LyreAnnotationProvider(groupName, annotationType, attributeValMap));
+          List<Object> annotationList = ensureList(ruleMap.get("annotations"), "Annotations should be specified as a list.");
+          for (Object o : annotationList) {
+            annotationProviders.add(LyreAnnotationProvider.fromMap(ensureMap(o, "Annotation entries should be specified as a map."), resource.descriptor(), ruleName));
           }
         }
 
         List<LyreRelationProvider> relationProviders = new LinkedList<>();
         if (ruleMap.containsKey("relations")) {
-          Map<String, Object> relationMap = ensureMap(ruleMap.get("relations"));
-          for (String relationValue : relationMap.keySet()) {
-            Map<String, Object> groupMap = ensureMap(relationMap.get(relationValue));
-            Preconditions.checkNotNull(groupMap.get("type"), "Relation must provide type");
-            Preconditions.checkNotNull(groupMap.get("source"), "Relation must provide source");
-            Preconditions.checkNotNull(groupMap.get("target"), "Relation must provide target");
-            RelationType type = RelationType.create(groupMap.get("type").toString());
-
-            Map<String, Object> sourceMap = ensureMap(groupMap.get("source"));
-            AnnotationType sourceType = sourceMap.containsKey("annotation") ? AnnotationType.create(sourceMap.get("annotation").toString()) : null;
-            String source = sourceMap.get("capture").toString();
-
-            Map<String, Object> targetMap = ensureMap(groupMap.get("target"));
-            AnnotationType targetType = targetMap.containsKey("annotation") ? AnnotationType.create(targetMap.get("annotation").toString()) : null;
-            String target = targetMap.get("capture").toString();
-
-            relationValue = groupMap.containsKey("value") ? groupMap.get("value").toString() : relationValue;
-            relationProviders.add(new LyreRelationProvider(type, relationValue, source, sourceType, target, targetType));
+          List<Object> relations = ensureList(ruleMap.get("relations"), "Relations should be specified as a list.");
+          for (Object o : relations) {
+            relationProviders.add(LyreRelationProvider.fromMap(ensureMap(o, "Relation entries should be specified as a map.")));
           }
         }
 
         try {
           program.rules.add(new LyreRule(
             resource.descriptor(),
-            entry.getKey(),
+            ruleName,
             TokenRegex.compile(pattern),
             annotationProviders,
             relationProviders
           ));
         } catch (ParseException e) {
-          throw new IOException("Invalid pattern for rule " + entry.getKey());
+          throw new IOException("Invalid pattern for rule " + ruleName);
         }
 
       }
@@ -145,20 +116,18 @@ public final class LyreProgram implements Serializable {
     return program;
   }
 
-  private static Map<String, Object> ensureMap(Object o) throws IOException {
-    if (!(o instanceof Map)) {
-      throw new IOException("Invalid Lyre Format");
+  protected static List<Object> ensureList(Object o, String error) throws IOException {
+    if (!(o instanceof List)) {
+      throw new IOException("Invalid Lyre Format: " + error);
     }
     return Cast.as(o);
   }
 
-  private static Map<Attribute, Val> readAttributes(Map<String, Object> map) {
-    Map<Attribute, Val> result = new HashMap<>();
-    map.entrySet().forEach(entry -> {
-      Attribute attribute = Attribute.create(entry.getKey());
-      result.put(attribute, Val.of(attribute.getValueType().convert(entry.getValue())));
-    });
-    return result;
+  protected static Map<String, Object> ensureMap(Object o, String error) throws IOException {
+    if (!(o instanceof Map)) {
+      throw new IOException("Invalid Lyre Format: " + error);
+    }
+    return Cast.as(o);
   }
 
   private Annotation createOrGet(Document document, AnnotationType type, HString span, Map<Attribute, Val> attributeValMap) {
@@ -168,26 +137,23 @@ public final class LyreProgram implements Serializable {
       .orElseGet(() -> document.createAnnotation(type, span, attributeValMap));
   }
 
-
   /**
    * Execute.
    *
    * @param document the document
    */
   public void execute(@NonNull Document document) {
-    rules.forEach(rule -> {
+    for (LyreRule rule : rules) {
       TokenMatcher matcher = rule.getRegex().matcher(document);
       while (matcher.find()) {
-
         ArrayListMultimap<String, Annotation> groups = ArrayListMultimap.create();
+        //Process all the annotation providers
         rule.getAnnotationProviders().forEach(ap -> {
-
           if (ap.getGroup().equals("*")) {
             groups.put(
               ap.getGroup(),
               createOrGet(document, ap.getAnnotationType(), matcher.group(), ap.getAttributes())
             );
-
           } else {
             matcher.group(ap.getGroup()).forEach(g ->
               groups.put(
@@ -198,25 +164,30 @@ public final class LyreProgram implements Serializable {
           }
         });
 
+        if (!groups.containsKey("*")) {
+          groups.putAll("*", matcher.group().tokens());
+        }
 
-        rule.getRelationProviders().forEach(rp -> {
-          List<Annotation> sourceAnnotations = rp.getSourceType() == null ?
-            groups.get(rp.getSource()) :
-            matcher.group(rp.getSource()).stream().flatMap(h -> h.get(rp.getSourceType()).stream()).collect(Collectors.toList());
 
-          List<Annotation> targetAnnotations = rp.getTargetType() == null ?
-            groups.get(rp.getTarget()) :
-            matcher.group(rp.getTarget()).stream().flatMap(h -> h.get(rp.getTargetType()).stream()).collect(Collectors.toList());
+        HashMultimap<String, Tuple2<Annotation, Relation>> relations = HashMultimap.create();
+        for (LyreRelationProvider rp : rule.getRelationProviders()) {
+          List<Annotation> sourceAnnotations = rp.getSource().getAnnotations(groups);
+          List<Annotation> targetAnnotations = rp.getTarget().getAnnotations(groups);
+          for (Annotation source : sourceAnnotations) {
+            for (Annotation target : targetAnnotations) {
+              relations.put(rp.getName(), Tuple2.of(source, new Relation(rp.getRelationType(), rp.getRelationValue(), target.getId())));
+            }
+          }
+        }
 
-          sourceAnnotations.forEach(source ->
-            targetAnnotations.stream().filter(t -> t != source).forEach(target ->
-              source.addRelation(new Relation(rp.getType(), rp.getValue(), target.getId()))
-            )
-          );
-        });
+        rule.getRelationProviders().stream()
+          .filter(rp -> StringUtils.isNullOrBlank(rp.getRequires()) || relations.containsKey(rp.getRequires()))
+          .forEach(rp -> relations.get(rp.getName()).forEach(t -> t.getV1().addRelation(t.getV2())));
 
       }
-    });
+    }
+
+
   }
 
 }//END OF LyreProgram

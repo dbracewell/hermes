@@ -21,22 +21,49 @@
 
 package com.davidbracewell.hermes.lyre;
 
-import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.tag.RelationType;
+import lombok.Builder;
 import lombok.Value;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * @author David B. Bracewell
  */
 @Value
-public class LyreRelationProvider implements Serializable{
+@Builder
+public class LyreRelationProvider implements Serializable {
   private static final long serialVersionUID = 1L;
-  private final RelationType type;
-  private final String value;
-  private final String source;
-  private final AnnotationType sourceType;
-  private final String target;
-  private final AnnotationType targetType;
+  private final String name;
+  private final String requires;
+  private final RelationType relationType;
+  private final String relationValue;
+  private final LyreRelationPoint source;
+  private final LyreRelationPoint target;
+
+
+  protected static LyreRelationProvider fromMap(Map<String, Object> groupMap) throws IOException {
+    if (!groupMap.containsKey("type")) {
+      throw new IOException("No type given for: " + groupMap);
+    }
+    if (!groupMap.containsKey("value")) {
+      throw new IOException("No value given for: " + groupMap);
+    }
+    if (!groupMap.containsKey("name")) {
+      throw new IOException("No name given for: " + groupMap);
+    }
+    Map<String, Object> sourceMap = LyreProgram.ensureMap(groupMap.get("source"), "Source should be a map");
+    Map<String, Object> targetMap = LyreProgram.ensureMap(groupMap.get("target"), "Target should be a map");
+    return LyreRelationProvider.builder()
+      .name(groupMap.get("name").toString())
+      .requires(groupMap.containsKey("requires") ? groupMap.get("requires").toString() : null)
+      .relationType(RelationType.create(groupMap.get("type").toString()))
+      .relationValue(groupMap.get("value").toString())
+      .source(LyreRelationPoint.fromMap(sourceMap))
+      .target(LyreRelationPoint.fromMap(targetMap))
+      .build();
+  }
+
 }//END OF LyreRelationProvider
