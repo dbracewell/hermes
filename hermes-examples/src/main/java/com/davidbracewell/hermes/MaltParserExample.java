@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.annotator.MaltParserAnnotator;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.DocumentFormats;
 import com.davidbracewell.io.Resources;
@@ -31,8 +32,7 @@ import static com.davidbracewell.hermes.Types.*;
 /**
  * @author David B. Bracewell
  */
-public class OpenNLPExample {
-
+public class MaltParserExample {
   public static void main(String[] args) throws Exception {
     Config.initialize("OpenNLPExample");
 
@@ -41,19 +41,22 @@ public class OpenNLPExample {
     //Create a prefix where the models are stored
     Config.setProperty("data.cp", "/data/models"); //This is the root
 
-//    Config.setProperty("Annotation.DEPENDENCY.annotator", MaltParserAnnotator.class.getName());
-//    Config.setProperty("MaltParser.ENGLISH.model", "/home/ik/Downloads/engmalt.linear-1.7.mco");
+    Config.setProperty("Annotation.DEPENDENCY.annotator", MaltParserAnnotator.class.getName());
+    Config.setProperty("MaltParser.ENGLISH.model", "${data.cp}/en/dependency/engmalt.linear-1.7.mco");
     Corpus corpus = Corpus.builder()
-      .format(DocumentFormats.PLAIN_TEXT)
+      .format(DocumentFormats.PLAIN_TEXT_OPL)
       .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
       .build()
-      .annotate(TOKEN, SENTENCE, PART_OF_SPEECH, ENTITY, LEMMA, STEM);
+      .annotate(TOKEN, SENTENCE, PART_OF_SPEECH, ENTITY, LEMMA, STEM, DEPENDENCY);
 
-    corpus.forEach(document -> document.sentences().forEach(sentence -> System.out.println(sentence.toPOSString())));
-
-    //Write the corpus to a resource in one json per line format (the resource just prints to standard out)
-    corpus.write(Resources.fromStdout());
-
+    corpus.forEach(document -> document.sentences()
+      .forEach(sentence -> {
+        sentence.tokens().forEach(token ->
+          System.out.println(token + "_" + token.getPOS().asString() +
+            " : " + token.getDependencyRelation().map(r -> r.getValue() + "=>" + document.getAnnotation(r.getTarget()).get()).orElse(""))
+        );
+        System.out.println();
+      })
+    );
   }
-
-}//END OF Sandbox
+}//END OF MaltParserExample

@@ -21,8 +21,11 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.collection.Counters;
+import com.davidbracewell.collection.Counter;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.filter.StopWords;
+
+import java.util.List;
 
 /**
  * @author David B. Bracewell
@@ -31,48 +34,37 @@ public class NGramExample {
 
   public static void main(String[] args) throws Exception {
     Config.initialize("NGramExample");
-    Document document = DocumentProvider.getDocument();
-    Pipeline.process(document, Types.SENTENCE, Types.TOKEN);
+    Document document = DocumentProvider.getAnnotatedDocument();
 
-    System.out.println(
-      document.sentences()
-        .stream()
-        .flatMap(sentence -> sentence.charNGrams(1).stream())
-        .map(HString::toLowerCase)
-        .collect(Counters.collector())
-        .merge(
-          document.sentences()
-            .stream()
-            .flatMap(sentence -> sentence.charNGrams(2).stream())
-            .map(HString::toLowerCase)
-            .collect(Counters.collector())
-        )
-        .merge(
-          document.sentences()
-            .stream()
-            .flatMap(sentence -> sentence.charNGrams(3).stream())
-            .map(HString::toLowerCase)
-            .collect(Counters.collector())
-        )
+    //Get all token level unigrams
+    List<HString> unigrams = document.tokenNGrams(1);
+    unigrams.forEach(System.out::println);
+    System.out.println("============================");
+
+    //Get all token level unigrams removing stopwords
+    unigrams = document.tokenNGrams(1, true);
+    unigrams.forEach(System.out::println);
+    System.out.println("============================");
+
+    //Gets sentence level unigrams
+    List<HString> sentenceUnigrams = document.ngrams(1, Types.SENTENCE);
+    sentenceUnigrams.forEach(System.out::println);
+    System.out.println("============================");
+
+    //Get character level trigrams
+    List<HString> trigrams = document.charNGrams(3);
+    trigrams.forEach(System.out::println);
+    System.out.println("============================");
+
+
+    //Generate token counts ignoring stopwords and folding tokens into lower case
+    Counter<String> counter = document.count(
+      Types.TOKEN,
+      StopWords.getInstance(document.getLanguage()),
+      HString::toLowerCase
     );
-
-    System.out.println(
-      document.sentences()
-        .stream()
-        .flatMap(sentence -> sentence.tokenNGrams(2, a -> !a.toLowerCase().startsWith("a")).stream())
-        .map(HString::toLowerCase)
-        .collect(Counters.collector())
-    );
-
-
-    System.out.println(
-      Fragments
-        .string("Blue moon is rising over the red sea.")
-        .charNGrams(2)
-        .stream()
-        .map(HString::toUpperCase)
-        .collect(Counters.collector())
-    );
+    counter.entries().forEach(e -> System.out.println(e.getKey() + " => " + e.getValue()));
+    System.out.println("============================");
 
   }
 

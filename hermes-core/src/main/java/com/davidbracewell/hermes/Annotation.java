@@ -200,6 +200,15 @@ public final class Annotation extends Fragment implements Serializable {
     return relations.stream().filter(r -> r.getTarget() == annotation.getId()).collect(Collectors.toList());
   }
 
+  /**
+   * Get dependency relation optional.
+   *
+   * @return the optional
+   */
+  public Optional<Relation> getDependencyRelation(){
+    return getRelations(Relations.DEPENDENCY).stream().findFirst();
+  }
+
 
   /**
    * Gets targets.

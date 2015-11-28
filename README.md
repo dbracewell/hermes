@@ -21,13 +21,22 @@ The core sub-module contains the basic api.
 ```
 
 ### OpenNLP Backend
-A set of wrappers around the [OpenNLP](https://opennlp.apache.org/) framework for tokenization, sentence segmentation, part-of-speech tagging, shallow parsing, named entity recognition, and syntactic parsing.
+A set of wrappers around the [OpenNLP](https://opennlp.apache.org/) framework for tokenization, sentence segmentation, part-of-speech tagging, shallow parsing, named entity recognition, and syntactic parsing (tbd).
 ```
  <dependency>
      <groupId>com.davidbracewell</groupId>
      <artifactId>hermes-opennlp</artifactId>
-     <version>0.0.1-SNAPSHOT</version>
+     <version>${VERSION}</version>
  </dependency>
 ```
 
+### MaltParser Backend
+A wrapper around [MaltParser](http://www.maltparser.org/) provides dependency relations between tokens.
+```
+ <dependency>
+     <groupId>com.davidbracewell</groupId>
+     <artifactId>hermes-maltparser</artifactId>
+     <version>${VERSION}</version>
+ </dependency>
+```
 

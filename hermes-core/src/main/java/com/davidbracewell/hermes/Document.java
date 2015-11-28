@@ -350,6 +350,16 @@ public class Document extends HString {
     return annotationSet;
   }
 
+  /**
+   * Gets annotation.
+   *
+   * @param id the id
+   * @return the annotation
+   */
+  public Optional<Annotation> getAnnotation(long id) {
+    return Optional.ofNullable(annotationSet.get(id));
+  }
+
   @Override
   protected Map<Attribute, Val> getAttributeMap() {
     return attributes;
