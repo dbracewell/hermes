@@ -79,8 +79,8 @@ public interface RelationalObject {
    *
    * @return the relations
    */
-  default Collection<Relation> getAllRelations() {
-    return getAllRelations(true);
+  default Collection<Relation> allRelations() {
+    return allRelations(false);
   }
 
   /**
@@ -89,7 +89,7 @@ public interface RelationalObject {
    * @param includeSubAnnotations the include sub annotations
    * @return the all relations
    */
-  default Collection<Relation> getAllRelations(boolean includeSubAnnotations) {
+  default Collection<Relation> allRelations(boolean includeSubAnnotations) {
     return Collections.emptyList();
   }
 

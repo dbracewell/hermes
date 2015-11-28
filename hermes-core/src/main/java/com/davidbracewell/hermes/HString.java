@@ -942,5 +942,18 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return annotations;
   }
 
+  public HString getHead() {
+    return tokens().stream()
+      .filter(t -> !t.parent().isPresent())
+      .map(Cast::<HString>as)
+      .findFirst()
+      .orElseGet(() ->
+        tokens().stream()
+          .filter(t -> !this.overlaps(t.parent().get()))
+          .map(Cast::<HString>as)
+          .findFirst()
+          .orElse(this)
+      );
+  }
 
 }//END OF HString

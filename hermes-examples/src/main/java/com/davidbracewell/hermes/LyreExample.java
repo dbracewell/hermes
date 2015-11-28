@@ -65,7 +65,6 @@ public class LyreExample {
       }
     );
 
-
     document.get(Types.ENTITY).forEach(e -> System.out.println(e + "/" + e.getTag().get()));
   }
 

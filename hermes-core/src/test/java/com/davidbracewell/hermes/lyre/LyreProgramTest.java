@@ -61,9 +61,9 @@ public class LyreProgramTest {
     assertEquals("rabbit", entities.get(8).toString());
 
 
-    assertEquals(1, entities.get(2).getAllRelations().size());
-    assertEquals(RelationType.create("ATTRIBUTE"), entities.get(2).getAllRelations().stream().findFirst().get().getType());
-    assertEquals("HAS_A", entities.get(2).getAllRelations().stream().findFirst().get().getValue());
+    assertEquals(1, entities.get(2).allRelations().size());
+    assertEquals(RelationType.create("ATTRIBUTE"), entities.get(2).allRelations().stream().findFirst().get().getType());
+    assertEquals("HAS_A", entities.get(2).allRelations().stream().findFirst().get().getValue());
 
   }
 }
