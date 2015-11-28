@@ -21,7 +21,14 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.annotator.LexiconAnnotator;
+import com.davidbracewell.hermes.corpus.Corpus;
+import com.davidbracewell.hermes.corpus.DocumentFormats;
+import com.davidbracewell.hermes.lexicon.Lexicon;
+import com.davidbracewell.hermes.lexicon.LexiconSpec;
+import com.davidbracewell.io.Resources;
 
 /**
  * @author David B. Bracewell
@@ -31,33 +38,23 @@ public class LexiconExample {
   public static void main(String[] args) throws Exception {
     Config.initialize("LexiconExample");
 
+    Lexicon lexicon = LexiconSpec.builder()
+      .caseSensitive(false)
+      .hasConstraints(false)
+      .probabilistic(false)
+      .tagAttribute(Attrs.ENTITY_TYPE)
+      .resource(Resources.fromClasspath("com/davidbracewell/hermes/people.dict"))
+      .build().create();
 
-//    TrieLexiconAnnotator annotator = new TrieLexiconAnnotator(
-//      false, Types.LEXICON_MATCH,
-//      Attrs.TAG,
-//      Resources.fromClasspath("com/davidbracewell/hermes/people.dict")
-//    );
-//    annotator.setPrefixMatch(true);
-//    Pipeline.setAnnotator(Types.LEXICON_MATCH, Language.ENGLISH, annotator);
-//
-//    Pipeline pipeline = Pipeline.builder()
-//      .addAnnotations(TOKEN, SENTENCE, LEXICON_MATCH)
-//      .onComplete(document -> {
-//        document.get(Types.LEXICON_MATCH)
-//          .forEach(m -> System.out.println(
-//            m +
-//              " [" + m.get(Attrs.TAG) + "] " +
-//              " [" + m.get(Attrs.CONFIDENCE) + "]"
-//          ));
-//      })
-//      .build();
-//
-//    Corpus corpus = Corpus.builder()
-//      .format(DocumentFormats.PLAIN_TEXT_OPL)
-//      .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
-//      .build();
-//
-//    pipeline.process(corpus);
+    Pipeline.setAnnotator(Types.ENTITY, Language.ENGLISH, new LexiconAnnotator(Types.ENTITY, lexicon));
+
+    Corpus.builder()
+      .format(DocumentFormats.PLAIN_TEXT_OPL)
+      .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
+      .build()
+      .annotate(Types.TOKEN, Types.SENTENCE, Types.ENTITY)
+      .forEach(document -> document.get(Types.ENTITY).forEach(entity -> System.out.println(entity + "/" + entity.getTag().get())));
+
   }
 
 }//END OF LexiconExample
