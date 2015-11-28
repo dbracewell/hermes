@@ -31,6 +31,7 @@ import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredFormat;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
+import com.davidbracewell.stream.Streams;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
@@ -178,7 +179,7 @@ public class Document extends HString {
         Annotation newAnnotation = new Annotation(document, annotation.getType(), annotation.start(), annotation.end());
         newAnnotation.putAll(annotation.getAttributeMap());
         newAnnotation.setId(annotation.getId());
-        newAnnotation.addAllRelations(annotation.getRelations());
+        newAnnotation.addAllRelations(annotation.getAllRelations());
         document.annotationSet.add(newAnnotation);
       });
       completed.entrySet().forEach(e -> document.annotationSet.setIsCompleted(e.getKey(), true, e.getValue()));
@@ -331,6 +332,11 @@ public class Document extends HString {
   @Override
   public List<Annotation> get(AnnotationType type) {
     return annotationSet.select(a -> a.isInstance(type));
+  }
+
+  @Override
+  public List<Annotation> getAllAnnotations() {
+    return Streams.of(annotationSet, false).collect();
   }
 
   @Override

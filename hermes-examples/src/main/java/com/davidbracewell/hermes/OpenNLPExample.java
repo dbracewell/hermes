@@ -41,8 +41,6 @@ public class OpenNLPExample {
     //Create a prefix where the models are stored
     Config.setProperty("data.cp", "/data/models"); //This is the root
 
-//    Config.setProperty("Annotation.DEPENDENCY.annotator", MaltParserAnnotator.class.getName());
-//    Config.setProperty("MaltParser.ENGLISH.model", "/home/ik/Downloads/engmalt.linear-1.7.mco");
     Corpus corpus = Corpus.builder()
       .format(DocumentFormats.PLAIN_TEXT)
       .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))

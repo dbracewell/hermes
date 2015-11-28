@@ -23,19 +23,18 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.annotator.MaltParserAnnotator;
-import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
+import com.davidbracewell.hermes.lyre.LyreProgram;
+import com.davidbracewell.hermes.tag.RelationType;
+import com.davidbracewell.hermes.tag.Relations;
 import com.davidbracewell.io.Resources;
-
-import static com.davidbracewell.hermes.Types.*;
 
 /**
  * @author David B. Bracewell
  */
-public class MaltParserExample {
-  public static void main(String[] args) throws Exception {
-    Config.initialize("MaltParserExample");
+public class LyreExample {
 
+  public static void main(String[] args) throws Exception {
+    Config.initialize("LyreExample");
     //Load the OpenNLP English defaults (May need to edit this file or override to point to your models)
     Config.loadConfig(Resources.fromClasspath("com/davidbracewell/hermes/opennlp/opennlp-english.conf"));
     //Create a prefix where the models are stored
@@ -43,23 +42,31 @@ public class MaltParserExample {
 
     Config.setProperty("Annotation.DEPENDENCY.annotator", MaltParserAnnotator.class.getName());
     Config.setProperty("MaltParser.ENGLISH.model", "${data.cp}/en/engmalt.linear-1.7.mco");
-    Corpus corpus = Corpus.builder()
-      .format(DocumentFormats.PLAIN_TEXT_OPL)
-      .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
-      .build()
-      .annotate(TOKEN, SENTENCE, PART_OF_SPEECH, ENTITY, LEMMA, STEM, DEPENDENCY);
 
-    corpus.forEach(document -> document.sentences()
-      .forEach(sentence -> {
-        sentence.tokens().forEach(token ->
-          //Dependency relations are stored as relations on the tokens.
-          //For convenience there is a method to get the first (which should be the only) dependency relation associated
-          //with a token. It returns an optional in case there is no relation (e.g. the root of the tree)
-          System.out.println(token + "/" + token.getPOS().asString() +
-            " : " + token.getDependencyRelation().map(r -> r.getKey() + "=>" + r.getValue()).orElse(""))
-        );
-        System.out.println();
-      })
+    //We use the example program
+    LyreProgram program = LyreProgram.read(Resources.from("classpath:com/davidbracewell/hermes/example.yaml"));
+
+    Document document = DocumentFactory.getInstance().create(
+      "John Doe spooked his family while they were on vacation in St. George Falls."
     );
+    Pipeline.process(document, Types.DEPENDENCY, Types.PHRASE_CHUNK, Types.ENTITY);
+    program.execute(document);
+
+    RelationType eventRole = Relations.relation("EVENT_ROLE");
+    AnnotationType eventType = Types.type("EVENT");
+    document.get(eventType).forEach(
+      event -> {
+        Annotation spooker = event.getSources(eventRole, "SPOOKER").stream().findFirst().orElse(null);
+        Annotation spookee = event.getSources(eventRole, "SPOOKEE").stream().findFirst().orElse(null);
+        System.out.println("EVENT := " + event);
+        System.out.println("\tSPOOKER := " + spooker);
+        System.out.println("\tSPOOKEE := " + spookee);
+        System.out.println("==================================");
+      }
+    );
+
+
+    document.get(Types.ENTITY).forEach(e -> System.out.println(e + "/" + e.getTag().get()));
   }
-}//END OF MaltParserExample
+
+}//END OF Sandbox

@@ -136,28 +136,10 @@ public class LyreRelationPoint {
       return getAnnotationStream(groups, matcher).filter(constraint).collect(Collectors.toList());
     }
 
-    if (StringUtils.isNullOrBlank(relationValue)) {
-      return getAnnotationStream(groups, matcher)
-        .flatMap(a -> {
-            if (relationType.equals(Relations.DEPENDENCY)) {
-              return a.getChildren().stream();
-            }
-            return a.getSources(relationType).stream();
-          }
-        ).flatMap(a -> {
-            if (annotationType == null) {
-              return Collections.singleton(a).stream();
-            }
-            return a.get(annotationType).stream();
-          }
-        ).filter(constraint)
-        .collect(Collectors.toList());
-    }
-
     return getAnnotationStream(groups, matcher)
       .flatMap(a -> {
           if (relationType.equals(Relations.DEPENDENCY)) {
-            return a.getChildren().stream().filter(a2 -> a2.getTargets(Relations.DEPENDENCY, relationValue).contains(a));
+            return a.getChildren().stream().filter(a2 -> a2.getDependencyRelation().filter(r -> r.getKey().equals(relationValue)).isPresent());
           }
           return a.getSources(relationType, relationValue).stream();
         }

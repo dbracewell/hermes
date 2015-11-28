@@ -62,6 +62,14 @@ public interface AnnotatedObject {
    */
   List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter);
 
+
+  /**
+   * Gets all annotations.
+   *
+   * @return the all annotations
+   */
+  List<Annotation> getAllAnnotations();
+
   /**
    * Gets annotations of a given type that overlap with this object.
    *

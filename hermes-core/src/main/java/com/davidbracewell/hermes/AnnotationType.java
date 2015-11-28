@@ -209,7 +209,7 @@ public final class AnnotationType extends HierarchicalEnumValue {
     }
 
     Annotator annotator = BeanUtils.parameterizeObject(Config.get(key).as(Annotator.class));
-    Preconditions.checkNotNull(annotator, "Could create the annotator [" + Config.get(key) + "] for " + name());
+    Preconditions.checkNotNull(annotator, "Could not create the annotator [" + Config.get(key) + "] for " + name());
     Preconditions.checkArgument(annotator.satisfies().contains(this), "Attempting to register " + annotator.getClass().getName() + " for " + name() + " which it does not provide.");
     return annotator;
   }

@@ -1,22 +1,25 @@
-- name: lives_with
-  pattern: /^(live|dwell)s?$/ with
+- name: spookEvent
+  pattern: [ /^spook/ & $VERB] #Match the word spook when it's a verb
+  annotations:
+    - capture: "*" #Create an EVENT anntotation from what is captured in the pattern
+      type: EVENT
+      attributes: [TAG: SPOOK_EVENT]
   relations:
-    - name: person1
-      type: Attribute
-      value: LIVES_WITH
-      reciprocal: true
+    - name: spookee #Create an EVENT_ROLE relation of type SPOOKEE between the captured text in pattern and its direct object
+      type: EVENT_ROLE
+      value: SPOOKEE
+      source:
+        relation: DEPENDENCY:dobj
+        annotation: PHRASE_CHUNK  #We will expand the direct object to the phrase chunk level
+        constraint: $NOUN #and we only want phrase chunks that are nouns
+      target:
+        capture: "*"
+    - name: spooker #Create an EVENT_ROLE relation of type SPOOKER between the captured text in pattern and its subject
+      type: EVENT_ROLE
+      value: SPOOKER
       source:
         relation: DEPENDENCY:nsubj
-        annotation: PHRASE_CHUNK
-        constraint: $NOUN
+        annotation: PHRASE_CHUNK  #We will expand the nsubj to the phrase chunk level
+        constraint: $NOUN #and we only want phrase chunks that are nouns
       target:
-        relation: DEPENDENCY:pobj
-        annotation: PHRASE_CHUNK
-        constraint: $NOUN
-
-- name: NP
-  pattern: $DETERMINER* $ADJECTIVE* $VBG* $NOUN+
-  annotations:
-    - capture: "*"
-      type: ENTITY
-      attributes: [ENTITY_TYPE: NP]
+        capture: "*"

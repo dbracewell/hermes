@@ -32,6 +32,7 @@ import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.string.StringUtils;
+import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * <p>
@@ -177,8 +179,12 @@ public final class Annotation extends Fragment implements Serializable {
    * @param relationType the relation type
    * @return the relations
    */
-  public List<Relation> getRelations(@NonNull RelationType relationType) {
-    return relations.stream().filter(r -> r.getType().equals(relationType)).collect(Collectors.toList());
+  public List<Relation> get(@NonNull RelationType relationType) {
+    return get(relationType, true);
+  }
+
+  public List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
+    return getRelationStream(includeSubAnnotations).filter(r -> r.getType().equals(relationType)).collect(Collectors.toList());
   }
 
   /**
@@ -186,18 +192,23 @@ public final class Annotation extends Fragment implements Serializable {
    *
    * @return the relations
    */
-  public Collection<Relation> getRelations() {
-    return Collections.unmodifiableCollection(relations);
+  public Collection<Relation> getAllRelations() {
+    return getAllRelations(true);
   }
 
-  /**
-   * Gets relations.
-   *
-   * @param annotation the annotation
-   * @return the relations
-   */
-  public List<Relation> getRelations(@NonNull Annotation annotation) {
-    return relations.stream().filter(r -> r.getTarget() == annotation.getId()).collect(Collectors.toList());
+  private Stream<Relation> getRelationStream(boolean includeSubAnnotations) {
+    Stream<Relation> relationStream = relations.stream();
+    if (this.getType() != Types.TOKEN && includeSubAnnotations) {
+      relationStream = Stream.concat(
+        relationStream,
+        getAllAnnotations().stream().filter(a -> a != this).flatMap(token -> token.getAllRelations(false).stream())
+      );
+    }
+    return relationStream;
+  }
+
+  public Collection<Relation> getAllRelations(boolean includeSubAnnotations) {
+    return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
   }
 
   /**
@@ -205,10 +216,26 @@ public final class Annotation extends Fragment implements Serializable {
    *
    * @return the optional
    */
-  public Optional<Relation> getDependencyRelation(){
-    return getRelations(Relations.DEPENDENCY).stream().findFirst();
+  public Optional<Tuple2<String, Annotation>> getDependencyRelation() {
+    return getRelationStream(true)
+      .filter(r -> r.getType() == Relations.DEPENDENCY)
+      .filter(r -> r.getTarget(this).isPresent())
+      .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).get()))
+      .findFirst();
   }
 
+
+  public List<Annotation> getTargets(@NonNull RelationType type) {
+    return getTargets(type, true);
+  }
+
+  public List<Annotation> getTargets(@NonNull RelationType type, boolean includeSubAnnotations) {
+    return getRelationStream(includeSubAnnotations)
+      .filter(r -> r.getType().equals(type))
+      .filter(r -> r.getTarget(this).isPresent())
+      .map(r -> r.getTarget(this).get())
+      .collect(Collectors.toList());
+  }
 
   /**
    * Gets targets.
@@ -218,21 +245,12 @@ public final class Annotation extends Fragment implements Serializable {
    * @return the targets
    */
   public List<Annotation> getTargets(@NonNull RelationType type, @NonNull String value) {
-    return relations.stream()
-      .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
-      .map(r -> document().getAnnotationSet().get(r.getTarget()))
-      .collect(Collectors.toList());
+    return getTargets(type, value, true);
   }
 
-  /**
-   * Gets targets.
-   *
-   * @param type the type
-   * @return the targets
-   */
-  public List<Annotation> getTargets(@NonNull RelationType type) {
-    return relations.stream()
-      .filter(r -> r.getType().equals(type))
+  public List<Annotation> getTargets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+    return getRelationStream(includeSubAnnotations)
+      .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
       .map(r -> document().getAnnotationSet().get(r.getTarget()))
       .collect(Collectors.toList());
   }
@@ -245,29 +263,29 @@ public final class Annotation extends Fragment implements Serializable {
    * @return the sources
    */
   public List<Annotation> getSources(@NonNull RelationType type, @NonNull String value) {
-    List<Annotation> sources = new LinkedList<>();
-    document().getAnnotationSet().forEach(a -> {
-      if (a.getTargets(type, value).stream().filter(r -> r == this).count() > 0) {
-        sources.add(a);
-      }
-    });
-    return sources;
+    return getSources(type, value, true);
   }
 
-  /**
-   * Gets sources.
-   *
-   * @param type the type
-   * @return the sources
-   */
+  public List<Annotation> getSources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+    Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
+    targets.add(this);
+    return document().getAllAnnotations().stream()
+      .filter(a -> !a.overlaps(this))
+      .filter(a -> a.getTargets(type, value, false).stream().filter(targets::contains).count() > 0)
+      .collect(Collectors.toList());
+  }
+
   public List<Annotation> getSources(@NonNull RelationType type) {
-    List<Annotation> sources = new LinkedList<>();
-    document().getAnnotationSet().forEach(a -> {
-      if (a.getTargets(type).stream().filter(r -> r == this).count() > 0) {
-        sources.add(a);
-      }
-    });
-    return sources;
+    return getSources(type, true);
+  }
+
+  public List<Annotation> getSources(@NonNull RelationType type, boolean includeSubAnnotations) {
+    Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
+    targets.add(this);
+    return document().getAllAnnotations().stream()
+      .filter(a -> !a.overlaps(this))
+      .filter(a -> a.getTargets(type,false).stream().filter(targets::contains).count() > 0)
+      .collect(Collectors.toList());
   }
 
 
@@ -297,19 +315,18 @@ public final class Annotation extends Fragment implements Serializable {
    * @return the children
    */
   public List<Annotation> getChildren() {
+    List<Annotation> tokens;
     if (document().getAnnotationSet().isCompleted(Types.SENTENCE)) {
-      return first(Types.SENTENCE).tokens().stream()
-        .filter(t -> t.getParent().filter(p -> p == this).isPresent())
-        .collect(Collectors.toList());
-
+      tokens = first(Types.SENTENCE).tokens();
+    } else {
+      tokens = document().tokens();
     }
-    List<Annotation> children = new LinkedList<>();
-    document().tokens().forEach(token -> {
-      if (token.getRelations(this).stream().filter(r -> r.getType().isInstance(Relations.DEPENDENCY)).count() > 0) {
-        children.add(token);
-      }
-    });
-    return children;
+    Set<Annotation> myTokens = new HashSet<>(tokens());
+    myTokens.add(this);
+    return tokens.stream()
+      .filter(t -> !t.overlaps(this))
+      .filter(t -> t.getParent().filter(myTokens::contains).isPresent())
+      .collect(Collectors.toList());
   }
 
   /**
@@ -318,10 +335,7 @@ public final class Annotation extends Fragment implements Serializable {
    * @return the parent
    */
   public Optional<Annotation> getParent() {
-    return relations.stream()
-      .filter(r -> r.getType().equals(Relations.DEPENDENCY))
-      .map(r -> document().getAnnotationSet().get(r.getTarget()))
-      .findFirst();
+    return getDependencyRelation().map(Tuple2::getValue);
   }
 
   /**

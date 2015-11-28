@@ -11,5 +11,11 @@ import com.davidbracewell.annotation.DynamicEnumeration;
   configPrefix = "RelationType"
 )
 public interface Relations {
+
+  static RelationType relation(String name) {
+    return RelationType.create(name);
+  }
+
+
   RelationType DEPENDENCY = RelationType.create("DEPENDENCY");
 }//END OF Relations

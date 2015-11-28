@@ -100,7 +100,7 @@ public class AnnotationTest {
     tokens.get(1).addRelation(new Relation(Relations.DEPENDENCY, "cop", tokens.get(2).getId()));
     assertTrue(tokens.get(0).getParent().isPresent());
     assertEquals("simple", tokens.get(0).getParent().get().toString());
-    assertEquals(1, tokens.get(0).getRelations(Relations.DEPENDENCY).size(), 0d);
+    assertEquals(1, tokens.get(0).get(Relations.DEPENDENCY).size(), 0d);
     assertEquals("simple", tokens.get(0).getTargets(Relations.DEPENDENCY, "nsubj").get(0).toString());
     assertEquals("simple", tokens.get(0).getTargets(Relations.DEPENDENCY).get(0).toString());
     assertTrue(tokens.get(1).getParent().isPresent());
@@ -109,7 +109,7 @@ public class AnnotationTest {
 
     Pipeline.process(document, Types.SENTENCE);
     assertEquals(2, tokens.get(2).getChildren().size());
-    tokens.get(0).removeRelation(tokens.get(0).getRelations(Relations.DEPENDENCY).get(0));
+    tokens.get(0).removeRelation(tokens.get(0).get(Relations.DEPENDENCY).get(0));
     assertEquals(1, tokens.get(2).getChildren().size());
 
     Annotation sentence = document.first(Types.SENTENCE);

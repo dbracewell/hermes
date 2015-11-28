@@ -394,6 +394,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return get(type, annotation -> annotation.isInstance(type) && annotation.overlaps(this));
   }
 
+  @Override
+  public List<Annotation> getAllAnnotations() {
+    return document().get(AnnotationType.ROOT, this);
+  }
+
   /**
    * Exposes the underlying attributes as a Map
    *

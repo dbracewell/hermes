@@ -27,6 +27,11 @@ package com.davidbracewell.hermes;
  * @author David B. Bracewell
  */
 public interface Attrs {
+
+  static Attribute attribute(String name) {
+    return Attribute.create(name);
+  }
+
   /**
    * Document author
    */
