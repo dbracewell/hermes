@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  *
  * @author David B. Bracewell
  */
-public abstract class HString extends Span implements CharSequence, AttributedObject, AnnotatedObject {
+public abstract class HString extends Span implements CharSequence, AttributedObject, AnnotatedObject, RelationalObject {
   private static final long serialVersionUID = 1L;
 
   /**

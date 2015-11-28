@@ -56,7 +56,7 @@ public class MaltParserExample {
           //For convenience there is a method to get the first (which should be the only) dependency relation associated
           //with a token. It returns an optional in case there is no relation (e.g. the root of the tree)
           System.out.println(token + "/" + token.getPOS().asString() +
-            " : " + token.getDependencyRelation().map(r -> r.getKey() + "=>" + r.getValue()).orElse(""))
+            " : " + token.dependencyRelation().map(r -> r.getKey() + "=>" + r.getValue()).orElse(""))
         );
         System.out.println();
       })

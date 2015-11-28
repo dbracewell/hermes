@@ -96,21 +96,21 @@ public class AnnotationTest {
   public void parentChildTest() {
     Document document = DocumentFactory.getInstance().fromTokens(Arrays.asList("This", "is", "simple"));
     List<Annotation> tokens = document.tokens();
-    tokens.get(0).addRelation(new Relation(Relations.DEPENDENCY, "nsubj", tokens.get(2).getId()));
-    tokens.get(1).addRelation(new Relation(Relations.DEPENDENCY, "cop", tokens.get(2).getId()));
-    assertTrue(tokens.get(0).getParent().isPresent());
-    assertEquals("simple", tokens.get(0).getParent().get().toString());
+    tokens.get(0).add(new Relation(Relations.DEPENDENCY, "nsubj", tokens.get(2).getId()));
+    tokens.get(1).add(new Relation(Relations.DEPENDENCY, "cop", tokens.get(2).getId()));
+    assertTrue(tokens.get(0).parent().isPresent());
+    assertEquals("simple", tokens.get(0).parent().get().toString());
     assertEquals(1, tokens.get(0).get(Relations.DEPENDENCY).size(), 0d);
-    assertEquals("simple", tokens.get(0).getTargets(Relations.DEPENDENCY, "nsubj").get(0).toString());
-    assertEquals("simple", tokens.get(0).getTargets(Relations.DEPENDENCY).get(0).toString());
-    assertTrue(tokens.get(1).getParent().isPresent());
-    assertEquals("simple", tokens.get(1).getParent().get().toString());
-    assertEquals(2, tokens.get(2).getChildren().size());
+    assertEquals("simple", tokens.get(0).targets(Relations.DEPENDENCY, "nsubj").get(0).toString());
+    assertEquals("simple", tokens.get(0).targets(Relations.DEPENDENCY).get(0).toString());
+    assertTrue(tokens.get(1).parent().isPresent());
+    assertEquals("simple", tokens.get(1).parent().get().toString());
+    assertEquals(2, tokens.get(2).children().size());
 
     Pipeline.process(document, Types.SENTENCE);
-    assertEquals(2, tokens.get(2).getChildren().size());
-    tokens.get(0).removeRelation(tokens.get(0).get(Relations.DEPENDENCY).get(0));
-    assertEquals(1, tokens.get(2).getChildren().size());
+    assertEquals(2, tokens.get(2).children().size());
+    tokens.get(0).remove(tokens.get(0).get(Relations.DEPENDENCY).get(0));
+    assertEquals(1, tokens.get(2).children().size());
 
     Annotation sentence = document.first(Types.SENTENCE);
     assertFalse(sentence.isEmpty());

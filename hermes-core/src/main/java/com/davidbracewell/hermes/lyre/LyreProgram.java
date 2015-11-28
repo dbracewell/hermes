@@ -187,7 +187,7 @@ public final class LyreProgram implements Serializable {
 
         rule.getRelationProviders().stream()
           .filter(rp -> StringUtils.isNullOrBlank(rp.getRequires()) || relations.containsKey(rp.getRequires()))
-          .forEach(rp -> relations.get(rp.getName()).forEach(t -> t.getV1().addRelation(t.getV2())));
+          .forEach(rp -> relations.get(rp.getName()).forEach(t -> t.getV1().add(t.getV2())));
 
       }
     }

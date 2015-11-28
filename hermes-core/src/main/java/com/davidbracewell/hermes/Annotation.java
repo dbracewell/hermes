@@ -164,36 +164,14 @@ public final class Annotation extends Fragment implements Serializable {
     return annotation;
   }
 
-  /**
-   * Add all relations.
-   *
-   * @param relations the relations
-   */
-  public void addAllRelations(@NonNull Collection<Relation> relations) {
+  @Override
+  public void addAll(@NonNull Collection<Relation> relations) {
     this.relations.addAll(relations);
   }
 
-  /**
-   * Gets relations.
-   *
-   * @param relationType the relation type
-   * @return the relations
-   */
-  public List<Relation> get(@NonNull RelationType relationType) {
-    return get(relationType, true);
-  }
-
+  @Override
   public List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
     return getRelationStream(includeSubAnnotations).filter(r -> r.getType().equals(relationType)).collect(Collectors.toList());
-  }
-
-  /**
-   * Gets relations.
-   *
-   * @return the relations
-   */
-  public Collection<Relation> getAllRelations() {
-    return getAllRelations(true);
   }
 
   private Stream<Relation> getRelationStream(boolean includeSubAnnotations) {
@@ -207,16 +185,13 @@ public final class Annotation extends Fragment implements Serializable {
     return relationStream;
   }
 
+  @Override
   public Collection<Relation> getAllRelations(boolean includeSubAnnotations) {
     return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
   }
 
-  /**
-   * Get dependency relation optional.
-   *
-   * @return the optional
-   */
-  public Optional<Tuple2<String, Annotation>> getDependencyRelation() {
+  @Override
+  public Optional<Tuple2<String, Annotation>> dependencyRelation() {
     return getRelationStream(true)
       .filter(r -> r.getType() == Relations.DEPENDENCY)
       .filter(r -> r.getTarget(this).isPresent())
@@ -225,11 +200,8 @@ public final class Annotation extends Fragment implements Serializable {
   }
 
 
-  public List<Annotation> getTargets(@NonNull RelationType type) {
-    return getTargets(type, true);
-  }
-
-  public List<Annotation> getTargets(@NonNull RelationType type, boolean includeSubAnnotations) {
+  @Override
+  public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
     return getRelationStream(includeSubAnnotations)
       .filter(r -> r.getType().equals(type))
       .filter(r -> r.getTarget(this).isPresent())
@@ -237,84 +209,50 @@ public final class Annotation extends Fragment implements Serializable {
       .collect(Collectors.toList());
   }
 
-  /**
-   * Gets targets.
-   *
-   * @param type  the type
-   * @param value the value
-   * @return the targets
-   */
-  public List<Annotation> getTargets(@NonNull RelationType type, @NonNull String value) {
-    return getTargets(type, value, true);
-  }
-
-  public List<Annotation> getTargets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+  @Override
+  public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
     return getRelationStream(includeSubAnnotations)
       .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
       .map(r -> document().getAnnotationSet().get(r.getTarget()))
       .collect(Collectors.toList());
   }
 
-  /**
-   * Gets sources.
-   *
-   * @param type  the type
-   * @param value the value
-   * @return the sources
-   */
-  public List<Annotation> getSources(@NonNull RelationType type, @NonNull String value) {
-    return getSources(type, value, true);
-  }
 
-  public List<Annotation> getSources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+  @Override
+  public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
     Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
     targets.add(this);
     return document().getAllAnnotations().stream()
       .filter(a -> !a.overlaps(this))
-      .filter(a -> a.getTargets(type, value, false).stream().filter(targets::contains).count() > 0)
+      .filter(a -> a.targets(type, value, false).stream().filter(targets::contains).count() > 0)
       .collect(Collectors.toList());
   }
 
-  public List<Annotation> getSources(@NonNull RelationType type) {
-    return getSources(type, true);
-  }
-
-  public List<Annotation> getSources(@NonNull RelationType type, boolean includeSubAnnotations) {
+  @Override
+  public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
     Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
     targets.add(this);
     return document().getAllAnnotations().stream()
       .filter(a -> !a.overlaps(this))
-      .filter(a -> a.getTargets(type,false).stream().filter(targets::contains).count() > 0)
+      .filter(a -> a.targets(type, false).stream().filter(targets::contains).count() > 0)
       .collect(Collectors.toList());
   }
 
 
-  /**
-   * Remove relation.
-   *
-   * @param relation the relation
-   */
-  public void removeRelation(@NonNull Relation relation) {
+  @Override
+  public void remove(@NonNull Relation relation) {
     relations.remove(relation);
   }
 
-  /**
-   * Add relation.
-   *
-   * @param relation the relation
-   */
-  public void addRelation(@NonNull Relation relation) {
+  @Override
+  public void add(@NonNull Relation relation) {
     if (!relations.contains(relation)) {
       relations.add(relation);
     }
   }
 
-  /**
-   * Gets children.
-   *
-   * @return the children
-   */
-  public List<Annotation> getChildren() {
+  @Override
+  public List<Annotation> children() {
     List<Annotation> tokens;
     if (document().getAnnotationSet().isCompleted(Types.SENTENCE)) {
       tokens = first(Types.SENTENCE).tokens();
@@ -325,17 +263,8 @@ public final class Annotation extends Fragment implements Serializable {
     myTokens.add(this);
     return tokens.stream()
       .filter(t -> !t.overlaps(this))
-      .filter(t -> t.getParent().filter(myTokens::contains).isPresent())
+      .filter(t -> t.parent().filter(myTokens::contains).isPresent())
       .collect(Collectors.toList());
-  }
-
-  /**
-   * Gets parent.
-   *
-   * @return the parent
-   */
-  public Optional<Annotation> getParent() {
-    return getDependencyRelation().map(Tuple2::getValue);
   }
 
   /**

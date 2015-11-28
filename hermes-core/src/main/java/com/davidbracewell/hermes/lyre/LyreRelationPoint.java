@@ -139,9 +139,9 @@ public class LyreRelationPoint {
     return getAnnotationStream(groups, matcher)
       .flatMap(a -> {
           if (relationType.equals(Relations.DEPENDENCY)) {
-            return a.getChildren().stream().filter(a2 -> a2.getDependencyRelation().filter(r -> r.getKey().equals(relationValue)).isPresent());
+            return a.children().stream().filter(a2 -> a2.dependencyRelation().filter(r -> r.getKey().equals(relationValue)).isPresent());
           }
-          return a.getSources(relationType, relationValue).stream();
+          return a.sources(relationType, relationValue).stream();
         }
       ).flatMap(a -> {
           if (annotationType == null) {

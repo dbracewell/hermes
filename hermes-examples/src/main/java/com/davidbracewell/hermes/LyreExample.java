@@ -56,8 +56,8 @@ public class LyreExample {
     AnnotationType eventType = Types.type("EVENT");
     document.get(eventType).forEach(
       event -> {
-        Annotation spooker = event.getSources(eventRole, "SPOOKER").stream().findFirst().orElse(null);
-        Annotation spookee = event.getSources(eventRole, "SPOOKEE").stream().findFirst().orElse(null);
+        Annotation spooker = event.sources(eventRole, "SPOOKER").stream().findFirst().orElse(null);
+        Annotation spookee = event.sources(eventRole, "SPOOKEE").stream().findFirst().orElse(null);
         System.out.println("EVENT := " + event);
         System.out.println("\tSPOOKER := " + spooker);
         System.out.println("\tSPOOKEE := " + spookee);
