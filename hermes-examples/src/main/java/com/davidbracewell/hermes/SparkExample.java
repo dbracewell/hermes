@@ -16,6 +16,7 @@ public class SparkExample implements Serializable {
   public static void main(String[] args) throws Exception {
     Config.initialize("SparkExample");
 
+    //Need to add the spark core jar file to the classpath for this to run
     //We will run it local, so we set the spark master to local[*]
     Config.setProperty("spark.master", "local[*]");
 
