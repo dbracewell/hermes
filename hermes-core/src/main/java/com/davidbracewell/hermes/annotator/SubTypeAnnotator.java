@@ -49,9 +49,11 @@ public class SubTypeAnnotator implements Annotator, Serializable {
    * @throws IllegalArgumentException - If one or more of the sub types is not an instance of annotationType
    */
   public SubTypeAnnotator(@NonNull AnnotationType annotationType, boolean nonOverlapping, @NonNull Collection<AnnotationType> subTypes) {
-    if (!subTypes.stream().allMatch(type -> type.isInstance(annotationType))) {
-      log.severe("One or more of the sub types are not an instance of {0}", annotationType.name());
-      throw new IllegalArgumentException("One or more of the sub types are not an instance of " + annotationType.name());
+    for (AnnotationType subType : subTypes) {
+      if (!subType.isInstance(annotationType)) {
+        log.severe("{0} is not an instance of {1}", subType.name(), annotationType.name());
+        throw new IllegalArgumentException(subType.name() + " is not a sub type of " + annotationType.name());
+      }
     }
     this.annotationType = annotationType;
     this.subTypes = new HashSet<>(subTypes);

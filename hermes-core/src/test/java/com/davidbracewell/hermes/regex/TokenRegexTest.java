@@ -61,8 +61,8 @@ public class TokenRegexTest {
     document.tokenAt(9).put(Attrs.PART_OF_SPEECH, POS.PUNCTUATION);
 
     //Add some dependencies
-    document.tokenAt(0).addRelation(new Relation(Relations.DEPENDENCY, "nsubj", document.tokenAt(1).getId()));
-    document.tokenAt(2).addRelation(new Relation(Relations.DEPENDENCY, "dobj", document.tokenAt(1).getId()));
+    document.tokenAt(0).add(new Relation(Relations.DEPENDENCY, "nsubj", document.tokenAt(1).getId()));
+    document.tokenAt(2).add(new Relation(Relations.DEPENDENCY, "dobj", document.tokenAt(1).getId()));
 
     //Create some more entites
     document.createAnnotation(Types.ENTITY, document.tokenAt(0), false).putAll(Collect.map(Attrs.ENTITY_TYPE, Entities.PERSON));

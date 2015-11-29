@@ -101,7 +101,7 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public int matches(HString input) {
-      Optional<Annotation> parent = input.asAnnotation().map(Annotation::getParent).get();
+      Optional<Annotation> parent = input.asAnnotation().map(Annotation::parent).get();
       if (parent.isPresent()) {
         return child.matches(parent.get());
       }
@@ -110,7 +110,7 @@ interface TransitionFunction extends Serializable {
 
     @Override
     public int nonMatch(HString input) {
-      Optional<Annotation> parent = input.asAnnotation().map(Annotation::getParent).get();
+      Optional<Annotation> parent = input.asAnnotation().map(Annotation::parent).get();
       if (parent.isPresent()) {
         if (child.matches(parent.get()) > 0) {
           return 0;
@@ -202,9 +202,9 @@ interface TransitionFunction extends Serializable {
         return Collections.emptyList();
       }
       if (StringUtils.isNullOrBlank(value)) {
-        return input.asAnnotation().get().getTargets(type);
+        return input.asAnnotation().get().targets(type);
       }
-      return input.asAnnotation().get().getTargets(type, value);
+      return input.asAnnotation().get().targets(type, value);
     }
 
     @Override

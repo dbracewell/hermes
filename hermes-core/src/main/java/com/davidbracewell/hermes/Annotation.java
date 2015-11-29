@@ -32,6 +32,7 @@ import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.string.StringUtils;
+import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * <p>
@@ -162,157 +164,52 @@ public final class Annotation extends Fragment implements Serializable {
     return annotation;
   }
 
-  /**
-   * Add all relations.
-   *
-   * @param relations the relations
-   */
-  public void addAllRelations(@NonNull Collection<Relation> relations) {
-    this.relations.addAll(relations);
-  }
-
-  /**
-   * Gets relations.
-   *
-   * @param relationType the relation type
-   * @return the relations
-   */
-  public List<Relation> getRelations(@NonNull RelationType relationType) {
-    return relations.stream().filter(r -> r.getType().equals(relationType)).collect(Collectors.toList());
-  }
-
-  /**
-   * Gets relations.
-   *
-   * @return the relations
-   */
-  public Collection<Relation> getRelations() {
-    return Collections.unmodifiableCollection(relations);
-  }
-
-  /**
-   * Gets relations.
-   *
-   * @param annotation the annotation
-   * @return the relations
-   */
-  public List<Relation> getRelations(@NonNull Annotation annotation) {
-    return relations.stream().filter(r -> r.getTarget() == annotation.getId()).collect(Collectors.toList());
-  }
-
-
-  /**
-   * Gets targets.
-   *
-   * @param type  the type
-   * @param value the value
-   * @return the targets
-   */
-  public List<Annotation> getTargets(@NonNull RelationType type, @NonNull String value) {
-    return relations.stream()
-      .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
-      .map(r -> document().getAnnotationSet().get(r.getTarget()))
-      .collect(Collectors.toList());
-  }
-
-  /**
-   * Gets targets.
-   *
-   * @param type the type
-   * @return the targets
-   */
-  public List<Annotation> getTargets(@NonNull RelationType type) {
-    return relations.stream()
-      .filter(r -> r.getType().equals(type))
-      .map(r -> document().getAnnotationSet().get(r.getTarget()))
-      .collect(Collectors.toList());
-  }
-
-  /**
-   * Gets sources.
-   *
-   * @param type  the type
-   * @param value the value
-   * @return the sources
-   */
-  public List<Annotation> getSources(@NonNull RelationType type, @NonNull String value) {
-    List<Annotation> sources = new LinkedList<>();
-    document().getAnnotationSet().forEach(a -> {
-      if (a.getTargets(type, value).stream().filter(r -> r == this).count() > 0) {
-        sources.add(a);
-      }
-    });
-    return sources;
-  }
-
-  /**
-   * Gets sources.
-   *
-   * @param type the type
-   * @return the sources
-   */
-  public List<Annotation> getSources(@NonNull RelationType type) {
-    List<Annotation> sources = new LinkedList<>();
-    document().getAnnotationSet().forEach(a -> {
-      if (a.getTargets(type).stream().filter(r -> r == this).count() > 0) {
-        sources.add(a);
-      }
-    });
-    return sources;
-  }
-
-
-  /**
-   * Remove relation.
-   *
-   * @param relation the relation
-   */
-  public void removeRelation(@NonNull Relation relation) {
-    relations.remove(relation);
-  }
-
-  /**
-   * Add relation.
-   *
-   * @param relation the relation
-   */
-  public void addRelation(@NonNull Relation relation) {
+  @Override
+  public void add(@NonNull Relation relation) {
     if (!relations.contains(relation)) {
       relations.add(relation);
     }
   }
 
-  /**
-   * Gets children.
-   *
-   * @return the children
-   */
-  public List<Annotation> getChildren() {
-    if (document().getAnnotationSet().isCompleted(Types.SENTENCE)) {
-      return first(Types.SENTENCE).tokens().stream()
-        .filter(t -> t.getParent().filter(p -> p == this).isPresent())
-        .collect(Collectors.toList());
-
-    }
-    List<Annotation> children = new LinkedList<>();
-    document().tokens().forEach(token -> {
-      if (token.getRelations(this).stream().filter(r -> r.getType().isInstance(Relations.DEPENDENCY)).count() > 0) {
-        children.add(token);
-      }
-    });
-    return children;
+  @Override
+  public void addAll(@NonNull Collection<Relation> relations) {
+    this.relations.addAll(relations);
   }
 
-  /**
-   * Gets parent.
-   *
-   * @return the parent
-   */
-  public Optional<Annotation> getParent() {
-    return relations.stream()
-      .filter(r -> r.getType().equals(Relations.DEPENDENCY))
-      .map(r -> document().getAnnotationSet().get(r.getTarget()))
+  @Override
+  public Collection<Relation> allRelations(boolean includeSubAnnotations) {
+    return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
+  }
+
+  @Override
+  public List<Annotation> children() {
+    List<Annotation> tokens;
+    if (document().getAnnotationSet().isCompleted(Types.SENTENCE)) {
+      tokens = first(Types.SENTENCE).tokens();
+    } else {
+      tokens = document().tokens();
+    }
+    Set<Annotation> myTokens = new HashSet<>(tokens());
+    myTokens.add(this);
+    return tokens.stream()
+      .filter(t -> !t.overlaps(this))
+      .filter(t -> t.parent().filter(myTokens::contains).isPresent())
+      .collect(Collectors.toList());
+  }
+
+  @Override
+  public Optional<Tuple2<String, Annotation>> dependencyRelation() {
+    return getRelationStream(true)
+      .filter(r -> r.getType() == Relations.DEPENDENCY)
+      .filter(r -> r.getTarget(this).isPresent())
+      .filter(r -> !this.overlaps(r.getTarget(this).get()))
+      .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).get()))
       .findFirst();
+  }
+
+  @Override
+  public List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
+    return getRelationStream(includeSubAnnotations).filter(r -> r.getType().equals(relationType)).collect(Collectors.toList());
   }
 
   /**
@@ -332,6 +229,40 @@ public final class Annotation extends Fragment implements Serializable {
    */
   void setId(long id) {
     this.id = id;
+  }
+
+  private Stream<Relation> getRelationStream(boolean includeSubAnnotations) {
+    Stream<Relation> relationStream = relations.stream();
+    if (this.getType() != Types.TOKEN && includeSubAnnotations) {
+      relationStream = Stream.concat(
+        relationStream,
+        getAllAnnotations().stream().filter(a -> a != this).flatMap(token -> token.allRelations(false).stream())
+      );
+    }
+    return relationStream;
+  }
+
+  /**
+   * <p>
+   * Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type using
+   * the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
+   * Tags must implement the <code>Tag</code> interface. If no tag type is defined, the <code>Attrs.TAG</code>
+   * attribute will be retrieved.
+   * </p>
+   *
+   * @return An optional containing the tag if present
+   */
+  public Optional<Tag> getTag() {
+    if (isInstance(Types.TOKEN)) {
+      return Optional.of(getPOS());
+    } else if (isInstance(Types.ENTITY)) {
+      return Optional.of(get(Attrs.ENTITY_TYPE).as(EntityType.class));
+    }
+    Attribute tagAttribute = annotationType.getTagAttribute();
+    if (tagAttribute == null) {
+      return Optional.ofNullable(get(Attrs.TAG).as(Tag.class));
+    }
+    return Optional.ofNullable(get(tagAttribute).as(Tag.class));
   }
 
   /**
@@ -372,6 +303,32 @@ public final class Annotation extends Fragment implements Serializable {
   }
 
   /**
+   * Is instance of tag boolean.
+   *
+   * @param tag the tag
+   * @return the boolean
+   */
+  public boolean isInstanceOfTag(String tag) {
+    if (StringUtils.isNullOrBlank(tag)) {
+      return false;
+    }
+    return isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute().getValueType().convert(tag)));
+  }
+
+  /**
+   * Is instance of tag boolean.
+   *
+   * @param tag the tag
+   * @return the boolean
+   */
+  public boolean isInstanceOfTag(Tag tag) {
+    if (tag == null) {
+      return false;
+    }
+    return getTag().filter(t -> t.isInstance(tag)).isPresent();
+  }
+
+  /**
    * Gets the next annotation with the same type as this one
    *
    * @return The next annotation with the same type as this one or an empty fragment
@@ -407,6 +364,48 @@ public final class Annotation extends Fragment implements Serializable {
    */
   public Annotation previous(AnnotationType type) {
     return document() == null ? Fragments.detachedEmptyAnnotation() : document().getAnnotationSet().previous(this, type);
+  }
+
+  @Override
+  public void remove(@NonNull Relation relation) {
+    relations.remove(relation);
+  }
+
+  @Override
+  public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+    Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
+    targets.add(this);
+    return document().getAllAnnotations().stream()
+      .filter(a -> !a.overlaps(this))
+      .filter(a -> a.targets(type, value, false).stream().filter(targets::contains).count() > 0)
+      .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
+    Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
+    targets.add(this);
+    return document().getAllAnnotations().stream()
+      .filter(a -> !a.overlaps(this))
+      .filter(a -> a.targets(type, false).stream().filter(targets::contains).count() > 0)
+      .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
+    return getRelationStream(includeSubAnnotations)
+      .filter(r -> r.getType().equals(type))
+      .filter(r -> r.getTarget(this).isPresent())
+      .map(r -> r.getTarget(this).get())
+      .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+    return getRelationStream(includeSubAnnotations)
+      .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
+      .map(r -> document().getAnnotationSet().get(r.getTarget()))
+      .collect(Collectors.toList());
   }
 
   @Override
@@ -459,56 +458,6 @@ public final class Annotation extends Fragment implements Serializable {
     }
 
     writer.endObject();
-  }
-
-
-  /**
-   * <p>
-   * Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type using
-   * the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
-   * Tags must implement the <code>Tag</code> interface. If no tag type is defined, the <code>Attrs.TAG</code>
-   * attribute will be retrieved.
-   * </p>
-   *
-   * @return An optional containing the tag if present
-   */
-  public Optional<Tag> getTag() {
-    if (isInstance(Types.TOKEN)) {
-      return Optional.of(getPOS());
-    } else if (isInstance(Types.ENTITY)) {
-      return Optional.of(get(Attrs.ENTITY_TYPE).as(EntityType.class));
-    }
-    Attribute tagAttribute = annotationType.getTagAttribute();
-    if (tagAttribute == null) {
-      return Optional.ofNullable(get(Attrs.TAG).as(Tag.class));
-    }
-    return Optional.ofNullable(get(tagAttribute).as(Tag.class));
-  }
-
-  /**
-   * Is instance of tag boolean.
-   *
-   * @param tag the tag
-   * @return the boolean
-   */
-  public boolean isInstanceOfTag(String tag) {
-    if (StringUtils.isNullOrBlank(tag)) {
-      return false;
-    }
-    return isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute().getValueType().convert(tag)));
-  }
-
-  /**
-   * Is instance of tag boolean.
-   *
-   * @param tag the tag
-   * @return the boolean
-   */
-  public boolean isInstanceOfTag(Tag tag) {
-    if (tag == null) {
-      return false;
-    }
-    return getTag().filter(t -> t.isInstance(tag)).isPresent();
   }
 
 }//END OF Annotation

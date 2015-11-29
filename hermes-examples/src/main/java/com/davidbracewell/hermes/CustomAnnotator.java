@@ -39,20 +39,29 @@ public class CustomAnnotator {
   public static void main(String[] args) throws Exception {
     Config.initialize("CustomAnnotator");
 
+    //Create an ANIMAL_MENTION annotation type that is added to documents using a regular expression annotator.
     AnnotationType animalMention = AnnotationType.create("ANIMAL_MENTION");
     Pipeline.setAnnotator(animalMention, Language.ENGLISH, new RegexAnnotator("(fox|dog)", animalMention));
 
+    //Create a VERBS annotation type that is added to documents using a regular expression annotator.
     AnnotationType verbs = AnnotationType.create("VERBS");
     Pipeline.setAnnotator(verbs, Language.ENGLISH, new RegexAnnotator("(is|jumps?|come)", verbs));
 
-    Corpus.builder().source(DocumentFormats.PLAIN_TEXT_OPL, Resources.fromString(
-      "The quick brown fox jumps over the lazy dog.\n" +
-        "Now is the time for all good men to come to aid of their country.\n"
-    )).build().forEach(document -> {
-      Pipeline.process(document, TOKEN, SENTENCE, animalMention, verbs);
-      document.get(animalMention).forEach(a -> System.out.println("ANIMAL: " + a));
-      document.get(verbs).forEach(a -> System.out.println("VERB: " + a));
-    });
+    //Build a corpus from plain text with one document per line in a String resource
+    Corpus.builder()
+      .source(DocumentFormats.PLAIN_TEXT_OPL, Resources.fromString(
+        "The quick brown fox jumps over the lazy dog.\n" +
+          "Now is the time for all good men to come to aid of their country.\n"
+        )
+      ).build()
+      //Annotate the document for tokens, sentences, animal mentions, and verbs
+      .annotate(TOKEN, SENTENCE, animalMention, verbs)
+      //for each of the documents print out the animal mentions and verbs
+      .forEach(document -> {
+          document.get(animalMention).forEach(a -> System.out.println("ANIMAL: " + a));
+          document.get(verbs).forEach(a -> System.out.println("VERB: " + a));
+        }
+      );
 
   }
 

@@ -28,6 +28,10 @@ package com.davidbracewell.hermes;
  */
 public interface Types {
 
+  static AnnotationType type(String name) {
+    return AnnotationType.create(name);
+  }
+
   /**
    * Entity annotation type
    */

@@ -52,6 +52,14 @@ public final class LexiconManager implements Serializable {
   );
 
 
+  public static void clear() {
+    lexiconCache.clear();
+  }
+
+  public static void remove(String name) {
+    lexiconCache.invalidate(name);
+  }
+
   private LexiconManager() {
     throw new IllegalAccessError();
   }
@@ -61,7 +69,7 @@ public final class LexiconManager implements Serializable {
   }
 
   private static Lexicon createLexicon(String name) {
-    if (Config.getPropertiesMatching(StringPredicates.STARTS_WITH(name,true)).isEmpty()) {
+    if (Config.getPropertiesMatching(StringPredicates.STARTS_WITH(name, true)).isEmpty()) {
       log.warn("'{0}' does not exists returning an empty lexicon.", name);
       return EmptyLexicon.INSTANCE;
     } else try {

@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  *
  * @author David B. Bracewell
  */
-public abstract class HString extends Span implements CharSequence, AttributedObject, AnnotatedObject {
+public abstract class HString extends Span implements CharSequence, AttributedObject, AnnotatedObject, RelationalObject {
   private static final long serialVersionUID = 1L;
 
   /**
@@ -392,6 +392,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return Collections.emptyList();
     }
     return get(type, annotation -> annotation.isInstance(type) && annotation.overlaps(this));
+  }
+
+  @Override
+  public List<Annotation> getAllAnnotations() {
+    return document().get(AnnotationType.ROOT, this);
   }
 
   /**
@@ -937,5 +942,18 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return annotations;
   }
 
+  public HString getHead() {
+    return tokens().stream()
+      .filter(t -> !t.parent().isPresent())
+      .map(Cast::<HString>as)
+      .findFirst()
+      .orElseGet(() ->
+        tokens().stream()
+          .filter(t -> !this.overlaps(t.parent().get()))
+          .map(Cast::<HString>as)
+          .findFirst()
+          .orElse(this)
+      );
+  }
 
 }//END OF HString

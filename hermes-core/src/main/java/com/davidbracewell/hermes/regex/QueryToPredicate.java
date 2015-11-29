@@ -143,7 +143,7 @@ public final class QueryToPredicate {
       SerializablePredicate<HString> child = parse(pe.right);
 
       if (exp.match(RegexTokenTypes.PARENT)) {
-        return hString -> hString.asAnnotation().map(a -> a.getParent().filter(child).isPresent()).orElse(false);
+        return hString -> hString.asAnnotation().map(a -> a.parent().filter(child).isPresent()).orElse(false);
       }
       if (exp.match(RegexTokenTypes.NOT)) {
         return child.negate();
@@ -246,9 +246,9 @@ public final class QueryToPredicate {
       String value = parts.size() > 1 ? StringUtils.unescape(parts.get(1), '\\') : null;
       return h -> h.asAnnotation().filter(a -> {
         if (value == null) {
-          return a.getTargets(relation).size() > 0;
+          return a.targets(relation).size() > 0;
         }
-        return a.getTargets(relation, value).size() > 0;
+        return a.targets(relation, value).size() > 0;
       }).map(a -> true).orElse(false);
     }
 

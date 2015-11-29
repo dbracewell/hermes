@@ -77,7 +77,7 @@ public class MaltParserAnnotator extends SentenceLevelAnnotator {
         Annotation child = tokens.get(node.getIndex() - 1);
         if (edge.getSource().getIndex() != 0) {
           Annotation parent = tokens.get(edge.getSource().getIndex() - 1);
-          child.addRelation(new Relation(Relations.DEPENDENCY, edge.getLabel("DEPREL"), parent.getId()));
+          child.add(new Relation(Relations.DEPENDENCY, edge.getLabel("DEPREL"), parent.getId()));
         }
       }
     } catch (MaltChainedException e) {

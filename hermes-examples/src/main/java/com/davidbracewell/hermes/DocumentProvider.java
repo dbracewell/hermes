@@ -47,7 +47,7 @@ public interface DocumentProvider {
     );
   }
 
-  static Document getProcessedDocument() {
+  static Document getAnnotatedDocument() {
     Document document = getDocument();
     Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
     return document;
