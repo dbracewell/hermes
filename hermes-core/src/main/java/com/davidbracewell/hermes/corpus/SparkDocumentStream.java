@@ -318,8 +318,8 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   }
 
   @Override
-  public MStream<Document> shuffle() {
-    return this;
+  public MStream<Document> shuffle(Random random) {
+    return new SparkDocumentStream(source.shuffle(random));
   }
 
   /**
