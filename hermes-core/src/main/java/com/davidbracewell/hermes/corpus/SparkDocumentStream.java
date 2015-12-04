@@ -52,11 +52,10 @@ import java.util.stream.Collectors;
  */
 class SparkDocumentStream implements MStream<Document>, Serializable {
   private static final long serialVersionUID = 1L;
-
-  private volatile MStream<String> source;
-  private Broadcast<Config> configBroadcast;
   final Accumulator<Double> documentsProcessed;
   final Accumulator<Double> tokensProcessed;
+  private volatile MStream<String> source;
+  private Broadcast<Config> configBroadcast;
 
   /**
    * Instantiates a new Spark document stream.
@@ -65,10 +64,6 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    */
   public SparkDocumentStream(@NonNull MStream<String> source) {
     this(source, Spark.context(source).broadcast(Config.getInstance()));
-  }
-
-  public void repartition(int numPartition) {
-    source = new SparkStream<>(Cast.<SparkStream<String>>as(source).getRDD().repartition(numPartition));
   }
 
   /**
@@ -83,6 +78,10 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
     this.documentsProcessed = getContext().accumulator(0d);
     this.tokensProcessed = getContext().accumulator(0d);
 
+  }
+
+  public void repartition(int numPartition) {
+    source = new SparkStream<>(Cast.<SparkStream<String>>as(source).getRDD().repartition(numPartition));
   }
 
   private SparkDocumentStream of(@NonNull MStream<String> source) {
@@ -313,6 +312,15 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
     source.saveAsTextFile(location);
   }
 
+  @Override
+  public MStream<Document> parallel() {
+    return this;
+  }
+
+  @Override
+  public MStream<Document> shuffle() {
+    return this;
+  }
 
   /**
    * Updates the config broadcast.
