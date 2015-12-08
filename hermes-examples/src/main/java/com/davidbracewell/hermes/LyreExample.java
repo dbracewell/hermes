@@ -23,7 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.annotator.MaltParserAnnotator;
-import com.davidbracewell.hermes.lyre.LyreProgram;
+import com.davidbracewell.hermes.caduceus.CaduceusProgram;
 import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.hermes.tag.Relations;
 import com.davidbracewell.io.Resources;
@@ -44,7 +44,7 @@ public class LyreExample {
     Config.setProperty("MaltParser.ENGLISH.model", "${data.cp}/en/engmalt.linear-1.7.mco");
 
     //We use the example program
-    LyreProgram program = LyreProgram.read(Resources.from("classpath:com/davidbracewell/hermes/example.yaml"));
+    CaduceusProgram program = CaduceusProgram.read(Resources.from("classpath:com/davidbracewell/hermes/example.yaml"));
 
     Document document = DocumentFactory.getInstance().create(
       "John Doe spooked his family while they were on vacation in St. George Falls."

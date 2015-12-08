@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lyre;
+package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.tag.RelationType;
@@ -35,18 +35,18 @@ import java.util.Map;
  */
 @Value
 @Builder
-public class LyreRelationProvider implements Serializable {
+public class CaduceusRelationProvider implements Serializable {
   private static final long serialVersionUID = 1L;
   private final String name;
   private final String requires;
   private final RelationType relationType;
   private final String relationValue;
-  private final LyreRelationPoint source;
-  private final LyreRelationPoint target;
+  private final CaduceusRelationPoint source;
+  private final CaduceusRelationPoint target;
   private final boolean isReciprocal;
 
 
-  protected static LyreRelationProvider fromMap(Map<String, Object> groupMap) throws IOException {
+  protected static CaduceusRelationProvider fromMap(Map<String, Object> groupMap) throws IOException {
     if (!groupMap.containsKey("type")) {
       throw new IOException("No type given for: " + groupMap);
     }
@@ -56,17 +56,17 @@ public class LyreRelationProvider implements Serializable {
     if (!groupMap.containsKey("name")) {
       throw new IOException("No name given for: " + groupMap);
     }
-    Map<String, Object> sourceMap = LyreProgram.ensureMap(groupMap.get("source"), "Source should be a map");
-    Map<String, Object> targetMap = LyreProgram.ensureMap(groupMap.get("target"), "Target should be a map");
-    return LyreRelationProvider.builder()
+    Map<String, Object> sourceMap = CaduceusProgram.ensureMap(groupMap.get("source"), "Source should be a map");
+    Map<String, Object> targetMap = CaduceusProgram.ensureMap(groupMap.get("target"), "Target should be a map");
+    return CaduceusRelationProvider.builder()
       .name(groupMap.get("name").toString())
       .requires(groupMap.containsKey("requires") ? groupMap.get("requires").toString() : null)
       .relationType(RelationType.create(groupMap.get("type").toString()))
       .relationValue(groupMap.get("value").toString())
       .isReciprocal(Val.of(groupMap.get("reciprocal")).asBooleanValue(false))
-      .source(LyreRelationPoint.fromMap(sourceMap))
-      .target(LyreRelationPoint.fromMap(targetMap))
+      .source(CaduceusRelationPoint.fromMap(sourceMap))
+      .target(CaduceusRelationPoint.fromMap(targetMap))
       .build();
   }
 
-}//END OF LyreRelationProvider
+}//END OF CaduceusRelationProvider

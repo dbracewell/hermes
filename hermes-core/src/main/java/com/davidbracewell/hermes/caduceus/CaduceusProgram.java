@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lyre;
+package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
@@ -43,33 +43,33 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The type Lyre program.
+ * The type Caduceus program.
  *
  * @author David B. Bracewell
  */
-public final class LyreProgram implements Serializable {
+public final class CaduceusProgram implements Serializable {
   private static final long serialVersionUID = 1L;
-  private final List<LyreRule> rules = new LinkedList<>();
+  private final List<CaduceusRule> rules = new LinkedList<>();
 
   /**
-   * Instantiates a new Lyre program.
+   * Instantiates a new Caduceus program.
    */
-  public LyreProgram() {
+  public CaduceusProgram() {
 
   }
 
   /**
-   * Read lyre program.
+   * Read Caduceus program.
    *
    * @param resource the resource
    * @return the lyre program
    * @throws IOException the io exception
    */
-  public static LyreProgram read(@NonNull Resource resource) throws IOException {
-    LyreProgram program = new LyreProgram();
+  public static CaduceusProgram read(@NonNull Resource resource) throws IOException {
+    CaduceusProgram program = new CaduceusProgram();
 
     try (Reader reader = resource.reader()) {
-      List<Object> rules = ensureList(new Yaml().load(reader), "Lyre rules should be specified in a list");
+      List<Object> rules = ensureList(new Yaml().load(reader), "Caduceus rules should be specified in a list");
 
       for (Object entry : rules) {
         Map<String, Object> ruleMap = ensureMap(entry, "Rule entry should be a map");
@@ -82,24 +82,24 @@ public final class LyreProgram implements Serializable {
           throw new IOException("No rule name specified: " + entry);
         }
 
-        List<LyreAnnotationProvider> annotationProviders = new LinkedList<>();
+        List<CaduceusAnnotationProvider> annotationProviders = new LinkedList<>();
         if (ruleMap.containsKey("annotations")) {
           List<Object> annotationList = ensureList(ruleMap.get("annotations"), "Annotations should be specified as a list.");
           for (Object o : annotationList) {
-            annotationProviders.add(LyreAnnotationProvider.fromMap(ensureMap(o, "Annotation entries should be specified as a map."), resource.descriptor(), ruleName));
+            annotationProviders.add(CaduceusAnnotationProvider.fromMap(ensureMap(o, "Annotation entries should be specified as a map."), resource.descriptor(), ruleName));
           }
         }
 
-        List<LyreRelationProvider> relationProviders = new LinkedList<>();
+        List<CaduceusRelationProvider> relationProviders = new LinkedList<>();
         if (ruleMap.containsKey("relations")) {
           List<Object> relations = ensureList(ruleMap.get("relations"), "Relations should be specified as a list.");
           for (Object o : relations) {
-            relationProviders.add(LyreRelationProvider.fromMap(ensureMap(o, "Relation entries should be specified as a map.")));
+            relationProviders.add(CaduceusRelationProvider.fromMap(ensureMap(o, "Relation entries should be specified as a map.")));
           }
         }
 
         try {
-          program.rules.add(new LyreRule(
+          program.rules.add(new CaduceusRule(
             resource.descriptor(),
             ruleName,
             TokenRegex.compile(pattern),
@@ -118,14 +118,14 @@ public final class LyreProgram implements Serializable {
 
   protected static List<Object> ensureList(Object o, String error) throws IOException {
     if (!(o instanceof List)) {
-      throw new IOException("Invalid Lyre Format: " + error);
+      throw new IOException("Invalid Caduceus Format: " + error);
     }
     return Cast.as(o);
   }
 
   protected static Map<String, Object> ensureMap(Object o, String error) throws IOException {
     if (!(o instanceof Map)) {
-      throw new IOException("Invalid Lyre Format: " + error);
+      throw new IOException("Invalid Caduceus Format: " + error);
     }
     return Cast.as(o);
   }
@@ -143,7 +143,7 @@ public final class LyreProgram implements Serializable {
    * @param document the document
    */
   public void execute(@NonNull Document document) {
-    for (LyreRule rule : rules) {
+    for (CaduceusRule rule : rules) {
       TokenMatcher matcher = rule.getRegex().matcher(document);
       while (matcher.find()) {
         ArrayListMultimap<String, Annotation> groups = ArrayListMultimap.create();
@@ -171,9 +171,9 @@ public final class LyreProgram implements Serializable {
 
 
         HashMultimap<String, Tuple2<Annotation, Relation>> relations = HashMultimap.create();
-        for (LyreRelationProvider rp : rule.getRelationProviders()) {
-          List<Annotation> sourceAnnotations = rp.getSource().getAnnotations(groups,matcher);
-          List<Annotation> targetAnnotations = rp.getTarget().getAnnotations(groups,matcher);
+        for (CaduceusRelationProvider rp : rule.getRelationProviders()) {
+          List<Annotation> sourceAnnotations = rp.getSource().getAnnotations(groups, matcher);
+          List<Annotation> targetAnnotations = rp.getTarget().getAnnotations(groups, matcher);
           for (Annotation source : sourceAnnotations) {
             for (Annotation target : targetAnnotations) {
               relations.put(rp.getName(), Tuple2.of(source, new Relation(rp.getRelationType(), rp.getRelationValue(), target.getId())));
@@ -195,4 +195,4 @@ public final class LyreProgram implements Serializable {
 
   }
 
-}//END OF LyreProgram
+}//END OF CaduceusProgram

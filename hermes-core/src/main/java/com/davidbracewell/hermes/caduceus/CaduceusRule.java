@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lyre;
+package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.hermes.regex.TokenRegex;
 import lombok.Value;
@@ -31,12 +31,12 @@ import java.util.List;
  * @author David B. Bracewell
  */
 @Value
-class LyreRule implements Serializable {
+class CaduceusRule implements Serializable {
   private static final long serialVersionUID = 1L;
   private final String ruleFile;
   private final String ruleName;
   private final TokenRegex regex;
-  private final List<LyreAnnotationProvider> annotationProviders;
-  private final List<LyreRelationProvider> relationProviders;
+  private final List<CaduceusAnnotationProvider> annotationProviders;
+  private final List<CaduceusRelationProvider> relationProviders;
 
-}//END OF LyreRule
+}//END OF CaduceusRule
