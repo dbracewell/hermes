@@ -33,7 +33,13 @@ public abstract class DSVCorpus extends ColumnBasedFormat {
   @Override
   final Iterable<List<String>> rows(Resource resource) {
     try {
-      com.davidbracewell.io.CSV csv = com.davidbracewell.io.CSV.builder().delimiter(delimiter);
+      com.davidbracewell.io.CSV csv = com.davidbracewell.io.CSV.builder()
+        .delimiter(delimiter);
+
+      if (Config.hasProperty("DSVCorpus.comment")) {
+        csv = csv.comment(Config.get("DSVCorpus.comment").asCharacterValue());
+      }
+
       CSVReader reader;
       if (Config.get(configProperty, "hasHeader").asBooleanValue(false)) {
         csv.hasHeader();
