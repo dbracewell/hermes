@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lyre;
+package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.AnnotationType;
@@ -39,14 +39,14 @@ import java.util.Map;
  */
 @Value
 @Builder
-class LyreAnnotationProvider implements Serializable {
+class CaduceusAnnotationProvider implements Serializable {
   private static final long serialVersionUID = 1L;
   private final String group;
   private final AnnotationType annotationType;
   private final Map<Attribute, Val> attributes;
 
-  protected static LyreAnnotationProvider fromMap(Map<String, Object> groupMap, String programName, String ruleName) throws IOException {
-    LyreAnnotationProviderBuilder builder = builder();
+  protected static CaduceusAnnotationProvider fromMap(Map<String, Object> groupMap, String programName, String ruleName) throws IOException {
+    CaduceusAnnotationProviderBuilder builder = builder();
 
     if (!groupMap.containsKey("type")) {
       throw new IOException("An annotation must provide a type.");
@@ -58,7 +58,7 @@ class LyreAnnotationProvider implements Serializable {
     );
     Map<Attribute, Val> attributeValMap = new HashMap<>();
     if (groupMap.containsKey("attributes")) {
-      attributeValMap = readAttributes(LyreProgram.ensureList(groupMap.get("attributes"), "Attributes should be specified as a list."));
+      attributeValMap = readAttributes(CaduceusProgram.ensureList(groupMap.get("attributes"), "Attributes should be specified as a list."));
     }
     attributeValMap.put(Attrs.LYRE_RULE, Val.of(programName + "::" + ruleName));
     builder.attributes(attributeValMap);
@@ -68,7 +68,7 @@ class LyreAnnotationProvider implements Serializable {
   private static Map<Attribute, Val> readAttributes(List<Object> list) throws IOException {
     Map<Attribute, Val> result = new HashMap<>();
     for (Object o : list) {
-      Map<String, Object> m = LyreProgram.ensureMap(o, "Attribute values should be key-value pairs");
+      Map<String, Object> m = CaduceusProgram.ensureMap(o, "Attribute values should be key-value pairs");
       m.entrySet().forEach(entry -> {
         Attribute attribute = Attribute.create(entry.getKey());
         result.put(attribute, Val.of(attribute.getValueType().convert(entry.getValue())));
@@ -77,4 +77,4 @@ class LyreAnnotationProvider implements Serializable {
     return result;
   }
 
-}//END OF LyreAnnotationProvider
+}//END OF Caduceus

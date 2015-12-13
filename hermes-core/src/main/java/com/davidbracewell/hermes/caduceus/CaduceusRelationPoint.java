@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lyre;
+package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.Annotation;
@@ -48,7 +48,7 @@ import java.util.stream.Stream;
  * @author David B. Bracewell
  */
 @Value
-public class LyreRelationPoint {
+public class CaduceusRelationPoint {
   private final AnnotationType annotationType;
   private final String captureGroup;
   private final RelationType relationType;
@@ -64,7 +64,7 @@ public class LyreRelationPoint {
    * @param relationValue  the relation value
    */
   @Builder
-  public LyreRelationPoint(AnnotationType annotationType, String captureGroup, RelationType relationType, String relationValue, String constraint) throws IOException {
+  public CaduceusRelationPoint(AnnotationType annotationType, String captureGroup, RelationType relationType, String relationValue, String constraint) throws IOException {
     this.annotationType = annotationType;
     this.captureGroup = StringUtils.isNullOrBlank(captureGroup) ? "*" : captureGroup;
     this.relationType = relationType;
@@ -77,8 +77,8 @@ public class LyreRelationPoint {
   }
 
 
-  protected static LyreRelationPoint fromMap(Map<String, Object> map) throws IOException {
-    LyreRelationPointBuilder builder = LyreRelationPoint.builder();
+  protected static CaduceusRelationPoint fromMap(Map<String, Object> map) throws IOException {
+    CaduceusRelationPointBuilder builder = CaduceusRelationPoint.builder();
 
     if (!map.containsKey("capture") && !map.containsKey("relation")) {
       throw new IOException("A source or target must contain either a capture or a relation: " + map);
@@ -154,4 +154,4 @@ public class LyreRelationPoint {
   }
 
 
-}//END OF LyreRelationPoint
+}//END OF CaduceusRelationPoint

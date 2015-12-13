@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lyre;
+package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
@@ -38,12 +38,12 @@ import static org.junit.Assert.*;
 /**
  * @author David B. Bracewell
  */
-public class LyreProgramTest {
+public class CaduceusProgramTest {
 
   @Test
   public void testExecute() throws Exception {
     Config.initializeTest();
-    LyreProgram p = LyreProgram.read(Resources.fromClasspath("com/davidbracewell/hermes/lyre/example.yaml"));
+    CaduceusProgram p = CaduceusProgram.read(Resources.fromClasspath("com/davidbracewell/hermes/lyre/example.yaml"));
     Document doc = DocumentProvider.getDocument();
     Pipeline.process(doc, Types.TOKEN, Types.SENTENCE);
     p.execute(doc);
