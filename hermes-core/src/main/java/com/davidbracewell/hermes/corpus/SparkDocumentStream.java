@@ -202,6 +202,14 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   }
 
   @Override
+  public void forEachLocal(SerializableConsumer<? super Document> consumer) {
+    source.forEachLocal(json -> {
+      Hermes.initializeWorker(configBroadcast.getValue());
+      consumer.accept(Document.fromJson(json));
+    });
+  }
+
+  @Override
   public Iterator<Document> iterator() {
     return Iterators.transform(source.iterator(), Document::fromJson);
   }
