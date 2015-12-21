@@ -185,7 +185,8 @@
         <module>hermes-core</module>
         <module>hermes-examples</module>
         <module>hermes-opennlp</module>
-        <module>hermes-maltparser</module>
+				<module>hermes-maltparser</module>
+				<module>hermes-ml</module>
     </modules>
 
     <distributionManagement>
