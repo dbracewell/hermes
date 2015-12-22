@@ -6,30 +6,64 @@ import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Attribute;
-import com.davidbracewell.hermes.annotator.SentenceLevelAnnotator;
+import com.davidbracewell.io.resource.Resource;
+import lombok.NonNull;
+
+import java.io.Serializable;
 
 /**
+ * The type Bio tagger.
+ *
  * @author David B. Bracewell
  */
-public abstract class BIOTagger extends SentenceLevelAnnotator {
+public class BIOTagger implements Serializable {
   private static final long serialVersionUID = 1L;
-  private final SequenceFeaturizer<Annotation> featurizer;
-  private final Attribute tagAttribute;
-  private final AnnotationType annotationType;
+  /**
+   * The Featurizer.
+   */
+  final SequenceFeaturizer<Annotation> featurizer;
+  /**
+   * The Annotation type.
+   */
+  final AnnotationType annotationType;
+  /**
+   * The Labeler.
+   */
+  final SequenceLabeler labeler;
 
-  public BIOTagger(SequenceFeaturizer<Annotation> featurizer, Attribute tagAttribute, AnnotationType annotationType) {
+  /**
+   * Instantiates a new Bio tagger.
+   *
+   * @param featurizer     the featurizer
+   * @param annotationType the annotation type
+   * @param labeler        the labeler
+   */
+  public BIOTagger(SequenceFeaturizer<Annotation> featurizer, AnnotationType annotationType, SequenceLabeler labeler) {
     this.featurizer = featurizer;
-    this.tagAttribute = tagAttribute;
     this.annotationType = annotationType;
+    this.labeler = labeler;
   }
 
-  protected abstract SequenceLabeler getLabeler();
+  /**
+   * Read t.
+   *
+   * @param resource the resource
+   * @return the t
+   * @throws Exception the exception
+   */
+  public static BIOTagger read(@NonNull Resource resource) throws Exception {
+    return resource.readObject();
+  }
 
-  @Override
-  public void annotate(Annotation sentence) {
+  /**
+   * Tag labeling result.
+   *
+   * @param sentence the sentence
+   * @return the labeling result
+   */
+  public LabelingResult tag(Annotation sentence) {
     SequenceInput<Annotation> sequenceInput = new SequenceInput<>(sentence.tokens());
-    LabelingResult result = getLabeler().label(featurizer.extractSequence(sequenceInput.iterator()));
+    LabelingResult result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
     for (int i = 0; i < sentence.tokenLength(); ) {
       if (result.getLabel(i).equals("O")) {
         i++;
@@ -43,9 +77,20 @@ public abstract class BIOTagger extends SentenceLevelAnnotator {
         int end = (i < sentence.tokenLength()) ? sentence.tokenAt(i - 1).end() : sentence.end();
         sentence.document()
           .createAnnotation(annotationType, start, end)
-          .put(tagAttribute, tagAttribute.getValueType().convert(type));
+          .put(annotationType.getTagAttribute(), annotationType.getTagAttribute().getValueType().convert(type));
       }
     }
+    return result;
+  }
+
+  /**
+   * Write.
+   *
+   * @param resource the resource
+   * @throws Exception the exception
+   */
+  public void write(@NonNull Resource resource) throws Exception {
+    resource.setIsCompressed(true).writeObject(this);
   }
 
 }// END OF BIOTagger

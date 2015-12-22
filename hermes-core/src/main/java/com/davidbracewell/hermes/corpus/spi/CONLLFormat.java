@@ -87,7 +87,7 @@ public class CONLLFormat extends FileBasedFormat {
         if (processors == null) {
           processors = new ArrayList<>();
           int i = 0;
-          for (FieldType fieldType : Config.get("CONLL.fields").as(FieldType[].class, new FieldType[]{FieldType.WORD, FieldType.POS})) {
+          for (FieldType fieldType : Config.get("CONLL.fields").as(FieldType[].class, new FieldType[]{FieldType.WORD, FieldType.POS, FieldType.CHUNK})) {
             processors.add(fieldType.getProcessor(i));
             if (fieldType == FieldType.WORD) {
               wordIndex = i;
