@@ -1,4 +1,4 @@
-package com.davidbracewell.hermes.ml;
+package com.davidbracewell.hermes.ml.chunker;
 
 import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
@@ -8,6 +8,7 @@ import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
 import com.davidbracewell.apollo.ml.sequence.linear.Solver;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.ml.BIOTrainer;
 
 import java.util.LinkedList;
 import java.util.List;

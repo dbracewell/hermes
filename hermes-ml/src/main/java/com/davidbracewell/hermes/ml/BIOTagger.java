@@ -6,17 +6,13 @@ import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.io.resource.Resource;
-import lombok.NonNull;
-
-import java.io.Serializable;
 
 /**
  * The type Bio tagger.
  *
  * @author David B. Bracewell
  */
-public class BIOTagger implements Serializable {
+public class BIOTagger extends AnnotationTagger {
   private static final long serialVersionUID = 1L;
   /**
    * The Featurizer.
@@ -44,24 +40,14 @@ public class BIOTagger implements Serializable {
     this.labeler = labeler;
   }
 
-  /**
-   * Read t.
-   *
-   * @param resource the resource
-   * @return the t
-   * @throws Exception the exception
-   */
-  public static BIOTagger read(@NonNull Resource resource) throws Exception {
-    return resource.readObject();
-  }
 
   /**
    * Tag labeling result.
    *
    * @param sentence the sentence
-   * @return the labeling result
    */
-  public LabelingResult tag(Annotation sentence) {
+  @Override
+  public void tag(Annotation sentence) {
     SequenceInput<Annotation> sequenceInput = new SequenceInput<>(sentence.tokens());
     LabelingResult result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
     for (int i = 0; i < sentence.tokenLength(); ) {
@@ -80,17 +66,6 @@ public class BIOTagger implements Serializable {
           .put(annotationType.getTagAttribute(), annotationType.getTagAttribute().getValueType().convert(type));
       }
     }
-    return result;
-  }
-
-  /**
-   * Write.
-   *
-   * @param resource the resource
-   * @throws Exception the exception
-   */
-  public void write(@NonNull Resource resource) throws Exception {
-    resource.setIsCompressed(true).writeObject(this);
   }
 
 }// END OF BIOTagger
