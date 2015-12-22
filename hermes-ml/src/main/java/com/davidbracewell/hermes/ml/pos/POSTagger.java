@@ -1,6 +1,6 @@
 package com.davidbracewell.hermes.ml.pos;
 
-import com.davidbracewell.apollo.ml.sequence.LabelingResult;
+import com.davidbracewell.apollo.ml.sequence.Labeling;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
@@ -30,7 +30,7 @@ public class POSTagger extends AnnotationTagger {
   @Override
   public void tag(Annotation sentence) {
     SequenceInput<Annotation> sequenceInput = new SequenceInput<>(sentence.tokens());
-    LabelingResult result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
+    Labeling result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
     for (int i = 0; i < sentence.tokenLength(); i++) {
       sentence.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(result.getLabel(i)));
     }

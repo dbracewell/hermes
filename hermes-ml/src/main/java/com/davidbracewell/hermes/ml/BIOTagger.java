@@ -1,6 +1,6 @@
 package com.davidbracewell.hermes.ml;
 
-import com.davidbracewell.apollo.ml.sequence.LabelingResult;
+import com.davidbracewell.apollo.ml.sequence.Labeling;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
@@ -49,7 +49,7 @@ public class BIOTagger extends AnnotationTagger {
   @Override
   public void tag(Annotation sentence) {
     SequenceInput<Annotation> sequenceInput = new SequenceInput<>(sentence.tokens());
-    LabelingResult result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
+    Labeling result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
     for (int i = 0; i < sentence.tokenLength(); ) {
       if (result.getLabel(i).equals("O")) {
         i++;

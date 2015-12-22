@@ -37,6 +37,10 @@ public abstract class BIOTrainer extends CommandLineApplication {
     this.annotationType = annotationType;
   }
 
+  protected SequenceValidator getValidator() {
+    return new BIOValidator();
+  }
+
   protected abstract SequenceFeaturizer<Annotation> getFeaturizer();
 
   protected PreprocessorList<Sequence> getPreprocessors() {
@@ -83,6 +87,10 @@ public abstract class BIOTrainer extends CommandLineApplication {
     BIOEvaluation eval = new BIOEvaluation();
     eval.evaluate(tagger.labeler, test);
     eval.output(System.out);
+
+    PerInstanceEvaluation eval2 = new PerInstanceEvaluation();
+    eval2.evaluate(tagger.labeler, test);
+    eval2.output(System.out,true);
   }
 
   protected void train() throws Exception {
@@ -112,7 +120,9 @@ public abstract class BIOTrainer extends CommandLineApplication {
     }
     train.encode();
 
-    SequenceLabeler labeler = getLearner().train(train);
+    SequenceLabelerLearner learner = getLearner();
+    learner.setValidator(getValidator());
+    SequenceLabeler labeler = learner.train(train);
     BIOTagger tagger = new BIOTagger(featurizer, annotationType, labeler);
     tagger.write(model);
   }
