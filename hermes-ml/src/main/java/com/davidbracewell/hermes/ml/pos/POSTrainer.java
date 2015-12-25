@@ -40,13 +40,6 @@ public class POSTrainer extends CommandLineApplication {
   }
 
   public static void main(String[] args) {
-    args = new String[]{
-      "--corpus", "/home/david/test.txt",
-      "--format", "CONLL",
-      "--model", "/home/david/en-pos.model.gz",
-//      "--minFeatureCount", "5",
-      "--mode", "TEST"
-    };
     new POSTrainer().run(args);
   }
 
