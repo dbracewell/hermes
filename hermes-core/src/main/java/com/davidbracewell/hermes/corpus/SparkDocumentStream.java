@@ -39,6 +39,7 @@ import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.ToDoubleFunction;
@@ -121,7 +122,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     source.close();
   }
 
