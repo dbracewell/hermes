@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
+ * The type Bag of annotation.
+ *
  * @author David B. Bracewell
  */
 public class BagOfAnnotation implements Featurizer<HString> {
@@ -23,6 +25,14 @@ public class BagOfAnnotation implements Featurizer<HString> {
   private final SerializablePredicate<HString> predicate;
   private final boolean binary;
 
+  /**
+   * Instantiates a new Bag of annotation.
+   *
+   * @param type             the type
+   * @param toStringFunction the to string function
+   * @param predicate        the predicate
+   * @param binary           the binary
+   */
   public BagOfAnnotation(@NonNull AnnotationType type, @NonNull SerializableFunction<HString, String> toStringFunction, @NonNull SerializablePredicate<HString> predicate, boolean binary) {
     this.type = type;
     this.toStringFunction = toStringFunction;
@@ -30,10 +40,26 @@ public class BagOfAnnotation implements Featurizer<HString> {
     this.binary = binary;
   }
 
+  /**
+   * Binary featurizer.
+   *
+   * @param type             the type
+   * @param toStringFunction the to string function
+   * @param predicate        the predicate
+   * @return the featurizer
+   */
   public static Featurizer<HString> binary(@NonNull AnnotationType type, @NonNull SerializableFunction<HString, String> toStringFunction, @NonNull SerializablePredicate<HString> predicate) {
     return new BagOfAnnotation(type, toStringFunction, predicate, true);
   }
 
+  /**
+   * Frequency featurizer.
+   *
+   * @param type             the type
+   * @param toStringFunction the to string function
+   * @param predicate        the predicate
+   * @return the featurizer
+   */
   public static Featurizer<HString> frequency(@NonNull AnnotationType type, @NonNull SerializableFunction<HString, String> toStringFunction, @NonNull SerializablePredicate<HString> predicate) {
     return new BagOfAnnotation(type, toStringFunction, predicate, false);
   }
