@@ -27,18 +27,16 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- * <p>
- * An object containing linguistic <code>Annotations</code>.
- * </p>
+ * <p> An object containing linguistic <code>Annotation</code>s. </p>
  *
  * @author David B. Bracewell
  */
 public interface AnnotatedObject {
 
   /**
-   * Returns the document that this fragment is a part of.
+   * Returns the document that the annotated object is associated with
    *
-   * @return The document that this fragment is associated with
+   * @return The document that this object is associated with
    */
   Document document();
 
@@ -64,9 +62,9 @@ public interface AnnotatedObject {
 
 
   /**
-   * Gets all annotations.
+   * Gets all annotations overlapping this object
    *
-   * @return the all annotations
+   * @return all annotations overlapping with this object.
    */
   List<Annotation> getAllAnnotations();
 
@@ -99,9 +97,9 @@ public interface AnnotatedObject {
   }
 
   /**
-   * Last token annotation.
+   * Ges the last token annotation overlapping this object
    *
-   * @return the annotation
+   * @return the last token annotation
    */
   default Annotation lastToken() {
     if (tokenLength() > 0) {
@@ -111,9 +109,9 @@ public interface AnnotatedObject {
   }
 
   /**
-   * First token annotation.
+   * Gets the first token annotation overlapping this object.
    *
-   * @return the annotation
+   * @return the forst token annotation
    */
   default Annotation firstToken() {
     if (tokenLength() > 0) {
@@ -132,12 +130,10 @@ public interface AnnotatedObject {
   }
 
   /**
-   * <p>
-   * Gits the token at the given token index which is a relative offset from this object. For example, given the
+   * <p> Gits the token at the given token index which is a relative offset from this object. For example, given the
    * document with the following tokens: <code>["the", "quick", "brown", "fox", "jumps", "over", "the", "lazy",
-   * "dog"]</code> and this annotation spanning <code>["quick", "brown", "fox"]</code> "quick" would have a relative
-   * offset in this object of 0 and document offset of 1.
-   * </p>
+   * "dog"]</code> and this annotated object spanning <code>["quick", "brown", "fox"]</code> "quick" would have a
+   * relative offset in this object of 0 and document offset of 1. </p>
    *
    * @param tokenIndex the token index relative to the tokens overlapping this object.
    * @return the token annotation at the relative offset

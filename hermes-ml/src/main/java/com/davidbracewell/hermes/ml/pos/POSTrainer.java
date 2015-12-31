@@ -53,7 +53,7 @@ public class POSTrainer extends CommandLineApplication {
   }
 
   protected void train() throws Exception {
-    POSFeaturizer featurizer = new POSFeaturizer();
+    DefaultPOSFeaturizer featurizer = new DefaultPOSFeaturizer();
     Dataset<Sequence> train = Dataset.sequence()
       .source(
         Corpus

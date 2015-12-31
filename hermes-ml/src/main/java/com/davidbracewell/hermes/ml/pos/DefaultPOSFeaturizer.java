@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * @author David B. Bracewell
  */
-public class POSFeaturizer implements SequenceFeaturizer<Annotation> {
+public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
 
   private String toWordForm(String word) {
 //    if (StringPredicates.IS_DIGIT.test(word)) {
