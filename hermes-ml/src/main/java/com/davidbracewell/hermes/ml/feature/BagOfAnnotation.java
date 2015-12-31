@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * @author David B. Bracewell
  */
 public class BagOfAnnotation implements Featurizer<HString> {
-
+  private static final long serialVersionUID = 1L;
   private final AnnotationType type;
   private final SerializableFunction<HString, String> toStringFunction;
   private final SerializablePredicate<HString> predicate;
@@ -68,7 +68,7 @@ public class BagOfAnnotation implements Featurizer<HString> {
   @Override
   public Set<Feature> apply(HString hString) {
     MStream<String> stream = Streams.of(
-      hString.get(type).stream()
+      hString.stream(type)
         .filter(predicate)
         .map(toStringFunction)
     );
