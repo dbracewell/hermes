@@ -35,9 +35,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * <p>
- * A <code>BreakIterator</code> backed sentence annotator that has limited knowledge of abbreviations.
- * </p>
+ * <p> A <code>BreakIterator</code> backed sentence annotator that has limited knowledge of abbreviations. </p>
  *
  * @author David B. Bracewell
  */
@@ -183,7 +181,7 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
         continue;
       }
 
-      if (!noSentenceBreak.contains(doc.substring(start, end))) {
+      if (!noSentenceBreak.contains(doc.substring(start, end).toString())) {
         doc.createAnnotation(Types.SENTENCE,
           start,
           end,

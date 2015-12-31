@@ -24,7 +24,9 @@ package com.davidbracewell.hermes;
 import lombok.NonNull;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * <p> An object containing linguistic <code>Annotation</code>s. </p>
@@ -159,5 +161,26 @@ public interface AnnotatedObject {
   default List<Annotation> tokens() {
     return get(Types.TOKEN);
   }
+
+  /**
+   * Stream stream.
+   *
+   * @param type the type
+   * @return the stream
+   */
+  default Stream<Annotation> stream(@NonNull AnnotationType type) {
+    return get(type).stream();
+  }
+
+  /**
+   * For each.
+   *
+   * @param type     the type
+   * @param consumer the consumer
+   */
+  default void forEach(@NonNull AnnotationType type, @NonNull Consumer<? super Annotation> consumer) {
+    get(type).forEach(consumer);
+  }
+
 
 }//END OF AnnotatedObject

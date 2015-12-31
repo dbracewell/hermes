@@ -9,10 +9,9 @@ import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
-import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
 import com.davidbracewell.apollo.ml.sequence.WindowedLearner;
 import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
-import com.davidbracewell.apollo.ml.sequence.linear.StructuredPerceptronLearner;
+import com.davidbracewell.apollo.ml.sequence.linear.MEMMLearner;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.Annotation;
@@ -33,7 +32,7 @@ public class POSTrainer extends CommandLineApplication {
   String corpusFormat;
   @Option(description = "Location to save model", required = true)
   Resource model;
-  @Option(description = "Minimum count for a feature to be kept", defaultValue = "0")
+  @Option(description = "Minimum count for a feature to be kept", defaultValue = "5")
   int minFeatureCount;
   @Option(description = "TEST or TRAIN", defaultValue = "TRAIN")
   Mode mode;
@@ -79,11 +78,11 @@ public class POSTrainer extends CommandLineApplication {
       train.preprocess(PreprocessorList.create(new CountFilter(d -> d >= minFeatureCount).asSequenceProcessor()));
     }
 
-    SequenceLabelerLearner learner = new StructuredPerceptronLearner();
+    SequenceLabelerLearner learner = new MEMMLearner();
       //new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
-    learner.setParameter("maxIterations", 20);
+      //new CRFTrainer();
+    learner.setParameter("maxIterations", 100);
     learner.setParameter("verbose", true);
-    learner.setTransitionFeatures(TransitionFeatures.SECOND_ORDER);
     SequenceLabeler labeler = learner.train(train);
     POSTagger tagger = new POSTagger(featurizer, labeler);
     tagger.write(model);
