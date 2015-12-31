@@ -5,7 +5,6 @@ import com.davidbracewell.apollo.ml.sequence.ContextualIterator;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.string.StringPredicates;
 
 import java.util.HashSet;
@@ -17,16 +16,16 @@ import java.util.Set;
 public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
 
   private String toWordForm(String word) {
-//    if (StringPredicates.IS_DIGIT.test(word)) {
-//      try {
-//        int d = Integer.valueOf(word);
-//        if (d >= 1800 && d <= 2100) {
-//          return "!YEAR";
-//        }
-//      } catch (Exception e) {
-//        return "!DIGIT";
-//      }
-//    }
+    if (StringPredicates.IS_DIGIT.test(word)) {
+      try {
+        int d = Integer.valueOf(word);
+        if (d >= 1800 && d <= 2100) {
+          return "!YEAR";
+        }
+      } catch (Exception e) {
+        return "!DIGIT";
+      }
+    }
     return word;
   }
 
@@ -61,7 +60,6 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
 
 
     features.add(Feature.TRUE("w[0]=" + word));
-//    features.add(Feature.TRUE("default"));
 
     if (iterator.getIndex() == 0) {
       features.add(Feature.TRUE("__BOS__"));
@@ -70,24 +68,21 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
     }
 
     if (!word.equals("!DIGIT") && !word.equals("!YEAR")) {
-//      for (int li = 0, ll = 3; li < ll; li++) {
-//        features.add(
-//          Feature.TRUE(
-//            "suffix[" + (li + 1) + "]=" +
-//              word.substring(Math.max(word.length() - li - 1, 0))
-//          )
-//        );
-//      }
-//      for (int li = 0, ll = 3; li < ll; li++) {
-//        features.add(
-//          Feature.TRUE(
-//            "prefix[" + (li + 1) + "]=" +
-//              word.substring(0, Math.min(li + 1, word.length()))
-//          )
-//        );
-//      }
-      if (word.length() > 3) {
-        features.add(Feature.TRUE("suffix[0]", word.substring(word.length() - 3)));
+      for (int li = 0, ll = 3; li < ll; li++) {
+        features.add(
+          Feature.TRUE(
+            "suffix[" + (li + 1) + "]=" +
+              word.substring(Math.max(word.length() - li - 1, 0))
+          )
+        );
+      }
+      for (int li = 0, ll = 3; li < ll; li++) {
+        features.add(
+          Feature.TRUE(
+            "prefix[" + (li + 1) + "]=" +
+              word.substring(0, Math.min(li + 1, word.length()))
+          )
+        );
       }
     }
 
