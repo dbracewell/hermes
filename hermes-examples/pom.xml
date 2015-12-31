@@ -88,7 +88,7 @@
                         </filter>
                     </filters>
                     <!-- Additional configuration. -->
-                    <finalName>uber-${artifactId}-${version}</finalName>
+                    <finalName>uber-${project.artifactId}-${project.version}</finalName>
                 </configuration>
             </plugin>
         </plugins>

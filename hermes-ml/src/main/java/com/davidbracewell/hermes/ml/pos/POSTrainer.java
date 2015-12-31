@@ -9,7 +9,10 @@ import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
+import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
 import com.davidbracewell.apollo.ml.sequence.WindowedLearner;
+import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
+import com.davidbracewell.apollo.ml.sequence.linear.StructuredPerceptronLearner;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.Annotation;
@@ -26,13 +29,13 @@ public class POSTrainer extends CommandLineApplication {
 
   @Option(description = "Location of the corpus to process", required = true)
   Resource corpus;
-  @Option(name = "format", description = "Format of the corpus", required = true)
+  @Option(name = "format", description = "Format of the corpus", defaultValue = "JSON_OPL")
   String corpusFormat;
   @Option(description = "Location to save model", required = true)
   Resource model;
   @Option(description = "Minimum count for a feature to be kept", defaultValue = "0")
   int minFeatureCount;
-  @Option(description = "TEST or TRAIN", defaultValue = "TEST")
+  @Option(description = "TEST or TRAIN", defaultValue = "TRAIN")
   Mode mode;
 
   public POSTrainer() {
@@ -76,9 +79,11 @@ public class POSTrainer extends CommandLineApplication {
       train.preprocess(PreprocessorList.create(new CountFilter(d -> d >= minFeatureCount).asSequenceProcessor()));
     }
 
-    SequenceLabelerLearner learner = new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
-    learner.setParameter("maxIterations", 100);
+    SequenceLabelerLearner learner = new StructuredPerceptronLearner();
+      //new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
+    learner.setParameter("maxIterations", 20);
     learner.setParameter("verbose", true);
+    learner.setTransitionFeatures(TransitionFeatures.SECOND_ORDER);
     SequenceLabeler labeler = learner.train(train);
     POSTagger tagger = new POSTagger(featurizer, labeler);
     tagger.write(model);
