@@ -44,6 +44,12 @@ public class CONLLFormat extends FileBasedFormat {
 
 
   public enum FieldType {
+    INDEX {
+      @Override
+      public FieldProcessor getProcessor(int index) {
+        return NoOptProcessor.INSTANCE;
+      }
+    },
     WORD {
       @Override
       public FieldProcessor getProcessor(int index) {
@@ -62,7 +68,7 @@ public class CONLLFormat extends FileBasedFormat {
         return IOBFieldProcessor.chunkProcessor(index);
       }
     },
-    NE {
+    ENTITY {
       @Override
       public FieldProcessor getProcessor(int index) {
         return IOBFieldProcessor.nameEntityProcessor(index);
@@ -103,7 +109,11 @@ public class CONLLFormat extends FileBasedFormat {
   private Document createDocument(List<List<String>> rows, DocumentFactory documentFactory) {
     List<String> tokens = new ArrayList<>();
     for (List<String> wordInfo : rows) {
-      tokens.add(wordInfo.get(wordIndex));
+      if (wordInfo.size() > wordIndex) {
+        tokens.add(wordInfo.get(wordIndex));
+      } else {
+        System.err.println("BAD: " + wordInfo);
+      }
     }
     Document document = documentFactory.fromTokens(tokens);
     document.createAnnotation(Types.SENTENCE, 0, document.length());
@@ -127,7 +137,7 @@ public class CONLLFormat extends FileBasedFormat {
         }
         rows = new ArrayList<>();
       } else {
-        rows.add(Arrays.asList(line.split("\\p{Z}")));
+        rows.add(Arrays.asList(line.split(Config.get("CONLL.fs").asString("\\s+"))));
       }
     }
 

@@ -81,7 +81,7 @@ public class POSTrainFormat extends FileBasedFormat {
     });
 
     Document document = documentFactory.fromTokens(tokens);
-    sentences.stream().filter(t -> t.v2 > t.v1)
+    sentences.stream().filter(t -> Math.min(t.v2, document.length()) > t.v1)
       .forEach(t -> document.createAnnotation(Types.SENTENCE, t.v1, Math.min(t.v2, document.length())));
     for (int i = 0; i < tokens.size(); i++) {
       document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(pos.get(i)));

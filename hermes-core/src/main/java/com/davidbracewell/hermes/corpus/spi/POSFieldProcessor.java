@@ -41,9 +41,19 @@ public class POSFieldProcessor implements FieldProcessor {
 
   @Override
   public void process(Document document, List<List<String>> rows) {
+    boolean completed = false;
     for (int i = 0; i < rows.size(); i++) {
-      document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(rows.get(i).get(index)));
+      if (rows.get(i).size() > index && !rows.get(i).get(index).equals("_") && !rows.get(i).get(index).equals("-")) {
+        String posStr = rows.get(i).get(index);
+        if (posStr.contains("|")) {
+          posStr = posStr.substring(0, posStr.indexOf('|'));
+        }
+        completed = true;
+        document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(posStr));
+      }
     }
-    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
+    if (completed) {
+      document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
+    }
   }
 }//END OF POSFieldProcessor

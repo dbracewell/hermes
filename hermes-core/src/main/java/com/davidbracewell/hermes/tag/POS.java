@@ -25,6 +25,7 @@ import com.davidbracewell.Tag;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.string.StringPredicates;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
 
@@ -229,18 +230,16 @@ public enum POS implements Tag {
   WRB(ADVERB, "WRB"), //Wh-adverb
   PERIOD(PUNCTUATION, "."),
   HASH(PUNCTUATION, "#"),
-  OPEN_QUOTE(PUNCTUATION, "``"),
-  CLOSE_QUOTE(PUNCTUATION, "''"),
   QUOTE(PUNCTUATION, "\""),
   DOLLAR(PUNCTUATION, "$"),
   LRB(PUNCTUATION, "-LRB-"),
   RRB(PUNCTUATION, "-RRB-"),
   LCB(PUNCTUATION, "-LCB-"),
   RCB(PUNCTUATION, "-RCB-"),
+  RSB(PUNCTUATION, "-RSB-"),
+  LSB(PUNCTUATION, "-LSB-"),
   COMMA(PUNCTUATION, ","),
   SEMICOLON(PUNCTUATION, ":"),
-  CLOSE_PARENS(PUNCTUATION, ")"),
-  OPEN_PARENS(PUNCTUATION, "("),
 
 
   /**
@@ -359,7 +358,7 @@ public enum POS implements Tag {
   private final String tag;
   private final com.davidbracewell.hermes.tag.POS parentType;
 
-  private POS(com.davidbracewell.hermes.tag.POS parentType, String tag) {
+  POS(com.davidbracewell.hermes.tag.POS parentType, String tag) {
     this.parentType = parentType;
     this.tag = tag;
   }
@@ -374,6 +373,7 @@ public enum POS implements Tag {
     if (StringUtils.isNullOrBlank(tag)) {
       return null;
     }
+
     try {
       return com.davidbracewell.hermes.tag.POS.valueOf(tag);
     } catch (Exception e) {
@@ -383,6 +383,27 @@ public enum POS implements Tag {
         }
       }
     }
+
+    if (tag.equals("``") || tag.equals("''") || tag.equals("\"\"") || tag.equals("'") || tag.equals("\"")) {
+      return QUOTE;
+    } else if (tag.equals("UH`")) {
+      return UH;
+    } else if (tag.endsWith("{")) {
+      return LCB;
+    } else if (tag.endsWith("}")) {
+      return RCB;
+    } else if (tag.endsWith("[")) {
+      return LSB;
+    } else if (tag.endsWith("]")) {
+      return RSB;
+    } else if (tag.endsWith("(")) {
+      return LRB;
+    } else if (tag.endsWith(")")) {
+      return RRB;
+    } else if (!StringPredicates.HAS_LETTER.test(tag)) {
+      return SYM;
+    }
+
     throw new IllegalArgumentException(tag + " is not a know PartOfSpeech");
   }
 

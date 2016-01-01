@@ -4,16 +4,10 @@ import com.davidbracewell.apollo.ml.Dataset;
 import com.davidbracewell.apollo.ml.classification.linear.AveragedPerceptronLearner;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
-import com.davidbracewell.apollo.ml.sequence.PerInstanceEvaluation;
-import com.davidbracewell.apollo.ml.sequence.Sequence;
-import com.davidbracewell.apollo.ml.sequence.SequenceInput;
-import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
-import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
-import com.davidbracewell.apollo.ml.sequence.WindowedLearner;
-import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
-import com.davidbracewell.apollo.ml.sequence.linear.MEMMLearner;
+import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
+import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.corpus.Corpus;
@@ -55,6 +49,7 @@ public class POSTrainer extends CommandLineApplication {
   }
 
   protected void train() throws Exception {
+    Config.setProperty("CONLL.fields","INDEX,IGNORE,IGNORE,WORD,IGNORE,POS");
     DefaultPOSFeaturizer featurizer = new DefaultPOSFeaturizer();
     Dataset<Sequence> train = Dataset.sequence()
       .source(
@@ -107,9 +102,10 @@ public class POSTrainer extends CommandLineApplication {
             return tagger.featurizer.extractSequence(input.iterator());
           })
       ).build();
+    System.out.println("Read: " + test.size());
     PerInstanceEvaluation evaluation = new PerInstanceEvaluation();
     evaluation.evaluate(tagger.labeler, test);
-    evaluation.output(System.out, true);
+    evaluation.output(System.out, false);
   }
 
 }// END OF POSTrainer
