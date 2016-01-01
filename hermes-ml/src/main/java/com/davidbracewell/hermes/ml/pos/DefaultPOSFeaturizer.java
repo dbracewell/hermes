@@ -103,6 +103,13 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
     }
 
 
+    if (word.endsWith("es")) {
+      features.add(Feature.TRUE("ENDING_ES"));
+    } else if (word.endsWith("s")) {
+      features.add(Feature.TRUE("ENDING_S"));
+    }
+
+
     return features;
   }
 

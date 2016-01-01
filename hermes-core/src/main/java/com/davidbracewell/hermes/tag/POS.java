@@ -112,7 +112,7 @@ public enum POS implements Tag {
       return true;
     }
   },
-  PUNCTUATION(ANY, ".") {
+  PUNCTUATION(ANY, "PUNCTUATION") {
     @Override
     public boolean isUniversal() {
       return true;
@@ -384,7 +384,9 @@ public enum POS implements Tag {
       }
     }
 
-    if (tag.equals("``") || tag.equals("''") || tag.equals("\"\"") || tag.equals("'") || tag.equals("\"")) {
+    if (tag.equals("?") || tag.equals("!")) {
+      return PERIOD;
+    } else if (tag.equals("``") || tag.equals("''") || tag.equals("\"\"") || tag.equals("'") || tag.equals("\"")) {
       return QUOTE;
     } else if (tag.equals("UH`")) {
       return UH;
