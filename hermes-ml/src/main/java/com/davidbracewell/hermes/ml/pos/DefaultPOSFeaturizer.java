@@ -5,7 +5,7 @@ import com.davidbracewell.apollo.ml.sequence.ContextualIterator;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.string.StringPredicates;
+import com.davidbracewell.string.StringUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,23 +14,26 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
+  private static final long serialVersionUID = 1L;
 
   private String toWordForm(String word) {
-    if (StringPredicates.IS_DIGIT.test(word)) {
-      try {
-        int d = Integer.valueOf(word);
-        if (d >= 1800 && d <= 2100) {
-          return "!YEAR";
-        }
-      } catch (Exception e) {
-        return "!DIGIT";
-      }
-    }
+//    if (StringPredicates.IS_DIGIT.test(word)) {
+//      try {
+//        int d = Integer.valueOf(word);
+//        if (d >= 1800 && d <= 2100) {
+//          return "!YEAR";
+//        }
+//      } catch (Exception e) {
+//        return "!DIGIT";
+//      }
+//    }
     return word;
   }
 
   @Override
   public Set<Feature> apply(ContextualIterator<Annotation> iterator) {
+
+
     String word = toWordForm(iterator.getCurrent().toString());
     Set<Feature> features = new HashSet<>();
 
@@ -57,7 +60,6 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
     } else {
       prev = Sequence.BOS;
     }
-
 
     features.add(Feature.TRUE("w[0]=" + word));
 
@@ -100,6 +102,12 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
     }
     if (nextNext != null) {
       features.add(Feature.TRUE("w[+2]=" + nextNext));
+    }
+
+    if (StringUtils.isUpperCase(word)) {
+      features.add(Feature.TRUE("ALL_UPPERCASE"));
+    } else if (Character.isUpperCase(word.charAt(0))) {
+      features.add(Feature.TRUE("STARTS_UPPERCASE"));
     }
 
 

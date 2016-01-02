@@ -25,6 +25,7 @@ import com.davidbracewell.Tag;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.string.StringPredicates;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
@@ -239,7 +240,7 @@ public enum POS implements Tag {
   RSB(PUNCTUATION, "-RSB-"),
   LSB(PUNCTUATION, "-LSB-"),
   COMMA(PUNCTUATION, ","),
-  SEMICOLON(PUNCTUATION, ":"),
+  COLON(PUNCTUATION, ":"),
 
 
   /**
@@ -384,7 +385,9 @@ public enum POS implements Tag {
       }
     }
 
-    if (tag.equals("?") || tag.equals("!")) {
+    if (tag.equals(";") || tag.equals("...") || tag.equals("-") || tag.equals("--")) {
+      return COLON;
+    } else if (tag.equals("?") || tag.equals("!")) {
       return PERIOD;
     } else if (tag.equals("``") || tag.equals("''") || tag.equals("\"\"") || tag.equals("'") || tag.equals("\"")) {
       return QUOTE;
@@ -420,6 +423,9 @@ public enum POS implements Tag {
 
     if (text.contains(Attrs.PART_OF_SPEECH)) {
       return text.get(Attrs.PART_OF_SPEECH).cast();
+    }
+    if (text.isInstance(Types.TOKEN)) {
+      return null;
     }
 
     com.davidbracewell.hermes.tag.POS tag = ANY;

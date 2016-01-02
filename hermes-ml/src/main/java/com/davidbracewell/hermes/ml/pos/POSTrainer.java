@@ -1,18 +1,21 @@
 package com.davidbracewell.hermes.ml.pos;
 
 import com.davidbracewell.apollo.ml.Dataset;
-import com.davidbracewell.apollo.ml.classification.linear.AveragedPerceptronLearner;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
 import com.davidbracewell.apollo.ml.sequence.*;
+import com.davidbracewell.apollo.ml.sequence.linear.StructuredPerceptronLearner;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
-import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.Mode;
+import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.resource.Resource;
+
+import java.util.Objects;
 
 /**
  * @author David B. Bracewell
@@ -31,6 +34,8 @@ public class POSTrainer extends CommandLineApplication {
   @Option(description = "TEST or TRAIN", defaultValue = "TRAIN")
   Mode mode;
 
+  private final DefaultPOSFeaturizer featurizer = new DefaultPOSFeaturizer();
+
   public POSTrainer() {
     super("POSTrainer");
   }
@@ -48,10 +53,8 @@ public class POSTrainer extends CommandLineApplication {
     }
   }
 
-  protected void train() throws Exception {
-    Config.setProperty("CONLL.fields","INDEX,IGNORE,IGNORE,WORD,IGNORE,POS");
-    DefaultPOSFeaturizer featurizer = new DefaultPOSFeaturizer();
-    Dataset<Sequence> train = Dataset.sequence()
+  protected Dataset<Sequence> loadDataset() throws Exception {
+    return Dataset.sequence()
       .source(
         Corpus
           .builder()
@@ -59,23 +62,33 @@ public class POSTrainer extends CommandLineApplication {
           .format(corpusFormat)
           .build()
           .stream()
+          .filter(d -> d.getAnnotationSet().isCompleted(Types.PART_OF_SPEECH))
           .flatMap(Document::sentences)
           .map(sentence -> {
             SequenceInput<Annotation> input = new SequenceInput<>();
             for (int i = 0; i < sentence.tokenLength(); i++) {
-              input.add(sentence.tokenAt(i), sentence.tokenAt(i).getPOS().asString());
+              POS pos = sentence.tokenAt(i).getPOS();
+              if (pos == null) {
+                return null;
+              }
+              input.add(sentence.tokenAt(i), pos.asString());
             }
             return featurizer.extractSequence(input.iterator());
           })
+          .filter(Objects::nonNull)
       ).build();
+  }
 
+  protected void train() throws Exception {
+    Dataset<Sequence> train = loadDataset();
     if (minFeatureCount > 1) {
-      train.preprocess(PreprocessorList.create(new CountFilter(d -> d >= minFeatureCount).asSequenceProcessor()));
+      train = train.preprocess(PreprocessorList.create(new CountFilter(d -> d >= minFeatureCount).asSequenceProcessor()));
     }
-
-    SequenceLabelerLearner learner = new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
-      //new CRFTrainer();
-    learner.setParameter("maxIterations", 10);
+    SequenceLabelerLearner learner = new StructuredPerceptronLearner();
+    //new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
+    //new CRFTrainer();
+    learner.setValidator(new POSValidator());
+    learner.setParameter("maxIterations", 50);
     learner.setParameter("verbose", true);
     SequenceLabeler labeler = learner.train(train);
     POSTagger tagger = new POSTagger(featurizer, labeler);
@@ -85,27 +98,11 @@ public class POSTrainer extends CommandLineApplication {
 
   protected void test() throws Exception {
     POSTagger tagger = POSTagger.read(model);
-    Dataset<Sequence> test = Dataset.sequence()
-      .source(
-        Corpus
-          .builder()
-          .source(corpus)
-          .format(corpusFormat)
-          .build()
-          .stream()
-          .flatMap(Document::sentences)
-          .map(sentence -> {
-            SequenceInput<Annotation> input = new SequenceInput<>();
-            for (int i = 0; i < sentence.tokenLength(); i++) {
-              input.add(sentence.tokenAt(i), sentence.tokenAt(i).getPOS().asString());
-            }
-            return tagger.featurizer.extractSequence(input.iterator());
-          })
-      ).build();
+    Dataset<Sequence> test = loadDataset();
     System.out.println("Read: " + test.size());
     PerInstanceEvaluation evaluation = new PerInstanceEvaluation();
     evaluation.evaluate(tagger.labeler, test);
-    evaluation.output(System.out, false);
+    evaluation.output(System.out, true);
   }
 
 }// END OF POSTrainer

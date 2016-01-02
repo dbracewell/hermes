@@ -68,6 +68,7 @@ public final class Attribute extends EnumValue {
 
   private static final DynamicEnum<Attribute> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
+  private volatile transient ValueType valueType;
 
   private Attribute(String name) {
     super(name);
@@ -220,7 +221,14 @@ public final class Attribute extends EnumValue {
    * @return The class associated with this attributes values
    */
   public ValueType getValueType() {
-    return ValueType.fromConfig("Attribute" + "." + name());
+    if (valueType == null) {
+      synchronized (this) {
+        if (valueType == null) {
+          valueType = ValueType.fromConfig("Attribute" + "." + name());
+        }
+      }
+    }
+    return valueType;
   }
 
 

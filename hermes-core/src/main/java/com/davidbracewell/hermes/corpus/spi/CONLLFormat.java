@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Types;
@@ -107,6 +108,7 @@ public class CONLLFormat extends FileBasedFormat {
   }
 
   private Document createDocument(List<List<String>> rows, DocumentFactory documentFactory) {
+    getProcessors();
     List<String> tokens = new ArrayList<>();
     for (List<String> wordInfo : rows) {
       if (wordInfo.size() > wordIndex) {
@@ -117,7 +119,7 @@ public class CONLLFormat extends FileBasedFormat {
     }
     Document document = documentFactory.fromTokens(tokens);
     document.createAnnotation(Types.SENTENCE, 0, document.length());
-    document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "Corpus");
+    document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
     for (FieldProcessor processor : getProcessors()) {
       processor.process(document, rows);
     }
@@ -133,7 +135,9 @@ public class CONLLFormat extends FileBasedFormat {
     for (String line : resource.readLines()) {
       if (StringUtils.isNullOrBlank(line)) {
         if (!rows.isEmpty()) {
-          documents.add(createDocument(rows, documentFactory));
+          Document doc = createDocument(rows, documentFactory);
+          doc.put(Attrs.FILE, resource.descriptor());
+          documents.add(doc);
         }
         rows = new ArrayList<>();
       } else {
@@ -142,7 +146,9 @@ public class CONLLFormat extends FileBasedFormat {
     }
 
     if (!rows.isEmpty()) {
-      documents.add(createDocument(rows, documentFactory));
+      Document doc = createDocument(rows, documentFactory);
+      doc.put(Attrs.FILE, resource.descriptor());
+      documents.add(doc);
     }
 
 
