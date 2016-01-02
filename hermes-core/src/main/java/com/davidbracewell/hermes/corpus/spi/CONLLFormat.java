@@ -23,20 +23,18 @@ package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.SystemInfo;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.corpus.DocumentFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
+import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -115,14 +113,20 @@ public class CONLLFormat extends FileBasedFormat {
     List<String> tokens = new ArrayList<>();
     for (List<String> wordInfo : rows) {
       if (wordInfo.size() > wordIndex) {
-        tokens.add(wordInfo.get(wordIndex));
+        String word = wordInfo.get(wordIndex).replaceAll(StringUtils.UNICODE_WHITESPACE_PLUS, "");
+        switch (word) {
+          case "\"\"":
+          case "``":
+          case "''":
+            word = "\"";
+            break;
+        }
+        tokens.add(word);
       } else {
         System.err.println("BAD: " + wordInfo);
       }
     }
     Document document = documentFactory.fromTokens(tokens);
-    document.createAnnotation(Types.SENTENCE, 0, document.length());
-    document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
     for (FieldProcessor processor : getProcessors()) {
       processor.process(document, rows);
     }
@@ -131,29 +135,40 @@ public class CONLLFormat extends FileBasedFormat {
 
   @Override
   public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
-    List<Document> documents = new ArrayList<>();
     List<List<String>> rows = new ArrayList<>();
+    List<Tuple2<Integer, Integer>> sentenceBoundaries = new ArrayList<>();
+
+    int start = 0;
+    int end = 0;
+    byte state = 0;
 
     for (String line : resource.readLines()) {
+
       if (StringUtils.isNullOrBlank(line)) {
-        if (!rows.isEmpty()) {
-          Document doc = createDocument(rows, documentFactory);
-          doc.put(Attrs.FILE, resource.descriptor());
-          documents.add(doc);
+        if (state == 1) { //END OF SENTENCE
+          sentenceBoundaries.add(Tuple2.of(start, end));
+          start = -1;
         }
-        rows = new ArrayList<>();
+        state = 0;
       } else {
+        if (state == 0) {
+          start = end;
+          state = 1;
+        }
         rows.add(Arrays.asList(line.split(Config.get("CONLL.fs").asString("\\s+"))));
+        end++;
       }
+
     }
 
-    if (!rows.isEmpty()) {
-      Document doc = createDocument(rows, documentFactory);
-      doc.put(Attrs.FILE, resource.descriptor());
-      documents.add(doc);
+    if (state == 1) {
+      sentenceBoundaries.add(Tuple2.of(start, end));
     }
-
-    return documents;
+    Document doc = createDocument(rows, documentFactory);
+    sentenceBoundaries.forEach(t -> doc.createAnnotation(Types.SENTENCE, doc.tokenAt(t.v1).start(), doc.tokenAt(t.v2 - 1).end()));
+    doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
+    doc.put(Attrs.FILE, resource.descriptor());
+    return Collections.singletonList(doc);
   }
 
   @Override
@@ -165,14 +180,17 @@ public class CONLLFormat extends FileBasedFormat {
   public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
     StringBuilder builder = new StringBuilder();
     List<FieldProcessor> processors = getProcessors();
-
-    for(Annotation sentence : document.sentences()){
-      for( int i = 0; i < sentence.tokenLength(); i++){
-        for(int p = 0; p < processors.size(); p++){
-          if( p > 0 ){
-            builder.append(" ");
+    String fieldSep = Config.get("CONLL.fs").asString("\\s+").replaceFirst("[\\*\\+]$", "");
+    if (fieldSep.equals("\\s")) {
+      fieldSep = " ";
+    }
+    for (Annotation sentence : document.sentences()) {
+      for (int i = 0; i < sentence.tokenLength(); i++) {
+        for (int p = 0; p < processors.size(); p++) {
+          if (p > 0) {
+            builder.append(fieldSep);
           }
-          builder.append(processors.get(p).processOutput(sentence,sentence.tokenAt(i), i));
+          builder.append(processors.get(p).processOutput(sentence, sentence.tokenAt(i), i));
         }
         builder.append(SystemInfo.LINE_SEPARATOR);
       }
