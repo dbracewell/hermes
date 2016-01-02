@@ -13,7 +13,6 @@ import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,17 +32,21 @@ public class POSTrainFormat extends FileBasedFormat {
     List<String> pos = new ArrayList<>();
     AtomicInteger start = new AtomicInteger(0);
     AtomicInteger end = new AtomicInteger(0);
+
+    List<Document> documents = new ArrayList<>();
     lines.forEach(line -> {
       line = line.trim();
       if (!StringUtils.isNullOrBlank(line)) {
         String[] parts = line.split("\\s+");
-        List<String> s = new LinkedList<>();
         for (String part : parts) {
           int lpos = part.lastIndexOf('_');
           String w = part.substring(0, lpos);
           String p = part.substring(lpos + 1);
 
           switch (w) {
+//            case "%":
+//              p = "SYM";
+//              break;
             case "``":
               w = "\"";
               break;
@@ -71,25 +74,24 @@ public class POSTrainFormat extends FileBasedFormat {
 
           }
           end.addAndGet(w.length() + 1);
-          tokens.add(w);
-          pos.add(p);
+          if (!StringUtils.isNullOrBlank(w)) {
+            tokens.add(w);
+            pos.add(p);
+          }
         }
-        sentences.add(Tuple2.of(start.get(), end.get()));
-        start.set(end.get() + 1);
-        end.set(start.get());
+        Document document = documentFactory.fromTokens(tokens);
+        for (int i = 0; i < tokens.size(); i++) {
+          document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(pos.get(i)));
+        }
+        document.createAnnotation(Types.SENTENCE, 0, document.length());
+        document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
+        document.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
+        document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
+        documents.add(document);
       }
     });
 
-    Document document = documentFactory.fromTokens(tokens);
-    sentences.stream().filter(t -> t.v2 > t.v1)
-      .forEach(t -> document.createAnnotation(Types.SENTENCE, t.v1, Math.min(t.v2, document.length())));
-    for (int i = 0; i < tokens.size(); i++) {
-      document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(pos.get(i)));
-    }
-    document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
-    document.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
-    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
-    return Collections.singletonList(document);
+    return documents;
   }
 
   @Override

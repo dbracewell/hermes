@@ -25,8 +25,14 @@ import com.davidbracewell.Tag;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.Types;
+import com.davidbracewell.string.StringPredicates;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
+import lombok.NonNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Enumeration covering the parts-of-speech used in pos tagging, chunking, and parsing.
@@ -111,7 +117,7 @@ public enum POS implements Tag {
       return true;
     }
   },
-  PUNCTUATION(ANY, ".") {
+  PUNCTUATION(ANY, "PUNCTUATION") {
     @Override
     public boolean isUniversal() {
       return true;
@@ -188,6 +194,7 @@ public enum POS implements Tag {
     }
   },
 
+
   /**
    * Penn Treebank Part of Speech Tags
    */
@@ -229,18 +236,16 @@ public enum POS implements Tag {
   WRB(ADVERB, "WRB"), //Wh-adverb
   PERIOD(PUNCTUATION, "."),
   HASH(PUNCTUATION, "#"),
-  OPEN_QUOTE(PUNCTUATION, "``"),
-  CLOSE_QUOTE(PUNCTUATION, "''"),
   QUOTE(PUNCTUATION, "\""),
   DOLLAR(PUNCTUATION, "$"),
   LRB(PUNCTUATION, "-LRB-"),
   RRB(PUNCTUATION, "-RRB-"),
   LCB(PUNCTUATION, "-LCB-"),
   RCB(PUNCTUATION, "-RCB-"),
+  RSB(PUNCTUATION, "-RSB-"),
+  LSB(PUNCTUATION, "-LSB-"),
   COMMA(PUNCTUATION, ","),
-  SEMICOLON(PUNCTUATION, ":"),
-  CLOSE_PARENS(PUNCTUATION, ")"),
-  OPEN_PARENS(PUNCTUATION, "("),
+  COLON(PUNCTUATION, ":"),
 
 
   /**
@@ -356,12 +361,20 @@ public enum POS implements Tag {
     }
   };
 
+  static Map<String, POS> index = new HashMap<>();
   private final String tag;
   private final com.davidbracewell.hermes.tag.POS parentType;
 
-  private POS(com.davidbracewell.hermes.tag.POS parentType, String tag) {
+  POS(com.davidbracewell.hermes.tag.POS parentType, String tag) {
     this.parentType = parentType;
     this.tag = tag;
+  }
+
+  static {
+    for (POS pos : values()) {
+      index.put(pos.asString().toUpperCase(), pos);
+      index.put(pos.toString().toUpperCase(), pos);
+    }
   }
 
   /**
@@ -373,15 +386,30 @@ public enum POS implements Tag {
   public static com.davidbracewell.hermes.tag.POS fromString(String tag) {
     if (StringUtils.isNullOrBlank(tag)) {
       return null;
-    }
-    try {
-      return com.davidbracewell.hermes.tag.POS.valueOf(tag);
-    } catch (Exception e) {
-      for (com.davidbracewell.hermes.tag.POS pos : com.davidbracewell.hermes.tag.POS.values()) {
-        if (pos.tag.equals(tag) || pos.tag.equals(tag.toUpperCase())) {
-          return pos;
-        }
-      }
+    } else if (index.containsKey(tag.toUpperCase())) {
+      return index.get(tag.toUpperCase());
+    } else if (tag.equals(";") || tag.equals("...") || tag.equals("-") || tag.equals("--")) {
+      return COLON;
+    } else if (tag.equals("?") || tag.equals("!")) {
+      return PERIOD;
+    } else if (tag.equals("``") || tag.equals("''") || tag.equals("\"\"") || tag.equals("'") || tag.equals("\"")) {
+      return QUOTE;
+    } else if (tag.equals("UH`")) {
+      return UH;
+    } else if (tag.endsWith("{")) {
+      return LCB;
+    } else if (tag.endsWith("}")) {
+      return RCB;
+    } else if (tag.endsWith("[")) {
+      return LSB;
+    } else if (tag.endsWith("]")) {
+      return RSB;
+    } else if (tag.endsWith("(")) {
+      return LRB;
+    } else if (tag.endsWith(")")) {
+      return RRB;
+    } else if (!StringPredicates.HAS_LETTER.test(tag)) {
+      return SYM;
     }
     throw new IllegalArgumentException(tag + " is not a know PartOfSpeech");
   }
@@ -397,6 +425,9 @@ public enum POS implements Tag {
 
     if (text.contains(Attrs.PART_OF_SPEECH)) {
       return text.get(Attrs.PART_OF_SPEECH).cast();
+    }
+    if (text.isInstance(Types.TOKEN)) {
+      return null;
     }
 
     com.davidbracewell.hermes.tag.POS tag = ANY;
@@ -542,6 +573,15 @@ public enum POS implements Tag {
       tag = tag.getParentType();
     }
     return tag;
+  }
+
+  public boolean isTag(@NonNull Tag... tags) {
+    for (Tag t : tags) {
+      if (t == this) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
