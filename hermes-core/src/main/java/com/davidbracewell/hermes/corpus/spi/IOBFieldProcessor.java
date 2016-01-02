@@ -85,4 +85,14 @@ public class IOBFieldProcessor implements FieldProcessor {
     return new IOBFieldProcessor(index, Types.ENTITY, Attrs.ENTITY_TYPE);
   }
 
+  @Override
+  public String processOutput(Annotation sentence, Annotation token) {
+    Annotation a = token.first(annotationType);
+    if(a.isDetached()){
+      return "-";
+    }
+    String tag = a.getTag().get().name();
+    return (a.firstToken() == token ? "B-" : "I-") + tag;
+  }
+
 }//END OF IOBFieldProcessor

@@ -21,18 +21,25 @@
 
 package com.davidbracewell.hermes.corpus.spi;
 
+import com.davidbracewell.SystemInfo;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.DocumentFormat;
+import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.string.CSVFormatter;
 import com.davidbracewell.string.StringUtils;
+import com.google.common.base.Joiner;
+import lombok.NonNull;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -142,6 +149,24 @@ public class CONLLFormat extends FileBasedFormat {
   @Override
   public String name() {
     return "CONLL";
+  }
+
+  @Override
+  public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
+    StringBuilder builder = new StringBuilder();
+    List<FieldProcessor> processors = getProcessors();
+    for(Annotation sentence : document.sentences()){
+      for( int i = 0; i < sentence.tokenLength(); i++){
+        for(int p = 0; p < processors.size(); p++){
+          if( p > 0 ){
+            builder.append(" ");
+          }
+          builder.append(processors.get(p).processOutput(sentence,sentence.tokenAt(i)));
+        }
+      }
+      builder.append(SystemInfo.LINE_SEPARATOR);
+    }
+    resource.write(builder.toString());
   }
 
 }//END OF CONLLFormat
