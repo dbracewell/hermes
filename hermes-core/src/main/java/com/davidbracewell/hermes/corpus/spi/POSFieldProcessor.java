@@ -59,7 +59,7 @@ public class POSFieldProcessor implements FieldProcessor {
   }
 
   @Override
-  public String processOutput(Annotation sentence, Annotation token) {
+  public String processOutput(Annotation sentence, Annotation token, int index) {
     return token.getPOS().asString();
   }
 

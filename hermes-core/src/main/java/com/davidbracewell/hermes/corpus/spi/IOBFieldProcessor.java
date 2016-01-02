@@ -86,7 +86,7 @@ public class IOBFieldProcessor implements FieldProcessor {
   }
 
   @Override
-  public String processOutput(Annotation sentence, Annotation token) {
+  public String processOutput(Annotation sentence, Annotation token, int index) {
     Annotation a = token.first(annotationType);
     if(a.isDetached()){
       return "-";

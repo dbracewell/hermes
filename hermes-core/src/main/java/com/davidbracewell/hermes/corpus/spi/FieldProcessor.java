@@ -33,6 +33,6 @@ public interface FieldProcessor {
 
   void process(Document document, List<List<String>> rows);
 
-  String processOutput(Annotation sentence, Annotation token);
+  String processOutput(Annotation sentence, Annotation token, int index);
 
 }//END OF FieldProcessor
