@@ -5,6 +5,7 @@ import com.davidbracewell.apollo.ml.sequence.ContextualIterator;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.string.StringPredicates;
 import com.davidbracewell.string.StringUtils;
 
 import java.util.HashSet;
@@ -28,6 +29,27 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
 //      }
 //    }
     return word;
+  }
+
+  private void affixes(String word, int position, int length, Set<Feature> features) {
+    if (word.length() >= length && !word.equals("!DIGIT") && !word.equals("!YEAR") && !word.equals(Sequence.BOS) && !word.equals(Sequence.EOS)) {
+      for (int li = 0; li < length; li++) {
+        features.add(
+          Feature.TRUE(
+            "suffix[" + position + "][" + (li + 1) + "]=" +
+              word.substring(Math.max(word.length() - li - 1, 0))
+          )
+        );
+      }
+      for (int li = 0; li < length; li++) {
+        features.add(
+          Feature.TRUE(
+            "prefix[" + position + "][" + (li + 1) + "]=" +
+              word.substring(0, Math.min(li + 1, word.length()))
+          )
+        );
+      }
+    }
   }
 
   @Override
@@ -69,38 +91,20 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
       features.add(Feature.TRUE("__EOS__"));
     }
 
-    if (!word.equals("!DIGIT") && !word.equals("!YEAR")) {
-      for (int li = 0, ll = 3; li < ll; li++) {
-        features.add(
-          Feature.TRUE(
-            "suffix[" + (li + 1) + "]=" +
-              word.substring(Math.max(word.length() - li - 1, 0))
-          )
-        );
-      }
-      for (int li = 0, ll = 3; li < ll; li++) {
-        features.add(
-          Feature.TRUE(
-            "prefix[" + (li + 1) + "]=" +
-              word.substring(0, Math.min(li + 1, word.length()))
-          )
-        );
-      }
-    }
+    affixes(word, 0, 3, features);
 
     features.add(Feature.TRUE("w[-1]=" + prev));
-    if (!prev.equals("!DIGIT") && !prev.equals("!YEAR") && prev.length() > 3) {
-      features.add(Feature.TRUE("suffix[-1]", prev.substring(prev.length() - 3)));
-    }
+    affixes(prev, -1, 3, features);
+
     if (prevPrev != null) {
+      affixes(prevPrev, -2, 3, features);
       features.add(Feature.TRUE("w[-2]=" + prevPrev));
     }
 
     features.add(Feature.TRUE("w[+1]=" + next));
-    if (!next.equals("!DIGIT") && !next.equals("!YEAR") && next.length() > 3) {
-      features.add(Feature.TRUE("suffix[+1]", next.substring(next.length() - 3)));
-    }
+    affixes(next, +1, 3, features);
     if (nextNext != null) {
+      affixes(nextNext, +2, 3, features);
       features.add(Feature.TRUE("w[+2]=" + nextNext));
     }
 
@@ -110,11 +114,59 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
       features.add(Feature.TRUE("STARTS_UPPERCASE"));
     }
 
+    String norm = word.toLowerCase();
+    if (StringPredicates.IS_DIGIT.test(word) ||
+      norm.equals("one") ||
+      norm.equals("two") ||
+      norm.equals("three") ||
+      norm.equals("four") ||
+      norm.equals("five") ||
+      norm.equals("six") ||
+      norm.equals("seven") ||
+      norm.equals("eight") ||
+      norm.equals("nine") ||
+      norm.equals("ten") ||
+      norm.equals("eleven") ||
+      norm.equals("twelve") ||
+      norm.equals("thirteen") ||
+      norm.equals("fourteen") ||
+      norm.equals("fifteen") ||
+      norm.equals("sixteen") ||
+      norm.equals("seventeen") ||
+      norm.equals("eighteen") ||
+      norm.equals("nineteen") ||
+      norm.equals("twenty") ||
+      norm.equals("thirty") ||
+      norm.equals("forty") ||
+      norm.equals("fifty") ||
+      norm.equals("sixty") ||
+      norm.equals("seventy") ||
+      norm.equals("eighty") ||
+      norm.equals("ninety") ||
+      norm.equals("hundred") ||
+      norm.equals("thousand") ||
+      norm.equals("million") ||
+      norm.equals("billion") ||
+      norm.equals("trillion") ||
+      StringPredicates.IS_DIGIT.test(word.replaceAll("\\W+", ""))
+      ) {
+      features.add(Feature.TRUE("IS_DIGIT"));
+    }
 
-    if (word.endsWith("es")) {
+    if (StringPredicates.IS_PUNCTUATION.test(word)) {
+      features.add(Feature.TRUE("IS_PUNCTUATION"));
+    }
+
+    if (norm.endsWith("es")) {
       features.add(Feature.TRUE("ENDING_ES"));
-    } else if (word.endsWith("s")) {
+    } else if (norm.endsWith("s")) {
       features.add(Feature.TRUE("ENDING_S"));
+    } else if (norm.endsWith("ed")) {
+      features.add(Feature.TRUE("ENDING_ED"));
+    } else if (norm.endsWith("ing")) {
+      features.add(Feature.TRUE("ENDING_ING"));
+    } else if (norm.endsWith("ly")) {
+      features.add(Feature.TRUE("ENDING_LY"));
     }
 
 

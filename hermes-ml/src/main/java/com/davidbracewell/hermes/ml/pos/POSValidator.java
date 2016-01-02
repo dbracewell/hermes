@@ -43,9 +43,7 @@ public class POSValidator implements SequenceValidator {
     if (pos == null) {
       return true;
     }
-    if( word.equals("'s")){
-      return pos.isTag(POS.POS);
-    }
+
     switch (word) {
       case "\"":
       case "``":
