@@ -51,9 +51,10 @@ public class POSValidator implements SequenceValidator {
       case "``":
       case "''":
       case "\"\"":
-      case "'":
       case "`":
         return pos.isTag(POS.QUOTE);
+      case "'":
+        return pos.isTag(POS.QUOTE, POS.POS);
       case "#":
         return pos.isTag(POS.HASH);
       case ",":

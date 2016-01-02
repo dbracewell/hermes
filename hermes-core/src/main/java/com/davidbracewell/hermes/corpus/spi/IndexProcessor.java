@@ -18,7 +18,7 @@ public enum IndexProcessor implements FieldProcessor {
 
   @Override
   public String processOutput(Annotation sentence, Annotation token, int index) {
-    return Integer.toString(index);
+    return Integer.toString(index+1);
   }
 
 }// END OF IndexProcessor

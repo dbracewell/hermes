@@ -4,7 +4,7 @@ import com.davidbracewell.apollo.ml.Dataset;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
 import com.davidbracewell.apollo.ml.sequence.*;
-import com.davidbracewell.apollo.ml.sequence.linear.StructuredPerceptronLearner;
+import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.Annotation;
@@ -84,11 +84,11 @@ public class POSTrainer extends CommandLineApplication {
     if (minFeatureCount > 1) {
       train = train.preprocess(PreprocessorList.create(new CountFilter(d -> d >= minFeatureCount).asSequenceProcessor()));
     }
-    SequenceLabelerLearner learner = new StructuredPerceptronLearner();
-    //new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
-    //new CRFTrainer();
+    SequenceLabelerLearner learner =
+      //new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
+      new CRFTrainer();
     learner.setValidator(new POSValidator());
-    learner.setParameter("maxIterations", 50);
+    learner.setParameter("maxIterations", 100);
     learner.setParameter("verbose", true);
     SequenceLabeler labeler = learner.train(train);
     POSTagger tagger = new POSTagger(featurizer, labeler);
