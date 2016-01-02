@@ -24,6 +24,7 @@ package com.davidbracewell.hermes.corpus.spi;
 import com.davidbracewell.SystemInfo;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Types;
