@@ -44,7 +44,7 @@ public class POSValidator implements SequenceValidator {
       return true;
     }
     if( word.equals("'s")){
-      return pos.isInstance(POS.POS);
+      return pos.isTag(POS.POS);
     }
     switch (word) {
       case "\"":
@@ -53,44 +53,44 @@ public class POSValidator implements SequenceValidator {
       case "\"\"":
       case "'":
       case "`":
-        return pos.isInstance(POS.QUOTE);
+        return pos.isTag(POS.QUOTE);
       case "#":
-        return pos.isInstance(POS.HASH);
+        return pos.isTag(POS.HASH);
       case ",":
-        return pos.isInstance(POS.COMMA);
+        return pos.isTag(POS.COMMA);
       case ":":
       case ";":
       case "...":
-        return pos.isInstance(POS.COLON);
+        return pos.isTag(POS.COLON);
       case "$":
-        return pos.isInstance(POS.DOLLAR);
+        return pos.isTag(POS.DOLLAR);
       case ".":
       case "!":
       case "?":
-        return pos.isInstance(POS.PERIOD);
+        return pos.isTag(POS.PERIOD);
       case "{":
-        return pos.isInstance(POS.LCB);
+        return pos.isTag(POS.LCB);
       case "}":
-        return pos.isInstance(POS.RCB);
+        return pos.isTag(POS.RCB);
       case "[":
-        return pos.isInstance(POS.LSB);
+        return pos.isTag(POS.LSB);
       case "]":
-        return pos.isInstance(POS.RSB);
+        return pos.isTag(POS.RSB);
       case "(":
-        return pos.isInstance(POS.LRB);
+        return pos.isTag(POS.LRB);
       case ")":
-        return pos.isInstance(POS.RRB);
+        return pos.isTag(POS.RRB);
       case "&":
-        return pos.isInstance(POS.CC, POS.SYM);
+        return pos.isTag(POS.CC, POS.SYM);
     }
 
     boolean hasLetterOrDigit = StringPredicates.HAS_LETTER_OR_DIGIT.test(word);
     if (!hasLetterOrDigit && word.endsWith("-")) {
-      return pos.isInstance(POS.COLON);
+      return pos.isTag(POS.COLON);
     }
 
     if (word.contains("$")) {
-      return pos.isInstance(POS.SYM, POS.CD, POS.DOLLAR);
+      return pos.isTag(POS.SYM, POS.CD, POS.DOLLAR);
     }
 
     if( word.equals("%")){
@@ -98,10 +98,10 @@ public class POSValidator implements SequenceValidator {
     }
 
     if (!hasLetterOrDigit) {
-      return pos.isInstance(POS.SYM, POS.CD);
+      return pos.isTag(POS.SYM, POS.CD);
     }
 
-    return !pos.isInstance(
+    return !pos.isTag(
       POS.QUOTE, POS.HASH, POS.COMMA, POS.COLON, POS.DOLLAR, POS.PERIOD,
       POS.LCB, POS.RCB, POS.LSB, POS.RSB, POS.LRB, POS.RRB
     );

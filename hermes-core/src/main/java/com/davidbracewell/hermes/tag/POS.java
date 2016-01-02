@@ -29,6 +29,10 @@ import com.davidbracewell.hermes.Types;
 import com.davidbracewell.string.StringPredicates;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Preconditions;
+import lombok.NonNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Enumeration covering the parts-of-speech used in pos tagging, chunking, and parsing.
@@ -189,6 +193,7 @@ public enum POS implements Tag {
       return true;
     }
   },
+
 
   /**
    * Penn Treebank Part of Speech Tags
@@ -356,12 +361,20 @@ public enum POS implements Tag {
     }
   };
 
+  static Map<String, POS> index = new HashMap<>();
   private final String tag;
   private final com.davidbracewell.hermes.tag.POS parentType;
 
   POS(com.davidbracewell.hermes.tag.POS parentType, String tag) {
     this.parentType = parentType;
     this.tag = tag;
+  }
+
+  static {
+    for (POS pos : values()) {
+      index.put(pos.asString().toUpperCase(), pos);
+      index.put(pos.toString().toUpperCase(), pos);
+    }
   }
 
   /**
@@ -373,19 +386,9 @@ public enum POS implements Tag {
   public static com.davidbracewell.hermes.tag.POS fromString(String tag) {
     if (StringUtils.isNullOrBlank(tag)) {
       return null;
-    }
-
-    try {
-      return com.davidbracewell.hermes.tag.POS.valueOf(tag);
-    } catch (Exception e) {
-      for (com.davidbracewell.hermes.tag.POS pos : com.davidbracewell.hermes.tag.POS.values()) {
-        if (pos.tag.equals(tag) || pos.tag.equals(tag.toUpperCase())) {
-          return pos;
-        }
-      }
-    }
-
-    if (tag.equals(";") || tag.equals("...") || tag.equals("-") || tag.equals("--")) {
+    } else if (index.containsKey(tag.toUpperCase())) {
+      return index.get(tag.toUpperCase());
+    } else if (tag.equals(";") || tag.equals("...") || tag.equals("-") || tag.equals("--")) {
       return COLON;
     } else if (tag.equals("?") || tag.equals("!")) {
       return PERIOD;
@@ -408,7 +411,6 @@ public enum POS implements Tag {
     } else if (!StringPredicates.HAS_LETTER.test(tag)) {
       return SYM;
     }
-
     throw new IllegalArgumentException(tag + " is not a know PartOfSpeech");
   }
 
@@ -571,6 +573,15 @@ public enum POS implements Tag {
       tag = tag.getParentType();
     }
     return tag;
+  }
+
+  public boolean isTag(@NonNull Tag... tags) {
+    for (Tag t : tags) {
+      if (t == this) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
