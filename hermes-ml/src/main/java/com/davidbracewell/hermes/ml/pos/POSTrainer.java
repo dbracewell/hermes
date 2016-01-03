@@ -85,11 +85,14 @@ public class POSTrainer extends CommandLineApplication {
       train = train.preprocess(PreprocessorList.create(new CountFilter(d -> d >= minFeatureCount).asSequenceProcessor()));
     }
     SequenceLabelerLearner learner =
+//      new MEMMLearner();
       new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
 //      new CRFTrainer();
     learner.setValidator(new POSValidator());
-    learner.setParameter("maxIterations", 100);
+    learner.setParameter("maxIterations", 250);
+    learner.setParameter("tolerance", 1E-8);
     learner.setParameter("verbose", true);
+    learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
     SequenceLabeler labeler = learner.train(train);
     POSTagger tagger = new POSTagger(featurizer, labeler);
     tagger.write(model);

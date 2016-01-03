@@ -17,20 +17,6 @@ import java.util.Set;
 public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
   private static final long serialVersionUID = 1L;
 
-  private String toWordForm(String word) {
-//    if (StringPredicates.IS_DIGIT.test(word)) {
-//      try {
-//        int d = Integer.valueOf(word);
-//        if (d >= 1800 && d <= 2100) {
-//          return "!YEAR";
-//        }
-//      } catch (Exception e) {
-//        return "!DIGIT";
-//      }
-//    }
-    return word;
-  }
-
   private void affixes(String word, int position, int length, Set<Feature> features) {
     if (word.length() >= length && !word.equals("!DIGIT") && !word.equals("!YEAR") && !word.equals(Sequence.BOS) && !word.equals(Sequence.EOS)) {
       for (int li = 0; li < length; li++) {
@@ -56,14 +42,14 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
   public Set<Feature> apply(ContextualIterator<Annotation> iterator) {
 
 
-    String word = toWordForm(iterator.getCurrent().toString());
+    String word = iterator.getCurrent().toString();
     Set<Feature> features = new HashSet<>();
 
     String next = null, nextNext = null;
     if (iterator.getContext(1).isPresent()) {
-      next = toWordForm(iterator.getContext(1).get().toString());
+      next = iterator.getContext(1).get().toString();
       if (iterator.getContext(2).isPresent()) {
-        nextNext = toWordForm(iterator.getContext(2).get().toString());
+        nextNext = iterator.getContext(2).get().toString();
       } else {
         nextNext = Sequence.EOS;
       }
@@ -73,9 +59,9 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
 
     String prev = null, prevPrev = null;
     if (iterator.getContext(-11).isPresent()) {
-      prev = toWordForm(iterator.getContext(-1).get().toString());
+      prev = iterator.getContext(-1).get().toString();
       if (iterator.getContext(-2).isPresent()) {
-        prevPrev = toWordForm(iterator.getContext(-2).get().toString());
+        prevPrev = iterator.getContext(-2).get().toString();
       } else {
         prevPrev = Sequence.BOS;
       }
@@ -94,17 +80,17 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
     affixes(word, 0, 3, features);
 
     features.add(Feature.TRUE("w[-1]=" + prev));
-    affixes(prev, -1, 3, features);
+//    affixes(prev, -1, 3, features);
 
     if (prevPrev != null) {
-      affixes(prevPrev, -2, 3, features);
+//      affixes(prevPrev, -2, 3, features);
       features.add(Feature.TRUE("w[-2]=" + prevPrev));
     }
 
     features.add(Feature.TRUE("w[+1]=" + next));
-    affixes(next, +1, 3, features);
+//    affixes(next, +1, 3, features);
     if (nextNext != null) {
-      affixes(nextNext, +2, 3, features);
+//      affixes(nextNext, +2, 3, features);
       features.add(Feature.TRUE("w[+2]=" + nextNext));
     }
 
