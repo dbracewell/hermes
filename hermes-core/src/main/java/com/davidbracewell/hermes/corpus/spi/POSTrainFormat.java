@@ -30,37 +30,8 @@ public class POSTrainFormat extends FileBasedFormat {
       int lpos = part.lastIndexOf('_');
       String w = part.substring(0, lpos);
       String p = part.substring(lpos + 1);
-
-      switch (w) {
-//            case "%":
-//              p = "SYM";
-//              break;
-        case "``":
-          w = "\"";
-          break;
-        case "''":
-          w = "\"";
-          break;
-        case "-LRB-":
-          w = "(";
-          break;
-        case "-LSB-":
-          w = "[";
-          break;
-        case "-LCB-":
-          w = "{";
-          break;
-        case "-RRB-":
-          w = ")";
-          break;
-        case "-RCB-":
-          w = "}";
-          break;
-        case "-RSB-":
-          w = "]";
-          break;
-
-      }
+      w = POSCorrection.word(w, p);
+      p = POSCorrection.pos(w, p);
       if (!StringUtils.isNullOrBlank(w)) {
         tokens.add(w);
         pos.add(p);

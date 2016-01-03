@@ -45,12 +45,13 @@ public class POSFieldProcessor implements FieldProcessor {
     boolean completed = false;
     for (int i = 0; i < rows.size(); i++) {
       if (rows.get(i).size() > index && !rows.get(i).get(index).equals("_") && !rows.get(i).get(index).equals("-")) {
+        Annotation token = document.tokenAt(i);
         String posStr = rows.get(i).get(index);
         if (posStr.contains("|")) {
           posStr = posStr.substring(0, posStr.indexOf('|'));
         }
         completed = true;
-        document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(posStr));
+        document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(POSCorrection.pos(token.toString(), posStr)));
       }
     }
     if (completed) {

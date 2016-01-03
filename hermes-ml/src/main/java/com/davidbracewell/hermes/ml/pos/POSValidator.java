@@ -52,7 +52,7 @@ public class POSValidator implements SequenceValidator {
       case "`":
         return pos.isTag(POS.QUOTE);
       case "'":
-        return pos.isTag(POS.QUOTE, POS.POS);
+        return pos.isTag(POS.QUOTE, POS.POS, POS.COLON);
       case "#":
         return pos.isTag(POS.HASH);
       case ",":
@@ -60,13 +60,16 @@ public class POSValidator implements SequenceValidator {
       case ":":
       case ";":
       case "...":
+      case "--":
+      case "::":
+      case "-":
         return pos.isTag(POS.COLON);
       case "$":
         return pos.isTag(POS.DOLLAR);
       case ".":
       case "!":
       case "?":
-        return pos.isTag(POS.PERIOD);
+        return pos.isTag(POS.PERIOD, POS.COLON);
       case "{":
         return pos.isTag(POS.LCB);
       case "}":
@@ -92,8 +95,8 @@ public class POSValidator implements SequenceValidator {
       return pos.isTag(POS.SYM, POS.CD, POS.DOLLAR);
     }
 
-    if( word.equals("%")){
-      return true;
+    if (word.equals("%")) {
+      return pos.isTag(POS.SYM);
     }
 
     if (!hasLetterOrDigit) {
