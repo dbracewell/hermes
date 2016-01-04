@@ -45,6 +45,17 @@ public interface POSCorrection {
         return "}";
       case "-RSB-":
         return "]";
+      case "\\/":
+        return "/";
+    }
+    switch (word) {
+      case "”":
+      case "“":
+        return "\"";
+      case "’s":
+        return "'s";
+      case "’":
+        return "'";
     }
     return word;
   }
@@ -53,6 +64,18 @@ public interface POSCorrection {
     switch (word) {
       case "%":
         return "SYM";
+      case "[":
+        return "-LSB-";
+      case "]":
+        return "-RSB-";
+      case "(":
+        return "-LRB-";
+      case ")":
+        return "-RRB-";
+      case "{":
+        return "-LCB-";
+      case "}":
+        return "-RCB-";
     }
 
     if (StringPredicates.HAS_LETTER_OR_DIGIT.negate().test(word) && pos.startsWith("NN")) {

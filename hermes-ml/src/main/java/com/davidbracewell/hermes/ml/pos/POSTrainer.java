@@ -1,10 +1,10 @@
 package com.davidbracewell.hermes.ml.pos;
 
 import com.davidbracewell.apollo.ml.Dataset;
-import com.davidbracewell.apollo.ml.classification.linear.AveragedPerceptronLearner;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
 import com.davidbracewell.apollo.ml.sequence.*;
+import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.Annotation;
@@ -86,8 +86,8 @@ public class POSTrainer extends CommandLineApplication {
     }
     SequenceLabelerLearner learner =
 //      new MEMMLearner();
-      new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
-//      new CRFTrainer();
+//      new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
+      new CRFTrainer();
     learner.setValidator(new POSValidator());
     learner.setParameter("maxIterations", 250);
     learner.setParameter("tolerance", 1E-8);

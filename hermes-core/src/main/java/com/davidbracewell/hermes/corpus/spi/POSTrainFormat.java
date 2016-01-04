@@ -1,15 +1,15 @@
 package com.davidbracewell.hermes.corpus.spi;
 
-import com.davidbracewell.hermes.Attrs;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.Types;
+import com.davidbracewell.SystemInfo;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.corpus.DocumentFormat;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
+import lombok.NonNull;
 import org.kohsuke.MetaInfServices;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -38,13 +38,18 @@ public class POSTrainFormat extends FileBasedFormat {
       }
     }
     Document document = documentFactory.fromTokens(tokens);
+    boolean complete = false;
     for (int i = 0; i < tokens.size(); i++) {
-      document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(pos.get(i)));
+      POS p = POS.fromString(pos.get(i));
+      if (p != null && !p.isTag(POS.ANY)) {
+        complete = true;
+        document.tokenAt(i).put(Attrs.PART_OF_SPEECH, p);
+      }
     }
     document.createAnnotation(Types.SENTENCE, 0, document.length());
     document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
     document.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
-    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
+    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, complete, "PROVIDED");
     return document;
   }
 
@@ -69,4 +74,20 @@ public class POSTrainFormat extends FileBasedFormat {
     return "POS";
   }
 
+  @Override
+  public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
+    if( document.getAnnotationSet().isCompleted(Types.PART_OF_SPEECH)) {
+      try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
+        for (Annotation sentence : document.sentences()) {
+          writer.write(sentence.toPOSString('_'));
+          writer.write(SystemInfo.LINE_SEPARATOR);
+        }
+      }
+    }
+  }
+
+  @Override
+  public boolean isOnePerLine() {
+    return true;
+  }
 }// END OF POSTrainFormat

@@ -143,7 +143,10 @@ public class OnePerLineFormat extends FileBasedFormat {
       for (Document document : documents) {
         Resource stringResource = new StringResource();
         subFormat.write(stringResource, document);
-        String string = stringResource.readToString().trim().replace("\n", "\\n");
+        String string = stringResource.readToString().trim();
+        if (!subFormat.isOnePerLine()) {
+          string = string.replace("\n", "\\n");
+        }
         writer.write(string);
         writer.write("\n");
       }
