@@ -123,7 +123,7 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
   public List<Annotation> select(@NonNull Span range, @NonNull Predicate<? super Annotation> criteria) {
     Annotation startDummy = Fragments.detachedAnnotation(null, range.end(), Integer.MAX_VALUE);
     Annotation endDummy = Fragments.detachedAnnotation(null, -1, range.start());
-    return Sets.union(startSorted.headSet(startDummy, true), endSorted.tailSet(endDummy, true))
+    return Sets.intersection(startSorted.headSet(startDummy, true), endSorted.tailSet(endDummy, true))
       .stream()
       .filter(criteria)
       .collect(Collectors.toList());
