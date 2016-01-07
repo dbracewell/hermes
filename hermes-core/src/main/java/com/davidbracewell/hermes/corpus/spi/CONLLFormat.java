@@ -34,7 +34,7 @@ import org.kohsuke.MetaInfServices;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -133,20 +133,32 @@ public class CONLLFormat extends FileBasedFormat {
     return document;
   }
 
+
   @Override
   public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
     List<List<String>> rows = new ArrayList<>();
     List<Tuple2<Integer, Integer>> sentenceBoundaries = new ArrayList<>();
+    List<Document> documents = new LinkedList<>();
 
     int start = 0;
     int end = 0;
     byte state = 0;
 
-    for (String line : resource.readLines()) {
+    boolean docPerSent = Config.get("CONLL.docPerSent").asBooleanValue(false);
 
+    for (String line : resource.readLines()) {
       if (StringUtils.isNullOrBlank(line)) {
         if (state == 1) { //END OF SENTENCE
-          sentenceBoundaries.add(Tuple2.of(start, end));
+          if (docPerSent) {
+            Document doc = createDocument(rows, documentFactory);
+            doc.createAnnotation(Types.SENTENCE, 0, doc.length());
+            doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
+            doc.put(Attrs.FILE, resource.descriptor());
+            documents.add(doc);
+            rows.clear();
+          } else {
+            sentenceBoundaries.add(Tuple2.of(start, end));
+          }
           start = -1;
         }
         state = 0;
@@ -162,13 +174,26 @@ public class CONLLFormat extends FileBasedFormat {
     }
 
     if (state == 1) {
-      sentenceBoundaries.add(Tuple2.of(start, end));
+      if (docPerSent) {
+        Document doc = createDocument(rows, documentFactory);
+        doc.createAnnotation(Types.SENTENCE, 0, doc.length());
+        doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
+        doc.put(Attrs.FILE, resource.descriptor());
+        documents.add(doc);
+        rows.clear();
+      } else {
+        sentenceBoundaries.add(Tuple2.of(start, end));
+      }
     }
-    Document doc = createDocument(rows, documentFactory);
-    sentenceBoundaries.forEach(t -> doc.createAnnotation(Types.SENTENCE, doc.tokenAt(t.v1).start(), doc.tokenAt(t.v2 - 1).end()));
-    doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
-    doc.put(Attrs.FILE, resource.descriptor());
-    return Collections.singletonList(doc);
+    if (!docPerSent) {
+      Document doc = createDocument(rows, documentFactory);
+      sentenceBoundaries.forEach(t -> doc.createAnnotation(Types.SENTENCE, doc.tokenAt(t.v1).start(), doc.tokenAt(t.v2 - 1).end()));
+      doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
+      doc.put(Attrs.FILE, resource.descriptor());
+      documents.add(doc);
+    }
+
+    return documents;
   }
 
   @Override

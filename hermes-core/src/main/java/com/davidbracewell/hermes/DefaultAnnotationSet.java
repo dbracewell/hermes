@@ -124,8 +124,9 @@ public class DefaultAnnotationSet implements AnnotationSet, Serializable {
     Annotation startDummy = Fragments.detachedAnnotation(null, range.end(), Integer.MAX_VALUE);
     Annotation endDummy = Fragments.detachedAnnotation(null, -1, range.start());
     return Sets.intersection(startSorted.headSet(startDummy, true), endSorted.tailSet(endDummy, true))
-      .stream()
+      .parallelStream()
       .filter(criteria)
+      .sorted(AnnotationOrdering.START_ORDERING)
       .collect(Collectors.toList());
   }
 

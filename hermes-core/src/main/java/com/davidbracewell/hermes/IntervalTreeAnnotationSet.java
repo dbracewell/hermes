@@ -1,10 +1,6 @@
 package com.davidbracewell.hermes;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -19,12 +15,12 @@ public class IntervalTreeAnnotationSet implements AnnotationSet {
 
   @Override
   public List<Annotation> select(Span span, Predicate<? super Annotation> criteria) {
-    return tree.overlapping(span).stream().filter(criteria).collect(Collectors.toList());
+    return tree.overlapping(span).stream().filter(criteria).sorted().collect(Collectors.toList());
   }
 
   @Override
   public List<Annotation> select(Predicate<? super Annotation> criteria) {
-    return tree.stream().filter(criteria).collect(Collectors.toList());
+    return tree.stream().filter(criteria).sorted().collect(Collectors.toList());
   }
 
   @Override

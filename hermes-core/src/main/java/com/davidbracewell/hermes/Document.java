@@ -23,7 +23,6 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
-import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
@@ -62,6 +61,7 @@ public class Document extends HString {
   private final String content;
   private final AtomicLong idGenerator = new AtomicLong(0);
   private final AnnotationSet annotationSet;
+  private volatile List<Annotation> tokens;
   private String id;
 
   /**
@@ -200,6 +200,18 @@ public class Document extends HString {
   @Override
   public char charAt(int index) {
     return content.charAt(index);
+  }
+
+  @Override
+  public List<Annotation> tokens() {
+    if (tokens == null) {
+      synchronized (this) {
+        if (tokens == null) {
+          tokens = get(Types.TOKEN);
+        }
+      }
+    }
+    return tokens;
   }
 
   /**
