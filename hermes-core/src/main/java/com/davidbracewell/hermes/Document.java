@@ -87,7 +87,8 @@ public class Document extends HString {
     this.content = content;
     setId(id);
     setLanguage(language);
-    this.annotationSet = Config.get("hermes.AnnotationSetImpl").asOrElse(AnnotationSet.class, DefaultAnnotationSet::new);
+    this.annotationSet =  new IntervalTreeAnnotationSet();
+      //Config.get("hermes.AnnotationSetImpl").asOrElse(AnnotationSet.class, DefaultAnnotationSet::new);
   }
 
 

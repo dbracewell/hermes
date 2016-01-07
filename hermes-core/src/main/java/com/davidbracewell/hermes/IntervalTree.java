@@ -1,8 +1,6 @@
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
-import com.google.common.base.Stopwatch;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -19,28 +17,6 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
   private static final long serialVersionUID = 1L;
 
   private Node root = null;
-
-  public static void main(String[] args) {
-    Config.initialize("");
-    IntervalTree it = new IntervalTree();
-    Document doc = DocumentFactory.getInstance().create("This is a simple test.");
-    Pipeline.process(doc, Types.TOKEN);
-    Annotation sentence = doc.createAnnotation(Types.SENTENCE, 0, doc.length());
-    doc.createAnnotation(Types.ENTITY, 0, 4);
-    doc.getAllAnnotations().forEach(it::add);
-    Stopwatch sw = Stopwatch.createStarted();
-    System.out.println(it.overlapping(sentence));
-    sw.stop();
-    System.out.println(sw);
-
-    sw.reset();
-    sw.start();
-    System.out.println(sentence.getAllAnnotations());
-    sw.stop();
-    System.out.println(sw);
-
-    System.out.println(it.overlapping(doc.tokenAt(0)));
-  }
 
 
   public List<Annotation> overlapping(Span span) {
@@ -336,6 +312,64 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
     return null;
   }
 
+  public Annotation floor(Annotation annotation, AnnotationType type){
+    if (annotation == null || type == null) {
+      return Fragments.detachedEmptyAnnotation();
+    }
+    Node n = floor(root, annotation);
+    if( n == null ){
+      return Fragments.detachedEmptyAnnotation();
+    }
+    return n.annotations.stream().filter(a -> a.isInstance(type)).filter(a -> a != annotation).findFirst().orElse(Fragments.detachedEmptyAnnotation());
+  }
+
+  private Node floor(Node n, Span span) {
+    if (n == null) {
+      return null;
+    }
+    int cmp = span.compareTo(n.span);
+    if (cmp == 0) {
+      return n;
+    }
+    if (cmp < 0) {
+      return floor(n.left, span);
+    }
+    Node t = floor(n.right, span);
+    if (t != null) {
+      return t;
+    }
+    return n;
+  }
+
+  public Annotation ceiling(Annotation annotation, AnnotationType type){
+    if (annotation == null || type == null) {
+      return Fragments.detachedEmptyAnnotation();
+    }
+    Node n = ceiling(root, annotation);
+    if( n == null ){
+      return Fragments.detachedEmptyAnnotation();
+    }
+    return n.annotations.stream().filter(a -> a.isInstance(type)).filter(a -> a != annotation).findFirst().orElse(Fragments.detachedEmptyAnnotation());
+  }
+
+  private Node ceiling(Node n, Span span) {
+    if (n == null) {
+      return null;
+    }
+    int cmp = span.compareTo(n.span);
+    if (cmp == 0) {
+      return n;
+    }
+    if (cmp > 0) {
+      return ceiling(n.right, span);
+    }
+    Node t = ceiling(n.left, span);
+    if (t != null) {
+      return t;
+    }
+    return n;
+  }
+
   static class Node implements Serializable {
     static final boolean RED = true;
     static final boolean BLACK = false;
@@ -361,6 +395,5 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
     }
 
   }
-
 
 }// END OF IntervalTree
