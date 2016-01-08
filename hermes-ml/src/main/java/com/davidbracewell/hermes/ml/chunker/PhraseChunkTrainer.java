@@ -1,10 +1,10 @@
 package com.davidbracewell.hermes.ml.chunker;
 
-import com.davidbracewell.apollo.ml.classification.linear.AveragedPerceptronLearner;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
 import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
-import com.davidbracewell.apollo.ml.sequence.WindowedLearner;
+import com.davidbracewell.apollo.ml.sequence.decoder.BeamDecoder;
+import com.davidbracewell.apollo.ml.sequence.linear.StructuredPerceptronLearner;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTrainer;
@@ -41,8 +41,9 @@ public class PhraseChunkTrainer extends BIOTrainer {
 
   @Override
   protected SequenceLabelerLearner getLearner() {
-    SequenceLabelerLearner learner = new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
-    learner.setTransitionFeatures(TransitionFeatures.SECOND_ORDER);
+    SequenceLabelerLearner learner = new StructuredPerceptronLearner();
+    learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
+    learner.setDecoder(new BeamDecoder(10));
     learner.setValidator(new BIOValidator());
     learner.setParameter("maxIterations", 250);
     learner.setParameter("tolerance", 1E-8);

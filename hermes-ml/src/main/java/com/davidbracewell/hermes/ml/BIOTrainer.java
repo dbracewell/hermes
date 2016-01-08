@@ -13,10 +13,7 @@ import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.io.resource.Resource;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author David B. Bracewell
@@ -31,7 +28,7 @@ public abstract class BIOTrainer extends CommandLineApplication {
   String corpusFormat;
   @Option(description = "Location to save model", required = true)
   Resource model;
-  @Option(description = "Minimum count for a feature to be kept", defaultValue = "0")
+  @Option(description = "Minimum count for a feature to be kept", defaultValue = "5")
   int minFeatureCount;
   @Option(description = "TEST or TRAIN", defaultValue = "TEST")
   Mode mode;
@@ -91,15 +88,10 @@ public abstract class BIOTrainer extends CommandLineApplication {
     BIOEvaluation eval = new BIOEvaluation();
     eval.evaluate(tagger.labeler, test);
     eval.output(System.out);
-
-    PerInstanceEvaluation eval2 = new PerInstanceEvaluation();
-    eval2.evaluate(tagger.labeler, test);
-    eval2.output(System.out, true);
   }
 
   protected void train() throws Exception {
     final SequenceFeaturizer<Annotation> featurizer = getFeaturizer();
-    AtomicLong processed = new AtomicLong();
     Dataset<Sequence> train = Dataset.sequence()
       .source(
         Corpus
@@ -108,24 +100,12 @@ public abstract class BIOTrainer extends CommandLineApplication {
           .format(corpusFormat)
           .build()
           .stream()
-		  .parallel()
+          .parallel()
           .flatMap(Document::sentences)
           .map(sentence -> {
             SequenceInput<Annotation> input = new SequenceInput<>();
-            Map<Integer, String> labels = new HashMap<>();
-            sentence.get(annotationType).forEach(a -> {
-              for (int i = 0; i < a.tokenLength(); i++) {
-                String label = (i == 0 ? "B-" : "I-") + a.getTag().get().name();
-                labels.put(a.tokenAt(i).start(), label);
-              }
-            });
             for (int i = 0; i < sentence.tokenLength(); i++) {
-              Annotation token = sentence.tokenAt(i);
-              String label = labels.containsKey(token.start()) ? labels.get(token.start()) : "O";
-              input.add(token, label);
-            }
-            if (processed.incrementAndGet() % 10 == 0) {
-              System.out.println(processed.get());
+              input.add(sentence.tokenAt(i), createLabel(sentence.tokenAt(i)));
             }
             return featurizer.extractSequence(input.iterator());
           })

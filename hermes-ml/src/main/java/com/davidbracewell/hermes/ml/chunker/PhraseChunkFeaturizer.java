@@ -18,59 +18,51 @@ public class PhraseChunkFeaturizer implements SequenceFeaturizer<Annotation> {
   @Override
   public Set<Feature> apply(ContextualIterator<Annotation> itr) {
     Set<Feature> features = new HashSet<>();
-    String pPOS, ppPOS = null, pWord, ppWord = null;
-    if (itr.hasContext(-1)) {
-      pWord = itr.getPrevious(1).get().toString();
-      pPOS = itr.getPrevious(1).get().getPOS().asString();
-      if (itr.hasContext(-2)) {
-        ppWord = itr.getPrevious(2).get().toString();
-        ppPOS = itr.getPrevious(2).get().getPOS().asString();
-      } else {
-        ppPOS = Sequence.BOS;
-        ppWord = Sequence.BOS;
-      }
-    } else {
-      pPOS = Sequence.BOS;
-      pWord = Sequence.BOS;
+
+
+    String p0W = itr.getCurrent().toString();
+    String p0T = itr.getCurrent().getPOS().asString();
+    features.add(Feature.TRUE("T[0]", p0T));
+    features.add(Feature.TRUE("W[0]", p0W));
+
+    String p1W = itr.getPrevious(1).map(Annotation::toString).orElse(Sequence.BOS);
+    String p1T = itr.getPrevious(1).map(a -> a.getPOS().asString()).orElse(Sequence.BOS);
+    String p2W = itr.getPrevious(2).map(Annotation::toString).orElse(null);
+    String p2T = itr.getPrevious(2).map(a -> a.getPOS().asString()).orElse(Sequence.BOS);
+    features.add(Feature.TRUE("T[-1]", p1T));
+    features.add(Feature.TRUE("T[-1,0]", p1T, p0T));
+    features.add(Feature.TRUE("W[-1]", p1W));
+    features.add(Feature.TRUE("W[-1,0]", p1W, p0W));
+
+    if (p2W != null) {
+      features.add(Feature.TRUE("T[-2]", p2T));
+      features.add(Feature.TRUE("T[-2,-1]", p2T, p1T));
+      features.add(Feature.TRUE("T[-2,-1,0]", p2T, p1T, p0T));
+      features.add(Feature.TRUE("W[-2]", p2W));
+      features.add(Feature.TRUE("W[-2,-1]", p2W, p1W));
+      features.add(Feature.TRUE("W[-2,-1,0]", p2W, p1W, p0W));
     }
 
-    String nPOS, nnPOS = null, nWord, nnWord = null;
-    if (itr.hasContext(1)) {
-      nPOS = itr.getNext(1).get().getPOS().asString();
-      nWord = itr.getNext(1).get().toString();
-      if (itr.hasContext(2)) {
-        nnPOS = itr.getNext(2).get().getPOS().asString();
-        nnWord = itr.getNext(2).get().toString();
-      } else {
-        nnWord = Sequence.EOS;
-        nnPOS = Sequence.EOS;
-      }
-    } else {
-      nWord = Sequence.EOS;
-      nPOS = Sequence.EOS;
+    String n1W = itr.getNext(1).map(Annotation::toString).orElse(Sequence.EOS);
+    String n1T = itr.getNext(1).map(a -> a.getPOS().asString()).orElse(Sequence.EOS);
+    String n2W = itr.getNext(2).map(Annotation::toString).orElse(null);
+    String n2T = itr.getNext(2).map(a -> a.getPOS().asString()).orElse(Sequence.EOS);
+    features.add(Feature.TRUE("T[0,1]", p0T, n1T));
+    features.add(Feature.TRUE("T[1]", n1T));
+    features.add(Feature.TRUE("W[0,1]", p0W, n1W));
+    features.add(Feature.TRUE("W[1]", n1W));
+
+    if (n2W != null) {
+      features.add(Feature.TRUE("T[2]", n2T));
+      features.add(Feature.TRUE("T[1,2]", n1T, n2T));
+      features.add(Feature.TRUE("T[0,1,2]", p0T, n1T, n2T));
+      features.add(Feature.TRUE("W[2]", n2W));
+      features.add(Feature.TRUE("W[1,2]", n1W, n2W));
+      features.add(Feature.TRUE("W[0,1,2]", p0W, n1W, n2W));
+
     }
 
-    if (itr.getIndex() == 0) {
-      features.add(Feature.TRUE("__BOS__"));
-    } else if (!itr.hasNext()) {
-      features.add(Feature.TRUE("__EOS__"));
-    }
 
-    String word = itr.getCurrent().toString();
-    String pos = itr.getCurrent().getPOS().asString();
-    features.add(Feature.TRUE("w[0]=", word));
-    features.add(Feature.TRUE("pos[0]=", itr.getCurrent().getPOS().asString()));
-    features.add(Feature.TRUE("pos[-1,0]=", pPOS + "," + pos));
-    if (ppPOS != null) {
-      features.add(Feature.TRUE("w[-2,-1,0]=", ppWord + "," + pWord + "," + word));
-      features.add(Feature.TRUE("pos[-2,-1,0]=", ppPOS + "," + pPOS + "," + pos));
-    }
-    features.add(Feature.TRUE("pos[0,+1]=", pos + "," + nPOS));
-    features.add(Feature.TRUE("w[0,+1]=", word + "," + nWord));
-    if (nnPOS != null) {
-      features.add(Feature.TRUE("w[0,+1,+2]=", word + "," + nWord + "," + nnWord));
-      features.add(Feature.TRUE("pos[0,+1,+2]=", pos + "," + nPOS + "," + nnPOS));
-    }
     return features;
   }
 }// END OF PhraseChunkFeaturizer
