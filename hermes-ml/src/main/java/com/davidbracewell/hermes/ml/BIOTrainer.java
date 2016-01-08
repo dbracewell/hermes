@@ -66,9 +66,8 @@ public abstract class BIOTrainer extends CommandLineApplication {
     return "O";
   }
 
-  protected void test() throws Exception {
-    BIOTagger tagger = BIOTagger.read(model);
-    Dataset<Sequence> test = Dataset.sequence()
+  protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
+    return Dataset.sequence()
       .source(
         Corpus
           .builder()
@@ -76,31 +75,6 @@ public abstract class BIOTrainer extends CommandLineApplication {
           .format(corpusFormat)
           .build()
           .stream()
-          .flatMap(Document::sentences)
-          .map(sentence -> {
-            SequenceInput<Annotation> input = new SequenceInput<>();
-            for (int i = 0; i < sentence.tokenLength(); i++) {
-              input.add(sentence.tokenAt(i), createLabel(sentence.tokenAt(i)));
-            }
-            return tagger.featurizer.extractSequence(input.iterator());
-          })
-      ).build();
-    BIOEvaluation eval = new BIOEvaluation();
-    eval.evaluate(tagger.labeler, test);
-    eval.output(System.out);
-  }
-
-  protected void train() throws Exception {
-    final SequenceFeaturizer<Annotation> featurizer = getFeaturizer();
-    Dataset<Sequence> train = Dataset.sequence()
-      .source(
-        Corpus
-          .builder()
-          .source(corpus)
-          .format(corpusFormat)
-          .build()
-          .stream()
-          .parallel()
           .flatMap(Document::sentences)
           .map(sentence -> {
             SequenceInput<Annotation> input = new SequenceInput<>();
@@ -110,14 +84,24 @@ public abstract class BIOTrainer extends CommandLineApplication {
             return featurizer.extractSequence(input.iterator());
           })
       ).build();
+  }
 
+  protected void test() throws Exception {
+    BIOTagger tagger = BIOTagger.read(model);
+    Dataset<Sequence> test = getDataset(tagger.featurizer);
+    BIOEvaluation eval = new BIOEvaluation();
+    eval.evaluate(tagger.labeler, test);
+    eval.output(System.out);
+  }
 
+  protected void train() throws Exception {
+    final SequenceFeaturizer<Annotation> featurizer = getFeaturizer();
+    Dataset<Sequence> train = getDataset(featurizer);
     PreprocessorList<Sequence> preprocessors = getPreprocessors();
     if (preprocessors != null && preprocessors.size() > 0) {
       train = train.preprocess(preprocessors);
     }
     train.encode();
-
     SequenceLabelerLearner learner = getLearner();
     learner.setValidator(getValidator());
     SequenceLabeler labeler = learner.train(train);
