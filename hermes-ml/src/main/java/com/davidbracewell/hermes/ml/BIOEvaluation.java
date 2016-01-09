@@ -13,6 +13,7 @@ import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.string.TableFormatter;
 import com.davidbracewell.tuple.Tuple3;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AtomicDouble;
 import lombok.NonNull;
 
@@ -28,6 +29,8 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
   private final Counter<String> correct = Counters.newHashMapCounter();
   private final Counter<String> missed = Counters.newHashMapCounter();
   private final Set<String> tags = new HashSet<>();
+  private double totalPhrasesGold = 0;
+  private double totalPhrasesFound = 0;
 
   private Set<Tuple3<Integer, Integer, String>> tags(Sequence sequence) {
     Set<Tuple3<Integer, Integer, String>> tags = new HashSet<>();
@@ -54,46 +57,38 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
 
   private Set<Tuple3<Integer, Integer, String>> tags(Labeling result) {
     Set<Tuple3<Integer, Integer, String>> tags = new HashSet<>();
-    int start = 0;
-    String tag = null;
-    for (int i = 0; i < result.size(); i++) {
+    for (int i = 0; i < result.size(); ) {
       String lbl = result.getLabel(i);
-      if (lbl.startsWith("O") && tag != null) {
-        tags.add(Tuple3.of(start, i, tag));
-        tag = null;
-      } else if (lbl.startsWith("B-")) {
-        if (tag != null) {
-          tags.add(Tuple3.of(start, i, tag));
+      if (lbl.equals("O")) {
+        i++;
+      } else {
+        String tag = lbl.substring(2);
+        int start = i;
+        i++;
+        while (i < result.size() && result.getLabel(i).startsWith("I-") && result.getLabel(i).substring(2).equals(tag)) {
+          i++;
         }
-        start = i;
-        tag = lbl.substring(2);
-      } else if (lbl.startsWith("I-") && tag == null) {
-        start = i;
-        tag = lbl.substring(2);
+        tags.add(Tuple3.of(start, i, tag));
       }
-    }
-    if (tag != null && start < result.size()) {
-      tags.add(Tuple3.of(start, result.size(), tag));
     }
     return tags;
   }
 
   private void entry(Set<Tuple3<Integer, Integer, String>> gold, Set<Tuple3<Integer, Integer, String>> pred) {
-    gold.forEach(g -> {
-      tags.add(g.v3);
-      if (pred.contains(g)) {
-        correct.increment(g.getV3());
-      } else {
-        missed.increment(g.getV3());
-      }
-    });
-    pred.forEach(p -> {
-      tags.add(p.v3);
-      if (!gold.contains(p)) {
-        incorrect.increment(p.getV3());
-      }
-    });
-
+    totalPhrasesFound += pred.size();
+    totalPhrasesGold += gold.size();
+    Sets.union(gold, pred).stream()
+      .map(Tuple3::getV3)
+      .forEach(tags::add);
+    Sets.intersection(gold, pred).stream()
+      .map(Tuple3::getV3)
+      .forEach(correct::increment);
+    Sets.difference(gold, pred).stream()
+      .map(Tuple3::getV3)
+      .forEach(missed::increment);
+    Sets.difference(pred, gold).stream()
+      .map(Tuple3::getV3)
+      .forEach(incorrect::increment);
   }
 
   /**
@@ -206,6 +201,9 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
   @Override
   public void output(@NonNull PrintStream printStream) {
     Set<String> sorted = new TreeSet<>(tags);
+    printStream.println("Total Gold Phrases: " + totalPhrasesGold);
+    printStream.println("Total Predicted Phrases: " + totalPhrasesFound);
+    printStream.println("Total Correct: " + correct.sum());
     TableFormatter tableFormatter = new TableFormatter();
     tableFormatter
       .title("Tag Metrics")

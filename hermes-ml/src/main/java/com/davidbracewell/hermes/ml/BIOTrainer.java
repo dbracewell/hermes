@@ -92,6 +92,27 @@ public abstract class BIOTrainer extends CommandLineApplication {
     BIOEvaluation eval = new BIOEvaluation();
     eval.evaluate(tagger.labeler, test);
     eval.output(System.out);
+
+    Corpus
+      .builder()
+      .source(corpus)
+      .format(corpusFormat)
+      .build()
+      .stream()
+      .flatMap(Document::sentences)
+      .forEach(sentence -> {
+        SequenceInput<Annotation> input = new SequenceInput<>();
+        for (int i = 0; i < sentence.tokenLength(); i++) {
+          input.add(sentence.tokenAt(i), createLabel(sentence.tokenAt(i)));
+        }
+        Labeling lbl = tagger.labeler.label(tagger.featurizer.extractSequence(input.iterator()));
+
+        for (int i = 0; i < sentence.tokenLength(); i++) {
+          System.err.println(sentence.tokenAt(i) + " " + sentence.tokenAt(i).getPOS().asString() + " " + input.getLabel(i) + " " + lbl.getLabel(i));
+        }
+        System.err.println();
+
+      });
   }
 
   protected void train() throws Exception {
