@@ -2,7 +2,6 @@ package com.davidbracewell.hermes.ml;
 
 import com.davidbracewell.apollo.ml.Dataset;
 import com.davidbracewell.apollo.ml.Evaluation;
-import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.sequence.Labeling;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
@@ -18,7 +17,11 @@ import com.google.common.util.concurrent.AtomicDouble;
 import lombok.NonNull;
 
 import java.io.PrintStream;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author David B. Bracewell
@@ -33,39 +36,28 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
   private double totalPhrasesFound = 0;
 
   private Set<Tuple3<Integer, Integer, String>> tags(Sequence sequence) {
-    Set<Tuple3<Integer, Integer, String>> tags = new HashSet<>();
-    int start = 0;
-    String tag = null;
-    List<Instance> instances = sequence.asInstances();
+    String[] labels = new String[sequence.size()];
     for (int i = 0; i < sequence.size(); i++) {
-      String lbl = instances.get(i).getLabel().toString();
-      if (lbl.startsWith("O") && tag != null) {
-        tags.add(Tuple3.of(start, i, tag));
-      } else if (lbl.startsWith("B-")) {
-        if (tag != null) {
-          tags.add(Tuple3.of(start, i, tag));
-        }
-        start = i;
-        tag = lbl.substring(2);
-      }
+      labels[i] = sequence.get(i).getLabel().toString();
     }
-    if (tag != null && start < sequence.size()) {
-      tags.add(Tuple3.of(start, sequence.size(), tag));
-    }
-    return tags;
+    return tags(labels);
   }
 
   private Set<Tuple3<Integer, Integer, String>> tags(Labeling result) {
+    return tags(result.getLabels());
+  }
+
+  private Set<Tuple3<Integer, Integer, String>> tags(String[] result) {
     Set<Tuple3<Integer, Integer, String>> tags = new HashSet<>();
-    for (int i = 0; i < result.size(); ) {
-      String lbl = result.getLabel(i);
+    for (int i = 0; i < result.length; ) {
+      String lbl = result[i];
       if (lbl.equals("O")) {
         i++;
       } else {
         String tag = lbl.substring(2);
         int start = i;
         i++;
-        while (i < result.size() && result.getLabel(i).startsWith("I-") && result.getLabel(i).substring(2).equals(tag)) {
+        while (i < result.length && result[i].startsWith("I-") ) {
           i++;
         }
         tags.add(Tuple3.of(start, i, tag));
