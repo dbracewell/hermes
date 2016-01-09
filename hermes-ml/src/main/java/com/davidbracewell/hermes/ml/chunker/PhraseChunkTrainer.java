@@ -5,12 +5,10 @@ import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
-import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
-import com.davidbracewell.apollo.ml.sequence.linear.StructuredPerceptronLearner;
+import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTrainer;
-import com.davidbracewell.hermes.ml.BIOValidator;
 
 /**
  * The type Phrase chunk trainer.
@@ -48,11 +46,8 @@ public class PhraseChunkTrainer extends BIOTrainer {
 
   @Override
   protected SequenceLabelerLearner getLearner() {
-    SequenceLabelerLearner learner = new StructuredPerceptronLearner();
-    learner.setTransitionFeatures(TransitionFeatures.SECOND_ORDER);
-    learner.setValidator(new BIOValidator());
-    learner.setParameter("maxIterations", 100);
-    learner.setParameter("tolerance", 1E-8);
+    SequenceLabelerLearner learner = new CRFTrainer();
+    learner.setParameter("maxIterations", 250);
     learner.setParameter("verbose", true);
     return learner;
   }
