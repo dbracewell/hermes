@@ -25,43 +25,50 @@ public class PhraseChunkFeaturizer implements SequenceFeaturizer<Annotation> {
     features.add(Feature.TRUE("T[0]", p0T));
     features.add(Feature.TRUE("W[0]", p0W));
 
-    String p1W = itr.getPrevious(1).map(Annotation::toString).orElse(Sequence.BOS);
-    String p1T = itr.getPrevious(1).map(a -> a.getPOS().asString()).orElse(Sequence.BOS);
-    String p2W = itr.getPrevious(2).map(Annotation::toString).orElse(Sequence.BOS);
-    String p2T = itr.getPrevious(2).map(a -> a.getPOS().asString()).orElse(Sequence.BOS);
+
     if (itr.getIndex() >= 1) {
+      String p1W = itr.getPrevious(1).map(Annotation::toString).orElse(Sequence.BOS);
+      String p1T = itr.getPrevious(1).map(a -> a.getPOS().asString()).orElse(Sequence.BOS);
       features.add(Feature.TRUE("T[-1]", p1T));
       features.add(Feature.TRUE("T[-1,0]", p1T, p0T));
       features.add(Feature.TRUE("W[-1]", p1W));
       features.add(Feature.TRUE("W[-1,0]", p1W, p0W));
-    }
-    if (itr.getIndex() >= 2) {
-      features.add(Feature.TRUE("T[-2]", p2T));
-      features.add(Feature.TRUE("T[-2,-1]", p2T, p1T));
-      features.add(Feature.TRUE("T[-2,-1,0]", p2T, p1T, p0T));
-      features.add(Feature.TRUE("W[-2]", p2W));
-      features.add(Feature.TRUE("W[-2,-1]", p2W, p1W));
-      features.add(Feature.TRUE("W[-2,-1,0]", p2W, p1W, p0W));
+
+      if (itr.getIndex() >= 2) {
+        String p2W = itr.getPrevious(2).map(Annotation::toString).orElse(Sequence.BOS);
+        String p2T = itr.getPrevious(2).map(a -> a.getPOS().asString()).orElse(Sequence.BOS);
+        features.add(Feature.TRUE("T[-2]", p2T));
+        features.add(Feature.TRUE("T[-2,-1]", p2T, p1T));
+        features.add(Feature.TRUE("T[-2,-1,0]", p2T, p1T, p0T));
+        features.add(Feature.TRUE("W[-2]", p2W));
+        features.add(Feature.TRUE("W[-2,-1]", p2W, p1W));
+        features.add(Feature.TRUE("W[-2,-1,0]", p2W, p1W, p0W));
+      }
+    } else {
+      features.add(Feature.TRUE("__BOS__"));
     }
 
-    String n1W = itr.getNext(1).map(Annotation::toString).orElse(Sequence.EOS);
-    String n1T = itr.getNext(1).map(a -> a.getPOS().asString()).orElse(Sequence.EOS);
-    String n2W = itr.getNext(2).map(Annotation::toString).orElse(Sequence.EOS);
-    String n2T = itr.getNext(2).map(a -> a.getPOS().asString()).orElse(Sequence.EOS);
 
-    if (!n1W.equals(Sequence.EOS)) {
+    if (itr.getIndex() + 1 < itr.size()) {
+      String n1W = itr.getNext(1).map(Annotation::toString).orElse(Sequence.EOS);
+      String n1T = itr.getNext(1).map(a -> a.getPOS().asString()).orElse(Sequence.EOS);
       features.add(Feature.TRUE("T[0,1]", p0T, n1T));
       features.add(Feature.TRUE("T[1]", n1T));
       features.add(Feature.TRUE("W[0,1]", p0W, n1W));
       features.add(Feature.TRUE("W[1]", n1W));
-    }
-    if (!n2W.equals(Sequence.EOS)) {
-      features.add(Feature.TRUE("T[2]", n2T));
-      features.add(Feature.TRUE("T[1,2]", n1T, n2T));
-      features.add(Feature.TRUE("T[0,1,2]", p0T, n1T, n2T));
-      features.add(Feature.TRUE("W[2]", n2W));
-      features.add(Feature.TRUE("W[1,2]", n1W, n2W));
-      features.add(Feature.TRUE("W[0,1,2]", p0W, n1W, n2W));
+
+      if (itr.getIndex() + 2 < itr.size()) {
+        String n2W = itr.getNext(2).map(Annotation::toString).orElse(Sequence.EOS);
+        String n2T = itr.getNext(2).map(a -> a.getPOS().asString()).orElse(Sequence.EOS);
+        features.add(Feature.TRUE("T[2]", n2T));
+        features.add(Feature.TRUE("T[1,2]", n1T, n2T));
+        features.add(Feature.TRUE("T[0,1,2]", p0T, n1T, n2T));
+        features.add(Feature.TRUE("W[2]", n2W));
+        features.add(Feature.TRUE("W[1,2]", n1W, n2W));
+        features.add(Feature.TRUE("W[0,1,2]", p0W, n1W, n2W));
+      }
+    } else {
+      features.add(Feature.TRUE("__EOS__"));
     }
 
 

@@ -22,6 +22,9 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
   }
 
   private List<Annotation> overlapping(Node node, Span span, List<Annotation> results) {
+    if (node == null || node.isNull()) {
+      return results;
+    }
     if (node.span.overlaps(span)) {
       results.addAll(node.annotations);
     }
