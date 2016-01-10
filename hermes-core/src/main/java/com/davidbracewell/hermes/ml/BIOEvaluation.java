@@ -17,11 +17,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import lombok.NonNull;
 
 import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * @author David B. Bracewell

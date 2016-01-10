@@ -18,7 +18,8 @@
      ~ specific language governing permissions and limitations
      ~ under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.davidbracewell</groupId>
@@ -86,6 +87,11 @@
             <version>1.6</version>
             <optional>true</optional>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.davidbracewell</groupId>
+            <artifactId>apollo</artifactId>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
@@ -185,8 +191,7 @@
         <module>hermes-core</module>
         <module>hermes-examples</module>
         <module>hermes-opennlp</module>
-				<module>hermes-maltparser</module>
-				<module>hermes-ml</module>
+        <module>hermes-maltparser</module>
     </modules>
 
     <distributionManagement>
