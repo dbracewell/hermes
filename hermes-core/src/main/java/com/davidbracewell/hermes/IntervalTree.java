@@ -1,19 +1,47 @@
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.collection.Collect;
 import com.davidbracewell.conversion.Cast;
+import com.google.common.collect.Lists;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
+ * The type Interval tree.
+ *
  * @author David B. Bracewell
  */
 public class IntervalTree implements Serializable, Collection<Annotation> {
   private static final long serialVersionUID = 1L;
+  /**
+   * The Nill.
+   */
+  static Node NILL = new Node();
+
+  static {
+    NILL.color = Node.BLACK;
+    NILL.parent = NILL;
+    NILL.left = NILL;
+    NILL.right = NILL;
+  }
 
   private Node root = NILL;
+  private int size = 0;
 
-
+  /**
+   * Overlapping list.
+   *
+   * @param span the span
+   * @return the list
+   */
   public List<Annotation> overlapping(Span span) {
     if (span == null || root.isNull()) {
       return Collections.emptyList();
@@ -39,14 +67,7 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
 
   @Override
   public int size() {
-    return size(root);
-  }
-
-  private int size(Node n) {
-    if (n.isNull()) {
-      return 0;
-    }
-    return n.annotations.size() + size(n.left) + size(n.right);
+    return size;
   }
 
   @Override
@@ -57,33 +78,19 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
   @Override
   public boolean contains(Object o) {
     if (o instanceof Annotation) {
-      Node n = get(Cast.as(o));
+      Node n = findNode(root, Cast.as(o));
       return !n.isNull() && n.annotations.contains(o);
     }
     return false;
   }
 
   private List<Annotation> toList() {
-    if (root.isNull()) {
-      return Collections.emptyList();
-    }
-    return toList(root, new LinkedList<>());
-  }
-
-  private List<Annotation> toList(Node node, List<Annotation> list) {
-    list.addAll(node.annotations);
-    if (!node.left.isNull()) {
-      toList(node.left, list);
-    }
-    if (!node.right.isNull()) {
-      toList(node.right, list);
-    }
-    return list;
+    return Lists.newArrayList(iterator());
   }
 
   @Override
   public Iterator<Annotation> iterator() {
-    return toList().iterator();
+    return new NodeIterator(root);
   }
 
   @Override
@@ -99,6 +106,7 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
   @Override
   public boolean add(Annotation annotation) {
     if (annotation != null) {
+      size++;
 
       if (root.isNull()) {
         root = new Node(annotation);
@@ -255,6 +263,25 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
 
   @Override
   public boolean remove(Object o) {
+    if (o instanceof Annotation) {
+      Annotation annotation = Cast.as(o);
+      Node n = findNode(root, annotation);
+      if (n != null && !n.isNull() && n.annotations.contains(annotation)) {
+        size--;
+        n.annotations.remove(annotation);
+        if (n.annotations.isEmpty()) {
+          //case 1: Leaf Node
+          if (n.left.isNull() && n.right.isNull()) {
+            if (n.parent.left == n) {
+              n.parent.left = NILL;
+            } else {
+              n.parent.right = NILL;
+            }
+          }
+        }
+        return true;
+      }
+    }
     return false;
   }
 
@@ -301,6 +328,11 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
 
   @Override
   public boolean retainAll(Collection<?> c) {
+    if (c != null) {
+      Collection<Annotation> toRemove = Collect.difference(toList(), Cast.cast(c));
+      toRemove.forEach(this::remove);
+      return containsAll(c);
+    }
     return false;
   }
 
@@ -309,14 +341,7 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
     this.root = NILL;
   }
 
-  private Node get(Span span) {
-    if (span == null) {
-      return null;
-    }
-    return get(root, span);
-  }
-
-  private Node get(Node n, Span span) {
+  private Node findNode(Node n, Span span) {
     while (!n.isNull()) {
       int cmp = span.compareTo(n.span);
       if (cmp < 0) {
@@ -330,90 +355,179 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
     return NILL;
   }
 
+  /**
+   * Floor annotation.
+   *
+   * @param annotation the annotation
+   * @param type       the type
+   * @return the annotation
+   */
   public Annotation floor(Annotation annotation, AnnotationType type) {
     if (annotation == null || type == null) {
       return Fragments.detachedEmptyAnnotation();
     }
-    Node n = floor(root, annotation);
-    if (n.isNull()) {
-      return Fragments.detachedEmptyAnnotation();
+    for (Annotation a : Collect.asIterable(new NodeIterator(root, -1, annotation.start(), type, false))) {
+      if (a.isInstance(type) && a != annotation) {
+        return a;
+      }
     }
-    return n.annotations.stream().filter(a -> a.isInstance(type)).filter(a -> a != annotation).findFirst().orElse(Fragments.detachedEmptyAnnotation());
+    return Fragments.detachedEmptyAnnotation();
   }
 
-  private Node floor(Node n, Span span) {
-    if (n.isNull()) {
-      return NILL;
-    }
-    int cmp = span.compareTo(n.span);
-    if (cmp == 0) {
-      return n;
-    }
-    if (cmp < 0) {
-      return floor(n.left, span);
-    }
-    Node t = floor(n.right, span);
-    if (!t.isNull()) {
-      return t;
-    }
-    return n;
-  }
 
+  /**
+   * Ceiling annotation.
+   *
+   * @param annotation the annotation
+   * @param type       the type
+   * @return the annotation
+   */
   public Annotation ceiling(Annotation annotation, AnnotationType type) {
     if (annotation == null || type == null) {
       return Fragments.detachedEmptyAnnotation();
     }
-    Node n = ceiling(root, annotation);
-    if (n.isNull()) {
-      return Fragments.detachedEmptyAnnotation();
+    for (Annotation a : Collect.asIterable(new NodeIterator(root, annotation.end(), Integer.MAX_VALUE, type, true))) {
+      if (a.isInstance(type) && a != annotation) {
+        return a;
+      }
     }
-    return n.annotations.stream().filter(a -> a.isInstance(type)).filter(a -> a != annotation).findFirst().orElse(Fragments.detachedEmptyAnnotation());
+    return Fragments.detachedEmptyAnnotation();
   }
 
-  private Node ceiling(Node n, Span span) {
-    if (n.isNull()) {
-      return NILL;
+  static class NodeIterator implements Iterator<Annotation> {
+    private Deque<Node> stack = new LinkedList<>();
+    private Span targetSpan;
+    private AnnotationType type = null;
+    private boolean goLeft;
+    private LinkedList<Annotation> annotations = new LinkedList<>();
+
+
+    public NodeIterator(Node node) {
+      this(node, -1, Integer.MAX_VALUE, null, true);
     }
-    int cmp = span.compareTo(n.span);
-    if (cmp == 0) {
-      return n;
+
+    public NodeIterator(Node node, int min, int max, AnnotationType type, boolean goLeft) {
+      this.type = type;
+      this.goLeft = goLeft;
+      this.targetSpan = new Span(min, max);
+      while (node != null && !node.isNull()) {
+        stack.push(node);
+        node = goLeft ? node.left : node.right;
+      }
     }
-    if (cmp > 0) {
-      return ceiling(n.right, span);
+
+    private boolean advance() {
+      while (annotations.isEmpty()) {
+        if (stack.isEmpty()) {
+          return false;
+        }
+        Node node = stack.pop();
+        if (goLeft) {
+          if (node.right != null && !node.right.isNull()) {
+            Node nr = node.right;
+            while (!nr.isNull()) {
+              stack.push(nr);
+              nr = nr.left;
+            }
+          }
+        } else {
+          if (node.left != null && !node.left.isNull()) {
+            Node nr = node.left;
+            while (!nr.isNull()) {
+              stack.push(nr);
+              nr = nr.right;
+            }
+          }
+        }
+
+
+        if (node.span.overlaps(targetSpan)) {
+          if (type == null) {
+            annotations.addAll(node.annotations);
+          } else {
+            node.annotations.stream()
+              .filter(a -> a.isInstance(type))
+              .forEach(annotations::add);
+          }
+        }
+      }
+
+      return annotations.size() > 0;
     }
-    Node t = ceiling(n.left, span);
-    if (!t.isNull()) {
-      return t;
+
+    @Override
+    public boolean hasNext() {
+      return advance();
     }
-    return n;
+
+    @Override
+    public Annotation next() {
+      if (!advance()) {
+        throw new NoSuchElementException();
+      }
+      return annotations.removeFirst();
+    }
   }
 
-  static Node NILL = new Node();
 
-  static {
-    NILL.color = Node.BLACK;
-    NILL.parent = NILL;
-    NILL.left = NILL;
-    NILL.right = NILL;
-  }
-
+  /**
+   * The type Node.
+   */
   static class Node implements Serializable {
+    /**
+     * The Red.
+     */
     static final boolean RED = true;
+    /**
+     * The Black.
+     */
     static final boolean BLACK = false;
     private static final long serialVersionUID = 1L;
-    Span span;
+    /**
+     * The Annotations.
+     */
     final List<Annotation> annotations = new LinkedList<>();
+    /**
+     * The Span.
+     */
+    Span span;
+    /**
+     * The Color.
+     */
     boolean color = RED;
+    /**
+     * The Left.
+     */
     Node left = NILL;
+    /**
+     * The Right.
+     */
     Node right = NILL;
+    /**
+     * The Parent.
+     */
     Node parent = NILL;
+    /**
+     * The Min.
+     */
     int min;
+    /**
+     * The Max.
+     */
     int max;
 
+    /**
+     * Instantiates a new Node.
+     */
     public Node() {
 
     }
 
+    /**
+     * Instantiates a new Node.
+     *
+     * @param annotation the annotation
+     */
     public Node(Annotation annotation) {
       this.span = annotation;
       this.annotations.add(annotation);
@@ -421,6 +535,11 @@ public class IntervalTree implements Serializable, Collection<Annotation> {
       this.max = annotation.end();
     }
 
+    /**
+     * Is null boolean.
+     *
+     * @return the boolean
+     */
     public boolean isNull() {
       return this == NILL;
     }
