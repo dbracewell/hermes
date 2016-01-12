@@ -44,15 +44,15 @@ public abstract class BIOTrainer extends CommandLineApplication {
 
   final AnnotationType annotationType;
   @Option(description = "Location of the corpus to process", required = true)
-  Resource corpus;
+  protected Resource corpus;
   @Option(name = "format", description = "Format of the corpus", required = true)
-  String corpusFormat;
+  protected String corpusFormat;
   @Option(description = "Location to save model", required = true)
-  Resource model;
+  protected Resource model;
   @Option(description = "Minimum count for a feature to be kept", defaultValue = "5")
-  int minFeatureCount;
+  protected int minFeatureCount;
   @Option(description = "TEST or TRAIN", defaultValue = "TEST")
-  Mode mode;
+  protected Mode mode;
 
   public BIOTrainer(String name, AnnotationType annotationType) {
     super(name);

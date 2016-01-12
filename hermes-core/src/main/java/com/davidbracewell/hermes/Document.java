@@ -88,7 +88,7 @@ public class Document extends HString {
     this.content = content;
     setId(id);
     setLanguage(language);
-    this.annotationSet =  Config.get("hermes.AnnotationSetImpl").asOrElse(AnnotationSet.class, DefaultAnnotationSet::new);
+    this.annotationSet = Config.get("hermes.AnnotationSetImpl").asOrElse(AnnotationSet.class, DefaultAnnotationSet::new);
   }
 
 
@@ -345,6 +345,14 @@ public class Document extends HString {
   @Override
   public List<Annotation> get(AnnotationType type) {
     return annotationSet.select(a -> a.isInstance(type));
+  }
+
+  public void remove(Annotation annotation) {
+    annotationSet.remove(annotation);
+  }
+
+  public void removeAnnotationType(AnnotationType type) {
+    annotationSet.removeAll(type);
   }
 
   @Override
