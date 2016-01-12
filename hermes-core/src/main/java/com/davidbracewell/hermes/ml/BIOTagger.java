@@ -27,6 +27,7 @@ import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.HString;
 
 /**
  * The type Bio tagger.
@@ -72,20 +73,19 @@ public class BIOTagger extends AnnotationTagger {
     SequenceInput<Annotation> sequenceInput = new SequenceInput<>(sentence.tokens());
     Labeling result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
     for (int i = 0; i < sentence.tokenLength(); ) {
-      System.err.println(sequenceInput.get(i) + " : " + sequenceInput.get(i).getPOS() + " : " + result.getLabel(i));
       if (result.getLabel(i).equals("O")) {
         i++;
       } else {
-        int start = sentence.tokenAt(i).start();
+        Annotation start = sentence.tokenAt(i);
         String type = result.getLabel(i).substring(2);
         i++;
-        while (i < sentence.tokenLength() && !result.getLabel(i).equals("O") && !result.getLabel(i).equals("B")) {
-          System.err.println(sequenceInput.get(i) + " : " + sequenceInput.get(i).getPOS() + " : " + result.getLabel(i));
+        while (i < sentence.tokenLength() && result.getLabel(i).startsWith("I-")) {
           i++;
         }
-        int end = (i < sentence.tokenLength()) ? sentence.tokenAt(i - 1).end() : sentence.end();
+        Annotation end = sentence.tokenAt(i - 1);
+        HString span = start.union(end);
         sentence.document()
-          .createAnnotation(annotationType, start, end)
+          .createAnnotation(annotationType, span)
           .put(annotationType.getTagAttribute(), annotationType.getTagAttribute().getValueType().convert(type));
       }
     }

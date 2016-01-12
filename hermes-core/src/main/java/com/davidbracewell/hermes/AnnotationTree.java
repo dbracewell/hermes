@@ -39,6 +39,11 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
   private Node root = NULL;
   private int size = 0;
 
+  private boolean isRed(Node node) {
+    return !isNull(node) && node.isRed;
+  }
+
+
   @Override
   public boolean add(Annotation annotation) {
     if (annotation != null) {
@@ -53,34 +58,31 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
         return true;
       }
 
-      Node x = root;
-      Node y = NULL;
-      while (!isNull(x)) {
-        y = x;
-        int cmp = z.span.compareTo(x.span);
-        if (cmp == 0) {
-          if (x.annotations.add(annotation)) {
-            size++;
-            return true;
-          }
-          return false;
-        } else if (cmp < 0) {
-          x = x.left;
+      Node iNode = root;
+      Node parent = NULL;
+      while (!isNull(iNode)) {
+        parent = iNode;
+        if (annotation.start() == iNode.span.start() && annotation.end() == iNode.span.end()) {
+          iNode.annotations.add(annotation);
+          return true;
+        } else if (annotation.start() <= iNode.span.start()) {
+          iNode = iNode.left;
         } else {
-          x = x.right;
+          iNode = iNode.right;
         }
       }
 
-      z.parent = y;
+      z.parent = parent;
       size++;
-      if (isNull(y)) {
+      if (isNull(parent)) {
         root = z;
-      } else if (z.span.compareTo(y.span) < 0) {
-        y.left = z;
+      } else if (annotation.start() <= parent.span.start()) {
+        parent.left = z;
       } else {
-        y.right = z;
+        parent.right = z;
       }
-      z.setRed();
+
+      update(z);
       balance(z);
       return true;
     }
@@ -211,16 +213,16 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
   }
 
   private List<Annotation> overlapping(Node node, Span span, List<Annotation> results) {
-    if (node == null || node.isNull()) {
+    if (isNull(node)) {
       return results;
     }
     if (node.span.overlaps(span)) {
       results.addAll(node.annotations);
     }
-    if (!node.left.isNull() && node.left.max >= span.start()) {
+    if (!isNull(node.left) && node.left.max >= span.start()) {
       overlapping(node.left, span, results);
     }
-    if (!node.right.isNull() && node.right.min <= span.end()) {
+    if (!isNull(node.right) && node.right.min <= span.end()) {
       overlapping(node.right, span, results);
     }
     return results;
@@ -384,7 +386,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
     /**
      * The Annotations.
      */
-    final Set<Annotation> annotations = new TreeSet<>();
+    final List<Annotation> annotations = new LinkedList<>();
     /**
      * The Is red.
      */

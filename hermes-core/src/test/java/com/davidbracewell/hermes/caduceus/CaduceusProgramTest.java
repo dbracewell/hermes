@@ -43,7 +43,7 @@ public class CaduceusProgramTest {
   @Test
   public void testExecute() throws Exception {
     Config.initializeTest();
-    CaduceusProgram p = CaduceusProgram.read(Resources.fromClasspath("com/davidbracewell/hermes/lyre/example.yaml"));
+    CaduceusProgram p = CaduceusProgram.read(Resources.fromClasspath("com/davidbracewell/hermes/caduceus/example.yaml"));
     Document doc = DocumentProvider.getDocument();
     Pipeline.process(doc, Types.TOKEN, Types.SENTENCE);
     p.execute(doc);

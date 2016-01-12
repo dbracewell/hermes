@@ -27,7 +27,7 @@ import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
 import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
-import com.davidbracewell.apollo.ml.sequence.linear.StructuredPerceptronLearner;
+import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTrainer;
@@ -57,6 +57,7 @@ public class PhraseChunkTrainer extends BIOTrainer {
     new PhraseChunkTrainer().run(args);
   }
 
+
   @Override
   protected PreprocessorList<Sequence> getPreprocessors() {
     return PreprocessorList.create(new CountFilter(d -> d >= 2).asSequenceProcessor());
@@ -69,10 +70,10 @@ public class PhraseChunkTrainer extends BIOTrainer {
 
   @Override
   protected SequenceLabelerLearner getLearner() {
-    SequenceLabelerLearner learner = new StructuredPerceptronLearner();
-    learner.setTransitionFeatures(TransitionFeatures.SECOND_ORDER);
+    SequenceLabelerLearner learner = new CRFTrainer();
+    learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
     learner.setValidator(new BIOValidator());
-    learner.setParameter("maxIterations", 20);
+    learner.setParameter("maxIterations", 200);
     learner.setParameter("verbose", true);
     return learner;
   }

@@ -254,9 +254,9 @@ public final class Annotation extends Fragment implements Serializable {
    */
   public Optional<Tag> getTag() {
     if (isInstance(Types.TOKEN)) {
-      return Optional.of(getPOS());
+      return Optional.ofNullable(getPOS());
     } else if (isInstance(Types.ENTITY)) {
-      return Optional.of(get(Attrs.ENTITY_TYPE).as(EntityType.class));
+      return Optional.ofNullable(get(Attrs.ENTITY_TYPE).as(EntityType.class));
     }
     Attribute tagAttribute = annotationType.getTagAttribute();
     if (tagAttribute == null) {
