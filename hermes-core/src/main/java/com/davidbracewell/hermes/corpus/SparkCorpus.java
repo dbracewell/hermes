@@ -75,8 +75,10 @@ public class SparkCorpus implements Corpus, Serializable {
    *
    * @param numPartitions the num partitions
    */
-  public void repartition(int numPartitions) {
+  @Override
+  public Corpus repartition(int numPartitions) {
     stream.repartition(numPartitions);
+    return this;
   }
 
   /**
@@ -160,4 +162,5 @@ public class SparkCorpus implements Corpus, Serializable {
     stream.updateConfig();
     return this;
   }
+
 }

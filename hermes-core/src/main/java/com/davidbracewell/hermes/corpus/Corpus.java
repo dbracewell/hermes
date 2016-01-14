@@ -353,4 +353,8 @@ public interface Corpus extends Iterable<Document> {
     return this;
   }
 
+  default Corpus repartition(int numPartitions){
+    return this;
+  }
+
 }//END OF Corpus2
