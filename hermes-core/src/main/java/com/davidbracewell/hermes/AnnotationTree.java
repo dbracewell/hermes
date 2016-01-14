@@ -43,7 +43,6 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
     return !isNull(node) && node.isRed;
   }
 
-
   @Override
   public boolean add(Annotation annotation) {
     if (annotation != null) {
@@ -54,7 +53,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
       if (isNull(root)) {
         size++;
         root = z;
-        root.isRed = false;
+        root.setBlack();
         return true;
       }
 
@@ -106,10 +105,11 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
 
   private void balance(Node z) {
     Node y;
-    while (!isNull(z) && z != root && z.getParent().isRed) {
+
+    while (!isNull(z) && z != root && !isNull(z.getParent()) && isRed(z.getParent())) {
       if (z.getParent() == z.getGrandparent().left) {
         y = z.getGrandparent().right;
-        if (y.isRed) {
+        if (isRed(y)) {
           z.getParent().setBlack();
           y.setBlack();
           z.getGrandparent().setRed();
@@ -125,7 +125,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
         }
       } else {
         y = z.getGrandparent().left;
-        if (y.isRed) {
+        if (isRed(y)) {
           z.getParent().setBlack();
           y.setBlack();
           z.getGrandparent().setRed();
@@ -456,7 +456,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
      * @return the grandparent
      */
     public Node getGrandparent() {
-      return parent == null ? NULL : parent.parent == null ? NULL : parent;
+      return parent == null ? NULL : parent.parent == null ? NULL : parent.parent;
     }
 
     /**
