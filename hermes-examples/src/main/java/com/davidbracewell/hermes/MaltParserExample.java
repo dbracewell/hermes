@@ -34,8 +34,6 @@ public class MaltParserExample {
   public static void main(String[] args) throws Exception {
     Config.initialize("MaltParserExample", args);
 
-    Config.setProperty("DEPENDENCY.model.ENGLISH", "${models.dir}/en/engmalt.linear-1.7.mco");
-
     Corpus corpus = Corpus.builder()
       .format(DocumentFormats.PLAIN_TEXT_OPL)
       .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))

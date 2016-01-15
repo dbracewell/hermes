@@ -73,9 +73,7 @@ public class DefaultAnnotationSet implements AnnotationSet {
   @Override
   public void add(Annotation annotation) {
     tree.add(annotation);
-    long id = idAnnotationMap.size();
-    annotation.setId(id);
-    idAnnotationMap.put(id, annotation);
+    idAnnotationMap.put(annotation.getId(), annotation);
   }
 
   @Override
