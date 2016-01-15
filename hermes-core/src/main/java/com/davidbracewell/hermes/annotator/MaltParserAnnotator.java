@@ -50,7 +50,7 @@ public class MaltParserAnnotator extends SentenceLevelAnnotator {
       synchronized (this) {
         if (!models.containsKey(language)) {
           try {
-            models.put(language, ConcurrentMaltParserService.initializeParserModel(Config.get("MaltParser", language, "model").asResource().asURL().get()));
+            models.put(language, ConcurrentMaltParserService.initializeParserModel(Config.get("Annotation.DEPENDENCY", language, "model").asResource().asURL().get()));
           } catch (Exception e) {
             throw Throwables.propagate(e);
           }
@@ -74,6 +74,9 @@ public class MaltParserAnnotator extends SentenceLevelAnnotator {
       for (int i = 1; i <= graph.nTokenNodes(); i++) {
         ConcurrentDependencyNode node = graph.getTokenNode(i);
         ConcurrentDependencyEdge edge = node.getHeadEdge();
+
+//        System.out.println(node.getIndex() + ": " + node.getLabel(1) + " => " + node.getHead().getLabel(1));
+
         Annotation child = tokens.get(node.getIndex() - 1);
         if (edge.getSource().getIndex() != 0) {
           Annotation parent = tokens.get(edge.getSource().getIndex() - 1);

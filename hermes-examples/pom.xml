@@ -43,20 +43,10 @@
             <version>0.2-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.davidbracewell</groupId>
-            <artifactId>hermes-maltparser</artifactId>
-            <version>0.2-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.11</artifactId>
             <version>1.5.2</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.davidbracewell</groupId>
-            <artifactId>apollo</artifactId>
-            <version>0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>

@@ -50,9 +50,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.davidbracewell</groupId>
-            <artifactId>apollo</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <groupId>org.maltparser</groupId>
+            <artifactId>maltparser</artifactId>
+            <version>1.8.1</version>
         </dependency>
     </dependencies>
     <build>
