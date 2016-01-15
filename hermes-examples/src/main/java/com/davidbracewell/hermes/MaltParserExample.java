@@ -27,6 +27,7 @@ import com.davidbracewell.hermes.corpus.DocumentFormats;
 import com.davidbracewell.io.Resources;
 
 import static com.davidbracewell.hermes.Types.*;
+
 /**
  * @author David B. Bracewell
  */
@@ -46,7 +47,7 @@ public class MaltParserExample {
           //Dependency relations are stored as relations on the tokens.
           //For convenience there is a method to get the first (which should be the only) dependency relation associated
           //with a token. It returns an optional in case there is no relation (e.g. the root of the tree)
-          System.out.println(token + "/" + token.getPOS().asString() +
+          System.out.println(token + "[" + token.getLemma() + "]" + "/" + token.getPOS().asString() +
             " : " + token.dependencyRelation().map(r -> r.getKey() + "=>" + r.getValue()).orElse(""))
         );
         System.out.println();
