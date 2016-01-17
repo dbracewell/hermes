@@ -191,6 +191,7 @@
         <module>hermes-core</module>
         <module>hermes-examples</module>
         <module>hermes-opennlp</module>
+        <module>hermes-wordnet</module>
     </modules>
 
     <distributionManagement>
