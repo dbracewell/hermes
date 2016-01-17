@@ -73,12 +73,12 @@ public class WordNet {
     );
 
   private WordNet() {
-    db = Config.get(WordNet.class, "db").as(WordNetDB.class);
-    for (WordNetLoader loader : Config.get(WordNet.class, "loaders").asList(WordNetLoader.class)) {
+    db = Config.get("WordNet.db").as(WordNetDB.class);
+    for (WordNetLoader loader : Config.get("WordNet.loaders").asList(WordNetLoader.class)) {
       loader.load(db);
     }
-    if (Config.hasProperty(WordNet.class, "properties")) {
-      for (WordNetPropertyLoader loader : Config.get(WordNet.class, "properties").asList(WordNetPropertyLoader.class)) {
+    if (Config.hasProperty("WordNet.properties")) {
+      for (WordNetPropertyLoader loader : Config.get("WordNet.properties").asList(WordNetPropertyLoader.class)) {
         loader.load(db);
       }
     }

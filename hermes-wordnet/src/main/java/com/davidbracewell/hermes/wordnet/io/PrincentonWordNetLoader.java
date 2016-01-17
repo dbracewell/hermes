@@ -43,7 +43,7 @@ public class PrincentonWordNetLoader implements WordNetLoader {
 
   private WordNetDB db;
   private Map<Tuple2<String, String>, Integer> synsetSenseToSenseNumber = new HashMap<>(100000);
-  private Set<Tuple3<String,String,WordNetRelation>> senseRelations = new HashSet<>(10000);
+  private Set<Tuple3<String, String, WordNetRelation>> senseRelations = new HashSet<>(10000);
   private Map<String, Sense> senseMap = new HashMap<>(100000);
 
   private void processFiles(Resource root, String prefix, Function<String, Object> parser) throws IOException {
@@ -64,8 +64,8 @@ public class PrincentonWordNetLoader implements WordNetLoader {
   public void load(WordNetDB db) {
     this.db = db;
     try {
-      processFiles(Config.get(PrincentonWordNetLoader.class, "dictionary").asResource(), "index", new IndexParser());
-      processFiles(Config.get(PrincentonWordNetLoader.class, "dictionary").asResource(), "data", new DataParser());
+      processFiles(Config.get("PrincentonWordNetLoader.dictionary").asResource(), "index", new IndexParser());
+      processFiles(Config.get("PrincentonWordNetLoader.dictionary").asResource(), "data", new DataParser());
       for (Tuple3<String, String, WordNetRelation> cell : senseRelations) {
         db.putRelation(senseMap.get(cell.getV1()), senseMap.get(cell.getV2()), cell.getV3());
       }
@@ -165,9 +165,9 @@ public class PrincentonWordNetLoader implements WordNetLoader {
         sense.setSense(synsetSenseToSenseNumber.get(Tuple2.of(synsetId, lemma.toLowerCase())));
         sense.setSynset(synset);
         sense.setAdjectiveMarker(marker);
-        sense.setId(synsetId + "%" + lemma +"%" + Strings.padStart(Integer.toString(lex_id), 2,'0'));
+        sense.setId(synsetId + "%" + lemma + "%" + Strings.padStart(Integer.toString(lex_id), 2, '0'));
         db.putSense(lemma, sense);
-        senseMap.put(toSenseIndex(synsetId, i+1), sense);
+        senseMap.put(toSenseIndex(synsetId, i + 1), sense);
         senses[i] = sense;
       }
 
@@ -184,23 +184,23 @@ public class PrincentonWordNetLoader implements WordNetLoader {
         int source_target = Integer.parseInt(sn, 16);
         if (source_target == 0) { //synset relation
           db.putRelation(synsetId, toSynsetId(targetOffset, targetPOS), relation);
-          if( relation == WordNetRelation.HYPERNYM || relation == WordNetRelation.HYPERNYM_INSTANCE ){
+          if (relation == WordNetRelation.HYPERNYM || relation == WordNetRelation.HYPERNYM_INSTANCE) {
             hasHypernym = true;
           }
         } else { //sense relation
           int source_num = Integer.parseInt(sn.substring(0, 2), 16);
           int target_num = Integer.parseInt(sn.substring(2), 16);
           senseRelations.add(
-              Tuple3.of(
-                  toSenseIndex(synsetId, source_num),
-                  toSenseIndex(toSynsetId(targetOffset, targetPOS), target_num),
-                  relation
-              )
+            Tuple3.of(
+              toSenseIndex(synsetId, source_num),
+              toSenseIndex(toSynsetId(targetOffset, targetPOS), target_num),
+              relation
+            )
           );
         }
       }
 
-      if( !hasHypernym ){
+      if (!hasHypernym) {
         db.addRoot(synset);
       }
 
