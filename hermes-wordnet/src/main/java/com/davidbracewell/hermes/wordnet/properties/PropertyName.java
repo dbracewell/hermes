@@ -28,7 +28,8 @@ import java.io.ObjectStreamException;
 import java.util.Collection;
 
 /**
- * The type Property name.
+ * <p>Dynamic enum for property names.</p>
+ *
  * @author David B. Bracewell
  */
 public class PropertyName extends EnumValue {
@@ -94,8 +95,6 @@ public class PropertyName extends EnumValue {
    * The constant DOMAIN.
    */
   public static final PropertyName DOMAIN = create("DOMAIN");
-
-
 
 
 }//END OF PropertyName

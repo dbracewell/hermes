@@ -22,12 +22,19 @@
 package com.davidbracewell.hermes.wordnet.io;
 
 /**
+ * <p>Defines the methodology for loading a WordNet.</p>
+ *
  * @author David B. Bracewell
  */
 public interface WordNetLoader {
 
 
-  public void load(WordNetDB db);
+  /**
+   * Load.
+   *
+   * @param db the db
+   */
+  void load(WordNetDB db);
 
 
 }//END OF WordNetLoader

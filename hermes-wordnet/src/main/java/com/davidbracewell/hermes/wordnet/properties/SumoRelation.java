@@ -22,17 +22,43 @@
 package com.davidbracewell.hermes.wordnet.properties;
 
 /**
+ * <p>Sumo Concept: see http://www.adampease.org/OP/</p>
+ *
  * @author dbracewell
  */
 public enum SumoRelation {
+  /**
+   * Equal sumo relation.
+   */
   EQUAL,
+  /**
+   * Instance of sumo relation.
+   */
   INSTANCE_OF,
+  /**
+   * Subsumed sumo relation.
+   */
   SUBSUMED,
+  /**
+   * Not equal sumo relation.
+   */
   NOT_EQUAL,
+  /**
+   * Not instance of sumo relation.
+   */
   NOT_INSTANCE_OF,
+  /**
+   * Not subsumed sumo relation.
+   */
   NOT_SUBSUMED;
 
 
+  /**
+   * From string sumo relation.
+   *
+   * @param string the string
+   * @return the sumo relation
+   */
   public static SumoRelation fromString(String string) {
     try {
       return SumoRelation.valueOf(string);

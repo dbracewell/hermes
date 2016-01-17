@@ -24,13 +24,15 @@ package com.davidbracewell.hermes.wordnet.properties;
 import java.util.Set;
 
 /**
- * The interface Property.
+ * <p>Interface representing a property of a synset. The generic interface acts as key value pair and specific
+ * implementations may include getter methods for convenience.</p>
+ *
  * @author David B. Bracewell
  */
 public interface Property {
 
   /**
-   * Get object.
+   * Gets the
    *
    * @param key the key
    * @return the object

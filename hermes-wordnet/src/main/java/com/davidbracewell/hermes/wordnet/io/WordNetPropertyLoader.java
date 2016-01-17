@@ -27,16 +27,30 @@ import com.davidbracewell.hermes.wordnet.properties.Property;
 import com.davidbracewell.hermes.wordnet.properties.PropertyName;
 
 /**
+ * <p>Loads properties associated with Synsets for a given instance of a WordNet database.</p>
+ *
  * @author David B. Bracewell
  */
 public abstract class WordNetPropertyLoader {
 
 
+  /**
+   * Loads the properties into the given database
+   *
+   * @param db the database to load the properties for
+   */
   public abstract void load(WordNetDB db);
 
 
-  protected final void setProperty(Synset synset, PropertyName name, Property property){
-    Cast.as(synset,SynsetImpl.class).setProperty(name,property);
+  /**
+   * Set property.
+   *
+   * @param synset   the synset
+   * @param name     the name
+   * @param property the property
+   */
+  protected final void setProperty(Synset synset, PropertyName name, Property property) {
+    Cast.as(synset, SynsetImpl.class).setProperty(name, property);
   }
 
 

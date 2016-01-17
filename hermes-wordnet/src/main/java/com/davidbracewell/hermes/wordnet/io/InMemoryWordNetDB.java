@@ -35,16 +35,17 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * The type In memory word net db.
+ *
  * @author David B. Bracewell
  */
-public class InMemoryWordNetDB implements WordNetDB, Serializable{
-
+public class InMemoryWordNetDB implements WordNetDB, Serializable {
   private static final long serialVersionUID = 3629513346307838903L;
-  public final TreeMultimap<String,Sense> lemmaToSenseMap = TreeMultimap.create();
-  public final Map<String,Synset> idToSynsetMap = new HashMap<>();
-  public final Table<Sense, Sense, WordNetRelation> senseRelations = HashBasedTable.create();
-  public final Table<String, String, WordNetRelation> synsetRelations = HashBasedTable.create();
-  public final Set<Synset> roots = new HashSet<>();
+  private final TreeMultimap<String, Sense> lemmaToSenseMap = TreeMultimap.create();
+  private final Map<String, Synset> idToSynsetMap = new HashMap<>();
+  private final Table<Sense, Sense, WordNetRelation> senseRelations = HashBasedTable.create();
+  private final Table<String, String, WordNetRelation> synsetRelations = HashBasedTable.create();
+  private final Set<Synset> roots = new HashSet<>();
 
 
   @Override
@@ -74,7 +75,7 @@ public class InMemoryWordNetDB implements WordNetDB, Serializable{
 
   @Override
   public WordNetRelation getRelation(Sense sense1, Sense sense2) {
-    return senseRelations.get(sense1,sense2);
+    return senseRelations.get(sense1, sense2);
   }
 
   @Override
@@ -104,22 +105,22 @@ public class InMemoryWordNetDB implements WordNetDB, Serializable{
 
   @Override
   public void putSense(String lemma, Sense sense) {
-      lemmaToSenseMap.put(lemma,sense);
+    lemmaToSenseMap.put(lemma, sense);
   }
 
   @Override
   public void putSynset(String id, Synset synset) {
-      idToSynsetMap.put(id,synset);
+    idToSynsetMap.put(id, synset);
   }
 
   @Override
   public void putRelation(Sense s1, Sense s2, WordNetRelation relation) {
-  senseRelations.put(s1,s2,relation);
+    senseRelations.put(s1, s2, relation);
   }
 
   @Override
   public void putRelation(String synsetId1, String synsetId2, WordNetRelation relation) {
-  synsetRelations.put(synsetId1,synsetId2,relation);
+    synsetRelations.put(synsetId1, synsetId2, relation);
   }
 
   @Override
@@ -127,7 +128,7 @@ public class InMemoryWordNetDB implements WordNetDB, Serializable{
     roots.add(root);
   }
 
-  public String toSenseRelationIndex(Sense sense){
+  public String toSenseRelationIndex(Sense sense) {
     return sense.getSynset().getId() + "%%" + Integer.toString(sense.getSynsetPosition());
   }
 

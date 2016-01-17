@@ -26,7 +26,9 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * The type Information content.
+ * <p>Information content measures the specificity of a concept with higher values representing more specific
+ * concepts. Information content files are available at http://wn-similarity.sourceforge.net/</p>
+ *
  * @author David B. Bracewell
  */
 public class InformationContent implements Property, Serializable {

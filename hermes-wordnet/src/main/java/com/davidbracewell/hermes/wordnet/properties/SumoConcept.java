@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * <p>Sumo Concept: see http://www.adampease.org/OP/</p>
+ *
  * @author dbracewell
  */
 public class SumoConcept implements Property, Serializable {
@@ -66,9 +68,9 @@ public class SumoConcept implements Property, Serializable {
   @Override
   public String toString() {
     return "SumoConcept{" +
-        "conceptName='" + conceptName + '\'' +
-        ", relation=" + relation +
-        '}';
+      "conceptName='" + conceptName + '\'' +
+      ", relation=" + relation +
+      '}';
   }
 
   @Override
