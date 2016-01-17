@@ -586,11 +586,8 @@ public class WordNet {
    */
   public static void main(String[] args) throws Exception {
     Config.initialize("WordNet");
-//    System.out.println(WordNetLemmatizer.getInstance().getBaseForm("running up"));
-    System.out.println(WordNetLemmatizer.getInstance().getBaseForm("hand-washing"));
     InformationContentLoader loader = new InformationContentLoader(Resources.fromFile("/shared/data/ic-bnc-add1.dat"), "INFORMATION_CONTENT");
     loader.load(WordNet.getInstance().db);
-
     Synset cat = WordNet.getInstance().getSense("cat", WordNetPOS.NOUN, 1, Language.ENGLISH).getSynset();
     Synset dog = WordNet.getInstance().getSense("dog", WordNetPOS.NOUN, 1, Language.ENGLISH).getSynset();
     System.out.println(cat + " : " + cat.getProperty(PropertyName.INFO_CONTENT).get("value"));
@@ -634,7 +631,7 @@ public class WordNet {
       if (senseNum != -1 && sense.getLexicalId() != senseNum) {
         return false;
       }
-      if (pos != null && sense.getPOS() != pos) {
+      if (pos != null && pos != WordNetPOS.ANY && sense.getPOS() != pos) {
         return false;
       }
       if (language != null && sense.getLanguage() != language) {
