@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.morphology;
 
+import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.CSV;
@@ -31,8 +32,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
@@ -86,7 +87,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
 
     this.lemmas = new PatriciaTrie<>();
     try (CSVReader reader = CSV.builder().delimiter('\t').reader(Resources.fromClasspath("com/davidbracewell/hermes/morphology/en/lemmas.dict.gz"))) {
-      reader.forEach(row ->{
+      reader.forEach(row -> {
         if (row.size() >= 2) {
           String lemma = row.get(0).toLowerCase();
           POS pos = POS.fromString(row.get(1).toUpperCase());
@@ -171,12 +172,25 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     }
   }
 
+  public List<String> getAllLemmas(@NonNull String word, @NonNull POS partOfSpeech) {
+    List<String> lemmas = null;
+    if (partOfSpeech == POS.ANY) {
+      lemmas = Lists.newArrayList(doLemmatization(word, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB));
+    } else if (partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)) {
+      lemmas = Lists.newArrayList(doLemmatization(word, partOfSpeech));
+    }
+    if (lemmas == null || lemmas.isEmpty()) {
+      lemmas = Collections.emptyList();
+    }
+    return lemmas;
+  }
+
   @Override
   public String lemmatize(@NonNull String string, @NonNull POS partOfSpeech) {
     if (partOfSpeech == POS.ANY) {
-      return Iterables.getFirst(doLemmatization(string, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB), string).toLowerCase();
+      return Collect.from(doLemmatization(string, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)).findFirst().orElse(string).toLowerCase();
     } else if (partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)) {
-      return Iterables.getFirst(doLemmatization(string, partOfSpeech), string).toLowerCase();
+      return Collect.from(doLemmatization(string, partOfSpeech)).findFirst().orElse(string).toLowerCase();
     }
     return string.toLowerCase();
   }

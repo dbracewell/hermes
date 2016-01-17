@@ -31,6 +31,9 @@ import com.davidbracewell.collection.Counters;
 import com.davidbracewell.collection.Sorting;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.hermes.Hermes;
+import com.davidbracewell.hermes.morphology.Lemmatizers;
+import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.hermes.wordnet.io.WordNetDB;
 import com.davidbracewell.hermes.wordnet.io.WordNetLoader;
 import com.davidbracewell.hermes.wordnet.io.WordNetPropertyLoader;
@@ -39,12 +42,13 @@ import com.davidbracewell.hermes.wordnet.properties.PropertyName;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.*;
+import lombok.NonNull;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * The type Word net.
@@ -164,15 +168,14 @@ public class WordNet {
    * @param partOfSpeech the part of speech
    * @return the max depth
    */
-  public double getMaxDepth(WordNetPOS partOfSpeech) {
-    Preconditions.checkNotNull(partOfSpeech);
+  public double getMaxDepth(@NonNull POS partOfSpeech) {
     if (maxDepths[partOfSpeech.ordinal()] == -1) {
       synchronized (maxDepths) {
         if (maxDepths[partOfSpeech.ordinal()] == -1) {
           double max = 0d;
           for (Synset synset : getSynsets()) {
             if (synset.getPOS() == partOfSpeech) {
-              max = Math.max(max, depth(synset) - 1);
+              max = Math.max(max, synset.depth() - 1);
             }
           }
           maxDepths[partOfSpeech.ordinal()] = max;
@@ -235,17 +238,24 @@ public class WordNet {
   }
 
   /**
-   * Returns the height of the node in the ontology.
+   * Gets the hypernyms of the given WordNetNode.
    *
-   * @param node The node to check
-   * @return The height
+   * @param node The WordNet node
+   * @return The hypernyms
    */
-  public int depth(Synset node) {
-    Preconditions.checkNotNull(node);
-    //TODO : implement
-    return -1;
+  public Set<Synset> getHypernyms(@NonNull Sense node) {
+    return getHypernyms(node.getSynset());
   }
 
+  /**
+   * Gets the first hypernym of the given WordNetNode.
+   *
+   * @param node The WordNet node
+   * @return The first hypernym
+   */
+  public Synset getHypernym(@NonNull Sense node) {
+    return getHypernyms(node.getSynset()).stream().findFirst().orElse(null);
+  }
 
   /**
    * Gets the hypernyms of the given WordNetNode.
@@ -253,7 +263,7 @@ public class WordNet {
    * @param node The WordNet node
    * @return The hypernyms
    */
-  public Set<Synset> getHypernyms(Synset node) {
+  public Set<Synset> getHypernyms(@NonNull Synset node) {
     return getRelatedSynsets(node, WordNetRelation.HYPERNYM);
   }
 
@@ -263,29 +273,30 @@ public class WordNet {
    * @param node The WordNet node
    * @return The first hypernym
    */
-  public Synset getHypernym(Synset node) {
-    return Iterables.getFirst(getHypernyms(node), null);
+  public Synset getHypernym(@NonNull Synset node) {
+    return getHypernyms(node).stream().findFirst().orElse(null);
   }
 
   /**
-   * Gets the hyponyms of the given WordNetNode.
+   * Gets the hyponyms of the given synset.
    *
-   * @param node The WordNet node
+   * @param node The synset whose hyponyms we want
    * @return The hyponyms
    */
-  public Set<Synset> getHyponyms(Synset node) {
+  public Set<Synset> getHyponyms(@NonNull Synset node) {
     return getRelatedSynsets(node, WordNetRelation.HYPONYM);
   }
 
   /**
-   * Gets the first hyponym of the given WordNetNode.
+   * Gets the hyponyms of the synset that the sense belongs to
    *
-   * @param node The WordNet node
-   * @return The first hyponym
+   * @param node The sense whose synset we want  the hyponyms of
+   * @return The hyponyms of the synset the sense is in
    */
-  public Synset getHyponym(Synset node) {
-    return Iterables.getFirst(getHyponyms(node), null);
+  public Set<Synset> getHyponyms(@NonNull Sense node) {
+    return getRelatedSynsets(node.getSynset(), WordNetRelation.HYPONYM);
   }
+
 
   /**
    * Gets the semantic relations associated with the given WordNetNode.
@@ -294,17 +305,11 @@ public class WordNet {
    * @param relation The desired relation
    * @return A set of synset representing the synsets with the given relation to the given node
    */
-  public Set<Synset> getRelatedSynsets(Synset node, final WordNetRelation relation) {
-    if (node == null) {
-      return Collections.emptySet();
-    }
-    Set<Synset> synsets = new HashSet<>();
-    for (Map.Entry<String, WordNetRelation> entry : db.getRelations(node).entrySet()) {
-      if (entry.getValue() == relation) {
-        synsets.add(db.getSynsetFromId(entry.getKey()));
-      }
-    }
-    return synsets;
+  public Set<Synset> getRelatedSynsets(@NonNull Synset node, @NonNull WordNetRelation relation) {
+    return db.getRelations(node).entrySet().stream()
+      .filter(entry -> entry.getValue() == relation)
+      .map(entry -> db.getSynsetFromId(entry.getKey()))
+      .collect(Collectors.toSet());
   }
 
   /**
@@ -313,13 +318,10 @@ public class WordNet {
    * @param synset The WordNet synset
    * @return A set of synset representing the relation with to the given synset
    */
-  public HashMultimap<WordNetRelation, Synset> getRelatedSynsets(final Synset synset) {
-    if (synset == null) {
-      return HashMultimap.create();
-    }
+  public HashMultimap<WordNetRelation, Synset> getRelatedSynsets(@NonNull Synset synset) {
     HashMultimap<WordNetRelation, Synset> map = HashMultimap.create();
     for (Map.Entry<String, WordNetRelation> entry : db.getRelations(synset).entrySet()) {
-      map.put(entry.getValue(), getSynset(entry.getKey()));
+      map.put(entry.getValue(), getSynsetFromId(entry.getKey()));
     }
     return map;
   }
@@ -331,18 +333,11 @@ public class WordNet {
    * @param relation The desired relation
    * @return A set of senses representing the sense with the given relation to the given sense
    */
-  public Set<Sense> getRelatedSenses(final Sense sense, final WordNetRelation relation) {
-    if (sense == null) {
-      return Collections.emptySet();
-    }
-    Set<Sense> senses = new HashSet<>();
-
-    for (Map.Entry<Sense, WordNetRelation> entry : db.getRelations(sense).entrySet()) {
-      if (entry.getValue() == relation) {
-        senses.add(entry.getKey());
-      }
-    }
-    return senses;
+  public Set<Sense> getRelatedSenses(@NonNull Sense sense, @NonNull WordNetRelation relation) {
+    return db.getRelations(sense).entrySet().stream()
+      .filter(entry -> entry.getValue() == relation)
+      .map(Map.Entry::getKey)
+      .collect(Collectors.toSet());
   }
 
   /**
@@ -351,10 +346,7 @@ public class WordNet {
    * @param sense The WordNet sense
    * @return A set of senses representing the sense with to the given sense
    */
-  public HashMultimap<WordNetRelation, Sense> getRelatedSenses(final Sense sense) {
-    if (sense == null) {
-      return HashMultimap.create();
-    }
+  public HashMultimap<WordNetRelation, Sense> getRelatedSenses(@NonNull Sense sense) {
     HashMultimap<WordNetRelation, Sense> map = HashMultimap.create();
     for (Map.Entry<Sense, WordNetRelation> entry : db.getRelations(sense).entrySet()) {
       map.put(entry.getValue(), entry.getKey());
@@ -368,16 +360,11 @@ public class WordNet {
    * @param synset The synset
    * @return A set of siblings
    */
-  public Set<Synset> getSiblings(Synset synset) {
-    if (synset == null) {
-      return Collections.emptySet();
-    }
-    Set<Synset> siblings = Sets.newHashSet();
-    for (Synset hypernym : getHypernyms(synset)) {
-      siblings.addAll(getHyponyms(hypernym));
-    }
-    siblings.remove(synset);
-    return siblings;
+  public Set<Synset> getSiblings(@NonNull Synset synset) {
+    return getHypernyms(synset).stream()
+      .flatMap(s -> getHyponyms(s).stream())
+      .filter(s -> !s.equals(synset))
+      .collect(Collectors.toSet());
   }
 
   /**
@@ -386,12 +373,18 @@ public class WordNet {
    * @param id The sense
    * @return The synset or null
    */
-  public Synset getSynset(String id) {
+  public Synset getSynsetFromId(String id) {
     return db.getSynsetFromId(id);
   }
 
+  /**
+   * Gets senses.
+   *
+   * @param surfaceForm the surface form
+   * @return the senses
+   */
   public List<Sense> getSenses(String surfaceForm) {
-    return getSenses(surfaceForm, WordNetPOS.ANY, Language.ENGLISH);
+    return getSenses(surfaceForm, POS.ANY, Hermes.defaultLanguage());
   }
 
   /**
@@ -402,23 +395,20 @@ public class WordNet {
    * @return the senses
    */
   public List<Sense> getSenses(String surfaceForm, Language language) {
-    return getSenses(surfaceForm, WordNetPOS.ANY, language);
+    return getSenses(surfaceForm, POS.ANY, language);
   }
 
   private List<Sense> getSenses(Predicate<Sense> predicate, Iterable<String> lemmas) {
     List<Sense> senses = Lists.newArrayList();
     List<String> lemmaList = Lists.newArrayList(lemmas);
-
     for (String lemma : lemmaList) {
-      senses.addAll(Collections2.filter(db.getSenses(lemma), Predicates.and(predicate, new SenseFormPredicate(lemma))));
+      senses.addAll(db.getSenses(lemma).stream().filter(predicate.and(new SenseFormPredicate(lemma))).collect(Collectors.toList()));
     }
-
     if (senses.isEmpty()) {
       for (String lemma : lemmaList) {
-        senses.addAll(Collections2.filter(db.getSenses(lemma), Predicates.and(predicate, new SenseFormPredicate(lemma.toLowerCase()))));
+        senses.addAll(db.getSenses(lemma).stream().filter(predicate.and(new SenseFormPredicate(lemma.toLowerCase()))).collect(Collectors.toList()));
       }
     }
-
     Collections.sort(senses);
     return senses;
   }
@@ -427,70 +417,36 @@ public class WordNet {
    * Gets senses.
    *
    * @param surfaceForm the surface form
-   * @param POS         the part of speech tag
+   * @param pos         the part of speech tag
    * @param language    the language
    * @return the senses
    */
-  public List<Sense> getSenses(String surfaceForm, WordNetPOS POS, Language language) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(surfaceForm));
-    Preconditions.checkNotNull(POS);
-    Preconditions.checkNotNull(language);
-    return getSenses(new SenseEnum(-1, POS, language), WordNetLemmatizer.getInstance().getBaseForm(surfaceForm, POS));
-  }
-
-  /**
-   * Gets senses.
-   *
-   * @param surfaceForm     the surface form
-   * @param partOfSpeechTag the part of speech tag
-   * @param senseNum        the sense num
-   * @return the senses
-   */
-  public List<Sense> getSenses(String surfaceForm, WordNetPOS partOfSpeechTag, int senseNum) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(surfaceForm));
-    Preconditions.checkNotNull(partOfSpeechTag);
-    List<Sense> senses = Lists.newArrayList();
-
-    for (Sense sense : db.getSenses(surfaceForm.toLowerCase())) {
-      if ((partOfSpeechTag == WordNetPOS.ANY || sense.getPOS() == partOfSpeechTag) && sense.getSenseNumber() == senseNum) {
-        senses.add(sense);
-      }
-    }
-    if (senses.isEmpty()) {
-      for (Sense sense : db.getSenses(surfaceForm)) {
-        if ((partOfSpeechTag == WordNetPOS.ANY || sense.getPOS() == partOfSpeechTag) && sense.getSenseNumber() == senseNum) {
-          senses.add(sense);
-        }
-      }
-    }
-    Collections.sort(senses);
-    return senses;
+  public List<Sense> getSenses(String surfaceForm, POS pos, Language language) {
+    return getSenses(new SenseEnum(-1, pos, language), Lemmatizers.getLemmatizer(language).getAllLemmas(surfaceForm, pos));
   }
 
   /**
    * Gets the sense for the associated information
    *
    * @param lemma    The lemma
-   * @param POS      The part of speech
+   * @param pos      The part of speech
    * @param senseNum The sense number
    * @param language The language
    * @return The sense
    */
-  public Sense getSense(String lemma, WordNetPOS POS, int senseNum, Language language) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(lemma));
-    Preconditions.checkNotNull(POS);
-    Preconditions.checkNotNull(language);
+  public Optional<Sense> getSense(@NonNull String lemma, @NonNull POS pos, int senseNum, @NonNull Language language) {
+    lemma = Lemmatizers.getLemmatizer(language).lemmatize(lemma, pos);
     for (Sense sense : db.getSenses(lemma.toLowerCase())) {
-      if ((POS == WordNetPOS.ANY || sense.getPOS() == POS) && sense.getSenseNumber() == senseNum && sense.getLanguage() == language) {
-        return sense;
+      if ((pos == POS.ANY || pos.isInstance(sense.getPOS())) && sense.getSenseNumber() == senseNum && sense.getLanguage() == language) {
+        return Optional.of(sense);
       }
     }
     for (Sense sense : db.getSenses(lemma)) {
-      if ((POS == WordNetPOS.ANY || sense.getPOS() == POS) && sense.getSenseNumber() == senseNum && sense.getLanguage() == language) {
-        return sense;
+      if ((pos == POS.ANY || pos.isInstance(sense.getPOS())) && sense.getSenseNumber() == senseNum && sense.getLanguage() == language) {
+        return Optional.of(sense);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   /**
@@ -513,8 +469,8 @@ public class WordNet {
       return null;
     }
 
-    int node1Height = depth(synset1);
-    int node2Height = depth(synset2);
+    int node1Height = synset1.depth();
+    int node2Height = synset2.depth();
     int minHeight = Math.min(node1Height, node2Height);
     int maxHeight = Integer.MIN_VALUE;
     Synset lcs = null;
@@ -522,7 +478,7 @@ public class WordNet {
       if (s.equals(synset1) || s.equals(synset2)) {
         continue;
       }
-      int height = depth(s);
+      int height = s.depth();
       if (height < minHeight && height > maxHeight) {
         maxHeight = height;
         lcs = s;
@@ -586,12 +542,19 @@ public class WordNet {
    */
   public static void main(String[] args) throws Exception {
     Config.initialize("WordNet");
+    Config.loadPackageConfig("com.davidbracewell.hermes");
     InformationContentLoader loader = new InformationContentLoader(Resources.fromFile("/shared/data/ic-bnc-add1.dat"), "INFORMATION_CONTENT");
     loader.load(WordNet.getInstance().db);
-    Synset cat = WordNet.getInstance().getSense("cat", WordNetPOS.NOUN, 1, Language.ENGLISH).getSynset();
-    Synset dog = WordNet.getInstance().getSense("dog", WordNetPOS.NOUN, 1, Language.ENGLISH).getSynset();
+    Synset cat = WordNet.getInstance().getSense("cats", POS.NOUN, 1, Language.ENGLISH).get().getSynset();
+    Synset dog = WordNet.getInstance().getSense("dog", POS.NOUN, 1, Language.ENGLISH).get().getSynset();
     System.out.println(cat + " : " + cat.getProperty(PropertyName.INFO_CONTENT).get("value"));
     System.out.println(dog + " : " + dog.getProperty(PropertyName.INFO_CONTENT).get("value"));
+
+    System.out.println(cat.depth());
+    System.out.println(cat.getHypernym().depth());
+    System.out.println(dog.depth());
+
+    System.out.println("Cat root = " + cat.getRoot().getGloss());
 
 
     WordNet.getInstance().shortestPath(cat, dog).forEach(synset -> System.out.println(synset.getSenses()));
@@ -606,7 +569,7 @@ public class WordNet {
     }
 
     @Override
-    public boolean apply(Sense sense) {
+    public boolean test(Sense sense) {
       return sense != null && sense.getLemma().equals(lemma);
     }
   }
@@ -614,24 +577,24 @@ public class WordNet {
   private static class SenseEnum implements Predicate<Sense> {
 
     private final int senseNum;
-    private final WordNetPOS pos;
+    private final POS pos;
     private final Language language;
 
-    private SenseEnum(int senseNum, WordNetPOS pos, Language language) {
+    private SenseEnum(int senseNum, POS pos, Language language) {
       this.senseNum = senseNum;
       this.pos = pos;
       this.language = language;
     }
 
     @Override
-    public boolean apply(Sense sense) {
+    public boolean test(Sense sense) {
       if (sense == null) {
         return false;
       }
       if (senseNum != -1 && sense.getLexicalId() != senseNum) {
         return false;
       }
-      if (pos != null && pos != WordNetPOS.ANY && sense.getPOS() != pos) {
+      if (pos != null && pos != POS.ANY && sense.getPOS() != pos) {
         return false;
       }
       if (language != null && sense.getLanguage() != language) {

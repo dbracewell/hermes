@@ -27,6 +27,7 @@ import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.POS;
 import lombok.NonNull;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -54,6 +55,8 @@ public interface Lemmatizer {
    * @return the lemmatized version of the string
    */
   String lemmatize(String string, POS partOfSpeech);
+
+  List<String> getAllLemmas(String string, POS partOfSpeech);
 
   /**
    * Lemmatizes a token.

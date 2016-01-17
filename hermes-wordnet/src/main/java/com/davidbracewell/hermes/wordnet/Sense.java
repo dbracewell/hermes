@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.wordnet;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.hermes.tag.POS;
 import com.google.common.collect.HashMultimap;
 
 import java.util.List;
@@ -50,7 +51,7 @@ public interface Sense extends Comparable<Sense> {
    *
    * @return the pOS
    */
-  WordNetPOS getPOS();
+  POS getPOS();
 
   /**
    * Senses in WordNet are generally ordered from most to least frequently used, with the most common sense numbered 1.

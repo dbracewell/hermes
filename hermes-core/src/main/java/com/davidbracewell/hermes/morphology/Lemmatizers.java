@@ -27,6 +27,8 @@ import com.davidbracewell.hermes.tag.POS;
 import com.google.common.collect.Maps;
 import lombok.NonNull;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -65,9 +67,15 @@ public final class Lemmatizers {
     INSTANCE;
 
     @Override
-    public String lemmatize(String string, POS partOfSpeech) {
+    public String lemmatize(@NonNull String string, POS partOfSpeech) {
       return string.toLowerCase();
     }
+
+    @Override
+    public List<String> getAllLemmas(@NonNull String string, POS partOfSpeech) {
+      return Collections.singletonList(string.toLowerCase());
+    }
+
 
   }//END OF Stemmer$NoOptStemmer
 

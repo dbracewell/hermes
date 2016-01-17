@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.wordnet.io;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.hermes.wordnet.*;
 import com.google.common.collect.HashMultimap;
 
@@ -83,8 +84,8 @@ public class SenseImpl implements Sense, Serializable {
   }
 
   @Override
-  public WordNetPOS getPOS() {
-    return partOfSpeech;
+  public POS getPOS() {
+    return partOfSpeech.toHermesPOS();
   }
 
   @Override

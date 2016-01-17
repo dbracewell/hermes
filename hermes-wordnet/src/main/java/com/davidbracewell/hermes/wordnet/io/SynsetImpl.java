@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.wordnet.io;
 
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.hermes.wordnet.*;
 import com.davidbracewell.hermes.wordnet.properties.Property;
 import com.davidbracewell.hermes.wordnet.properties.PropertyName;
@@ -45,6 +46,7 @@ public class SynsetImpl implements Synset, Serializable, Comparable<Synset> {
   private WordNetPOS partOfSpeech;
   private String gloss;
   private Sense[] senses;
+  private int depth = -1;
   private final Map<PropertyName, Property> properties = new HashMap<>(0);
 
   /**
@@ -111,8 +113,8 @@ public class SynsetImpl implements Synset, Serializable, Comparable<Synset> {
   }
 
   @Override
-  public WordNetPOS getPOS() {
-    return partOfSpeech;
+  public POS getPOS() {
+    return partOfSpeech.toHermesPOS();
   }
 
   @Override
@@ -132,7 +134,17 @@ public class SynsetImpl implements Synset, Serializable, Comparable<Synset> {
 
   @Override
   public int depth() {
-    return 0;
+    if (depth < 0) {
+      synchronized (this) {
+        if (depth < 0) {
+          depth = (int) WordNet.getInstance().getRoots().stream()
+            .filter(s -> s.getPOS() == getPOS())
+            .mapToDouble(root -> WordNet.getInstance().distance(this, root))
+            .min().orElse(-1);
+        }
+      }
+    }
+    return depth;
   }
 
   @Override
