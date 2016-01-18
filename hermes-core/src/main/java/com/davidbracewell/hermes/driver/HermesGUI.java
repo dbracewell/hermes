@@ -17,6 +17,7 @@ public class HermesGUI extends JFrame {
   private JMenuBar menuBar;
   private JSplitPane basePane;
   private JTextPane textPane;
+  private JTree annotationList;
 
   public HermesGUI() {
     try {
@@ -27,9 +28,11 @@ public class HermesGUI extends JFrame {
     menuBar = new JMenuBar();
     menuBar.add(createFileMenu());
     textPane = new JTextPane();
+    annotationList = new JTree();
+    annotationList.setModel(null);
     JSplitPane contentPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(textPane), new JScrollPane(new JPanel()));
     contentPane.setDividerLocation(400);
-    basePane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(new JTree()), contentPane);
+    basePane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(annotationList), contentPane);
     basePane.setDividerLocation(200);
     setSize(800, 600);
     setJMenuBar(menuBar);
