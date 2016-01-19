@@ -3,25 +3,29 @@ package com.davidbracewell.hermes.driver;
 import com.davidbracewell.application.JavaFXApplication;
 import com.davidbracewell.io.resource.FileResource;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
-import javafx.geometry.VPos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -32,6 +36,18 @@ import java.io.IOException;
  */
 public class HermesFX extends JavaFXApplication {
 
+  private static final String STANDARD_BUTTON_STYLE = "-fx-text-fill: #666666;";
+  private static final String HOVERED_BUTTON_STYLE = "-fx-text-fill: #000000;";
+  private final Font TenPointBold = Font.font("System", FontWeight.BOLD, 10);
+  private TextArea editor;
+  private TreeView<String> annotationList;
+  private VBox annotationPane;
+  private TreeView<String> attributeList;
+  private VBox attributePane;
+  private HBox statusBar;
+  private SplitPane workspace;
+
+
   public HermesFX() {
     super("HermesFX");
   }
@@ -40,54 +56,38 @@ public class HermesFX extends JavaFXApplication {
     launch(args);
   }
 
-  @Override
-  public void setup() throws Exception {
-    TextArea textArea = new TextArea();
-    textArea.setEditable(false);
 
-    BorderPane pane = new BorderPane();
-    HBox bbox = new HBox();
-    pane.setBottom(bbox);
-    bbox.setMinHeight(25);
-    bbox.setMinWidth(500);
-    bbox.setMaxHeight(25);
+  Menu createViewMenu() {
+    Menu viewMenu = new Menu("_View");
+    CheckMenuItem annotationWindow = new CheckMenuItem("A_nnotation Window");
+    annotationWindow.setOnAction(a -> {
+      if (workspace.getItems().contains(annotationPane)) {
+        workspace.getItems().remove(annotationPane);
+      } else {
+        workspace.getItems().add(0, annotationPane);
+        workspace.setDividerPosition(0, 0.2);
+      }
+    });
+    CheckMenuItem attributeWindow = new CheckMenuItem("A_ttribute Window");
 
-    GridPane grid = new GridPane();
+    attributeWindow.setOnAction(a -> {
+      if (workspace.getItems().contains(attributePane)) {
+        workspace.getItems().remove(attributePane);
+      } else {
+        workspace.getItems().add(2, attributePane);
+        workspace.setDividerPosition(2, 0.1);
+      }
+    });
+    viewMenu.getItems().addAll(annotationWindow, attributeWindow);
 
-    HBox leftBar = new HBox();
-    leftBar.setMinHeight(20);
-    leftBar.setAlignment(Pos.CENTER_RIGHT);
-    Button closeButton = new Button("X");
-    closeButton.setStyle("-fx-border-radius: 0;");
-    leftBar.getChildren().addAll(closeButton);
+    viewMenu.setOnShowing(e -> {
+      attributeWindow.setSelected(workspace.getItems().contains(attributePane));
+      annotationWindow.setSelected(workspace.getItems().contains(annotationPane));
+    });
+    return viewMenu;
+  }
 
-    BorderPane leftPane = new BorderPane();
-    TitledPane annotations = new TitledPane("Annotations", new TreeView<String>());
-    annotations.setCollapsible(false);
-    grid.add(annotations, 0, 1);
-    TitledPane attributes = new TitledPane("Attributes", new TreeView<String>());
-    attributes.setCollapsible(false);
-    grid.add(attributes, 0, 2);
-
-
-    RowConstraints top = new RowConstraints();
-    top.setValignment(VPos.TOP);
-    top.setPercentHeight(50);
-    RowConstraints middle = new RowConstraints();
-    middle.setValignment(VPos.CENTER);
-    top.setPercentHeight(0);
-    RowConstraints bottom = new RowConstraints();
-    bottom.setValignment(VPos.BOTTOM);
-    bottom.setPercentHeight(50);
-    grid.getRowConstraints().setAll(top, middle, bottom);
-
-    ColumnConstraints cc = new ColumnConstraints();
-    cc.setFillWidth(true);
-    cc.setPercentWidth(100);
-    grid.getColumnConstraints().setAll(cc);
-
-
-    MenuBar menuBar = new MenuBar();
+  Menu createFileMenu() {
     Menu menuFile = new Menu("_File");
     MenuItem fileOpen = new MenuItem("_Open");
     fileOpen.setAccelerator(KeyCombination.keyCombination("SHORTCUT+O"));
@@ -96,54 +96,94 @@ public class HermesFX extends JavaFXApplication {
       File chose = chooser.showOpenDialog(null);
       if (chose != null) {
         try {
-          textArea.setText(new FileResource(chose).readToString());
+          editor.setText(new FileResource(chose).readToString());
         } catch (IOException e) {
           e.printStackTrace();
         }
       }
     });
-
     MenuItem fileClose = new MenuItem("E_xit");
     fileClose.setAccelerator(KeyCombination.keyCombination("SHORTCUT+Q"));
     fileClose.setOnAction(e -> Platform.exit());
     menuFile.getItems().addAll(fileOpen, new SeparatorMenuItem(), fileClose);
+    return menuFile;
+  }
+
+  private VBox createAnnotationPane() {
+    annotationPane = new VBox();
+    annotationPane.setFillWidth(true);
+    HBox titleBar = new HBox();
+    titleBar.setMinHeight(15);
+    titleBar.setAlignment(Pos.CENTER_RIGHT);
+    Button closeButton = new Button("X");
+    closeButton.setFont(TenPointBold);
+    closeButton.setBackground(Background.EMPTY);
+    closeButton.styleProperty().bind(
+      Bindings.when(closeButton.hoverProperty()).then(new SimpleStringProperty(HOVERED_BUTTON_STYLE)).otherwise(STANDARD_BUTTON_STYLE)
+    );
+    Label lbl = new Label("Annotations");
+    lbl.setFont(TenPointBold);
+    Region spacer = new Region();
+    titleBar.getChildren().addAll(lbl, spacer, closeButton);
+    HBox.setHgrow(spacer, Priority.ALWAYS);
+    closeButton.setOnAction(a -> workspace.getItems().remove(annotationPane));
+    annotationList = new TreeView<>();
+    VBox.setVgrow(annotationList, Priority.ALWAYS);
+    annotationPane.getChildren().addAll(titleBar, annotationList);
+    return annotationPane;
+  }
+
+  private VBox createAttributePane() {
+    attributePane = new VBox();
+    attributePane.setFillWidth(true);
+    HBox titleBar = new HBox();
+    titleBar.setMinHeight(15);
+    titleBar.setAlignment(Pos.CENTER_RIGHT);
+    Button closeButton = new Button("X");
+    closeButton.setFont(TenPointBold);
+    closeButton.setBackground(Background.EMPTY);
+    closeButton.styleProperty().bind(
+      Bindings.when(closeButton.hoverProperty()).then(new SimpleStringProperty(HOVERED_BUTTON_STYLE)).otherwise(STANDARD_BUTTON_STYLE)
+    );
+    Label lbl = new Label("Attributes");
+    lbl.setFont(TenPointBold);
+    Region spacer = new Region();
+    titleBar.getChildren().addAll(lbl, spacer, closeButton);
+    HBox.setHgrow(spacer, Priority.ALWAYS);
+    closeButton.setOnAction(a -> workspace.getItems().remove(attributePane));
+    attributeList = new TreeView<>();
+    VBox.setVgrow(attributeList, Priority.ALWAYS);
+    attributePane.getChildren().addAll(titleBar, attributeList);
+    return attributePane;
+  }
+
+  @Override
+  public void setup() throws Exception {
+    editor = new TextArea();
+    editor.setEditable(false);
+
+    BorderPane pane = new BorderPane();
+    statusBar = new HBox();
+    statusBar.setMinHeight(15);
+    statusBar.setMinWidth(500);
+    statusBar.setMaxHeight(15);
+    pane.setBottom(statusBar);
 
 
-    menuBar.getMenus().addAll(menuFile);
-
+    MenuBar menuBar = new MenuBar();
+    menuBar.getMenus().addAll(createFileMenu(), createViewMenu());
     pane.setTop(menuBar);
 
-    SplitPane splitPane = new SplitPane();
-    leftPane.setTop(leftBar);
-    leftPane.setCenter(grid);
+    workspace = new SplitPane();
+    workspace.getItems().addAll(createAnnotationPane(), editor, createAttributePane());
+    workspace.setDividerPositions(0.2, 0.8, 0.1);
 
-    closeButton.setOnAction(a -> {
-      splitPane.getItems().remove(leftPane);
-    });
 
-    Menu viewMenu = new Menu("_View");
-    CheckMenuItem properties = new CheckMenuItem("_Side Bar");
-    viewMenu.setOnShowing(e -> {
-      if (splitPane.getItems().size() == 1) {
-        properties.setSelected(false);
-      } else {
-        properties.setSelected(true);
-      }
-    });
+    SplitPane.setResizableWithParent(editor,true);
+    SplitPane.setResizableWithParent(workspace.getItems().get(0),false);
+    SplitPane.setResizableWithParent(workspace.getItems().get(2),false);
 
-    properties.setOnAction(a -> {
-      if (splitPane.getItems().size() == 1) {
-        splitPane.getItems().add(0, leftPane);
-      } else {
-        splitPane.getItems().remove(leftPane);
-      }
-    });
-    viewMenu.getItems().addAll(properties);
-    menuBar.getMenus().addAll(viewMenu);
-
-    splitPane.getItems().addAll(leftPane, textArea);
-
-    pane.setCenter(splitPane);
+    pane.setCenter(workspace);
     Scene scene = new Scene(pane);
     getStage().setScene(scene);
     getStage().show();
