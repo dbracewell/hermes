@@ -43,10 +43,24 @@ import com.davidbracewell.io.Resources;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.MinMaxPriorityQueue;
+import com.google.common.collect.Sets;
 import lombok.NonNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -100,6 +114,32 @@ public class WordNet {
     return INSTANCE;
   }
 
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   * @throws Exception the exception
+   */
+  public static void main(String[] args) throws Exception {
+    Config.initialize("WordNet");
+    Config.loadPackageConfig("com.davidbracewell.hermes");
+    InformationContentLoader loader = new InformationContentLoader(Resources.fromFile("/shared/data/ic-bnc-add1.dat"), "INFORMATION_CONTENT");
+    loader.load(WordNet.getInstance().db);
+    Synset cat = WordNet.getInstance().getSense("cats", POS.NOUN, 1, Language.ENGLISH).get().getSynset();
+    Synset dog = WordNet.getInstance().getSense("dog", POS.NOUN, 1, Language.ENGLISH).get().getSynset();
+    System.out.println(cat + " : " + cat.getProperty(PropertyName.INFO_CONTENT).get("value"));
+    System.out.println(dog + " : " + dog.getProperty(PropertyName.INFO_CONTENT).get("value"));
+
+    System.out.println(cat.depth());
+    System.out.println(cat.getHypernym().depth());
+    System.out.println(dog.depth());
+
+    System.out.println("Cat root = " + cat.getRoot().getGloss());
+
+
+    WordNet.getInstance().shortestPath(cat, dog).forEach(synset -> System.out.println(synset.getSenses()));
+
+  }
 
   private ListMultimap<Synset, Synset> dijkstra_path(Synset source) {
     Counter<Synset> dist = Counters.newHashMapCounter();
@@ -185,7 +225,6 @@ public class WordNet {
     return maxDepths[partOfSpeech.ordinal()];
   }
 
-
   /**
    * Gets relation.
    *
@@ -226,6 +265,10 @@ public class WordNet {
    */
   public Collection<Sense> getSenses() {
     return Collections.unmodifiableCollection(db.getSenses());
+  }
+
+  public Sense getSenseFromID(@NonNull String id) {
+    return db.getSenseFromId(id);
   }
 
   /**
@@ -296,7 +339,6 @@ public class WordNet {
   public Set<Synset> getHyponyms(@NonNull Sense node) {
     return getRelatedSynsets(node.getSynset(), WordNetRelation.HYPONYM);
   }
-
 
   /**
    * Gets the semantic relations associated with the given WordNetNode.
@@ -506,7 +548,6 @@ public class WordNet {
     return Collections.unmodifiableList(shortestPathCache.get(synset1).get(synset2));
   }
 
-
   /**
    * Calculates the distance between synsets.
    *
@@ -524,7 +565,6 @@ public class WordNet {
     return path.isEmpty() ? Double.POSITIVE_INFINITY : path.size() - 1;
   }
 
-
   /**
    * Gets the root synsets in the network
    *
@@ -532,33 +572,6 @@ public class WordNet {
    */
   public Set<Synset> getRoots() {
     return Collections.unmodifiableSet(db.getRoots());
-  }
-
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   * @throws Exception the exception
-   */
-  public static void main(String[] args) throws Exception {
-    Config.initialize("WordNet");
-    Config.loadPackageConfig("com.davidbracewell.hermes");
-    InformationContentLoader loader = new InformationContentLoader(Resources.fromFile("/shared/data/ic-bnc-add1.dat"), "INFORMATION_CONTENT");
-    loader.load(WordNet.getInstance().db);
-    Synset cat = WordNet.getInstance().getSense("cats", POS.NOUN, 1, Language.ENGLISH).get().getSynset();
-    Synset dog = WordNet.getInstance().getSense("dog", POS.NOUN, 1, Language.ENGLISH).get().getSynset();
-    System.out.println(cat + " : " + cat.getProperty(PropertyName.INFO_CONTENT).get("value"));
-    System.out.println(dog + " : " + dog.getProperty(PropertyName.INFO_CONTENT).get("value"));
-
-    System.out.println(cat.depth());
-    System.out.println(cat.getHypernym().depth());
-    System.out.println(dog.depth());
-
-    System.out.println("Cat root = " + cat.getRoot().getGloss());
-
-
-    WordNet.getInstance().shortestPath(cat, dog).forEach(synset -> System.out.println(synset.getSenses()));
-
   }
 
   private static class SenseFormPredicate implements Predicate<Sense> {

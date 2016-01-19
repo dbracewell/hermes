@@ -56,7 +56,18 @@ public interface Lemmatizer {
    */
   String lemmatize(String string, POS partOfSpeech);
 
+  /**
+   * Gets all lemmas.
+   *
+   * @param string       the string
+   * @param partOfSpeech the part of speech
+   * @return the all lemmas
+   */
   List<String> getAllLemmas(String string, POS partOfSpeech);
+
+  default boolean prefixMatch(String word) {
+    return true;
+  }
 
   /**
    * Lemmatizes a token.

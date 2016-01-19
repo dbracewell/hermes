@@ -39,7 +39,11 @@ import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The type English lemmatizer.
@@ -172,6 +176,16 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     }
   }
 
+  @Override
+  public boolean prefixMatch(@NonNull String word) {
+    String lower = word.toLowerCase();
+    if (lemmas.containsKey(word) || lemmas.prefixMap(word).size() > 0 || lemmas.containsKey(lower) || lemmas.prefixMap(lower).size() > 0) {
+      return true;
+    }
+    return getAllLemmas(word, POS.ANY).size() > 1;
+  }
+
+  @Override
   public List<String> getAllLemmas(@NonNull String word, @NonNull POS partOfSpeech) {
     List<String> lemmas = null;
     if (partOfSpeech == POS.ANY) {

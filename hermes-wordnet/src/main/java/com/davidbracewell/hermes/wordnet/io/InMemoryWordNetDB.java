@@ -21,8 +21,10 @@
 
 package com.davidbracewell.hermes.wordnet.io;
 
+import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.hermes.wordnet.Sense;
 import com.davidbracewell.hermes.wordnet.Synset;
+import com.davidbracewell.hermes.wordnet.WordNetPOS;
 import com.davidbracewell.hermes.wordnet.WordNetRelation;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -47,6 +49,14 @@ public class InMemoryWordNetDB implements WordNetDB, Serializable {
   private final Table<String, String, WordNetRelation> synsetRelations = HashBasedTable.create();
   private final Set<Synset> roots = new HashSet<>();
 
+
+  @Override
+  public Sense getSenseFromId(String id) {
+    String[] parts = id.split("#");
+    POS pos = WordNetPOS.fromString(parts[1]).toHermesPOS();
+    int num = Integer.parseInt(parts[2]);
+    return lemmaToSenseMap.get(parts[0]).stream().filter(s -> s.getLexicalId() == num && s.getPOS() == pos).findFirst().orElse(null);
+  }
 
   @Override
   public boolean containsLemma(String lemma) {

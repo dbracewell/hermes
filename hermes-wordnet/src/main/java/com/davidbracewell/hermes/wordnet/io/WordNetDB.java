@@ -73,6 +73,8 @@ public interface WordNetDB {
    */
   Synset getSynsetFromId(String id);
 
+  Sense getSenseFromId(String id);
+
   /**
    * Gets relation.
    *
