@@ -135,6 +135,20 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
       fill(word, tag, tokenLemmas);
     }
 
+    if (tokenLemmas.isEmpty() && word.contains("-")) {
+      String noHyphen = word.replace('-', ' ');
+      for (POS tag : tags) {
+        fill(noHyphen, tag, tokenLemmas);
+      }
+    }
+
+    if (tokenLemmas.isEmpty() && word.contains(" ")) {
+      String withHyphen = word.replace(' ', '-');
+      for (POS tag : tags) {
+        fill(withHyphen, tag, tokenLemmas);
+      }
+    }
+
     //If all else fails and we should include the word return it
     if (tokenLemmas.isEmpty() && includeSelf) {
       return Collections.singleton(word.toLowerCase());

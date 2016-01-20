@@ -111,6 +111,8 @@ public class WordNet {
     return INSTANCE;
   }
 
+
+
   private ListMultimap<Synset, Synset> dijkstra_path(Synset source) {
     Counter<Synset> dist = Counters.newHashMapCounter();
     Map<Synset, Synset> previous = new HashMap<>();
@@ -410,15 +412,16 @@ public class WordNet {
     return getSenses(surfaceForm, POS.ANY, language);
   }
 
-  private List<Sense> getSenses(Predicate<Sense> predicate, Iterable<String> lemmas) {
+  private List<Sense> getSenses(Predicate<Sense> predicate, Collection<String> lemmas) {
     List<Sense> senses = Lists.newArrayList();
-    List<String> lemmaList = Lists.newArrayList(lemmas);
-    for (String lemma : lemmaList) {
+    for (String lemma : lemmas) {
+      lemma = lemma.toLowerCase();
       senses.addAll(db.getSenses(lemma).stream().filter(predicate.and(new SenseFormPredicate(lemma))).collect(Collectors.toList()));
-    }
-    if (senses.isEmpty()) {
-      for (String lemma : lemmaList) {
-        senses.addAll(db.getSenses(lemma).stream().filter(predicate.and(new SenseFormPredicate(lemma.toLowerCase()))).collect(Collectors.toList()));
+      if (lemma.contains(" ")) {
+        senses.addAll(db.getSenses(lemma.replace(' ', '-')).stream().filter(predicate.and(new SenseFormPredicate(lemma))).collect(Collectors.toList()));
+      }
+      if (lemma.contains("-")) {
+        senses.addAll(db.getSenses(lemma.replace('-', ' ')).stream().filter(predicate.and(new SenseFormPredicate(lemma))).collect(Collectors.toList()));
       }
     }
     Collections.sort(senses);
@@ -433,29 +436,25 @@ public class WordNet {
    * @param language    the language
    * @return the senses
    */
-  public List<Sense> getSenses(String surfaceForm, POS pos, Language language) {
-    return getSenses(new SenseEnum(-1, pos, language), Lemmatizers.getLemmatizer(language).allPossibleLemmas(surfaceForm, pos));
+  public List<Sense> getSenses(@NonNull String surfaceForm, @NonNull POS pos, @NonNull Language language) {
+    return getSenses(new SenseEnum(-1, pos.getUniversalTag(), language), Lemmatizers.getLemmatizer(language).allPossibleLemmas(surfaceForm, pos));
   }
 
   /**
    * Gets the sense for the associated information
    *
-   * @param lemma    The lemma
+   * @param word     The word
    * @param pos      The part of speech
    * @param senseNum The sense number
    * @param language The language
    * @return The sense
    */
-  public Optional<Sense> getSense(@NonNull String lemma, @NonNull POS pos, int senseNum, @NonNull Language language) {
-    lemma = Lemmatizers.getLemmatizer(language).lemmatize(lemma, pos);
-    for (Sense sense : db.getSenses(lemma.toLowerCase())) {
-      if ((pos == POS.ANY || pos.isInstance(sense.getPOS())) && sense.getSenseNumber() == senseNum && sense.getLanguage() == language) {
-        return Optional.of(sense);
-      }
-    }
-    for (Sense sense : db.getSenses(lemma)) {
-      if ((pos == POS.ANY || pos.isInstance(sense.getPOS())) && sense.getSenseNumber() == senseNum && sense.getLanguage() == language) {
-        return Optional.of(sense);
+  public Optional<Sense> getSense(@NonNull String word, @NonNull POS pos, int senseNum, @NonNull Language language) {
+    for (String lemma : Lemmatizers.getLemmatizer(language).allPossibleLemmas(word, pos)) {
+      for (Sense sense : db.getSenses(lemma.toLowerCase())) {
+        if ((pos == POS.ANY || pos.isInstance(sense.getPOS())) && sense.getSenseNumber() == senseNum && sense.getLanguage() == language) {
+          return Optional.of(sense);
+        }
       }
     }
     return Optional.empty();
@@ -553,7 +552,7 @@ public class WordNet {
 
     @Override
     public boolean test(Sense sense) {
-      return sense != null && sense.getLemma().equals(lemma);
+      return sense != null && sense.getLemma().replace('-', ' ').equalsIgnoreCase(lemma.replace(' ', '_').replace('-', ' '));
     }
   }
 
@@ -577,7 +576,7 @@ public class WordNet {
       if (senseNum != -1 && sense.getLexicalId() != senseNum) {
         return false;
       }
-      if (pos != null && pos != POS.ANY && sense.getPOS() != pos) {
+      if (pos != null && !sense.getPOS().isInstance(pos)) {
         return false;
       }
       if (language != null && sense.getLanguage() != language) {

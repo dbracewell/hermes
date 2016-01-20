@@ -115,7 +115,7 @@ public class InMemoryWordNetDB implements WordNetDB, Serializable {
 
   @Override
   public void putSense(String lemma, Sense sense) {
-    lemmaToSenseMap.put(lemma, sense);
+    lemmaToSenseMap.put(lemma.toLowerCase().replace('_', ' '), sense);
   }
 
   @Override
