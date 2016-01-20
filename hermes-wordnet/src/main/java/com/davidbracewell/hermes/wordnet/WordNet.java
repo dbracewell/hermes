@@ -37,9 +37,6 @@ import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.hermes.wordnet.io.WordNetDB;
 import com.davidbracewell.hermes.wordnet.io.WordNetLoader;
 import com.davidbracewell.hermes.wordnet.io.WordNetPropertyLoader;
-import com.davidbracewell.hermes.wordnet.io.properties.InformationContentLoader;
-import com.davidbracewell.hermes.wordnet.properties.PropertyName;
-import com.davidbracewell.io.Resources;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -112,33 +109,6 @@ public class WordNet {
       }
     }
     return INSTANCE;
-  }
-
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   * @throws Exception the exception
-   */
-  public static void main(String[] args) throws Exception {
-    Config.initialize("WordNet");
-    Config.loadPackageConfig("com.davidbracewell.hermes");
-    InformationContentLoader loader = new InformationContentLoader(Resources.fromFile("/shared/data/ic-bnc-add1.dat"), "INFORMATION_CONTENT");
-    loader.load(WordNet.getInstance().db);
-    Synset cat = WordNet.getInstance().getSense("cats", POS.NOUN, 1, Language.ENGLISH).get().getSynset();
-    Synset dog = WordNet.getInstance().getSense("dog", POS.NOUN, 1, Language.ENGLISH).get().getSynset();
-    System.out.println(cat + " : " + cat.getProperty(PropertyName.INFO_CONTENT).get("value"));
-    System.out.println(dog + " : " + dog.getProperty(PropertyName.INFO_CONTENT).get("value"));
-
-    System.out.println(cat.depth());
-    System.out.println(cat.getHypernym().depth());
-    System.out.println(dog.depth());
-
-    System.out.println("Cat root = " + cat.getRoot().getGloss());
-
-
-    WordNet.getInstance().shortestPath(cat, dog).forEach(synset -> System.out.println(synset.getSenses()));
-
   }
 
   private ListMultimap<Synset, Synset> dijkstra_path(Synset source) {
