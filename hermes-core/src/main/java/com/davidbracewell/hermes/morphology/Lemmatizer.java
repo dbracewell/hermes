@@ -28,6 +28,7 @@ import com.davidbracewell.hermes.tag.POS;
 import lombok.NonNull;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -65,8 +66,15 @@ public interface Lemmatizer {
    */
   List<String> getAllLemmas(String string, POS partOfSpeech);
 
+  Set<String> getPrefixedLemmas(String string, POS partOfSpeech);
+
   default boolean prefixMatch(String word) {
     return true;
+  }
+
+
+  default boolean contains(String word, POS... tags) {
+    return false;
   }
 
   /**

@@ -39,11 +39,7 @@ import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The type English lemmatizer.
@@ -93,7 +89,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     try (CSVReader reader = CSV.builder().delimiter('\t').reader(Resources.fromClasspath("com/davidbracewell/hermes/morphology/en/lemmas.dict.gz"))) {
       reader.forEach(row -> {
         if (row.size() >= 2) {
-          String lemma = row.get(0).toLowerCase();
+          String lemma = row.get(0).replace('_', ' ');
           POS pos = POS.fromString(row.get(1).toUpperCase());
           if (!lemmas.containsKey(lemma)) {
             lemmas.put(lemma, new HashSet<>());
@@ -123,8 +119,16 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     return INSTANCE;
   }
 
-  private Iterable<String> doLemmatization(String string, POS... tags) {
+  @Override
+  public boolean contains(String string, POS... tags) {
+    return doLemmatization(string, false, tags).size() > 0;
+  }
+
+  private Set<String> doLemmatization(String string, boolean includeSelf, POS... tags) {
     Set<String> tokenLemmas = new LinkedHashSet<>();
+    if (tags == null || tags.length == 0) {
+      tags = new POS[]{POS.NOUN, POS.ADJECTIVE, POS.ADVERB, POS.VERB};
+    }
     for (POS tag : tags) {
       fill(string, tag, tokenLemmas);
     }
@@ -134,14 +138,21 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
         fill(string, tag, tokenLemmas);
       }
     }
-    if (tokenLemmas.isEmpty()) {
+    if (tokenLemmas.isEmpty() && includeSelf) {
       return Collections.singleton(string);
     }
-
     return tokenLemmas;
   }
 
   private void fill(String string, POS partOfSpeech, Set<String> set) {
+    if (lemmas.containsKey(string) &&
+      (partOfSpeech == POS.ANY || lemmas.get(string).contains(partOfSpeech.getUniversalTag()))
+      ) {
+      set.add(string);
+      return;
+    }
+
+
     if (partOfSpeech.isVerb()) {
       if (string.equalsIgnoreCase("'s") || string.equalsIgnoreCase("'re")) {
         set.add("be");
@@ -168,9 +179,12 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     if (exceptions.containsKey(key)) {
       set.addAll(exceptions.get(key));
     }
+
     for (DetachmentRule rule : rules.get(partOfSpeech.getUniversalTag())) {
       String output = rule.apply(string);
-      if (output != null && lemmas.containsKey(output) && lemmas.get(output).contains(partOfSpeech.getUniversalTag())) {
+      if (output != null && lemmas.containsKey(output) &&
+        (partOfSpeech == POS.ANY || lemmas.get(output).contains(partOfSpeech.getUniversalTag()))
+        ) {
         set.add(output);
       }
     }
@@ -189,9 +203,9 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
   public List<String> getAllLemmas(@NonNull String word, @NonNull POS partOfSpeech) {
     List<String> lemmas = null;
     if (partOfSpeech == POS.ANY) {
-      lemmas = Lists.newArrayList(doLemmatization(word, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB));
+      lemmas = Lists.newArrayList(doLemmatization(word, true, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB));
     } else if (partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)) {
-      lemmas = Lists.newArrayList(doLemmatization(word, partOfSpeech));
+      lemmas = Lists.newArrayList(doLemmatization(word, true, partOfSpeech));
     }
     if (lemmas == null || lemmas.isEmpty()) {
       lemmas = Collections.emptyList();
@@ -200,11 +214,21 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
   }
 
   @Override
+  public Set<String> getPrefixedLemmas(@NonNull String string, @NonNull POS partOfSpeech) {
+    Set<String> lemmaSet = new LinkedHashSet<>();
+    for (String lemma : doLemmatization(string, false, partOfSpeech)) {
+      lemmaSet.add(lemma);
+      lemmaSet.addAll(lemmas.prefixMap(lemma + " ").keySet());
+    }
+    return lemmaSet;
+  }
+
+  @Override
   public String lemmatize(@NonNull String string, @NonNull POS partOfSpeech) {
     if (partOfSpeech == POS.ANY) {
-      return Collect.from(doLemmatization(string, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)).findFirst().orElse(string).toLowerCase();
+      return Collect.from(doLemmatization(string, true, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)).findFirst().orElse(string).toLowerCase();
     } else if (partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)) {
-      return Collect.from(doLemmatization(string, partOfSpeech)).findFirst().orElse(string).toLowerCase();
+      return Collect.from(doLemmatization(string, true, partOfSpeech)).findFirst().orElse(string).toLowerCase();
     }
     return string.toLowerCase();
   }

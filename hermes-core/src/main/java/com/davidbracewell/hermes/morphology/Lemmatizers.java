@@ -30,6 +30,7 @@ import lombok.NonNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>Factory class for creating/retrieving lemmatizers for a given language</p>
@@ -74,6 +75,11 @@ public final class Lemmatizers {
     @Override
     public List<String> getAllLemmas(@NonNull String string, POS partOfSpeech) {
       return Collections.singletonList(string.toLowerCase());
+    }
+
+    @Override
+    public Set<String> getPrefixedLemmas(@NonNull String string, POS partOfSpeech) {
+      return Collections.singleton(string);
     }
 
 

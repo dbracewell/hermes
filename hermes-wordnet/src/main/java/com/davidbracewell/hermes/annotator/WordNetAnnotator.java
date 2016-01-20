@@ -2,13 +2,11 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.morphology.Lemmatizer;
 import com.davidbracewell.hermes.morphology.Lemmatizers;
 import com.davidbracewell.hermes.tag.POS;
-import com.davidbracewell.hermes.wordnet.Sense;
 import com.davidbracewell.hermes.wordnet.WordNet;
 
 import java.util.Collections;
@@ -26,24 +24,30 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
     List<Annotation> tokens = sentence.tokens();
     WordNet wn = WordNet.getInstance();
     Lemmatizer lemmatizer = Lemmatizers.getLemmatizer(sentence.getLanguage());
+
     for (int i = 0; i < tokens.size(); ) {
       Annotation bestMatch = null;
-      if (lemmatizer.prefixMatch(tokens.get(i).toString())) {
-        for (int j = Math.min(tokens.size(), i + 7); j > i; j--) {
+      Set<String> lemmas = lemmatizer.getPrefixedLemmas(tokens.get(i).toString(), POS.ANY);
+      if (lemmas.size() > 0) {
+        int lastIn = lemmatizer.contains(tokens.get(i).toString(), tokens.get(i).getPOS()) ? i + 1 : -1;
+        for (int j = i + 2; j < tokens.size(); j++) {
           HString temp = HString.union(tokens.subList(i, j));
-          POS pos = POS.forText(temp);
-          if (pos != null && pos.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)) {
-            List<Sense> entries = wn.getSenses(temp.toString(), pos, sentence.getLanguage());
-            if (entries.size() > 0) {
-              bestMatch = sentence.document().createAnnotation(Types.WORD_SENSE, temp);
-              bestMatch.put(Attrs.SENSE, entries);
-              break;
-            }
+          lemmas = lemmatizer.getPrefixedLemmas(temp.toString(), POS.ANY);
+          System.out.println(temp + " > " + lemmas);
+          if (lemmatizer.contains(temp.toString())) {
+            lastIn = j;
+          }
+          if (lemmas.size() == 0) {
+            break;
           }
         }
-      }
-      if (bestMatch != null) {
-        i += bestMatch.tokenLength();
+        if (lastIn != -1) {
+          HString candidate = HString.union(tokens.subList(i, lastIn));
+          System.out.println(candidate);
+          i = lastIn;
+        } else {
+          i++;
+        }
       } else {
         i++;
       }
