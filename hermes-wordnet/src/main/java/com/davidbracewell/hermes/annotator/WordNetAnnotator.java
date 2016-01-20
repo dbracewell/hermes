@@ -27,12 +27,12 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
 
     for (int i = 0; i < tokens.size(); ) {
       Annotation bestMatch = null;
-      Set<String> lemmas = lemmatizer.getPrefixedLemmas(tokens.get(i).toString(), POS.ANY);
+      Set<String> lemmas = lemmatizer.allPossibleLemmasAndPrefixes(tokens.get(i).toString(), POS.ANY);
       if (lemmas.size() > 0) {
         int lastIn = lemmatizer.contains(tokens.get(i).toString(), tokens.get(i).getPOS()) ? i + 1 : -1;
         for (int j = i + 2; j < tokens.size(); j++) {
           HString temp = HString.union(tokens.subList(i, j));
-          lemmas = lemmatizer.getPrefixedLemmas(temp.toString(), POS.ANY);
+          lemmas = lemmatizer.allPossibleLemmasAndPrefixes(temp.toString(), POS.ANY);
           System.out.println(temp + " > " + lemmas);
           if (lemmatizer.contains(temp.toString())) {
             lastIn = j;

@@ -434,7 +434,7 @@ public class WordNet {
    * @return the senses
    */
   public List<Sense> getSenses(String surfaceForm, POS pos, Language language) {
-    return getSenses(new SenseEnum(-1, pos, language), Lemmatizers.getLemmatizer(language).getAllLemmas(surfaceForm, pos));
+    return getSenses(new SenseEnum(-1, pos, language), Lemmatizers.getLemmatizer(language).allPossibleLemmas(surfaceForm, pos));
   }
 
   /**

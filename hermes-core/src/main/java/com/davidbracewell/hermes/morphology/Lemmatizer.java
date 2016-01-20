@@ -45,7 +45,7 @@ public interface Lemmatizer {
    * @return the lemmatized version of the string
    */
   default String lemmatize(@NonNull String string) {
-    return lemmatize(string, POS.ANY);
+    return allPossibleLemmas(string, POS.ANY).stream().findFirst().orElse(string.toLowerCase());
   }
 
   /**
@@ -55,7 +55,9 @@ public interface Lemmatizer {
    * @param partOfSpeech the part of speech
    * @return the lemmatized version of the string
    */
-  String lemmatize(String string, POS partOfSpeech);
+  default String lemmatize(@NonNull String string, @NonNull POS partOfSpeech) {
+    return allPossibleLemmas(string, partOfSpeech).stream().findFirst().orElse(string.toLowerCase());
+  }
 
   /**
    * Gets all lemmas.
@@ -64,18 +66,16 @@ public interface Lemmatizer {
    * @param partOfSpeech the part of speech
    * @return the all lemmas
    */
-  List<String> getAllLemmas(String string, POS partOfSpeech);
+  List<String> allPossibleLemmas(String string, POS partOfSpeech);
 
-  Set<String> getPrefixedLemmas(String string, POS partOfSpeech);
-
-  default boolean prefixMatch(String word) {
-    return true;
-  }
-
-
-  default boolean contains(String word, POS... tags) {
-    return false;
-  }
+  /**
+   * Gets prefixed lemmas.
+   *
+   * @param string       the string
+   * @param partOfSpeech the part of speech
+   * @return the prefixed lemmas
+   */
+  Set<String> allPossibleLemmasAndPrefixes(String string, POS partOfSpeech);
 
   /**
    * Lemmatizes a token.

@@ -33,12 +33,12 @@ import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -94,7 +94,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     try (CSVReader reader = CSV.builder().delimiter('\t').reader(Resources.fromClasspath("com/davidbracewell/hermes/morphology/en/lemmas.dict.gz"))) {
       reader.forEach(row -> {
         if (row.size() >= 2) {
-          String lemma = row.get(0).replace('_', ' ');
+          String lemma = row.get(0).replace('_', ' ').toLowerCase();
           POS pos = POS.fromString(row.get(1).toUpperCase());
           if (!lemmas.containsKey(lemma)) {
             lemmas.put(lemma, new HashSet<>());
@@ -124,40 +124,20 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     return INSTANCE;
   }
 
-  public static void main(String[] args) {
-    EnglishLemmatizer lt = EnglishLemmatizer.getInstance();
-    System.out.println(lt.lemmatize("United States of America"));
-    System.out.println(lt.lemmatize("states"));
-    System.out.println(lt.contains("United States of America"));
-  }
-
-  @Override
-  public boolean contains(String string, POS... tags) {
-    return doLemmatization(string, false, tags).size() > 0;
-  }
-
   private Set<String> doLemmatization(String word, boolean includeSelf, POS... tags) {
     Set<String> tokenLemmas = new LinkedHashSet<>();
     if (tags == null || tags.length == 0) {
       tags = ALL_POS;
     }
 
-    //Try as is
+    word = word.toLowerCase();
     for (POS tag : tags) {
       fill(word, tag, tokenLemmas);
     }
 
-    //Try lower case
-    if (tokenLemmas.isEmpty()) {
-      word = word.toLowerCase();
-      for (POS tag : tags) {
-        fill(word, tag, tokenLemmas);
-      }
-    }
-
     //If all else fails and we should include the word return it
     if (tokenLemmas.isEmpty() && includeSelf) {
-      return Collections.singleton(word);
+      return Collections.singleton(word.toLowerCase());
     }
 
     return tokenLemmas;
@@ -211,30 +191,21 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
   }
 
   @Override
-  public boolean prefixMatch(@NonNull String word) {
-    String lower = word.toLowerCase();
-    if (lemmas.containsKey(word) || lemmas.prefixMap(word).size() > 0 || lemmas.containsKey(lower) || lemmas.prefixMap(lower).size() > 0) {
-      return true;
-    }
-    return getAllLemmas(word, POS.ANY).size() > 1;
-  }
-
-  @Override
-  public List<String> getAllLemmas(@NonNull String word, @NonNull POS partOfSpeech) {
+  public List<String> allPossibleLemmas(@NonNull String word, @NonNull POS partOfSpeech) {
     List<String> lemmas = null;
     if (partOfSpeech == POS.ANY) {
-      lemmas = Lists.newArrayList(doLemmatization(word, true, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB));
+      lemmas = new ArrayList<>(doLemmatization(word, true, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB));
     } else if (partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)) {
-      lemmas = Lists.newArrayList(doLemmatization(word, true, partOfSpeech));
+      lemmas = new ArrayList<>(doLemmatization(word, true, partOfSpeech));
     }
     if (lemmas == null || lemmas.isEmpty()) {
-      lemmas = Collections.emptyList();
+      lemmas = Collections.singletonList(word.toLowerCase());
     }
     return lemmas;
   }
 
   @Override
-  public Set<String> getPrefixedLemmas(@NonNull String string, @NonNull POS partOfSpeech) {
+  public Set<String> allPossibleLemmasAndPrefixes(@NonNull String string, @NonNull POS partOfSpeech) {
     Set<String> lemmaSet = new LinkedHashSet<>();
     for (String lemma : doLemmatization(string, false, partOfSpeech)) {
       lemmaSet.add(lemma);

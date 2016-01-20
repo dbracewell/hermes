@@ -42,9 +42,8 @@ public final class Lemmatizers {
   private static volatile Map<Language, Lemmatizer> lemmatizerMap = Maps.newConcurrentMap();
 
   /**
-   * Gets the Lemmatizer for the given language as defined in the config option
-   * <code>iknowledge.latte.morphology.Lemmatizer.LANGUAGE</code>. if no lemmatizer is specified a no-op lemmatizer is
-   * returned.
+   * Gets the Lemmatizer for the given language as defined in the config option <code>iknowledge.latte.morphology.Lemmatizer.LANGUAGE</code>.
+   * if no lemmatizer is specified a no-op lemmatizer is returned.
    *
    * @param language The language
    * @return The Lemmatizer for the language
@@ -68,17 +67,12 @@ public final class Lemmatizers {
     INSTANCE;
 
     @Override
-    public String lemmatize(@NonNull String string, POS partOfSpeech) {
-      return string.toLowerCase();
-    }
-
-    @Override
-    public List<String> getAllLemmas(@NonNull String string, POS partOfSpeech) {
+    public List<String> allPossibleLemmas(@NonNull String string, POS partOfSpeech) {
       return Collections.singletonList(string.toLowerCase());
     }
 
     @Override
-    public Set<String> getPrefixedLemmas(@NonNull String string, POS partOfSpeech) {
+    public Set<String> allPossibleLemmasAndPrefixes(@NonNull String string, POS partOfSpeech) {
       return Collections.singleton(string);
     }
 
