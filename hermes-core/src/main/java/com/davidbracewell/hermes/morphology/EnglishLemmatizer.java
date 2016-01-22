@@ -38,12 +38,7 @@ import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The type English lemmatizer.
@@ -126,9 +121,11 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
 
   private Set<String> doLemmatization(String word, boolean includeSelf, POS... tags) {
     Set<String> tokenLemmas = new LinkedHashSet<>();
-    if (tags == null || tags.length == 0) {
+
+    if (tags == null || tags.length == 0 || tags[0] == POS.ANY) {
       tags = ALL_POS;
     }
+
 
     word = word.toLowerCase();
     for (POS tag : tags) {
@@ -162,6 +159,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
   }
 
   private void fill(String word, POS partOfSpeech, Set<String> set) {
+    word = word.toLowerCase();
     //Word is already a lemma with the given part of speech
     if (contains(word, partOfSpeech.getUniversalTag())) {
       set.add(word);
@@ -206,26 +204,33 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
 
   @Override
   public List<String> allPossibleLemmas(@NonNull String word, @NonNull POS partOfSpeech) {
-    List<String> lemmas = null;
+    List<String> lemmaList = null;
     if (partOfSpeech == POS.ANY) {
-      lemmas = new ArrayList<>(doLemmatization(word, true, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB));
+      lemmaList = new ArrayList<>(doLemmatization(word, true, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB));
     } else if (partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)) {
-      lemmas = new ArrayList<>(doLemmatization(word, true, partOfSpeech));
+      lemmaList = new ArrayList<>(doLemmatization(word, true, partOfSpeech));
     }
-    if (lemmas == null || lemmas.isEmpty()) {
-      lemmas = Collections.singletonList(word.toLowerCase());
+    if (lemmaList == null || lemmaList.isEmpty()) {
+      lemmaList = Collections.singletonList(word.toLowerCase());
     }
-    return lemmas;
+    return lemmaList;
   }
 
   @Override
   public Set<String> allPossibleLemmasAndPrefixes(@NonNull String string, @NonNull POS partOfSpeech) {
     Set<String> lemmaSet = new LinkedHashSet<>();
-    for (String lemma : doLemmatization(string, false, partOfSpeech)) {
-      lemmaSet.add(lemma);
+    for (String lemma : doLemmatization(string, true, partOfSpeech)) {
       lemmaSet.addAll(lemmas.prefixMap(lemma + " ").keySet());
+      if (lemmas.containsKey(lemma)) {
+        lemmaSet.add(lemma);
+      }
     }
     return lemmaSet;
+  }
+
+  @Override
+  public boolean canLemmatize(String input, POS partOfSpeech) {
+    return partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB) && doLemmatization(input, false, partOfSpeech).size() > 0;
   }
 
   @Override

@@ -77,6 +77,8 @@ public interface Lemmatizer {
    */
   Set<String> allPossibleLemmasAndPrefixes(String string, POS partOfSpeech);
 
+  boolean canLemmatize(String input, POS partOfSpeech);
+
   /**
    * Lemmatizes a token.
    *

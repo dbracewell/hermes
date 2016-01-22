@@ -1,9 +1,6 @@
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.morphology.Lemmatizer;
 import com.davidbracewell.hermes.morphology.Lemmatizers;
 import com.davidbracewell.hermes.tag.POS;
@@ -19,39 +16,66 @@ import java.util.Set;
 public class WordNetAnnotator extends SentenceLevelAnnotator {
   private static final long serialVersionUID = 1L;
 
+  private Annotation createAnnotation(Document document, Span span) {
+    Annotation annotation = document.createAnnotation(Types.WORD_SENSE, span);
+    annotation.put(Attrs.SENSE, WordNet.getInstance().getSenses(annotation.toString(), POS.forText(annotation), document.getLanguage()));
+    return annotation;
+  }
+
   @Override
   public void annotate(Annotation sentence) {
     List<Annotation> tokens = sentence.tokens();
-    WordNet wn = WordNet.getInstance();
+    Document document = sentence.document();
     Lemmatizer lemmatizer = Lemmatizers.getLemmatizer(sentence.getLanguage());
+    for (int i = 0; i < tokens.size(); ) {
+      Annotation token = tokens.get(i);
+      Set<String> lemmas = lemmatizer.allPossibleLemmasAndPrefixes(tokens.get(i).toString(), POS.ANY);
+      if (lemmas.size() > 0) {
+        HString bestMatch = null;
+        if (lemmas.size() == 1 && lemmatizer.canLemmatize(token.toString(), token.getPOS())) {
 
-//    for (int i = 0; i < tokens.size(); ) {
-//      Annotation bestMatch = null;
-//      Set<String> lemmas = lemmatizer.allPossibleLemmasAndPrefixes(tokens.get(i).toString(), POS.ANY);
-//      if (lemmas.size() > 0) {
-//        int lastIn = lemmatizer.contains(tokens.get(i).toString(), tokens.get(i).getPOS()) ? i + 1 : -1;
-//        for (int j = i + 2; j < tokens.size(); j++) {
-//          HString temp = HString.union(tokens.subList(i, j));
-//          lemmas = lemmatizer.allPossibleLemmasAndPrefixes(temp.toString(), POS.ANY);
-//          System.out.println(temp + " > " + lemmas);
-//          if (lemmatizer.contains(temp.toString())) {
-//            lastIn = j;
-//          }
-//          if (lemmas.size() == 0) {
-//            break;
-//          }
-//        }
-//        if (lastIn != -1) {
-//          HString candidate = HString.union(tokens.subList(i, lastIn));
-//          System.out.println(candidate);
-//          i = lastIn;
-//        } else {
-//          i++;
-//        }
-//      } else {
-//        i++;
-//      }
-//    }
+          bestMatch = token;
+
+        } else if (lemmas.size() > 1) {
+
+          if (lemmatizer.canLemmatize(token.toString(), token.getPOS())) {
+            bestMatch = token;
+          }
+
+          int start = token.start();
+          int end = i + 1;
+          StringBuilder builder = new StringBuilder(token);
+          while (end < tokens.size()) {
+            token = tokens.get(end);
+            if (sentence.getLanguage().usesWhitespace()) {
+              builder.append(" ");
+            }
+            builder.append(token);
+            lemmas = lemmatizer.allPossibleLemmasAndPrefixes(builder.toString(), POS.ANY);
+            HString span = HString.union(tokens.subList(i, end + 1));
+            if (lemmatizer.canLemmatize(span.toString(), POS.forText(span)) && lemmas.contains(lemmatizer.lemmatize(span.toString(), POS.forText(span)))) {
+              bestMatch = span;
+            }
+            if (lemmas.isEmpty()) {
+              break;
+            }
+            end++;
+          }
+        }
+
+
+        if (bestMatch == null) {
+          i++;
+        } else {
+          createAnnotation(document, bestMatch);
+          i += bestMatch.tokenLength();
+        }
+
+
+      } else {
+        i++;
+      }
+    }
   }
 
   @Override
