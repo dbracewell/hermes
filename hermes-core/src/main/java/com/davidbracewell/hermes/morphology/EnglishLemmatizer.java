@@ -27,18 +27,22 @@ import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.structured.csv.CSVReader;
+import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * The type English lemmatizer.
@@ -119,13 +123,14 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     return INSTANCE;
   }
 
+  private static Pattern WHITESPACE = Pattern.compile(StringUtils.UNICODE_WHITESPACE_PLUS);
+
   private Set<String> doLemmatization(String word, boolean includeSelf, POS... tags) {
     Set<String> tokenLemmas = new LinkedHashSet<>();
 
     if (tags == null || tags.length == 0 || tags[0] == POS.ANY) {
       tags = ALL_POS;
     }
-
 
     word = word.toLowerCase();
     for (POS tag : tags) {
@@ -144,6 +149,10 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
       for (POS tag : tags) {
         fill(withHyphen, tag, tokenLemmas);
       }
+    }
+
+    if (tokenLemmas.isEmpty() && WHITESPACE.matcher(word).find()) {
+      tokenLemmas.addAll(phraseLemmas(word, tags));
     }
 
     //If all else fails and we should include the word return it
@@ -217,16 +226,68 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
   }
 
   @Override
-  public Set<String> allPossibleLemmasAndPrefixes(@NonNull String string, @NonNull POS partOfSpeech) {
-    Set<String> lemmaSet = new LinkedHashSet<>();
+  public PatriciaTrie<String> allPossibleLemmasAndPrefixes(@NonNull String string, @NonNull POS partOfSpeech) {
+    PatriciaTrie<String> lemmaSet = new PatriciaTrie<>();
     for (String lemma : doLemmatization(string, true, partOfSpeech)) {
-      lemmaSet.addAll(lemmas.prefixMap(lemma + " ").keySet());
+      lemmaSet.putAll(Maps.asMap(lemmas.prefixMap(lemma + " ").keySet(), k -> k));
       if (lemmas.containsKey(lemma)) {
-        lemmaSet.add(lemma);
+        lemmaSet.put(lemma, lemma);
       }
     }
     return lemmaSet;
   }
+
+  private Set<String> allAndSelf(String word) {
+    Set<String> lemmas = new HashSet<>(doLemmatization(word, true, POS.ANY));
+    lemmas.add(word);
+    return lemmas;
+  }
+
+  private boolean hasPOS(String lemma, POS... tags) {
+    if (tags == null || tags.length == 0 || tags[0] == POS.ANY) {
+      return this.lemmas.containsKey(lemma);
+    }
+    for (POS pos : this.lemmas.get(lemma)) {
+      if (pos.isInstance(tags)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private Set<String> phraseLemmas(String phrase, POS... tags) {
+    String[] words = phrase.split("\\s+");
+    if (words.length == 0) {
+      return Collections.emptySet();
+    }
+    if (tags == null || tags.length == 0 || tags[0] == POS.ANY) {
+      tags = ALL_POS;
+    }
+    PatriciaTrie<String> prefixes = allPossibleLemmasAndPrefixes(words[0], POS.ANY);
+    Set<String> lemmas = allAndSelf(words[0]);
+    for (int i = 1; i < words.length; i++) {
+      Set<String> nextSet = new HashSet<>();
+      for (String previous : lemmas) {
+        for (String next : allAndSelf(words[i])) {
+          String subPhrase = previous + " " + next;
+          if (prefixes.containsKey(subPhrase)) {
+            nextSet.add(subPhrase);
+          } else if (prefixes.prefixMap(subPhrase).size() > 0) {
+            nextSet.add(subPhrase);
+          }
+        }
+      }
+      if (nextSet.isEmpty()) {
+        return Collections.emptySet();
+      }
+      lemmas = nextSet;
+    }
+
+    final POS[] target = tags;
+    lemmas = lemmas.stream().filter(lemma -> hasPOS(lemma, target)).collect(Collectors.toSet());
+    return lemmas;
+  }
+
 
   @Override
   public boolean canLemmatize(String input, POS partOfSpeech) {

@@ -40,24 +40,10 @@ import com.davidbracewell.hermes.wordnet.io.WordNetPropertyLoader;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.MinMaxPriorityQueue;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import lombok.NonNull;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -416,12 +402,12 @@ public class WordNet {
     List<Sense> senses = Lists.newArrayList();
     for (String lemma : lemmas) {
       lemma = lemma.toLowerCase();
-      senses.addAll(db.getSenses(lemma).stream().filter(predicate.and(new SenseFormPredicate(lemma))).collect(Collectors.toList()));
+      senses.addAll(db.getSenses(lemma).stream().filter(predicate).collect(Collectors.toList()));
       if (lemma.contains(" ")) {
-        senses.addAll(db.getSenses(lemma.replace(' ', '-')).stream().filter(predicate.and(new SenseFormPredicate(lemma))).collect(Collectors.toList()));
+        senses.addAll(db.getSenses(lemma.replace(' ', '-')).stream().filter(predicate).collect(Collectors.toList()));
       }
       if (lemma.contains("-")) {
-        senses.addAll(db.getSenses(lemma.replace('-', ' ')).stream().filter(predicate.and(new SenseFormPredicate(lemma))).collect(Collectors.toList()));
+        senses.addAll(db.getSenses(lemma.replace('-', ' ')).stream().filter(predicate).collect(Collectors.toList()));
       }
     }
     Collections.sort(senses);

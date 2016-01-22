@@ -188,7 +188,7 @@ public class SenseImpl implements Sense, Serializable {
     if (o == null) {
       return 1;
     }
-    int cmp = lemma.compareTo(o.getLemma());
+    int cmp = lemma.compareToIgnoreCase(o.getLemma());
     if (cmp == 0) {
       cmp = Integer.compare(sense, o.getSenseNumber());
     }

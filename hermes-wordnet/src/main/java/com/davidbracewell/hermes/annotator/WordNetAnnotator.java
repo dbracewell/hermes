@@ -1,5 +1,6 @@
 package com.davidbracewell.hermes.annotator;
 
+import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.morphology.Lemmatizer;
 import com.davidbracewell.hermes.morphology.Lemmatizers;
@@ -7,8 +8,10 @@ import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.hermes.wordnet.WordNet;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author David B. Bracewell
@@ -22,6 +25,12 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
     return annotation;
   }
 
+  private Set<String> getAllLemmas(HString hString, Lemmatizer lemmatizer) {
+    Set<String> all = new HashSet<>(lemmatizer.allPossibleLemmas(hString.toString(), POS.ANY));
+    all.add(hString.toLowerCase());
+    return all;
+  }
+
   @Override
   public void annotate(Annotation sentence) {
     List<Annotation> tokens = sentence.tokens();
@@ -29,34 +38,47 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
     Lemmatizer lemmatizer = Lemmatizers.getLemmatizer(sentence.getLanguage());
     for (int i = 0; i < tokens.size(); ) {
       Annotation token = tokens.get(i);
-      Set<String> lemmas = lemmatizer.allPossibleLemmasAndPrefixes(tokens.get(i).toString(), POS.ANY);
+      final PatriciaTrie<String> lemmas = lemmatizer.allPossibleLemmasAndPrefixes(tokens.get(i).toString(), POS.ANY);
+
       if (lemmas.size() > 0) {
+
         HString bestMatch = null;
+
         if (lemmas.size() == 1 && lemmatizer.canLemmatize(token.toString(), token.getPOS())) {
 
           bestMatch = token;
 
         } else if (lemmas.size() > 1) {
 
+          Set<String> working = getAllLemmas(token, lemmatizer).stream().filter(s -> lemmas.containsKey(s) || lemmas.prefixMap(s + " ").size() > 0).collect(Collectors.toSet());
+
           if (lemmatizer.canLemmatize(token.toString(), token.getPOS())) {
             bestMatch = token;
           }
 
-          int start = token.start();
+          int startChar = token.start();
           int end = i + 1;
-          StringBuilder builder = new StringBuilder(token);
           while (end < tokens.size()) {
+            boolean matched = false;
             token = tokens.get(end);
-            if (sentence.getLanguage().usesWhitespace()) {
-              builder.append(" ");
+            Set<String> nextSet = new HashSet<>();
+            for (String previous : working) {
+              for (String next : getAllLemmas(token, lemmatizer)) {
+                String phrase = previous + " " + next;
+                if (lemmas.containsKey(phrase)) {
+                  nextSet.add(phrase);
+                  matched = true;
+                } else if (lemmas.prefixMap(phrase).size() > 0) {
+                  nextSet.add(phrase);
+                }
+              }
             }
-            builder.append(token);
-            lemmas = lemmatizer.allPossibleLemmasAndPrefixes(builder.toString(), POS.ANY);
-            HString span = HString.union(tokens.subList(i, end + 1));
-            if (lemmatizer.canLemmatize(span.toString(), POS.forText(span)) && lemmas.contains(lemmatizer.lemmatize(span.toString(), POS.forText(span)))) {
+            working = nextSet;
+            HString span = document.substring(startChar, token.end());
+            if (matched) {
               bestMatch = span;
             }
-            if (lemmas.isEmpty()) {
+            if (nextSet.isEmpty()) {
               break;
             }
             end++;

@@ -22,13 +22,13 @@
 package com.davidbracewell.hermes.morphology;
 
 
+import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.POS;
 import lombok.NonNull;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -75,7 +75,7 @@ public interface Lemmatizer {
    * @param partOfSpeech the part of speech
    * @return the prefixed lemmas
    */
-  Set<String> allPossibleLemmasAndPrefixes(String string, POS partOfSpeech);
+  PatriciaTrie<String> allPossibleLemmasAndPrefixes(String string, POS partOfSpeech);
 
   boolean canLemmatize(String input, POS partOfSpeech);
 
