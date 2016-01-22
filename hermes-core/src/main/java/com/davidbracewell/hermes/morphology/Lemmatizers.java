@@ -22,6 +22,8 @@
 package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.collection.Collect;
+import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.tag.POS;
 import com.google.common.collect.Maps;
@@ -30,7 +32,6 @@ import lombok.NonNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * <p>Factory class for creating/retrieving lemmatizers for a given language</p>
@@ -72,8 +73,13 @@ public final class Lemmatizers {
     }
 
     @Override
-    public Set<String> allPossibleLemmasAndPrefixes(@NonNull String string, POS partOfSpeech) {
-      return Collections.singleton(string);
+    public PatriciaTrie<String> allPossibleLemmasAndPrefixes(@NonNull String string, POS partOfSpeech) {
+      return new PatriciaTrie<>(Collect.map(string, string));
+    }
+
+    @Override
+    public boolean canLemmatize(String input, POS partOfSpeech) {
+      return false;
     }
 
 

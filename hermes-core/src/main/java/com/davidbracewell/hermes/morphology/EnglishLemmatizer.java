@@ -247,7 +247,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     if (tags == null || tags.length == 0 || tags[0] == POS.ANY) {
       return this.lemmas.containsKey(lemma);
     }
-    for (POS pos : this.lemmas.get(lemma)) {
+    for (POS pos : this.lemmas.getOrDefault(lemma, Collections.emptySet())) {
       if (pos.isInstance(tags)) {
         return true;
       }

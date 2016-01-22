@@ -37,7 +37,10 @@ import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -229,7 +232,9 @@ public final class Pipeline implements Serializable {
     @Override
     public void produce() {
       start();
-      documents.forEach(this::yield);
+      for (Document document : documents) {
+        yield(document);
+      }
       stop();
     }
   }
