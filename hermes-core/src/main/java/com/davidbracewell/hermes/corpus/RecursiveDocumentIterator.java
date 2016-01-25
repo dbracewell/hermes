@@ -26,7 +26,9 @@ import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
 
 /**
@@ -37,7 +39,7 @@ import java.util.function.BiFunction;
 public class RecursiveDocumentIterator implements Iterator<Document> {
   private final Iterator<Resource> resourceIterator;
   private final DocumentFactory documentFactory;
-  private final Queue<Document> documentQueue = new LinkedList<>();
+  private Iterator<Document> iterator;
   private final BiFunction<Resource, DocumentFactory, Iterable<Document>> resourceReader;
 
   /**
@@ -53,20 +55,22 @@ public class RecursiveDocumentIterator implements Iterator<Document> {
     this.resourceIterator = resource.isDirectory() ? resource.childIterator(true) : Collections.singleton(resource).iterator();
   }
 
+  private boolean isNullOrEmpty() {
+    return iterator == null || !iterator.hasNext();
+  }
+
   boolean advance() {
-    if (documentQueue.isEmpty()) {
-      synchronized (documentQueue) {
-        while (resourceIterator.hasNext() && documentQueue.isEmpty()) {
-          Resource r = resourceIterator.next();
-          if (!r.isDirectory()) {
-            if (r.asFile().map(f -> !f.isHidden()).orElse(true)) {
-              resourceReader.apply(r, documentFactory).forEach(documentQueue::add);
-            }
+    if (isNullOrEmpty()) {
+      while (resourceIterator.hasNext() && isNullOrEmpty()) {
+        Resource r = resourceIterator.next();
+        if (!r.isDirectory()) {
+          if (r.asFile().map(f -> !f.isHidden()).orElse(true)) {
+            iterator = resourceReader.apply(r, documentFactory).iterator();
           }
         }
       }
     }
-    return documentQueue.size() > 0;
+    return !isNullOrEmpty();
   }
 
   @Override
@@ -79,7 +83,7 @@ public class RecursiveDocumentIterator implements Iterator<Document> {
     if (!advance()) {
       throw new NoSuchElementException();
     }
-    return documentQueue.remove();
+    return iterator.next();
   }
 
 

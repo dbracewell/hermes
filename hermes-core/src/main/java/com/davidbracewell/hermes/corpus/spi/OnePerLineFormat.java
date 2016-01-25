@@ -85,15 +85,17 @@ public class OnePerLineFormat extends FileBasedFormat {
       try {
         this.reader = new BufferedReader(input.reader());
         this.format = format;
-        advance();
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }
     }
 
-    private void advance() {
-      if (!documentQueue.isEmpty() || isClosed) {
-        return;
+    private boolean advance() {
+      if (isClosed) {
+        return false;
+      }
+      if (!documentQueue.isEmpty()) {
+        return true;
       }
       try {
         line = reader.readLine();
@@ -104,6 +106,7 @@ public class OnePerLineFormat extends FileBasedFormat {
         if (line == null) {
           reader.close();
           isClosed = true;
+          return false;
         } else {
           for (Document d : format.read(Resources.fromString(line), documentFactory)) {
             documentQueue.add(d);
@@ -114,16 +117,18 @@ public class OnePerLineFormat extends FileBasedFormat {
         log.warn(e);
         line = null;
       }
+
+      return documentQueue.size() > 0;
     }
 
     @Override
     public boolean hasNext() {
-      return !documentQueue.isEmpty() || line != null;
+      return advance();
     }
 
     @Override
     public Document next() {
-      if (documentQueue.isEmpty()) {
+      if (!advance()) {
         throw new NoSuchElementException();
       }
       Document toReturn = documentQueue.remove();
@@ -139,8 +144,10 @@ public class OnePerLineFormat extends FileBasedFormat {
 
   @Override
   public void write(@NonNull Resource resource, @NonNull Iterable<Document> documents) throws IOException {
+    long count = 0;
     try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
       for (Document document : documents) {
+        count++;
         Resource stringResource = new StringResource();
         subFormat.write(stringResource, document);
         String string = stringResource.readToString().trim();
@@ -149,6 +156,9 @@ public class OnePerLineFormat extends FileBasedFormat {
         }
         writer.write(string);
         writer.write("\n");
+        if (count % 10000 == 0) {
+          writer.flush();
+        }
       }
     }
   }

@@ -23,7 +23,6 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
-import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
@@ -88,7 +87,7 @@ public class Document extends HString {
     this.content = content;
     setId(id);
     setLanguage(language);
-    this.annotationSet = Config.get("hermes.AnnotationSetImpl").asOrElse(AnnotationSet.class, DefaultAnnotationSet::new);
+    this.annotationSet = new DefaultAnnotationSet();
   }
 
 

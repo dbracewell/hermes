@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.collection.Collect;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
@@ -31,10 +32,12 @@ import com.davidbracewell.stream.JavaMStream;
 import com.davidbracewell.stream.MStream;
 import lombok.NonNull;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * <p>
@@ -79,6 +82,29 @@ public class FileCorpus implements Corpus, Serializable {
     }
     ));
   }
+
+  @Override
+  public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
+    DocumentFormat documentFormat = DocumentFormats.forName(format);
+    if (documentFormat == this.documentFormat) {
+      try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
+        try (MStream<String> lines = this.resource.lines()) {
+          AtomicLong count = new AtomicLong();
+          for (String line : Collect.asIterable(lines.iterator())) {
+            writer.write(line);
+            writer.write("\n");
+            if (count.incrementAndGet() % 1000 == 0) {
+              writer.flush();
+            }
+          }
+        }
+      }
+      return Corpus.builder().format(format).source(resource).build();
+    } else {
+      return Corpus.super.write(format, resource);
+    }
+  }
+
 
   @Override
   public MStream<Document> stream() {

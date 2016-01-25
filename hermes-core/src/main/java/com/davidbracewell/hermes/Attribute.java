@@ -23,11 +23,14 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
+import com.davidbracewell.Tag;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.Val;
+import com.davidbracewell.hermes.attribute.AttributeValueCodec;
+import com.davidbracewell.hermes.attribute.CommonCodecs;
+import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
@@ -35,11 +38,15 @@ import com.davidbracewell.reflection.ValueType;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.ObjectStreamException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * <p>
@@ -69,6 +76,19 @@ public final class Attribute extends EnumValue {
   private static final DynamicEnum<Attribute> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
   private volatile transient ValueType valueType;
+  private volatile transient AttributeValueCodec codec;
+
+  private static final ImmutableMap<Class<?>, AttributeValueCodec> defaultCodecs = ImmutableMap.
+    <Class<?>, AttributeValueCodec>builder()
+    .put(Double.class, CommonCodecs.DOUBLE)
+    .put(Integer.class, CommonCodecs.INTEGER)
+    .put(String.class, CommonCodecs.STRING)
+    .put(Long.class, CommonCodecs.LONG)
+    .put(Boolean.class, CommonCodecs.BOOLEAN)
+    .put(POS.class, CommonCodecs.PART_OF_SPEECH)
+    .put(Tag.class, CommonCodecs.TAG)
+    .build();
+
 
   private Attribute(String name) {
     super(name);
@@ -126,44 +146,65 @@ public final class Attribute extends EnumValue {
     Attribute attribute;
     Object value;
 
-    if (reader.peek() == ElementType.BEGIN_ARRAY) {
-
-      attribute = Attribute.create(reader.beginArray());
-      ValueType valueType = attribute.getValueType();
-
-      Preconditions.checkArgument(valueType.isCollection(), attribute.name() + " is not defined as a collection.");
-
-      List<Object> list = new ArrayList<>();
-      while (reader.peek() != ElementType.END_ARRAY) {
-        list.add(reader.nextValue().as(valueType.getParameterTypes()[0]));
-      }
-      value = valueType.convert(list);
-      reader.endArray();
-
-    } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
-
-      attribute = Attribute.create(reader.beginObject());
-      ValueType valueType = attribute.getValueType();
-      Optional<AttributeValueCodec> decoder = attribute.getCodec();
-
-      if (decoder.isPresent()) {
-        value = decoder.get().decode(reader, attribute);
-      } else if (valueType.isMap()) {
-        value = valueType.convert(reader.nextMap());
-      } else {
-        throw new RuntimeException(attribute.name() + " is not defined as Map and does not have a declared decoder.");
-      }
-
-      reader.endObject();
-
-    } else {
-      Tuple2<String, Val> keyValue = reader.nextKeyValue();
-      attribute = Attribute.create(keyValue.getKey());
-      value = attribute.getValueType().convert(keyValue.getValue());
+    switch (reader.peek()) {
+      case BEGIN_OBJECT:
+        attribute = Attribute.create(reader.beginObject());
+        value = attribute.getCodec().get().decode(reader, attribute, null);
+        reader.endObject();
+        break;
+      case BEGIN_ARRAY:
+        attribute = Attribute.create(reader.beginArray());
+        value = attribute.getCodec().get().decode(reader, attribute, null);
+        reader.endArray();
+        break;
+      default:
+        Tuple2<String, Val> keyValue = reader.nextKeyValue();
+        attribute = Attribute.create(keyValue.getKey());
+        value = attribute.getCodec().get().decode(reader, attribute, keyValue.getValue().get());
     }
+
+//    Attribute attribute;
+//    Object value;
+//
+//
+//    if (reader.peek() == ElementType.BEGIN_ARRAY) {
+//      attribute = Attribute.create(reader.beginArray());
+//      ValueType valueType = attribute.getValueType();
+//
+//      Preconditions.checkArgument(valueType.isCollection(), attribute.name() + " is not defined as a collection.");
+//
+//      List<Object> list = new ArrayList<>();
+//      while (reader.peek() != ElementType.END_ARRAY) {
+//        list.add(reader.nextValue().as(valueType.getParameterTypes()[0]));
+//      }
+//      value = valueType.convert(list);
+//      reader.endArray();
+//
+//    } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
+//
+//      attribute = Attribute.create(reader.beginObject());
+//      ValueType valueType = attribute.getValueType();
+//      Optional<AttributeValueCodec> decoder = attribute.getCodec();
+//
+//      if (decoder.isPresent()) {
+//        value = decoder.get().decode(reader, attribute, null);
+//      } else if (valueType.isMap()) {
+//        value = valueType.convert(reader.nextMap());
+//      } else {
+//        throw new RuntimeException(attribute.name() + " is not defined as Map and does not have a declared decoder.");
+//      }
+//
+//      reader.endObject();
+//
+//    } else {
+//      Tuple2<String, Val> keyValue = reader.nextKeyValue();
+//      attribute = Attribute.create(keyValue.getKey());
+//      value = attribute.getValueType().convert(keyValue.getValue());
+//    }
 
     return Tuple2.of(attribute, Val.of(value));
   }
+
 
   static Map<Attribute, Val> readAttributeList(StructuredReader reader) throws IOException {
     Map<Attribute, Val> attributeValMap = new HashMap<>();
@@ -211,7 +252,17 @@ public final class Attribute extends EnumValue {
   }
 
   private Optional<AttributeValueCodec> getCodec() {
-    return Optional.ofNullable(Config.get("Attribute", name(), "codec").as(AttributeValueCodec.class));
+    if (codec == null) {
+      synchronized (this) {
+        if (codec == null) {
+          codec = Config.get("Attribute", name(), "codec").as(AttributeValueCodec.class);
+          if (codec == null) {
+            codec = defaultCodecs.getOrDefault(getValueType().getType(), CommonCodecs.STRING);
+          }
+        }
+      }
+    }
+    return Optional.ofNullable(codec);
   }
 
   /**
@@ -240,33 +291,44 @@ public final class Attribute extends EnumValue {
   }
 
   void write(StructuredWriter writer, Object val) throws IOException {
-    ValueType valueType = getValueType();
-    Optional<AttributeValueCodec> encoder = getCodec();
+    AttributeValueCodec encoder = getCodec().get();
     Val wrapped = val instanceof Val ? Cast.as(val) : Val.of(val);
-
     if (checkType(wrapped)) {
-      if (valueType.isCollection()) {
-        writer.beginArray(name());
-        Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);
-        for (Object o : collection) {
-          writer.writeValue(o);
-        }
+      if (encoder.isObject()) {
+        writer.beginObject(this.name());
+        encoder.encode(writer, this, wrapped.get());
+        writer.endObject();
+      } else if (encoder.isArray()) {
+        writer.beginArray(this.name());
+        encoder.encode(writer, this, wrapped.get());
         writer.endArray();
-      } else if (encoder.isPresent()) {
-        writer.beginObject(name());
-        encoder.get().encode(writer, this, wrapped.asObject(Object.class));
-        writer.endObject();
-      } else if (valueType.isMap()) {
-        writer.beginObject(name());
-        Map<?, ?> map = wrapped.asMap(valueType.getParameterTypes()[0], valueType.getParameterTypes()[1]);
-        for (Map.Entry<?, ?> entry : map.entrySet()) {
-          writer.writeKeyValue(Convert.convert(entry.getKey(), String.class), entry.getValue());
-        }
-        writer.endObject();
       } else {
-        writer.writeKeyValue(name(), wrapped.get());
+        encoder.encode(writer, this, wrapped.get());
       }
     }
+
+//      if (valueType.isCollection()) {
+//        writer.beginArray(name());
+//        Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);
+//        for (Object o : collection) {
+//          writer.writeValue(o);
+//        }
+//        writer.endArray();
+//      } else if (encoder.isPresent()) {
+//        writer.beginObject(name());
+//        encoder.get().encode(writer, this, wrapped.asObject(Object.class));
+//        writer.endObject();
+//      } else if (valueType.isMap()) {
+//        writer.beginObject(name());
+//        Map<?, ?> map = wrapped.asMap(valueType.getParameterTypes()[0], valueType.getParameterTypes()[1]);
+//        for (Map.Entry<?, ?> entry : map.entrySet()) {
+//          writer.writeKeyValue(Convert.convert(entry.getKey(), String.class), entry.getValue());
+//        }
+//        writer.endObject();
+//      } else {
+//        writer.writeKeyValue(name(), wrapped.get());
+//      }
+//  }
 
   }
 

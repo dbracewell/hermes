@@ -2,7 +2,7 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Attribute;
-import com.davidbracewell.hermes.AttributeValueCodec;
+import com.davidbracewell.hermes.attribute.AttributeValueCodec;
 import com.davidbracewell.hermes.wordnet.Sense;
 import com.davidbracewell.hermes.wordnet.WordNet;
 import com.davidbracewell.io.structured.ElementType;
@@ -31,7 +31,7 @@ public class SenseCodec implements AttributeValueCodec, Serializable {
   }
 
   @Override
-  public Object decode(StructuredReader reader, Attribute attribute) throws IOException {
+  public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
     List<Sense> senses = new ArrayList<>();
     reader.beginArray("senses");
     while (reader.peek() != ElementType.END_ARRAY) {
@@ -43,4 +43,15 @@ public class SenseCodec implements AttributeValueCodec, Serializable {
     reader.endArray();
     return senses;
   }
+
+  @Override
+  public boolean isArray() {
+    return false;
+  }
+
+  @Override
+  public boolean isObject() {
+    return true;
+  }
+
 }// END OF SenseCodec

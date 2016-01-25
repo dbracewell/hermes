@@ -19,8 +19,9 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes;
+package com.davidbracewell.hermes.attribute;
 
+import com.davidbracewell.hermes.Attribute;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 
@@ -50,9 +51,14 @@ public interface AttributeValueCodec {
    *
    * @param reader    the reader to read from
    * @param attribute the attribute whose value needs decoding
+   * @param value     the value
    * @return the attribute value
    * @throws IOException something went wrong reading
    */
-  Object decode(StructuredReader reader, Attribute attribute) throws IOException;
+  Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException;
+
+  boolean isObject();
+
+  boolean isArray();
 
 }//END OF AttributeValueCodec

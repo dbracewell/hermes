@@ -126,7 +126,6 @@ public final class Annotation extends Fragment implements Serializable {
    */
   static Annotation read(StructuredReader reader) throws IOException {
     reader.beginObject();
-
     Map<String, Val> annotationProperties = new HashMap<>();
     Map<Attribute, Val> attributeValMap = Collections.emptyMap();
     List<Relation> relations = new LinkedList<>();

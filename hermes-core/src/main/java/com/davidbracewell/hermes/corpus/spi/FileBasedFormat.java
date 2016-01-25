@@ -21,13 +21,11 @@
 
 package com.davidbracewell.hermes.corpus.spi;
 
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.DocumentFormat;
 import com.davidbracewell.hermes.corpus.FileCorpus;
-import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
