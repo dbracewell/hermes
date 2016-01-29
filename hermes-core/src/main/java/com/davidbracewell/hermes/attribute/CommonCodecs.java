@@ -25,11 +25,13 @@ import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.tag.EntityType;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * @author David B. Bracewell
@@ -57,7 +59,7 @@ public enum CommonCodecs implements AttributeValueCodec {
       return Convert.convert(value, Double.class);
     }
   },
-  STRING {
+  FLOAT {
     @Override
     public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
       writer.writeKeyValue(attribute.name(), value);
@@ -65,7 +67,7 @@ public enum CommonCodecs implements AttributeValueCodec {
 
     @Override
     public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
-      return value.toString();
+      return Convert.convert(value, Float.class);
     }
   },
   LONG {
@@ -77,6 +79,17 @@ public enum CommonCodecs implements AttributeValueCodec {
     @Override
     public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
       return Convert.convert(value, Long.class);
+    }
+  },
+  STRING {
+    @Override
+    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
+      writer.writeKeyValue(attribute.name(), value);
+    }
+
+    @Override
+    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+      return value.toString();
     }
   },
   BOOLEAN {
@@ -117,6 +130,28 @@ public enum CommonCodecs implements AttributeValueCodec {
     @Override
     public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
       return Convert.convert(value, POS.class);
+    }
+  },
+  ENTITY_TYPE {
+    @Override
+    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
+      writer.writeKeyValue(attribute.name(), value);
+    }
+
+    @Override
+    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+      return Convert.convert(value, EntityType.class);
+    }
+  },
+  DATE {
+    @Override
+    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
+      writer.writeKeyValue(attribute.name(), Cast.<Date>as(value).getTime());
+    }
+
+    @Override
+    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+      return new Date(Convert.convert(value, Long.class));
     }
   };
 

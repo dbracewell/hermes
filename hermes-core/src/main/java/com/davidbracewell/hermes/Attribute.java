@@ -30,6 +30,7 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.attribute.AttributeValueCodec;
 import com.davidbracewell.hermes.attribute.CommonCodecs;
+import com.davidbracewell.hermes.tag.EntityType;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
@@ -44,30 +45,24 @@ import lombok.NonNull;
 import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 /**
- * <p>
- * An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link #create(String)} or
- * the {@link #create(String, Class)} static methods. The value type of an attribute is either defined via the create
+ * <p> An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link #create(String)}
+ * or the {@link #create(String, Class)} static methods. The value type of an attribute is either defined via the create
  * method or via a config parameter using a value type (see {@link ValueType} for information of defining the type).
  * Attributes that do not have a defined type default to being Strings. An attribute can define a custom codec ({@link
  * AttributeValueCodec}*) for encoding and decoding its value using  the <code>codec</code> property, e.g.
  * <code>Attribute.NAME.codec=fully.qualified.codec.name</code>.  Note that the <code>Attribute</code> class only
- * represents the name and type of an attribute.
- * </p>
- * <p>
- * Attribute names are normalized so that an Attribute created with the name <code>partofspeech</code> and one created
- * with the name <code>PartOfSpeech</code> are equal (see {@link DynamicEnum} for normalization information).
- * </p>
- * <p>
- * When attributes are written to a structured format their type is checked against what is defined. Differences in
- * type will by default cause ignore the attribute and not write it to file. You can set
- * <code>Attribute.ignoreTypeChecks</code> to <code>false</code> to ensure the type and throw an
- * <code>IllegalArgumentException</code> when there is a mismatch.
- * </p>
+ * represents the name and type of an attribute. </p> <p> Attribute names are normalized so that an Attribute created
+ * with the name <code>partofspeech</code> and one created with the name <code>PartOfSpeech</code> are equal (see {@link
+ * DynamicEnum} for normalization information). </p> <p> When attributes are written to a structured format their type
+ * is checked against what is defined. Differences in type will by default cause ignore the attribute and not write it
+ * to file. You can set <code>Attribute.ignoreTypeChecks</code> to <code>false</code> to ensure the type and throw an
+ * <code>IllegalArgumentException</code> when there is a mismatch. </p>
  *
  * @author David B. Bracewell
  */
@@ -75,9 +70,6 @@ public final class Attribute extends EnumValue {
 
   private static final DynamicEnum<Attribute> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
-  private volatile transient ValueType valueType;
-  private volatile transient AttributeValueCodec codec;
-
   private static final ImmutableMap<Class<?>, AttributeValueCodec> defaultCodecs = ImmutableMap.
     <Class<?>, AttributeValueCodec>builder()
     .put(Double.class, CommonCodecs.DOUBLE)
@@ -86,8 +78,12 @@ public final class Attribute extends EnumValue {
     .put(Long.class, CommonCodecs.LONG)
     .put(Boolean.class, CommonCodecs.BOOLEAN)
     .put(POS.class, CommonCodecs.PART_OF_SPEECH)
+    .put(EntityType.class, CommonCodecs.ENTITY_TYPE)
     .put(Tag.class, CommonCodecs.TAG)
+    .put(Date.class, CommonCodecs.DATE)
     .build();
+  private volatile transient ValueType valueType;
+  private volatile transient AttributeValueCodec codec;
 
 
   private Attribute(String name) {
@@ -293,20 +289,21 @@ public final class Attribute extends EnumValue {
   void write(StructuredWriter writer, Object val) throws IOException {
     AttributeValueCodec encoder = getCodec().get();
     Val wrapped = val instanceof Val ? Cast.as(val) : Val.of(val);
-    if (checkType(wrapped)) {
-      if (encoder.isObject()) {
-        writer.beginObject(this.name());
-        encoder.encode(writer, this, wrapped.get());
-        writer.endObject();
-      } else if (encoder.isArray()) {
-        writer.beginArray(this.name());
-        encoder.encode(writer, this, wrapped.get());
-        writer.endArray();
-      } else {
-        encoder.encode(writer, this, wrapped.get());
+    if (!wrapped.isNull()) {
+      if (checkType(wrapped)) {
+        if (encoder.isObject()) {
+          writer.beginObject(this.name());
+          encoder.encode(writer, this, wrapped.get());
+          writer.endObject();
+        } else if (encoder.isArray()) {
+          writer.beginArray(this.name());
+          encoder.encode(writer, this, wrapped.get());
+          writer.endArray();
+        } else {
+          encoder.encode(writer, this, wrapped.get());
+        }
       }
     }
-
 //      if (valueType.isCollection()) {
 //        writer.beginArray(name());
 //        Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);
