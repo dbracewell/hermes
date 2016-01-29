@@ -46,7 +46,7 @@ public class HermesFX extends JavaFXApplication {
   private VBox attributePane;
   private HBox statusBar;
   private SplitPane workspace;
-
+  private File currentDirectory = new File(".");
 
   public HermesFX() {
     super("HermesFX");
@@ -93,8 +93,10 @@ public class HermesFX extends JavaFXApplication {
     fileOpen.setAccelerator(KeyCombination.keyCombination("SHORTCUT+O"));
     fileOpen.setOnAction(a -> {
       FileChooser chooser = new FileChooser();
+      chooser.setInitialDirectory(currentDirectory);
       File chose = chooser.showOpenDialog(null);
       if (chose != null) {
+        currentDirectory = chose.getParentFile();
         try {
           editor.setText(new FileResource(chose).readToString());
         } catch (IOException e) {
@@ -179,9 +181,9 @@ public class HermesFX extends JavaFXApplication {
     workspace.setDividerPositions(0.2, 0.8, 0.1);
 
 
-    SplitPane.setResizableWithParent(editor,true);
-    SplitPane.setResizableWithParent(workspace.getItems().get(0),false);
-    SplitPane.setResizableWithParent(workspace.getItems().get(2),false);
+    SplitPane.setResizableWithParent(editor, true);
+    SplitPane.setResizableWithParent(workspace.getItems().get(0), false);
+    SplitPane.setResizableWithParent(workspace.getItems().get(2), false);
 
     pane.setCenter(workspace);
     Scene scene = new Scene(pane);
