@@ -21,12 +21,11 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.DynamicEnum;
-import com.davidbracewell.EnumValue;
-import com.davidbracewell.Tag;
+import com.davidbracewell.*;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.attribute.AttributeValueCodec;
 import com.davidbracewell.hermes.attribute.CommonCodecs;
@@ -44,21 +43,20 @@ import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.ObjectStreamException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
- * <p> An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link #create(String)}
- * or the {@link #create(String, Class)} static methods. The value type of an attribute is either defined via the create
+ * <p> An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link
+ * #create(String)}
+ * or the {@link #create(String, Class)} static methods. The value type of an attribute is either defined via the
+ * create
  * method or via a config parameter using a value type (see {@link ValueType} for information of defining the type).
  * Attributes that do not have a defined type default to being Strings. An attribute can define a custom codec ({@link
  * AttributeValueCodec}*) for encoding and decoding its value using  the <code>codec</code> property, e.g.
  * <code>Attribute.NAME.codec=fully.qualified.codec.name</code>.  Note that the <code>Attribute</code> class only
  * represents the name and type of an attribute. </p> <p> Attribute names are normalized so that an Attribute created
- * with the name <code>partofspeech</code> and one created with the name <code>PartOfSpeech</code> are equal (see {@link
+ * with the name <code>partofspeech</code> and one created with the name <code>PartOfSpeech</code> are equal (see
+ * {@link
  * DynamicEnum} for normalization information). </p> <p> When attributes are written to a structured format their type
  * is checked against what is defined. Differences in type will by default cause ignore the attribute and not write it
  * to file. You can set <code>Attribute.ignoreTypeChecks</code> to <code>false</code> to ensure the type and throw an
@@ -81,9 +79,12 @@ public final class Attribute extends EnumValue {
     .put(EntityType.class, CommonCodecs.ENTITY_TYPE)
     .put(Tag.class, CommonCodecs.TAG)
     .put(Date.class, CommonCodecs.DATE)
+    .put(Language.class, CommonCodecs.LANGUAGE)
     .build();
-  private volatile transient ValueType valueType;
-  private volatile transient AttributeValueCodec codec;
+  private volatile ValueType valueType;
+  private volatile transient Lazy<AttributeValueCodec> codec = new Lazy<>(
+    () -> Config.get("Attribute", name(), "codec").as(AttributeValueCodec.class, defaultCodecs.get(getValueType().getType()))
+  );
 
 
   private Attribute(String name) {
@@ -137,6 +138,24 @@ public final class Attribute extends EnumValue {
     return index.isDefined(name);
   }
 
+  static Object readObject(StructuredReader reader, Attribute attribute) throws IOException {
+    ValueType valueType = attribute.getValueType();
+    if (valueType.isMap()) {
+      return valueType.convert(reader.nextMap());
+    } else {
+      throw new RuntimeException(attribute.name() + " is not defined as Map and does not have a declared decoder.");
+    }
+  }
+
+  static Object readList(StructuredReader reader, Attribute attribute) throws IOException {
+    ValueType valueType = attribute.getValueType();
+    List<Object> list = new ArrayList<>();
+    while (reader.peek() != ElementType.END_ARRAY) {
+      list.add(reader.nextValue().as(valueType.getParameterTypes()[0]));
+    }
+    return valueType.convert(list);
+  }
+
   static Tuple2<Attribute, Val> read(StructuredReader reader) throws IOException {
 
     Attribute attribute;
@@ -145,18 +164,30 @@ public final class Attribute extends EnumValue {
     switch (reader.peek()) {
       case BEGIN_OBJECT:
         attribute = Attribute.create(reader.beginObject());
-        value = attribute.getCodec().get().decode(reader, attribute, null);
+        if (attribute.codec.get() == null) {
+          value = readObject(reader, attribute);
+        } else {
+          value = attribute.codec.get().decode(reader, attribute, null);
+        }
         reader.endObject();
         break;
       case BEGIN_ARRAY:
         attribute = Attribute.create(reader.beginArray());
-        value = attribute.getCodec().get().decode(reader, attribute, null);
+        if (attribute.codec.get() == null) {
+          value = readList(reader, attribute);
+        } else {
+          value = attribute.codec.get().decode(reader, attribute, null);
+        }
         reader.endArray();
         break;
       default:
         Tuple2<String, Val> keyValue = reader.nextKeyValue();
         attribute = Attribute.create(keyValue.getKey());
-        value = attribute.getCodec().get().decode(reader, attribute, keyValue.getValue().get());
+        if (attribute.codec.get() == null) {
+          value = attribute.getValueType().convert(keyValue.getValue());
+        } else {
+          value = attribute.codec.get().decode(reader, attribute, keyValue.getValue().get());
+        }
     }
 
 //    Attribute attribute;
@@ -247,20 +278,6 @@ public final class Attribute extends EnumValue {
     return true;
   }
 
-  private Optional<AttributeValueCodec> getCodec() {
-    if (codec == null) {
-      synchronized (this) {
-        if (codec == null) {
-          codec = Config.get("Attribute", name(), "codec").as(AttributeValueCodec.class);
-          if (codec == null) {
-            codec = defaultCodecs.getOrDefault(getValueType().getType(), CommonCodecs.STRING);
-          }
-        }
-      }
-    }
-    return Optional.ofNullable(codec);
-  }
-
   /**
    * Gets class information for the type of values this attribute is expected to have. Types are defined via
    * configuration as follows: <code>Attribute.NAME.type = class</code>. If not defined String.class will be returned.
@@ -287,11 +304,29 @@ public final class Attribute extends EnumValue {
   }
 
   void write(StructuredWriter writer, Object val) throws IOException {
-    AttributeValueCodec encoder = getCodec().get();
+    AttributeValueCodec encoder = codec.get();
     Val wrapped = val instanceof Val ? Cast.as(val) : Val.of(val);
     if (!wrapped.isNull()) {
       if (checkType(wrapped)) {
-        if (encoder.isObject()) {
+        if (encoder == null) {
+          if (valueType.isCollection()) {
+            writer.beginArray(name());
+            Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);
+            for (Object o : collection) {
+              writer.writeValue(o);
+            }
+            writer.endArray();
+          } else if (valueType.isMap()) {
+            writer.beginObject(name());
+            Map<?, ?> map = wrapped.asMap(valueType.getParameterTypes()[0], valueType.getParameterTypes()[1]);
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+              writer.writeKeyValue(Convert.convert(entry.getKey(), String.class), entry.getValue());
+            }
+            writer.endObject();
+          } else {
+            writer.writeKeyValue(name(), wrapped.get());
+          }
+        } else if (encoder.isObject()) {
           writer.beginObject(this.name());
           encoder.encode(writer, this, wrapped.get());
           writer.endObject();
@@ -304,29 +339,6 @@ public final class Attribute extends EnumValue {
         }
       }
     }
-//      if (valueType.isCollection()) {
-//        writer.beginArray(name());
-//        Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);
-//        for (Object o : collection) {
-//          writer.writeValue(o);
-//        }
-//        writer.endArray();
-//      } else if (encoder.isPresent()) {
-//        writer.beginObject(name());
-//        encoder.get().encode(writer, this, wrapped.asObject(Object.class));
-//        writer.endObject();
-//      } else if (valueType.isMap()) {
-//        writer.beginObject(name());
-//        Map<?, ?> map = wrapped.asMap(valueType.getParameterTypes()[0], valueType.getParameterTypes()[1]);
-//        for (Map.Entry<?, ?> entry : map.entrySet()) {
-//          writer.writeKeyValue(Convert.convert(entry.getKey(), String.class), entry.getValue());
-//        }
-//        writer.endObject();
-//      } else {
-//        writer.writeKeyValue(name(), wrapped.get());
-//      }
-//  }
-
   }
 
 

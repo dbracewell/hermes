@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.attribute;
 
+import com.davidbracewell.Language;
 import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
@@ -152,6 +153,17 @@ public enum CommonCodecs implements AttributeValueCodec {
     @Override
     public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
       return new Date(Convert.convert(value, Long.class));
+    }
+  },
+  LANGUAGE {
+    @Override
+    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
+      writer.writeKeyValue(attribute.name(), Cast.<Language>as(value).toString());
+    }
+
+    @Override
+    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+      return Language.fromString(value.toString());
     }
   };
 
