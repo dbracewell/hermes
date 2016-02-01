@@ -137,5 +137,4 @@ public interface Sense extends Comparable<Sense> {
    */
   List<VerbFrame> getVerbFrames();
 
-
 }//END OF Sense

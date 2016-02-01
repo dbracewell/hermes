@@ -23,35 +23,31 @@ public class SenseCodec implements AttributeValueCodec, Serializable {
   @Override
   public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
     List<Sense> senses = Cast.as(value);
-    writer.beginArray("senses");
     for (Sense sense : senses) {
       writer.writeValue(sense.toString());
     }
-    writer.endArray();
   }
 
   @Override
   public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
     List<Sense> senses = new ArrayList<>();
-    reader.beginArray("senses");
     while (reader.peek() != ElementType.END_ARRAY) {
       Sense sense = WordNet.getInstance().getSenseFromID(reader.nextValue().asString());
       if (sense != null) {
         senses.add(sense);
       }
     }
-    reader.endArray();
     return senses;
   }
 
   @Override
   public boolean isArray() {
-    return false;
+    return true;
   }
 
   @Override
   public boolean isObject() {
-    return true;
+    return false;
   }
 
 }// END OF SenseCodec

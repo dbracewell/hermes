@@ -31,13 +31,15 @@ import com.davidbracewell.hermes.attribute.AttributeValueCodec;
 import com.davidbracewell.hermes.attribute.CommonCodecs;
 import com.davidbracewell.hermes.tag.EntityType;
 import com.davidbracewell.hermes.tag.POS;
-import com.davidbracewell.io.structured.ElementType;
-import com.davidbracewell.io.structured.StructuredReader;
-import com.davidbracewell.io.structured.StructuredWriter;
+import com.davidbracewell.io.structured.*;
+import com.davidbracewell.io.structured.Readable;
+import com.davidbracewell.reflection.Reflect;
+import com.davidbracewell.reflection.ReflectionException;
 import com.davidbracewell.reflection.ValueType;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import lombok.NonNull;
 
@@ -183,51 +185,27 @@ public final class Attribute extends EnumValue {
       default:
         Tuple2<String, Val> keyValue = reader.nextKeyValue();
         attribute = Attribute.create(keyValue.getKey());
-        if (attribute.codec.get() == null) {
+        if (attribute.codec.get() == null && Readable.class.isAssignableFrom(attribute.getValueType().getType())) {
+          try {
+            value = Reflect.onClass(attribute.getValueType().getType()).create();
+            Cast.<Readable>as(value).read(reader);
+          } catch (ReflectionException e) {
+            throw Throwables.propagate(e);
+          }
+        } else if (attribute.codec.get() == null) {
           value = attribute.getValueType().convert(keyValue.getValue());
+        } else if (Readable.class.isAssignableFrom(attribute.getValueType().getType())) {
+          try {
+            value = Reflect.onClass(attribute.getValueType().getType()).create();
+            Cast.<Readable>as(value).read(reader);
+          } catch (ReflectionException e) {
+            throw Throwables.propagate(e);
+          }
         } else {
           value = attribute.codec.get().decode(reader, attribute, keyValue.getValue().get());
         }
     }
 
-//    Attribute attribute;
-//    Object value;
-//
-//
-//    if (reader.peek() == ElementType.BEGIN_ARRAY) {
-//      attribute = Attribute.create(reader.beginArray());
-//      ValueType valueType = attribute.getValueType();
-//
-//      Preconditions.checkArgument(valueType.isCollection(), attribute.name() + " is not defined as a collection.");
-//
-//      List<Object> list = new ArrayList<>();
-//      while (reader.peek() != ElementType.END_ARRAY) {
-//        list.add(reader.nextValue().as(valueType.getParameterTypes()[0]));
-//      }
-//      value = valueType.convert(list);
-//      reader.endArray();
-//
-//    } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
-//
-//      attribute = Attribute.create(reader.beginObject());
-//      ValueType valueType = attribute.getValueType();
-//      Optional<AttributeValueCodec> decoder = attribute.getCodec();
-//
-//      if (decoder.isPresent()) {
-//        value = decoder.get().decode(reader, attribute, null);
-//      } else if (valueType.isMap()) {
-//        value = valueType.convert(reader.nextMap());
-//      } else {
-//        throw new RuntimeException(attribute.name() + " is not defined as Map and does not have a declared decoder.");
-//      }
-//
-//      reader.endObject();
-//
-//    } else {
-//      Tuple2<String, Val> keyValue = reader.nextKeyValue();
-//      attribute = Attribute.create(keyValue.getKey());
-//      value = attribute.getValueType().convert(keyValue.getValue());
-//    }
 
     return Tuple2.of(attribute, Val.of(value));
   }
@@ -306,17 +284,27 @@ public final class Attribute extends EnumValue {
   void write(StructuredWriter writer, Object val) throws IOException {
     AttributeValueCodec encoder = codec.get();
     Val wrapped = val instanceof Val ? Cast.as(val) : Val.of(val);
+    ValueType vType = getValueType();
+
+
+    //Ignore nulls
     if (!wrapped.isNull()) {
+      //Check the type
       if (checkType(wrapped)) {
+        if (this == Attrs.SENSE)
+        //No encoder is specified
         if (encoder == null) {
-          if (valueType.isCollection()) {
+          //The value type already knows how to write, because it's Writable
+          if (Writable.class.isAssignableFrom(vType.getType())) {
+            Cast.<Writable>as(wrapped.get()).write(writer);
+          } else if (vType.isCollection()) {
             writer.beginArray(name());
             Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);
             for (Object o : collection) {
               writer.writeValue(o);
             }
             writer.endArray();
-          } else if (valueType.isMap()) {
+          } else if (vType.isMap()) {
             writer.beginObject(name());
             Map<?, ?> map = wrapped.asMap(valueType.getParameterTypes()[0], valueType.getParameterTypes()[1]);
             for (Map.Entry<?, ?> entry : map.entrySet()) {
@@ -339,6 +327,7 @@ public final class Attribute extends EnumValue {
         }
       }
     }
+
   }
 
 
