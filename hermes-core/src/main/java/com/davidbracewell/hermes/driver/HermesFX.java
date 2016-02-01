@@ -191,9 +191,5 @@ public class HermesFX extends JavaFXApplication {
     getStage().show();
   }
 
-  @Override
-  public void run() {
-
-  }
 
 }// END OF HermesFX
