@@ -31,8 +31,10 @@ import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.apollo.ml.preprocess.transform.TFIDFTransform;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.CorpusBuilder;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotation;
+
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author David B. Bracewell
@@ -166,22 +168,27 @@ public class MLExample {
       new String[]{"POSITIVE", "a pleasant enough movie , held together by skilled ensemble actors ."}
     };
 
-    CorpusBuilder builder = Corpus.builder()
-      .inMemory();
 
     Attribute label = Attrs.attribute("LABEL");
-    for (String[] example : training) {
-      Document doc = DocumentFactory.getInstance().create(example[1]);
-      doc.put(label, example[0]);
-      builder.add(doc);
-    }
 
-    Corpus corpus = builder.inMemory().build().annotate(Types.TOKEN, Types.SENTENCE, Types.LEMMA);
+    Corpus corpus = Corpus.builder()
+      .inMemory()
+      .addAll(
+        Stream.of(training)
+          .map(example -> {
+              Document doc = DocumentFactory.getInstance().create(example[1]);
+              doc.put(label, example[0]);
+              return doc;
+            }
+          ).collect(Collectors.toList())
+      )
+      .build()
+      .annotate(Types.TOKEN, Types.SENTENCE, Types.LEMMA);
+
     Featurizer<HString> featurizer =
       Featurizer.<HString>builder()
         .add(BagOfAnnotation.frequency(Types.TOKEN, HString::getLemma, hs -> true))
         .build();
-
 
     Dataset<Instance> dataset = Dataset.classification()
       .type(Dataset.Type.InMemory)
