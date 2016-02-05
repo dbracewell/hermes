@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
@@ -82,6 +83,10 @@ public interface Corpus extends Iterable<Document> {
    * @return A new corpus with the given annotation types present.
    */
   Corpus annotate(AnnotationType... types);
+
+  default MStream<LabeledDatum<HString>> asLabeledStream(@NonNull SerializableFunction<HString, Object> labelFunction) {
+    return stream().map(hs -> hs.asLabeledData(labelFunction));
+  }
 
   /**
    * To memory.

@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
 import com.davidbracewell.conversion.Cast;
@@ -954,6 +955,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
           .findFirst()
           .orElse(this)
       );
+  }
+
+  public LabeledDatum<HString> asLabeledData(@NonNull Function<HString, Object> labelFunction) {
+    return LabeledDatum.of(labelFunction.apply(this), this);
   }
 
 }//END OF HString
