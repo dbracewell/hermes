@@ -163,4 +163,8 @@ public class SparkCorpus implements Corpus, Serializable {
     return this;
   }
 
+  @Override
+  public boolean isDistributed() {
+    return true;
+  }
 }

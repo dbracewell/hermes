@@ -129,4 +129,8 @@ public class FileCorpus implements Corpus, Serializable {
     return size;
   }
 
+  @Override
+  public boolean isOffHeap() {
+    return true;
+  }
 }//END OF FileCorpus

@@ -30,7 +30,6 @@ import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.io.resource.Resource;
 
@@ -88,23 +87,12 @@ public abstract class BIOTrainer extends CommandLineApplication {
   }
 
   protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
-    return Dataset.sequence()
-      .source(
-        Corpus
-          .builder()
-          .source(corpus)
-          .format(corpusFormat)
-          .build()
-          .stream()
-          .flatMap(Document::sentences)
-          .map(sentence -> {
-            SequenceInput<Annotation> input = new SequenceInput<>();
-            for (int i = 0; i < sentence.tokenLength(); i++) {
-              input.add(sentence.tokenAt(i), createLabel(sentence.tokenAt(i)));
-            }
-            return featurizer.extractSequence(input.iterator());
-          })
-      ).build();
+    return Corpus
+      .builder()
+      .source(corpus)
+      .format(corpusFormat)
+      .build()
+      .asSequenceDataSet(new BIOLabelMaker(annotationType), featurizer);
   }
 
   protected void test() throws Exception {

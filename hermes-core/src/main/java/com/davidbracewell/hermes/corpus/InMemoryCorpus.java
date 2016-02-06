@@ -93,4 +93,8 @@ public class InMemoryCorpus implements Corpus, Serializable {
     return new JavaMStream<>(documents);
   }
 
+  @Override
+  public boolean isInMemory() {
+    return true;
+  }
 }//END OF InMemoryCorpus

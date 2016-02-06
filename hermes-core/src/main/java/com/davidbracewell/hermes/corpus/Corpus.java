@@ -25,6 +25,9 @@ import com.davidbracewell.apollo.ml.Dataset;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.LabeledDatum;
+import com.davidbracewell.apollo.ml.sequence.Sequence;
+import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
+import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
@@ -127,13 +130,30 @@ public interface Corpus extends Iterable<Document> {
    */
   Corpus annotate(AnnotationType... types);
 
+
+  default MStream<SequenceInput<Annotation>> asSequenceStream() {
+    return asSequenceStream(Types.SENTENCE);
+  }
+
+  default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull AnnotationType sequenceType) {
+    return stream().flatMap(doc -> doc.get(sequenceType)).map(HString::asSequence);
+  }
+
+  default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull Function<? super Annotation, String> labelFunction) {
+    return asSequenceStream(Types.SENTENCE, labelFunction);
+  }
+
+  default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction) {
+    return stream().flatMap(doc -> doc.get(sequenceType)).map(hs -> hs.asSequence(labelFunction));
+  }
+
   /**
    * As labeled stream m stream.
    *
    * @param labelFunction the label function
    * @return the m stream
    */
-  default MStream<LabeledDatum<HString>> asLabeledStream(@NonNull SerializableFunction<HString, Object> labelFunction) {
+  default MStream<LabeledDatum<HString>> asLabeledStream(@NonNull SerializableFunction<HString, ? extends Object> labelFunction) {
     return stream().map(hs -> hs.asLabeledData(labelFunction));
   }
 
@@ -142,17 +162,53 @@ public interface Corpus extends Iterable<Document> {
   }
 
   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer) {
-    return Dataset.classification().type(Dataset.Type.InMemory).source(stream().map(featurizer::extract)).build();
+    return Dataset.classification().type(getDataSetType()).source(stream().map(featurizer::extract)).build();
+  }
+
+  default Dataset<Sequence> asSequenceDataSet(@NonNull SequenceFeaturizer<Annotation> featurizer) {
+    return Dataset.sequence().type(Dataset.Type.InMemory).source(asSequenceStream().map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+  }
+
+  default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+    return Dataset.sequence().type(getDataSetType()).source(asSequenceStream(sequenceType).map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+  }
+
+  default Dataset<Sequence> asSequenceDataSet(@NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+    return Dataset.sequence().type(getDataSetType()).source(asSequenceStream(labelFunction).map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+  }
+
+  default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+    return Dataset.sequence().type(getDataSetType()).source(asSequenceStream(sequenceType, labelFunction).map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+  }
+
+  default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer) {
+    return Dataset.regression().type(getDataSetType()).source(stream().map(featurizer::extract)).build();
   }
 
   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull Attribute labelAttribute) {
-    return Dataset.classification().type(Dataset.Type.InMemory).source(asLabeledStream(labelAttribute).map(featurizer::extractLabeled)).build();
+    return Dataset.classification().type(getDataSetType()).source(asLabeledStream(labelAttribute).map(featurizer::extractLabeled)).build();
+  }
+
+  default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull Attribute labelAttribute) {
+    return Dataset.regression().type(getDataSetType()).source(asLabeledStream(labelAttribute).map(featurizer::extractLabeled)).build();
   }
 
   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Object> labelFunction) {
-    return Dataset.classification().type(Dataset.Type.InMemory).source(asLabeledStream(labelFunction).map(featurizer::extractLabeled)).build();
+    return Dataset.classification().type(getDataSetType()).source(asLabeledStream(labelFunction).map(featurizer::extractLabeled)).build();
   }
 
+  default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Double> labelFunction) {
+    return Dataset.regression().type(getDataSetType()).source(asLabeledStream(labelFunction).map(featurizer::extractLabeled)).build();
+  }
+
+  default Dataset.Type getDataSetType() {
+    if (isInMemory()) {
+      return Dataset.Type.InMemory;
+    } else if (isDistributed()) {
+      return Dataset.Type.Distributed;
+    }
+    return Dataset.Type.OffHeap;
+  }
 
   /**
    * To memory.
@@ -456,4 +512,16 @@ public interface Corpus extends Iterable<Document> {
     return this;
   }
 
-}//END OF Corpus2
+  default boolean isInMemory() {
+    return false;
+  }
+
+  default boolean isDistributed() {
+    return false;
+  }
+
+  default boolean isOffHeap() {
+    return false;
+  }
+
+}//END OF Corpus

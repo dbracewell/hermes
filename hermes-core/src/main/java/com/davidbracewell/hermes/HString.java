@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.LabeledDatum;
+import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
 import com.davidbracewell.conversion.Cast;
@@ -957,12 +958,25 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       );
   }
 
-  public LabeledDatum<HString> asLabeledData(@NonNull Function<HString, Object> labelFunction) {
+  public LabeledDatum<HString> asLabeledData(@NonNull Function<HString, ? extends Object> labelFunction) {
     return LabeledDatum.of(labelFunction.apply(this), this);
   }
 
   public LabeledDatum<HString> asLabeledData(@NonNull Attribute attributeLabel) {
     return LabeledDatum.of(get(attributeLabel), this);
   }
+
+  public SequenceInput<Annotation> asSequence() {
+    return new SequenceInput<>(Cast.cast(tokens()));
+  }
+
+  public SequenceInput<Annotation> asSequence(@NonNull Function<? super Annotation, String> labelFunction) {
+    SequenceInput<Annotation> si = new SequenceInput<>();
+    for (Annotation token : tokens()) {
+      si.add(token, labelFunction.apply(token));
+    }
+    return si;
+  }
+
 
 }//END OF HString
