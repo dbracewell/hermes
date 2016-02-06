@@ -191,7 +191,6 @@ public class MLExample {
       .asClassificationDataSet(featurizer, label)
       .shuffle();
 
-
     //Setup a supplier for a classification learner to use in cross validation
     Supplier<ClassifierLearner> supplier = () -> Learner.classification()
       .learnerClass(NaiveBayesLearner.class)
