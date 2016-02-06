@@ -33,15 +33,13 @@ import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.io.resource.Resource;
 
-import java.util.Optional;
-
 /**
  * @author David B. Bracewell
  */
 public abstract class BIOTrainer extends CommandLineApplication {
   private static final long serialVersionUID = 1L;
 
-  final AnnotationType annotationType;
+  protected final AnnotationType annotationType;
   @Option(description = "Location of the corpus to process", required = true)
   protected Resource corpus;
   @Option(name = "format", description = "Format of the corpus", required = true)
@@ -74,17 +72,6 @@ public abstract class BIOTrainer extends CommandLineApplication {
   }
 
   protected abstract SequenceLabelerLearner getLearner();
-
-  protected String createLabel(Annotation token) {
-    Optional<Annotation> target = token.get(annotationType).stream().findFirst();
-    if (target.isPresent()) {
-      if (target.get().start() == token.start()) {
-        return "B-" + target.get().getTag().get().name();
-      }
-      return "I-" + target.get().getTag().get().name();
-    }
-    return "O";
-  }
 
   protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
     return Corpus
