@@ -33,8 +33,10 @@ import com.davidbracewell.apollo.ml.classification.bayes.NaiveBayesLearner;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
+import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotation;
 
+import java.util.Random;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -175,10 +177,10 @@ public class MLExample {
 
     Attribute label = Attrs.attribute("LABEL");
 
-    //Simple binary featurizer that converts tokens to lemmas keeping everything
+    //Simple binary featurizer that converts tokens to lower case and removes stop words
     Featurizer<HString> featurizer =
       Featurizer.<HString>builder()
-        .add(BagOfAnnotation.binary(Types.TOKEN, HString::getLemma, hs -> true))
+        .add(BagOfAnnotation.binary(Types.TOKEN, HString::toLowerCase, StopWords.getInstance(Language.ENGLISH)))
         .build();
 
     //Build an in-memory dataset from a corpus constructed using the raw labels and documents in the String[][] above
@@ -187,15 +189,16 @@ public class MLExample {
         .map(example -> DocumentFactory.getInstance()
           .create(example[1], Language.ENGLISH, Collect.map(label, example[0])))
     )
-      .annotate(Types.TOKEN, Types.SENTENCE, Types.LEMMA)
+      .annotate(Types.TOKEN)
       .asClassificationDataSet(featurizer, label)
-      .shuffle();
+      .shuffle(new Random(1234));
+
 
     //Setup a supplier for a classification learner to use in cross validation
-    Supplier<ClassifierLearner> supplier = () -> Learner.classification()
+    Supplier<ClassifierLearner> supplier = Learner.classification()
       .learnerClass(NaiveBayesLearner.class)
       .parameter("modelType", NaiveBayes.ModelType.Bernoulli)
-      .build();
+      .supplier();
 
     //Perform 10-fold cross-validation and output the results to System.out
     new ClassifierEvaluation()
