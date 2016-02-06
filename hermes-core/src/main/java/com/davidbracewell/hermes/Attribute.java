@@ -291,7 +291,6 @@ public final class Attribute extends EnumValue {
     if (!wrapped.isNull()) {
       //Check the type
       if (checkType(wrapped)) {
-        if (this == Attrs.SENSE)
         //No encoder is specified
         if (encoder == null) {
           //The value type already knows how to write, because it's Writable
