@@ -38,13 +38,11 @@ import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * <p>
@@ -76,6 +74,48 @@ public interface Corpus extends Iterable<Document> {
   }
 
   /**
+   * Of corpus.
+   *
+   * @param documentStream the document stream
+   * @return the corpus
+   */
+  static Corpus of(@NonNull Stream<Document> documentStream) {
+    return new InMemoryCorpus(documentStream.collect(Collectors.toList()));
+  }
+
+  /**
+   * Of corpus.
+   *
+   * @param documentStream the document stream
+   * @return the corpus
+   */
+  static Corpus of(@NonNull MStream<Document> documentStream) {
+    return new InMemoryCorpus(documentStream.collect());
+  }
+
+
+  /**
+   * Of corpus.
+   *
+   * @param documentIterable the document iterable
+   * @return the corpus
+   */
+  static Corpus of(@NonNull Iterable<Document> documentIterable) {
+    return new InMemoryCorpus(Collect.from(documentIterable).collect(Collectors.toList()));
+  }
+
+  /**
+   * Of corpus.
+   *
+   * @param documentCollection the document collection
+   * @return the corpus
+   */
+  static Corpus of(@NonNull Collection<Document> documentCollection) {
+    return new InMemoryCorpus(documentCollection);
+  }
+
+
+  /**
    * Annotates this corpus with the given annotation types and returns a new corpus with the given annotation types
    * present
    *
@@ -84,8 +124,18 @@ public interface Corpus extends Iterable<Document> {
    */
   Corpus annotate(AnnotationType... types);
 
+  /**
+   * As labeled stream m stream.
+   *
+   * @param labelFunction the label function
+   * @return the m stream
+   */
   default MStream<LabeledDatum<HString>> asLabeledStream(@NonNull SerializableFunction<HString, Object> labelFunction) {
     return stream().map(hs -> hs.asLabeledData(labelFunction));
+  }
+
+  default MStream<LabeledDatum<HString>> asLabeledStream(@NonNull Attribute labelAttribute) {
+    return stream().map(hs -> hs.asLabeledData(labelAttribute));
   }
 
   /**
@@ -232,14 +282,36 @@ public interface Corpus extends Iterable<Document> {
   MStream<Document> stream();
 
 
+  /**
+   * Token n grams counter.
+   *
+   * @param order     the order
+   * @param lemmatize the lemmatize
+   * @return the counter
+   */
   default Counter<Tuple> tokenNGrams(int order, boolean lemmatize) {
     return tokenNGrams(order, false, hString -> lemmatize ? hString.getLemma() : hString.toString());
   }
 
+  /**
+   * Token n grams counter.
+   *
+   * @param order            the order
+   * @param toStringFunction the to string function
+   * @return the counter
+   */
   default Counter<Tuple> tokenNGrams(int order, @NonNull SerializableFunction<? super HString, String> toStringFunction) {
     return tokenNGrams(order, false, toStringFunction);
   }
 
+  /**
+   * Token n grams counter.
+   *
+   * @param order            the order
+   * @param removeStopWords  the remove stop words
+   * @param toStringFunction the to string function
+   * @return the counter
+   */
   default Counter<Tuple> tokenNGrams(int order, boolean removeStopWords, @NonNull SerializableFunction<? super HString, String> toStringFunction) {
     return Counters.newHashMapCounter(
       stream()
@@ -358,7 +430,13 @@ public interface Corpus extends Iterable<Document> {
     return this;
   }
 
-  default Corpus repartition(int numPartitions){
+  /**
+   * Repartition corpus.
+   *
+   * @param numPartitions the num partitions
+   * @return the corpus
+   */
+  default Corpus repartition(int numPartitions) {
     return this;
   }
 

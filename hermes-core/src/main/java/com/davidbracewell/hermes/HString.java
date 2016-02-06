@@ -961,4 +961,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return LabeledDatum.of(labelFunction.apply(this), this);
   }
 
+  public LabeledDatum<HString> asLabeledData(@NonNull Attribute attributeLabel) {
+    return LabeledDatum.of(get(attributeLabel), this);
+  }
+
 }//END OF HString

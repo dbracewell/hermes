@@ -21,19 +21,21 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.Dataset;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.apollo.ml.Instance;
-import com.davidbracewell.apollo.ml.classification.Classification;
-import com.davidbracewell.apollo.ml.classification.Classifier;
-import com.davidbracewell.apollo.ml.classification.linear.LibLinearLearner;
-import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
-import com.davidbracewell.apollo.ml.preprocess.transform.TFIDFTransform;
+import com.davidbracewell.apollo.ml.Learner;
+import com.davidbracewell.apollo.ml.classification.ClassifierEvaluation;
+import com.davidbracewell.apollo.ml.classification.ClassifierLearner;
+import com.davidbracewell.apollo.ml.classification.bayes.NaiveBayes;
+import com.davidbracewell.apollo.ml.classification.bayes.NaiveBayesLearner;
+import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotation;
 
-import java.util.stream.Collectors;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -43,6 +45,8 @@ public class MLExample {
 
   public static void main(String[] args) throws Exception {
     Config.initialize("MLExample");
+
+    //Set of documents taken from the Rotten Tomato corpus
     String[][] training = {
       new String[]{"NEGATIVE", "simplistic , silly and tedious . "},
       new String[]{"NEGATIVE", "it's so laddish and juvenile , only teenage boys could possibly find it funny . "},
@@ -171,44 +175,35 @@ public class MLExample {
 
     Attribute label = Attrs.attribute("LABEL");
 
-    Corpus corpus = Corpus.builder()
-      .inMemory()
-      .addAll(
-        Stream.of(training)
-          .map(example -> {
-              Document doc = DocumentFactory.getInstance().create(example[1]);
-              doc.put(label, example[0]);
-              return doc;
-            }
-          ).collect(Collectors.toList())
-      )
-      .build()
-      .annotate(Types.TOKEN, Types.SENTENCE, Types.LEMMA);
-
+    //Simple binary featurizer that converts tokens to lemmas keeping everything
     Featurizer<HString> featurizer =
       Featurizer.<HString>builder()
-        .add(BagOfAnnotation.frequency(Types.TOKEN, HString::getLemma, hs -> true))
+        .add(BagOfAnnotation.binary(Types.TOKEN, HString::getLemma, hs -> true))
         .build();
 
+    //Convert the raw labels and documents into corpus
+    Corpus corpus = Corpus.of(Stream.of(training)
+      .map(example -> DocumentFactory.getInstance()
+        .create(example[1], Language.ENGLISH, Collect.map(label, example[0])))
+    ).annotate(Types.TOKEN, Types.SENTENCE, Types.LEMMA);
+
+    //Build an in-memory dataset using the previously created corpus and featurizer
     Dataset<Instance> dataset = Dataset.classification()
       .type(Dataset.Type.InMemory)
-      .source(featurizer.extractLabeled(corpus.asLabeledStream(h -> h.get(label))))
-      .build()
-      .preprocess(PreprocessorList.create(new TFIDFTransform()));
+      .source(featurizer.extractLabeled(corpus.asLabeledStream(label)))
+      .build().shuffle();
 
-    Classifier classifier = new LibLinearLearner().train(dataset);
+    //Setup a supplier for a classification learner to use in cross validation
+    Supplier<ClassifierLearner> supplier = () -> Learner.classification()
+      .learnerClass(NaiveBayesLearner.class)
+      .parameter("modelType", NaiveBayes.ModelType.Bernoulli)
+      .build();
 
-    String[] test = {
-      "I really like how the car feels.",
-      "It tastes pretty good.",
-      "Can't stand it ewwwww !!!"
-    };
-    for (String docText : test) {
-      Document doc = DocumentFactory.getInstance().create(docText);
-      Pipeline.process(doc, Types.TOKEN, Types.SENTENCE, Types.LEMMA);
-      Classification classification = classifier.classify(featurizer.extract(doc));
-      System.out.println(doc + "\t" + classification.getResult() + " : = " + classification.getConfidence());
-    }
+    //Perform 10-fold cross-validation and output the results to System.out
+    new ClassifierEvaluation()
+      .crossValidation(dataset, supplier, 10)
+      .output(System.out, true);
+
   }
 
 }//END OF MLExample
