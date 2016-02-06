@@ -181,17 +181,16 @@ public class MLExample {
         .add(BagOfAnnotation.binary(Types.TOKEN, HString::getLemma, hs -> true))
         .build();
 
-    //Convert the raw labels and documents into corpus
-    Corpus corpus = Corpus.of(Stream.of(training)
-      .map(example -> DocumentFactory.getInstance()
-        .create(example[1], Language.ENGLISH, Collect.map(label, example[0])))
-    ).annotate(Types.TOKEN, Types.SENTENCE, Types.LEMMA);
+    //Build an in-memory dataset from a corpus constructed using the raw labels and documents in the String[][] above
+    Dataset<Instance> dataset = Corpus.of(
+      Stream.of(training)
+        .map(example -> DocumentFactory.getInstance()
+          .create(example[1], Language.ENGLISH, Collect.map(label, example[0])))
+    )
+      .annotate(Types.TOKEN, Types.SENTENCE, Types.LEMMA)
+      .asClassificationDataSet(featurizer, label)
+      .shuffle();
 
-    //Build an in-memory dataset using the previously created corpus and featurizer
-    Dataset<Instance> dataset = Dataset.classification()
-      .type(Dataset.Type.InMemory)
-      .source(featurizer.extractLabeled(corpus.asLabeledStream(label)))
-      .build().shuffle();
 
     //Setup a supplier for a classification learner to use in cross validation
     Supplier<ClassifierLearner> supplier = () -> Learner.classification()

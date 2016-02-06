@@ -21,6 +21,9 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.apollo.ml.Dataset;
+import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
@@ -137,6 +140,19 @@ public interface Corpus extends Iterable<Document> {
   default MStream<LabeledDatum<HString>> asLabeledStream(@NonNull Attribute labelAttribute) {
     return stream().map(hs -> hs.asLabeledData(labelAttribute));
   }
+
+  default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer) {
+    return Dataset.classification().type(Dataset.Type.InMemory).source(stream().map(featurizer::extract)).build();
+  }
+
+  default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull Attribute labelAttribute) {
+    return Dataset.classification().type(Dataset.Type.InMemory).source(asLabeledStream(labelAttribute).map(featurizer::extractLabeled)).build();
+  }
+
+  default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Object> labelFunction) {
+    return Dataset.classification().type(Dataset.Type.InMemory).source(asLabeledStream(labelFunction).map(featurizer::extractLabeled)).build();
+  }
+
 
   /**
    * To memory.
