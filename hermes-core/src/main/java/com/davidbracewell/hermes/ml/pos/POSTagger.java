@@ -34,6 +34,7 @@ import com.davidbracewell.hermes.tag.POS;
  * @author David B. Bracewell
  */
 public class POSTagger extends AnnotationTagger {
+  private static final long serialVersionUID = 1L;
   /**
    * The Featurizer.
    */
