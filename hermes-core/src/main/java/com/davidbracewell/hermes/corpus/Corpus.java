@@ -201,6 +201,9 @@ public interface Corpus extends Iterable<Document> {
     return Dataset.regression().type(getDataSetType()).source(asLabeledStream(labelFunction).map(featurizer::extractLabeled)).build();
   }
 
+
+  Corpus map(@NonNull SerializableFunction<Document,Document> function);
+
   default Dataset.Type getDataSetType() {
     if (isInMemory()) {
       return Dataset.Type.InMemory;

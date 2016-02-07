@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.collection.Collect;
+import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
@@ -132,5 +133,10 @@ public class FileCorpus implements Corpus, Serializable {
   @Override
   public boolean isOffHeap() {
     return true;
+  }
+
+  @Override
+  public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+    return Corpus.builder().offHeap().addAll(stream().map(function).collect()).build();
   }
 }//END OF FileCorpus

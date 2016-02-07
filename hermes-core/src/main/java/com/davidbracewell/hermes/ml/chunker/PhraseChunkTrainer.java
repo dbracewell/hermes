@@ -30,7 +30,6 @@ import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
 import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
 import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.Corpus;
@@ -64,21 +63,17 @@ public class PhraseChunkTrainer extends BIOTrainer {
 
   @Override
   protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
-    return Dataset.sequence().source(
-      Corpus
+    return Corpus
       .builder()
       .source(corpus)
       .format(corpusFormat)
       .build()
-      .stream()
       .map(d -> {
         d.removeAnnotationType(Types.PART_OF_SPEECH);
         Pipeline.process(d, Types.PART_OF_SPEECH);
         return d;
       })
-      .flatMap(Document::sentences)
-      .map(sentence -> getFeaturizer().extractSequence(sentence.asSequence(new BIOLabelMaker(annotationType)).iterator()))
-    ).build();
+      .asSequenceDataSet(new BIOLabelMaker(annotationType), featurizer);
   }
 
   @Override

@@ -21,6 +21,8 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
@@ -57,6 +59,11 @@ public class MStreamCorpus implements Corpus, Serializable {
     }),
       documentFactory
     );
+  }
+
+  @Override
+  public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+    return new MStreamCorpus(stream().map(Cast.as(function)), documentFactory);
   }
 
   @Override

@@ -1,6 +1,7 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.config.Config;
+import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
@@ -166,5 +167,10 @@ public class SparkCorpus implements Corpus, Serializable {
   @Override
   public boolean isDistributed() {
     return true;
+  }
+
+  @Override
+  public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+    return new SparkCorpus(new SparkDocumentStream(stream.map(d -> function.apply(d).toJson())));
   }
 }
