@@ -180,6 +180,7 @@ public final class Annotation extends Fragment implements Serializable {
     return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
   }
 
+
   @Override
   public List<Annotation> children() {
     List<Annotation> tokens;

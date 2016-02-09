@@ -55,6 +55,7 @@ public class POSTrainer extends CommandLineApplication {
 
   protected Dataset<Sequence> loadDataset() throws Exception {
     return Dataset.sequence()
+      .type(Dataset.Type.InMemory)
       .source(
         Corpus
           .builder()
