@@ -69,7 +69,7 @@ public final class Annotation extends Fragment implements Serializable {
   private final AnnotationType annotationType;
   private final Set<Relation> relations = new HashSet<>();
   private long id = DETACHED_ID;
-  private transient Annotation[] tokens;
+  private volatile transient Annotation[] tokens;
 
   /**
    * Instantiates a new Annotation.
@@ -126,7 +126,6 @@ public final class Annotation extends Fragment implements Serializable {
    */
   static Annotation read(StructuredReader reader) throws IOException {
     reader.beginObject();
-
     Map<String, Val> annotationProperties = new HashMap<>();
     Map<Attribute, Val> attributeValMap = Collections.emptyMap();
     List<Relation> relations = new LinkedList<>();
@@ -180,6 +179,7 @@ public final class Annotation extends Fragment implements Serializable {
   public Collection<Relation> allRelations(boolean includeSubAnnotations) {
     return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
   }
+
 
   @Override
   public List<Annotation> children() {
@@ -254,9 +254,9 @@ public final class Annotation extends Fragment implements Serializable {
    */
   public Optional<Tag> getTag() {
     if (isInstance(Types.TOKEN)) {
-      return Optional.of(getPOS());
+      return Optional.ofNullable(getPOS());
     } else if (isInstance(Types.ENTITY)) {
-      return Optional.of(get(Attrs.ENTITY_TYPE).as(EntityType.class));
+      return Optional.ofNullable(get(Attrs.ENTITY_TYPE).as(EntityType.class));
     }
     Attribute tagAttribute = annotationType.getTagAttribute();
     if (tagAttribute == null) {
@@ -288,15 +288,6 @@ public final class Annotation extends Fragment implements Serializable {
     return document() == null || id == DETACHED_ID;
   }
 
-  /**
-   * Is this annotation a gold standard annotation, i.e. does its type start with <code>@</code>
-   *
-   * @return True if this annotation is a gold standard annotation
-   */
-  public boolean isGoldAnnotation() {
-    return annotationType.name().startsWith("@");
-  }
-
   @Override
   public boolean isInstance(AnnotationType type) {
     return this.annotationType.isInstance(type);
@@ -309,10 +300,7 @@ public final class Annotation extends Fragment implements Serializable {
    * @return the boolean
    */
   public boolean isInstanceOfTag(String tag) {
-    if (StringUtils.isNullOrBlank(tag)) {
-      return false;
-    }
-    return isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute().getValueType().convert(tag)));
+    return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute().getValueType().convert(tag)));
   }
 
   /**
@@ -322,10 +310,7 @@ public final class Annotation extends Fragment implements Serializable {
    * @return the boolean
    */
   public boolean isInstanceOfTag(Tag tag) {
-    if (tag == null) {
-      return false;
-    }
-    return getTag().filter(t -> t.isInstance(tag)).isPresent();
+    return tag != null && getTag().filter(t -> t.isInstance(tag)).isPresent();
   }
 
   /**

@@ -22,11 +22,13 @@
 package com.davidbracewell.hermes.morphology;
 
 
+import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.POS;
 import lombok.NonNull;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -43,7 +45,7 @@ public interface Lemmatizer {
    * @return the lemmatized version of the string
    */
   default String lemmatize(@NonNull String string) {
-    return lemmatize(string, POS.ANY);
+    return allPossibleLemmas(string, POS.ANY).stream().findFirst().orElse(string.toLowerCase());
   }
 
   /**
@@ -53,7 +55,29 @@ public interface Lemmatizer {
    * @param partOfSpeech the part of speech
    * @return the lemmatized version of the string
    */
-  String lemmatize(String string, POS partOfSpeech);
+  default String lemmatize(@NonNull String string, @NonNull POS partOfSpeech) {
+    return allPossibleLemmas(string, partOfSpeech).stream().findFirst().orElse(string.toLowerCase());
+  }
+
+  /**
+   * Gets all lemmas.
+   *
+   * @param string       the string
+   * @param partOfSpeech the part of speech
+   * @return the all lemmas
+   */
+  List<String> allPossibleLemmas(String string, POS partOfSpeech);
+
+  /**
+   * Gets prefixed lemmas.
+   *
+   * @param string       the string
+   * @param partOfSpeech the part of speech
+   * @return the prefixed lemmas
+   */
+  PatriciaTrie<String> allPossibleLemmasAndPrefixes(String string, POS partOfSpeech);
+
+  boolean canLemmatize(String input, POS partOfSpeech);
 
   /**
    * Lemmatizes a token.

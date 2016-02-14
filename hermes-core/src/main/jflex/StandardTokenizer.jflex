@@ -126,7 +126,7 @@ SGML = "<" [^>]+ ">"
 
 CURRENCY = [$\u00A2\u00A3\u00A5\u20A0-\u20CF]
 
-WHITESPACE = [\p{Z}\r\n\p{C}]
+WHITESPACE = [\p{Z}\t\f\r\n\p{C}]
 
 
 %%

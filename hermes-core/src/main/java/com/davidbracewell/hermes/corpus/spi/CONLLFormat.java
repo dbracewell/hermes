@@ -21,18 +21,20 @@
 
 package com.davidbracewell.hermes.corpus.spi;
 
+import com.davidbracewell.SystemInfo;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.corpus.DocumentFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
+import com.davidbracewell.tuple.Tuple2;
+import lombok.NonNull;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -44,10 +46,16 @@ public class CONLLFormat extends FileBasedFormat {
 
 
   public enum FieldType {
+    INDEX {
+      @Override
+      public FieldProcessor getProcessor(int index) {
+        return IndexProcessor.INSTANCE;
+      }
+    },
     WORD {
       @Override
       public FieldProcessor getProcessor(int index) {
-        return NoOptProcessor.INSTANCE;
+        return WordProcessor.INSTANCE;
       }
     },
     POS {
@@ -62,7 +70,7 @@ public class CONLLFormat extends FileBasedFormat {
         return IOBFieldProcessor.chunkProcessor(index);
       }
     },
-    NE {
+    ENTITY {
       @Override
       public FieldProcessor getProcessor(int index) {
         return IOBFieldProcessor.nameEntityProcessor(index);
@@ -87,7 +95,7 @@ public class CONLLFormat extends FileBasedFormat {
         if (processors == null) {
           processors = new ArrayList<>();
           int i = 0;
-          for (FieldType fieldType : Config.get("CONLL.fields").as(FieldType[].class, new FieldType[]{FieldType.WORD, FieldType.POS})) {
+          for (FieldType fieldType : Config.get("CONLL.fields").as(FieldType[].class, new FieldType[]{FieldType.WORD, FieldType.POS, FieldType.CHUNK})) {
             processors.add(fieldType.getProcessor(i));
             if (fieldType == FieldType.WORD) {
               wordIndex = i;
@@ -101,40 +109,89 @@ public class CONLLFormat extends FileBasedFormat {
   }
 
   private Document createDocument(List<List<String>> rows, DocumentFactory documentFactory) {
+    getProcessors();
     List<String> tokens = new ArrayList<>();
     for (List<String> wordInfo : rows) {
-      tokens.add(wordInfo.get(wordIndex));
+      if (wordInfo.size() > wordIndex) {
+        String word = wordInfo.get(wordIndex).replaceAll(StringUtils.UNICODE_WHITESPACE_PLUS, "");
+        switch (word) {
+          case "\"\"":
+          case "``":
+          case "''":
+            word = "\"";
+            break;
+        }
+        tokens.add(word);
+      } else {
+        System.err.println("BAD: " + wordInfo);
+      }
     }
     Document document = documentFactory.fromTokens(tokens);
-    document.createAnnotation(Types.SENTENCE, 0, document.length());
-    document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "Corpus");
     for (FieldProcessor processor : getProcessors()) {
       processor.process(document, rows);
     }
     return document;
   }
 
+
   @Override
   public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
-    List<Document> documents = new ArrayList<>();
-
     List<List<String>> rows = new ArrayList<>();
+    List<Tuple2<Integer, Integer>> sentenceBoundaries = new ArrayList<>();
+    List<Document> documents = new LinkedList<>();
+
+    int start = 0;
+    int end = 0;
+    byte state = 0;
+
+    boolean docPerSent = Config.get("CONLL.docPerSent").asBooleanValue(false);
 
     for (String line : resource.readLines()) {
       if (StringUtils.isNullOrBlank(line)) {
-        if (!rows.isEmpty()) {
-          documents.add(createDocument(rows, documentFactory));
+        if (state == 1) { //END OF SENTENCE
+          if (docPerSent) {
+            Document doc = createDocument(rows, documentFactory);
+            doc.createAnnotation(Types.SENTENCE, 0, doc.length());
+            doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
+            doc.put(Attrs.FILE, resource.descriptor());
+            documents.add(doc);
+            rows.clear();
+          } else {
+            sentenceBoundaries.add(Tuple2.of(start, end));
+          }
+          start = -1;
         }
-        rows = new ArrayList<>();
+        state = 0;
       } else {
-        rows.add(Arrays.asList(line.split("\\p{Z}")));
+        if (state == 0) {
+          start = end;
+          state = 1;
+        }
+        rows.add(Arrays.asList(line.split(Config.get("CONLL.fs").asString("\\s+"))));
+        end++;
+      }
+
+    }
+
+    if (state == 1) {
+      if (docPerSent) {
+        Document doc = createDocument(rows, documentFactory);
+        doc.createAnnotation(Types.SENTENCE, 0, doc.length());
+        doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
+        doc.put(Attrs.FILE, resource.descriptor());
+        documents.add(doc);
+        rows.clear();
+      } else {
+        sentenceBoundaries.add(Tuple2.of(start, end));
       }
     }
-
-    if (!rows.isEmpty()) {
-      documents.add(createDocument(rows, documentFactory));
+    if (!docPerSent) {
+      Document doc = createDocument(rows, documentFactory);
+      sentenceBoundaries.forEach(t -> doc.createAnnotation(Types.SENTENCE, doc.tokenAt(t.v1).start(), doc.tokenAt(t.v2 - 1).end()));
+      doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
+      doc.put(Attrs.FILE, resource.descriptor());
+      documents.add(doc);
     }
-
 
     return documents;
   }
@@ -142,6 +199,30 @@ public class CONLLFormat extends FileBasedFormat {
   @Override
   public String name() {
     return "CONLL";
+  }
+
+  @Override
+  public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
+    StringBuilder builder = new StringBuilder();
+    List<FieldProcessor> processors = getProcessors();
+    String fieldSep = Config.get("CONLL.fs").asString("\\s+").replaceFirst("[\\*\\+]$", "");
+    if (fieldSep.equals("\\s")) {
+      fieldSep = " ";
+    }
+    for (Annotation sentence : document.sentences()) {
+      for (int i = 0; i < sentence.tokenLength(); i++) {
+        for (int p = 0; p < processors.size(); p++) {
+          if (p > 0) {
+            builder.append(fieldSep);
+          }
+          builder.append(processors.get(p).processOutput(sentence, sentence.tokenAt(i), i));
+        }
+        builder.append(SystemInfo.LINE_SEPARATOR);
+      }
+      builder.append(SystemInfo.LINE_SEPARATOR);
+      builder.append(SystemInfo.LINE_SEPARATOR);
+    }
+    resource.write(builder.toString());
   }
 
 }//END OF CONLLFormat

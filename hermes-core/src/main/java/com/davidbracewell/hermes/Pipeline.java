@@ -37,7 +37,10 @@ import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -74,8 +77,12 @@ public final class Pipeline implements Serializable {
     this.onComplete = Preconditions.checkNotNull(onComplete);
   }
 
-  public long getElapsedTime(@NonNull TimeUnit timeUnit) {
-    return totalTime + timer.elapsed(timeUnit);
+  public double getElapsedTime(@NonNull TimeUnit timeUnit) {
+    double totalNanoSeconds = totalTime + timer.elapsed(TimeUnit.NANOSECONDS);
+    if (timeUnit == TimeUnit.NANOSECONDS) {
+      return totalNanoSeconds;
+    }
+    return totalNanoSeconds / TimeUnit.NANOSECONDS.convert(1, timeUnit);
   }
 
   /**
@@ -140,7 +147,7 @@ public final class Pipeline implements Serializable {
    * @return the number of documents processed per second
    */
   public double documentsPerSecond() {
-    return documentsProcessed.get() / (getElapsedTime(TimeUnit.NANOSECONDS) / 1000000000d);
+    return (double) documentsProcessed.get() / getElapsedTime(TimeUnit.SECONDS);
   }
 
   /**
@@ -155,10 +162,11 @@ public final class Pipeline implements Serializable {
       .addProducer(new Producer(documents))
       .bufferSize(queueSize);
 
-    Corpus corpus = Corpus.EMPTY;
+    Corpus corpus = documents;
     if (returnCorpus) {
 
       Resource tempFile = Resources.temporaryFile();
+      tempFile.deleteOnExit();
       try (AsyncWriter writer = new AsyncWriter(tempFile.writer())) {
         builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer), numberOfThreads)
           .build().run();
@@ -190,7 +198,7 @@ public final class Pipeline implements Serializable {
     process(document, annotationTypes);
     timer.stop();
     documentsProcessed.incrementAndGet();
-    totalTime += timer.elapsed(TimeUnit.MILLISECONDS);
+    totalTime += timer.elapsed(TimeUnit.NANOSECONDS);
     timer.reset();
     return document;
   }
@@ -201,9 +209,7 @@ public final class Pipeline implements Serializable {
    * @return the total time processing in string representation
    */
   public String totalTimeProcessing() {
-    long nanoTime = getElapsedTime(TimeUnit.NANOSECONDS);
-    double value = nanoTime / TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS);
-    return String.format("%.4g s", value);
+    return String.format("%.4g s", getElapsedTime(TimeUnit.SECONDS));
   }
 
   public static void setAnnotator(@NonNull AnnotationType annotationType, @NonNull Language language, @NonNull Annotator annotator) {
@@ -229,7 +235,9 @@ public final class Pipeline implements Serializable {
     @Override
     public void produce() {
       start();
-      documents.forEach(this::yield);
+      for (Document document : documents) {
+        yield(document);
+      }
       stop();
     }
   }

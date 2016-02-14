@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
@@ -85,4 +86,8 @@ class UnionCorpus implements Corpus, Serializable {
     return Iterators.concat(c1.iterator(), c2.iterator());
   }
 
+  @Override
+  public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+    return new MStreamCorpus(stream().map(function), DocumentFactory.getInstance());
+  }
 }//END OF UnionCorpus

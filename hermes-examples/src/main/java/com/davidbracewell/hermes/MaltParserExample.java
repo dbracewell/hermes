@@ -22,7 +22,6 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.annotator.MaltParserAnnotator;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.DocumentFormats;
 import com.davidbracewell.io.Resources;
@@ -34,15 +33,8 @@ import static com.davidbracewell.hermes.Types.*;
  */
 public class MaltParserExample {
   public static void main(String[] args) throws Exception {
-    Config.initialize("MaltParserExample");
+    Config.initialize("MaltParserExample", args);
 
-    //Load the OpenNLP English defaults (May need to edit this file or override to point to your models)
-    Config.loadConfig(Resources.fromClasspath("com/davidbracewell/hermes/opennlp/opennlp-english.conf"));
-    //Create a prefix where the models are stored
-    Config.setProperty("data.cp", "/data/models"); //This is the root
-
-    Config.setProperty("Annotation.DEPENDENCY.annotator", MaltParserAnnotator.class.getName());
-    Config.setProperty("MaltParser.ENGLISH.model", "${data.cp}/en/engmalt.linear-1.7.mco");
     Corpus corpus = Corpus.builder()
       .format(DocumentFormats.PLAIN_TEXT_OPL)
       .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
@@ -55,7 +47,7 @@ public class MaltParserExample {
           //Dependency relations are stored as relations on the tokens.
           //For convenience there is a method to get the first (which should be the only) dependency relation associated
           //with a token. It returns an optional in case there is no relation (e.g. the root of the tree)
-          System.out.println(token + "/" + token.getPOS().asString() +
+          System.out.println(token + "[" + token.getLemma() + "]" + "/" + token.getPOS().asString() +
             " : " + token.dependencyRelation().map(r -> r.getKey() + "=>" + r.getValue()).orElse(""))
         );
         System.out.println();

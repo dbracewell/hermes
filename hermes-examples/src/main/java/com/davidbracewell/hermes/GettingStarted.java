@@ -40,10 +40,9 @@ public class GettingStarted {
     Document document = DocumentFactory.getInstance().create("The quick brown fox jumps over the lazy dog.");
 
     //The pipeline defines the type of annotations/attributes that will be added to the document.
-    //Processing is done parallel when multiple documents are passed in.
     Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
 
-    //For each sentence (Types.SENTENCE) print in a part-of-speech representation
+    //For each sentence (Types.SENTENCE) print
     document.sentences().forEach(System.out::println);
 
     //Counts the token lemmas in the document (also lower cases)

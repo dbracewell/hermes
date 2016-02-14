@@ -21,24 +21,28 @@
 
 package com.davidbracewell.hermes.morphology;
 
+import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.structured.csv.CSVReader;
+import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * The type English lemmatizer.
@@ -47,6 +51,7 @@ import java.util.*;
  */
 public class EnglishLemmatizer implements Lemmatizer, Serializable {
   private static final long serialVersionUID = -6093027604295026727L;
+  private static final POS[] ALL_POS = {POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB};
   private static EnglishLemmatizer INSTANCE = null;
   private final Multimap<POS, DetachmentRule> rules = ArrayListMultimap.create();
   private final Multimap<Tuple2<POS, String>, String> exceptions = LinkedHashMultimap.create();
@@ -86,9 +91,9 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
 
     this.lemmas = new PatriciaTrie<>();
     try (CSVReader reader = CSV.builder().delimiter('\t').reader(Resources.fromClasspath("com/davidbracewell/hermes/morphology/en/lemmas.dict.gz"))) {
-      reader.forEach(row ->{
+      reader.forEach(row -> {
         if (row.size() >= 2) {
-          String lemma = row.get(0).toLowerCase();
+          String lemma = row.get(0).replace('_', ' ').toLowerCase();
           POS pos = POS.fromString(row.get(1).toUpperCase());
           if (!lemmas.containsKey(lemma)) {
             lemmas.put(lemma, new HashSet<>());
@@ -118,65 +123,183 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     return INSTANCE;
   }
 
-  private Iterable<String> doLemmatization(String string, POS... tags) {
+  private static Pattern WHITESPACE = Pattern.compile(StringUtils.UNICODE_WHITESPACE_PLUS);
+
+  private Set<String> doLemmatization(String word, boolean includeSelf, POS... tags) {
     Set<String> tokenLemmas = new LinkedHashSet<>();
-    for (POS tag : tags) {
-      fill(string, tag, tokenLemmas);
+
+    if (tags == null || tags.length == 0 || tags[0] == POS.ANY) {
+      tags = ALL_POS;
     }
-    if (tokenLemmas.isEmpty()) {
-      string = string.toLowerCase();
+
+    word = word.toLowerCase();
+    for (POS tag : tags) {
+      fill(word, tag, tokenLemmas);
+    }
+
+    if (tokenLemmas.isEmpty() && word.contains("-")) {
+      String noHyphen = word.replace('-', ' ');
       for (POS tag : tags) {
-        fill(string, tag, tokenLemmas);
+        fill(noHyphen, tag, tokenLemmas);
       }
     }
-    if (tokenLemmas.isEmpty()) {
-      return Collections.singleton(string);
+
+    if (tokenLemmas.isEmpty() && word.contains(" ")) {
+      String withHyphen = word.replace(' ', '-');
+      for (POS tag : tags) {
+        fill(withHyphen, tag, tokenLemmas);
+      }
+    }
+
+    if (tokenLemmas.isEmpty() && WHITESPACE.matcher(word).find()) {
+      tokenLemmas.addAll(phraseLemmas(word, tags));
+    }
+
+    //If all else fails and we should include the word return it
+    if (tokenLemmas.isEmpty() && includeSelf) {
+      return Collections.singleton(word.toLowerCase());
     }
 
     return tokenLemmas;
   }
 
-  private void fill(String string, POS partOfSpeech, Set<String> set) {
+  private boolean contains(String string, POS pos) {
+    return lemmas.containsKey(string) && (pos == POS.ANY || lemmas.get(string).contains(pos.getUniversalTag()));
+  }
+
+  private void fill(String word, POS partOfSpeech, Set<String> set) {
+    word = word.toLowerCase();
+    //Word is already a lemma with the given part of speech
+    if (contains(word, partOfSpeech.getUniversalTag())) {
+      set.add(word);
+      return;
+    }
+
     if (partOfSpeech.isVerb()) {
-      if (string.equalsIgnoreCase("'s") || string.equalsIgnoreCase("'re")) {
+      if (word.equalsIgnoreCase("'s") || word.equalsIgnoreCase("'re")) {
         set.add("be");
         return;
-      } else if (string.equals("'ll")) {
+      } else if (word.equals("'ll")) {
         set.add("will");
         return;
-      } else if (string.equals("'ve")) {
+      } else if (word.equals("'ve")) {
         set.add("will");
         return;
       }
     } else if (partOfSpeech.isAdverb()) {
-      if (string.equalsIgnoreCase("n't")) {
+      if (word.equalsIgnoreCase("n't")) {
         set.add("not");
         return;
       }
-    } else if (string.equalsIgnoreCase("'d")) {
+    } else if (word.equalsIgnoreCase("'d")) {
       set.add("would");
       return;
     }
 
-
-    Tuple2<POS, String> key = Tuple2.of(partOfSpeech.getUniversalTag(), string.toLowerCase());
+    //Apply the exceptions
+    Tuple2<POS, String> key = Tuple2.of(partOfSpeech.getUniversalTag(), word.toLowerCase());
     if (exceptions.containsKey(key)) {
       set.addAll(exceptions.get(key));
     }
+
+    //Apply the rules
     for (DetachmentRule rule : rules.get(partOfSpeech.getUniversalTag())) {
-      String output = rule.apply(string);
-      if (output != null && lemmas.containsKey(output) && lemmas.get(output).contains(partOfSpeech.getUniversalTag())) {
+      String output = rule.apply(word);
+      if (contains(output, partOfSpeech.getUniversalTag())) {
         set.add(output);
       }
     }
   }
 
   @Override
+  public List<String> allPossibleLemmas(@NonNull String word, @NonNull POS partOfSpeech) {
+    List<String> lemmaList = null;
+    if (partOfSpeech == POS.ANY) {
+      lemmaList = new ArrayList<>(doLemmatization(word, true, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB));
+    } else if (partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)) {
+      lemmaList = new ArrayList<>(doLemmatization(word, true, partOfSpeech));
+    }
+    if (lemmaList == null || lemmaList.isEmpty()) {
+      lemmaList = Collections.singletonList(word.toLowerCase());
+    }
+    return lemmaList;
+  }
+
+  @Override
+  public PatriciaTrie<String> allPossibleLemmasAndPrefixes(@NonNull String string, @NonNull POS partOfSpeech) {
+    PatriciaTrie<String> lemmaSet = new PatriciaTrie<>();
+    for (String lemma : doLemmatization(string, true, partOfSpeech)) {
+      lemmaSet.putAll(Maps.asMap(lemmas.prefixMap(lemma + " ").keySet(), k -> k));
+      if (lemmas.containsKey(lemma)) {
+        lemmaSet.put(lemma, lemma);
+      }
+    }
+    return lemmaSet;
+  }
+
+  private Set<String> allAndSelf(String word) {
+    Set<String> lemmas = new HashSet<>(doLemmatization(word, true, POS.ANY));
+    lemmas.add(word);
+    return lemmas;
+  }
+
+  private boolean hasPOS(String lemma, POS... tags) {
+    if (tags == null || tags.length == 0 || tags[0] == POS.ANY) {
+      return this.lemmas.containsKey(lemma);
+    }
+    for (POS pos : this.lemmas.getOrDefault(lemma, Collections.emptySet())) {
+      if (pos.isInstance(tags)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private Set<String> phraseLemmas(String phrase, POS... tags) {
+    String[] words = phrase.split("\\s+");
+    if (words.length == 0) {
+      return Collections.emptySet();
+    }
+    if (tags == null || tags.length == 0 || tags[0] == POS.ANY) {
+      tags = ALL_POS;
+    }
+    PatriciaTrie<String> prefixes = allPossibleLemmasAndPrefixes(words[0], POS.ANY);
+    Set<String> lemmas = allAndSelf(words[0]);
+    for (int i = 1; i < words.length; i++) {
+      Set<String> nextSet = new HashSet<>();
+      for (String previous : lemmas) {
+        for (String next : allAndSelf(words[i])) {
+          String subPhrase = previous + " " + next;
+          if (prefixes.containsKey(subPhrase)) {
+            nextSet.add(subPhrase);
+          } else if (prefixes.prefixMap(subPhrase).size() > 0) {
+            nextSet.add(subPhrase);
+          }
+        }
+      }
+      if (nextSet.isEmpty()) {
+        return Collections.emptySet();
+      }
+      lemmas = nextSet;
+    }
+
+    final POS[] target = tags;
+    lemmas = lemmas.stream().filter(lemma -> hasPOS(lemma, target)).collect(Collectors.toSet());
+    return lemmas;
+  }
+
+
+  @Override
+  public boolean canLemmatize(String input, POS partOfSpeech) {
+    return partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB) && doLemmatization(input, false, partOfSpeech).size() > 0;
+  }
+
+  @Override
   public String lemmatize(@NonNull String string, @NonNull POS partOfSpeech) {
     if (partOfSpeech == POS.ANY) {
-      return Iterables.getFirst(doLemmatization(string, POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB), string).toLowerCase();
-    } else if (partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB)) {
-      return Iterables.getFirst(doLemmatization(string, partOfSpeech), string).toLowerCase();
+      return Collect.from(doLemmatization(string, true, ALL_POS)).findFirst().orElse(string).toLowerCase();
+    } else if (partOfSpeech.isInstance(ALL_POS)) {
+      return Collect.from(doLemmatization(string, true, partOfSpeech)).findFirst().orElse(string).toLowerCase();
     }
     return string.toLowerCase();
   }
@@ -251,6 +374,5 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
       return input;
     }
   }
-
 
 }//END OF EnglishLemmatizer

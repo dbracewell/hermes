@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.davidbracewell</groupId>
     <artifactId>hermes</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A Natural Language Processing framework for Java</description>
@@ -50,7 +50,7 @@
         <connection>scm:git:git@github.com:dbracewell/hermes.git</connection>
         <developerConnection>scm:git:git@github.com:dbracewell/hermes.git</developerConnection>
         <url>git@github.com:dbracewell/hermes.git</url>
-        <tag>0.1</tag>
+        <tag>hermes-0.2</tag>
     </scm>
 
     <licenses>
@@ -66,7 +66,7 @@
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>mango</artifactId>
-            <version>0.1</version>
+            <version>0.2</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -86,6 +86,11 @@
             <version>1.6</version>
             <optional>true</optional>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.davidbracewell</groupId>
+            <artifactId>apollo</artifactId>
+            <version>0.1</version>
         </dependency>
     </dependencies>
 
@@ -185,7 +190,7 @@
         <module>hermes-core</module>
         <module>hermes-examples</module>
         <module>hermes-opennlp</module>
-        <module>hermes-maltparser</module>
+        <module>hermes-wordnet</module>
     </modules>
 
     <distributionManagement>

@@ -39,6 +39,7 @@ import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.ToDoubleFunction;
@@ -52,11 +53,10 @@ import java.util.stream.Collectors;
  */
 class SparkDocumentStream implements MStream<Document>, Serializable {
   private static final long serialVersionUID = 1L;
-
-  private volatile MStream<String> source;
-  private Broadcast<Config> configBroadcast;
   final Accumulator<Double> documentsProcessed;
   final Accumulator<Double> tokensProcessed;
+  private volatile MStream<String> source;
+  private Broadcast<Config> configBroadcast;
 
   /**
    * Instantiates a new Spark document stream.
@@ -65,10 +65,6 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    */
   public SparkDocumentStream(@NonNull MStream<String> source) {
     this(source, Spark.context(source).broadcast(Config.getInstance()));
-  }
-
-  public void repartition(int numPartition) {
-    source = new SparkStream<>(Cast.<SparkStream<String>>as(source).getRDD().repartition(numPartition));
   }
 
   /**
@@ -83,6 +79,10 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
     this.documentsProcessed = getContext().accumulator(0d);
     this.tokensProcessed = getContext().accumulator(0d);
 
+  }
+
+  public void repartition(int numPartition) {
+    source = new SparkStream<>(Cast.<SparkStream<String>>as(source).getRDD().repartition(numPartition));
   }
 
   private SparkDocumentStream of(@NonNull MStream<String> source) {
@@ -122,7 +122,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     source.close();
   }
 
@@ -197,6 +197,14 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   @Override
   public void forEach(SerializableConsumer<? super Document> consumer) {
     source.forEach(json -> {
+      Hermes.initializeWorker(configBroadcast.getValue());
+      consumer.accept(Document.fromJson(json));
+    });
+  }
+
+  @Override
+  public void forEachLocal(SerializableConsumer<? super Document> consumer) {
+    source.forEachLocal(json -> {
       Hermes.initializeWorker(configBroadcast.getValue());
       consumer.accept(Document.fromJson(json));
     });
@@ -313,6 +321,15 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
     source.saveAsTextFile(location);
   }
 
+  @Override
+  public MStream<Document> parallel() {
+    return this;
+  }
+
+  @Override
+  public MStream<Document> shuffle(Random random) {
+    return new SparkDocumentStream(source.shuffle(random));
+  }
 
   /**
    * Updates the config broadcast.

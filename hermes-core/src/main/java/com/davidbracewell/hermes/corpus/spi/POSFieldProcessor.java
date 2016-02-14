@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus.spi;
 
+import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
@@ -41,9 +42,27 @@ public class POSFieldProcessor implements FieldProcessor {
 
   @Override
   public void process(Document document, List<List<String>> rows) {
+    boolean completed = false;
     for (int i = 0; i < rows.size(); i++) {
-      document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(rows.get(i).get(index)));
+      if (rows.get(i).size() > index && !rows.get(i).get(index).equals("_") && !rows.get(i).get(index).equals("-")) {
+        Annotation token = document.tokenAt(i);
+        String posStr = rows.get(i).get(index);
+        if (posStr.contains("|")) {
+          posStr = posStr.substring(0, posStr.indexOf('|'));
+        }
+        completed = true;
+        document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(POSCorrection.pos(token.toString(), posStr)));
+      }
     }
-    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
+    if (completed) {
+      document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
+    }
   }
+
+  @Override
+  public String processOutput(Annotation sentence, Annotation token, int index) {
+    POS pos = token.getPOS();
+    return pos == null ? "-" : pos.asString();
+  }
+
 }//END OF POSFieldProcessor

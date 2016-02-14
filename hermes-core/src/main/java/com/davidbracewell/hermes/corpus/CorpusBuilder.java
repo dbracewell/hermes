@@ -51,6 +51,12 @@ public class CorpusBuilder {
     return this;
   }
 
+  public CorpusBuilder offHeap() {
+    this.isDistributed = false;
+    this.isInMemory = false;
+    return this;
+  }
+
   public CorpusBuilder distributed() {
     this.isDistributed = true;
     this.isInMemory = false;

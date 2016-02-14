@@ -22,11 +22,15 @@
 package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.collection.Collect;
+import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.tag.POS;
 import com.google.common.collect.Maps;
 import lombok.NonNull;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,9 +43,8 @@ public final class Lemmatizers {
   private static volatile Map<Language, Lemmatizer> lemmatizerMap = Maps.newConcurrentMap();
 
   /**
-   * Gets the Lemmatizer for the given language as defined in the config option
-   * <code>iknowledge.latte.morphology.Lemmatizer.LANGUAGE</code>. if no lemmatizer is specified a no-op lemmatizer is
-   * returned.
+   * Gets the Lemmatizer for the given language as defined in the config option <code>iknowledge.latte.morphology.Lemmatizer.LANGUAGE</code>.
+   * if no lemmatizer is specified a no-op lemmatizer is returned.
    *
    * @param language The language
    * @return The Lemmatizer for the language
@@ -65,9 +68,20 @@ public final class Lemmatizers {
     INSTANCE;
 
     @Override
-    public String lemmatize(String string, POS partOfSpeech) {
-      return string.toLowerCase();
+    public List<String> allPossibleLemmas(@NonNull String string, POS partOfSpeech) {
+      return Collections.singletonList(string.toLowerCase());
     }
+
+    @Override
+    public PatriciaTrie<String> allPossibleLemmasAndPrefixes(@NonNull String string, POS partOfSpeech) {
+      return new PatriciaTrie<>(Collect.map(string, string));
+    }
+
+    @Override
+    public boolean canLemmatize(String input, POS partOfSpeech) {
+      return false;
+    }
+
 
   }//END OF Stemmer$NoOptStemmer
 

@@ -32,6 +32,8 @@ public interface Types {
     return AnnotationType.create(name);
   }
 
+  AnnotationType WORD_SENSE = AnnotationType.create("WORD_SENSE");
+
   /**
    * Entity annotation type
    */

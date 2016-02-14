@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * The interface Relational object.
@@ -100,6 +101,11 @@ public interface RelationalObject {
    */
   default List<Annotation> children() {
     return Collections.emptyList();
+  }
+
+
+  default List<Annotation> children(@NonNull String relation) {
+    return children().stream().filter(a -> a.dependencyRelation().filter(r -> r.v1.equalsIgnoreCase(relation)).isPresent()).collect(Collectors.toList());
   }
 
   /**

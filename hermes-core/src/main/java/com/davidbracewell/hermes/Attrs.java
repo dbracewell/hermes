@@ -32,6 +32,8 @@ public interface Attrs {
     return Attribute.create(name);
   }
 
+  Attribute SENSE = Attribute.create("SENSE");
+
   /**
    * Document author
    */

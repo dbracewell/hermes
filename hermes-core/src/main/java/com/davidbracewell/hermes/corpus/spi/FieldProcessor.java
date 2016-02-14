@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus.spi;
 
+import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 
 import java.util.List;
@@ -31,5 +32,7 @@ import java.util.List;
 public interface FieldProcessor {
 
   void process(Document document, List<List<String>> rows);
+
+  String processOutput(Annotation sentence, Annotation token, int index);
 
 }//END OF FieldProcessor

@@ -21,9 +21,11 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Val;
 import lombok.NonNull;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -68,6 +70,39 @@ public interface AttributedObject {
    * @return the value associated with the attribute or null
    */
   Val get(Attribute attribute);
+
+  default <T> T get(@NonNull Attribute attribute, @NonNull Class<T> clazz) {
+    return get(attribute).as(clazz);
+  }
+
+  default int getAttributeAsInt(@NonNull Attribute attribute) {
+    return get(attribute).asIntegerValue();
+  }
+
+  default double getAttributeAsDouble(@NonNull Attribute attribute) {
+    return get(attribute).asDouble();
+  }
+
+  default String getAttributeAsString(@NonNull Attribute attribute) {
+    return get(attribute).asString();
+  }
+
+  default <T> List<T> getAttributeAsList(@NonNull Attribute attribute) {
+    return get(attribute).cast();
+  }
+
+  default <T extends Tag> T getAttributeAsTag(@NonNull Attribute attribute) {
+    return get(attribute).cast();
+  }
+
+
+  default <T> Set<T> getAttributeAsSet(@NonNull Attribute attribute) {
+    return get(attribute).cast();
+  }
+
+  default <K, V> Map<K, V> getAttributeAsMap(@NonNull Attribute attribute) {
+    return get(attribute).cast();
+  }
 
   /**
    * Sets the value of an attribute. Removes the attribute if the value is null and ignores setting a value if the

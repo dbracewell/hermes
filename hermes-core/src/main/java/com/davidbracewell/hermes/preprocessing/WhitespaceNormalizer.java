@@ -34,7 +34,7 @@ public class WhitespaceNormalizer extends TextNormalizer {
     String normSpaces = input.replaceAll("\\p{Zs}+", " ");
     normSpaces = normSpaces.replaceAll("\r(?!\n)", "\n");
     normSpaces = normSpaces.replaceAll("(?<!(\\p{P}\\p{Z}?))\n", " ");
-    normSpaces = normSpaces.replaceAll("\r?\n(\\p{Z}*\r?\n)+", "\n");
+    normSpaces = normSpaces.replaceAll("\r?\n(" + StringUtils.UNICODE_WHITESPACE_PLUS + "\r?\n)+", "\n");
     return StringUtils.trim(normSpaces);
   }
 

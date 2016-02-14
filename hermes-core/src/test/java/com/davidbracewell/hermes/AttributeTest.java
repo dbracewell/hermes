@@ -27,7 +27,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -118,7 +117,7 @@ public class AttributeTest {
 
     Config.setProperty("Attribute.LIST.type", "List");
     Config.setProperty("Attribute.LIST.elementType", "String");
-    Attribute listAttribute = Attribute.create("LIST", List.class);
+    Attribute listAttribute = Attribute.create("LIST");
 
     Config.setProperty("Attribute.MAP.type", "map");
     Config.setProperty("Attribute.MAP.keyType", "String");
@@ -134,8 +133,9 @@ public class AttributeTest {
 
     //Reading back in token type is ignored for the first token, because it is not a valid type
     document = Document.fromJson(json);
-    assertEquals(Arrays.asList("One", "Two", "Three"), document.tokenAt(0).get(listAttribute).get());
-    assertEquals(Collect.map("A", "B", "C", "D"), document.tokenAt(1).get(mapAttribute).get());
+
+    assertEquals(Arrays.asList("One", "Two", "Three"), document.tokenAt(0).getAttributeAsList(listAttribute));
+    assertEquals(Collect.map("A", "B", "C", "D"), document.tokenAt(1).getAttributeAsMap(mapAttribute));
 
   }
 

@@ -21,6 +21,13 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.apollo.ml.Dataset;
+import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.apollo.ml.Instance;
+import com.davidbracewell.apollo.ml.LabeledDatum;
+import com.davidbracewell.apollo.ml.sequence.Sequence;
+import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
+import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
@@ -37,13 +44,11 @@ import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * <p>
@@ -75,6 +80,48 @@ public interface Corpus extends Iterable<Document> {
   }
 
   /**
+   * Of corpus.
+   *
+   * @param documentStream the document stream
+   * @return the corpus
+   */
+  static Corpus of(@NonNull Stream<Document> documentStream) {
+    return new InMemoryCorpus(documentStream.collect(Collectors.toList()));
+  }
+
+  /**
+   * Of corpus.
+   *
+   * @param documentStream the document stream
+   * @return the corpus
+   */
+  static Corpus of(@NonNull MStream<Document> documentStream) {
+    return new InMemoryCorpus(documentStream.collect());
+  }
+
+
+  /**
+   * Of corpus.
+   *
+   * @param documentIterable the document iterable
+   * @return the corpus
+   */
+  static Corpus of(@NonNull Iterable<Document> documentIterable) {
+    return new InMemoryCorpus(Collect.from(documentIterable).collect(Collectors.toList()));
+  }
+
+  /**
+   * Of corpus.
+   *
+   * @param documentCollection the document collection
+   * @return the corpus
+   */
+  static Corpus of(@NonNull Collection<Document> documentCollection) {
+    return new InMemoryCorpus(documentCollection);
+  }
+
+
+  /**
    * Annotates this corpus with the given annotation types and returns a new corpus with the given annotation types
    * present
    *
@@ -82,6 +129,198 @@ public interface Corpus extends Iterable<Document> {
    * @return A new corpus with the given annotation types present.
    */
   Corpus annotate(AnnotationType... types);
+
+
+  /**
+   * As sequence stream m stream.
+   *
+   * @return the m stream
+   */
+  default MStream<SequenceInput<Annotation>> asSequenceStream() {
+    return asSequenceStream(Types.SENTENCE);
+  }
+
+  /**
+   * As sequence stream m stream.
+   *
+   * @param sequenceType the sequence type
+   * @return the m stream
+   */
+  default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull AnnotationType sequenceType) {
+    return stream().flatMap(doc -> doc.get(sequenceType)).map(HString::asSequence);
+  }
+
+  /**
+   * As sequence stream m stream.
+   *
+   * @param labelFunction the label function
+   * @return the m stream
+   */
+  default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull Function<? super Annotation, String> labelFunction) {
+    return asSequenceStream(Types.SENTENCE, labelFunction);
+  }
+
+  /**
+   * As sequence stream m stream.
+   *
+   * @param sequenceType  the sequence type
+   * @param labelFunction the label function
+   * @return the m stream
+   */
+  default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction) {
+    return stream().flatMap(doc -> doc.get(sequenceType)).map(hs -> hs.asSequence(labelFunction));
+  }
+
+  /**
+   * As labeled stream m stream.
+   *
+   * @param labelFunction the label function
+   * @return the m stream
+   */
+  default MStream<LabeledDatum<HString>> asLabeledStream(@NonNull SerializableFunction<HString, ?> labelFunction) {
+    return stream().map(hs -> hs.asLabeledData(labelFunction));
+  }
+
+  /**
+   * As labeled stream m stream.
+   *
+   * @param labelAttribute the label attribute
+   * @return the m stream
+   */
+  default MStream<LabeledDatum<HString>> asLabeledStream(@NonNull Attribute labelAttribute) {
+    return stream().map(hs -> hs.asLabeledData(labelAttribute));
+  }
+
+  /**
+   * As classification data set dataset.
+   *
+   * @param featurizer the featurizer
+   * @return the dataset
+   */
+  default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer) {
+    return Dataset.classification().type(getDataSetType()).source(stream().map(featurizer::extract)).build();
+  }
+
+  /**
+   * As sequence data set dataset.
+   *
+   * @param featurizer the featurizer
+   * @return the dataset
+   */
+  default Dataset<Sequence> asSequenceDataSet(@NonNull SequenceFeaturizer<Annotation> featurizer) {
+    return Dataset.sequence().type(Dataset.Type.InMemory).source(asSequenceStream().map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+  }
+
+  /**
+   * As sequence data set dataset.
+   *
+   * @param sequenceType the sequence type
+   * @param featurizer   the featurizer
+   * @return the dataset
+   */
+  default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+    return Dataset.sequence().type(getDataSetType()).source(asSequenceStream(sequenceType).map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+  }
+
+  /**
+   * As sequence data set dataset.
+   *
+   * @param labelFunction the label function
+   * @param featurizer    the featurizer
+   * @return the dataset
+   */
+  default Dataset<Sequence> asSequenceDataSet(@NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+    return Dataset.sequence().type(getDataSetType()).source(asSequenceStream(labelFunction).map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+  }
+
+  /**
+   * As sequence data set dataset.
+   *
+   * @param sequenceType  the sequence type
+   * @param labelFunction the label function
+   * @param featurizer    the featurizer
+   * @return the dataset
+   */
+  default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+    return Dataset.sequence().type(getDataSetType()).source(asSequenceStream(sequenceType, labelFunction).map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+  }
+
+  /**
+   * As regression data set dataset.
+   *
+   * @param featurizer the featurizer
+   * @return the dataset
+   */
+  default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer) {
+    return Dataset.regression().type(getDataSetType()).source(stream().map(featurizer::extract)).build();
+  }
+
+  /**
+   * As classification data set dataset.
+   *
+   * @param featurizer     the featurizer
+   * @param labelAttribute the label attribute
+   * @return the dataset
+   */
+  default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull Attribute labelAttribute) {
+    return Dataset.classification().type(getDataSetType()).source(asLabeledStream(labelAttribute).map(featurizer::extractLabeled)).build();
+  }
+
+  /**
+   * As regression data set dataset.
+   *
+   * @param featurizer     the featurizer
+   * @param labelAttribute the label attribute
+   * @return the dataset
+   */
+  default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull Attribute labelAttribute) {
+    return Dataset.regression().type(getDataSetType()).source(asLabeledStream(labelAttribute).map(featurizer::extractLabeled)).build();
+  }
+
+  /**
+   * As classification data set dataset.
+   *
+   * @param featurizer    the featurizer
+   * @param labelFunction the label function
+   * @return the dataset
+   */
+  default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Object> labelFunction) {
+    return Dataset.classification().type(getDataSetType()).source(asLabeledStream(labelFunction).map(featurizer::extractLabeled)).build();
+  }
+
+  /**
+   * As regression data set dataset.
+   *
+   * @param featurizer    the featurizer
+   * @param labelFunction the label function
+   * @return the dataset
+   */
+  default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Double> labelFunction) {
+    return Dataset.regression().type(getDataSetType()).source(asLabeledStream(labelFunction).map(featurizer::extractLabeled)).build();
+  }
+
+
+  /**
+   * Map corpus.
+   *
+   * @param function the function
+   * @return the corpus
+   */
+  Corpus map(@NonNull SerializableFunction<Document,Document> function);
+
+  /**
+   * Gets data set type.
+   *
+   * @return the data set type
+   */
+  default Dataset.Type getDataSetType() {
+    if (isInMemory()) {
+      return Dataset.Type.InMemory;
+    } else if (isDistributed()) {
+      return Dataset.Type.Distributed;
+    }
+    return Dataset.Type.OffHeap;
+  }
 
   /**
    * To memory.
@@ -227,14 +466,36 @@ public interface Corpus extends Iterable<Document> {
   MStream<Document> stream();
 
 
+  /**
+   * Token n grams counter.
+   *
+   * @param order     the order
+   * @param lemmatize the lemmatize
+   * @return the counter
+   */
   default Counter<Tuple> tokenNGrams(int order, boolean lemmatize) {
     return tokenNGrams(order, false, hString -> lemmatize ? hString.getLemma() : hString.toString());
   }
 
+  /**
+   * Token n grams counter.
+   *
+   * @param order            the order
+   * @param toStringFunction the to string function
+   * @return the counter
+   */
   default Counter<Tuple> tokenNGrams(int order, @NonNull SerializableFunction<? super HString, String> toStringFunction) {
     return tokenNGrams(order, false, toStringFunction);
   }
 
+  /**
+   * Token n grams counter.
+   *
+   * @param order            the order
+   * @param removeStopWords  the remove stop words
+   * @param toStringFunction the to string function
+   * @return the counter
+   */
   default Counter<Tuple> tokenNGrams(int order, boolean removeStopWords, @NonNull SerializableFunction<? super HString, String> toStringFunction) {
     return Counters.newHashMapCounter(
       stream()
@@ -353,4 +614,41 @@ public interface Corpus extends Iterable<Document> {
     return this;
   }
 
-}//END OF Corpus2
+  /**
+   * Repartition corpus.
+   *
+   * @param numPartitions the num partitions
+   * @return the corpus
+   */
+  default Corpus repartition(int numPartitions) {
+    return this;
+  }
+
+  /**
+   * Is in memory boolean.
+   *
+   * @return the boolean
+   */
+  default boolean isInMemory() {
+    return false;
+  }
+
+  /**
+   * Is distributed boolean.
+   *
+   * @return the boolean
+   */
+  default boolean isDistributed() {
+    return false;
+  }
+
+  /**
+   * Is off heap boolean.
+   *
+   * @return the boolean
+   */
+  default boolean isOffHeap() {
+    return false;
+  }
+
+}//END OF Corpus

@@ -28,13 +28,11 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * <p>
- * Represents a starting (inclusive) and ending (exclusive) portion of a <code>CharSequence</code>.
- * </p>
+ * <p> Represents a starting (inclusive) and ending (exclusive) portion of a <code>CharSequence</code>. </p>
  *
  * @author David B. Bracewell
  */
-public class Span implements Serializable {
+public class Span implements Serializable, Comparable<Span> {
   private static final long serialVersionUID = 1L;
   private final int start;
   private final int end;
@@ -121,9 +119,23 @@ public class Span implements Serializable {
   @Override
   public boolean equals(Object other) {
     return other != null &&
-        other.getClass().equals(Span.class) &&
-        Cast.<Span>as(other).start == this.start &&
-        Cast.<Span>as(other).end == this.end;
+      other.getClass().equals(Span.class) &&
+      Cast.<Span>as(other).start == this.start &&
+      Cast.<Span>as(other).end == this.end;
+  }
+
+  @Override
+  public int compareTo(Span o) {
+    if (o == null) {
+      return -1;
+    }
+    if (start < o.start) {
+      return -1;
+    }
+    if (start > o.start) {
+      return 1;
+    }
+    return Integer.compare(end, o.end);
   }
 
 }//END OF Span

@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
@@ -69,6 +70,11 @@ public class InMemoryCorpus implements Corpus, Serializable {
   }
 
   @Override
+  public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+    return new InMemoryCorpus(documents.stream().map(function).collect(Collectors.toList()));
+  }
+
+  @Override
   public DocumentFactory getDocumentFactory() {
     return DocumentFactory.getInstance();
   }
@@ -93,4 +99,8 @@ public class InMemoryCorpus implements Corpus, Serializable {
     return new JavaMStream<>(documents);
   }
 
+  @Override
+  public boolean isInMemory() {
+    return true;
+  }
 }//END OF InMemoryCorpus
