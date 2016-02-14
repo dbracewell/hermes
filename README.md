@@ -1,6 +1,6 @@
 ![Hermes](https://github.com/dbracewell/hermes/blob/gh-pages/images/hermes.png)
 
-A Natural Language Processing framework for Java based on the [Tipster Architecture](http://cs.nyu.edu/cs/faculty/grishman/tipster.html).
+A Natural Language Processing framework for Java based on the [Tipster Architecture](http://cs.nyu.edu/cs/faculty/grishman/tipster.html). Check out the [Wiki](https://github.com/dbracewell/hermes/wiki) for more information and a Quickstart example.
 
 ## License
 Copyright 2015 David B. Bracewell
@@ -16,7 +16,7 @@ The core sub-module contains the basic api.
  <dependency>
      <groupId>com.davidbracewell</groupId>
      <artifactId>hermes-core</artifactId>
-     <version>0.0.1-SNAPSHOT</version>
+     <version>0.1</version>
  </dependency>
 ```
 
@@ -26,7 +26,7 @@ A set of wrappers around the [OpenNLP](https://opennlp.apache.org/) framework fo
  <dependency>
      <groupId>com.davidbracewell</groupId>
      <artifactId>hermes-opennlp</artifactId>
-     <version>${VERSION}</version>
+     <version>0.1</version>
  </dependency>
 ```
 
@@ -36,7 +36,7 @@ A wrapper around [MaltParser](http://www.maltparser.org/) provides dependency re
  <dependency>
      <groupId>com.davidbracewell</groupId>
      <artifactId>hermes-maltparser</artifactId>
-     <version>${VERSION}</version>
+     <version>0.1</version>
  </dependency>
 ```
 
