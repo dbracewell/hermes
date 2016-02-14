@@ -67,7 +67,7 @@
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>mango</artifactId>
-            <version>0.2-SNAPSHOT</version>
+            <version>0.2</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -91,7 +91,7 @@
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>apollo</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.1</version>
         </dependency>
     </dependencies>
 

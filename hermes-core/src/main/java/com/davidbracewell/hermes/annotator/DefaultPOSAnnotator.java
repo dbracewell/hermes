@@ -27,6 +27,8 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.pos.POSTagger;
+import com.davidbracewell.io.Resources;
+import com.davidbracewell.io.resource.Resource;
 import com.google.common.base.Throwables;
 
 import java.io.Serializable;
@@ -48,7 +50,12 @@ public class DefaultPOSAnnotator extends SentenceLevelAnnotator implements Seria
       synchronized (this) {
         if (!taggers.containsKey(language)) {
           try {
-            taggers.put(language, POSTagger.read(Config.get("Annotation.PART_OF_SPEECH", language, "model").asResource()));
+            Resource classPath = Resources.fromClasspath("hermes/models/" + language.getCode().toLowerCase() + "/pos.model.gz");
+            if (classPath.exists()) {
+              taggers.put(language, POSTagger.read(classPath));
+            } else {
+              taggers.put(language, POSTagger.read(Config.get("Annotation.PART_OF_SPEECH", language, "model").asResource()));
+            }
           } catch (Exception e) {
             throw Throwables.propagate(e);
           }

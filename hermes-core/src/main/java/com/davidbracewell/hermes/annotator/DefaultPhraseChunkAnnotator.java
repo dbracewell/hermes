@@ -27,6 +27,8 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTagger;
+import com.davidbracewell.io.Resources;
+import com.davidbracewell.io.resource.Resource;
 import com.google.common.base.Throwables;
 
 import java.io.Serializable;
@@ -49,7 +51,12 @@ public class DefaultPhraseChunkAnnotator extends SentenceLevelAnnotator implemen
       synchronized (this) {
         if (!taggers.containsKey(language)) {
           try {
-            taggers.put(language, BIOTagger.read(Config.get("Annotation.PHRASE_CHUNK", language, "model").asResource()));
+            Resource classPath = Resources.fromClasspath("hermes/models/" + language.getCode().toLowerCase() + "/phrase_chunk.model.gz");
+            if( classPath.exists() ){
+              taggers.put(language, BIOTagger.read(classPath));
+            } else {
+              taggers.put(language, BIOTagger.read(Config.get("Annotation.PHRASE_CHUNK", language, "model").asResource()));
+            }
           } catch (Exception e) {
             throw Throwables.propagate(e);
           }
