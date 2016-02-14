@@ -62,6 +62,8 @@ public interface POSCorrection {
 
   static String pos(String word, String pos) {
     switch (word) {
+      case "-":
+        return ":";
       case "%":
         return "SYM";
       case "[":
@@ -76,6 +78,10 @@ public interface POSCorrection {
         return "-LCB-";
       case "}":
         return "-RCB-";
+    }
+
+    if (pos.equals("HYPH")) {
+      return ":";
     }
 
     if (StringPredicates.HAS_LETTER_OR_DIGIT.negate().test(word) && pos.startsWith("NN")) {

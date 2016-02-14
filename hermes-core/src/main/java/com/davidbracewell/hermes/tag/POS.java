@@ -246,7 +246,9 @@ public enum POS implements Tag {
   LSB(PUNCTUATION, "-LSB-"),
   COMMA(PUNCTUATION, ","),
   COLON(PUNCTUATION, ":"),
-
+  ADD(OTHER,"ADD"),
+  AFX(ADPOSITION,"AFX"),
+  NFP(PUNCTUATION, "NFP"),
 
   /**
    * Special Japanese Part of Speech Tags
