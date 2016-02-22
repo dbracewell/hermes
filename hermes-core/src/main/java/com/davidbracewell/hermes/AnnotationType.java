@@ -25,6 +25,7 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.HierarchicalEnumValue;
 import com.davidbracewell.Language;
+import com.davidbracewell.Lazy;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.annotator.Annotator;
@@ -40,44 +41,22 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The definition
+ * <p> An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The definition
  * provided by the type facilitates the portability of the annotation between different modules. An annotation type
  * defines the type name, parent type, and optionally a set of attributes that are expected to be associated with an
- * annotation of this type.
- * </p>
- * <p>
- * Annotation types are hierarchical and all types have a parent defined. If no parent is explicitly declared, its
- * parent is resolved to the <code>ROOT</code> type. Annotation types inherit their parent's attributes. Attribute
- * information on the type serves as documentation and is not type checked. Additionally, a "tag" can be defined for a
- * type using the <code>tag</code> property, which defines the attribute to return on calls to <code>getTag()</code>.
- * </p>
- * <p>Type information is defined via configuration. An Example is as follows:</p>
- * {@code
- * Annotation{
- * ENTITY {
- * attributes = ENTITY_TYPE, CONFIDENCE
- * tag = ENTITY_TYPE
- * }
- * REGEX_ENTITY {
- * parent = ENTITY
- * annotator = @{DEFAULT_ENTITY_REGEX}
- * annotator {
- * ENGLISH = @{ENGLISH_ENTITY_REGEX}
- * JAPANESE = @{JAPANESE_ENTITY_REGEX}
- * }
- * attributes = PATTERN
- * }
- * }
- * }*
- * <p>
- * In the example shown above, we define the <code>ENTITY</code> and <code>REGEX_ENTITY</code> types. The
- * <code>Entity</code> type has two attributes associated with it which relate to the type of entity and the confidence
- * that the span of text is an entity of the given type. The <code>REGEX_ENTITY</code> is a sub-type (child) of
- * <code>ENTITY</code> and inherits all of its attributes. It defines annotators for English and Japanese which are
- * beans defined elsewhere in the configuration. Finally, it defines a <code>PATTERN</code> attribute relating to the
- * pattern that was used to identify the entity.
- * </p>
+ * annotation of this type. </p> <p> Annotation types are hierarchical and all types have a parent defined. If no parent
+ * is explicitly declared, its parent is resolved to the <code>ROOT</code> type. Annotation types inherit their parent's
+ * attributes. Attribute information on the type serves as documentation and is not type checked. Additionally, a "tag"
+ * can be defined for a type using the <code>tag</code> property, which defines the attribute to return on calls to
+ * <code>getTag()</code>. </p> <p>Type information is defined via configuration. An Example is as follows:</p> {@code
+ * Annotation{ ENTITY { attributes = ENTITY_TYPE, CONFIDENCE tag = ENTITY_TYPE } REGEX_ENTITY { parent = ENTITY
+ * annotator = @{DEFAULT_ENTITY_REGEX} annotator { ENGLISH = @{ENGLISH_ENTITY_REGEX} JAPANESE = @{JAPANESE_ENTITY_REGEX}
+ * } attributes = PATTERN } } }* <p> In the example shown above, we define the <code>ENTITY</code> and
+ * <code>REGEX_ENTITY</code> types. The <code>Entity</code> type has two attributes associated with it which relate to
+ * the type of entity and the confidence that the span of text is an entity of the given type. The
+ * <code>REGEX_ENTITY</code> is a sub-type (child) of <code>ENTITY</code> and inherits all of its attributes. It defines
+ * annotators for English and Japanese which are beans defined elsewhere in the configuration. Finally, it defines a
+ * <code>PATTERN</code> attribute relating to the pattern that was used to identify the entity. </p>
  *
  * @author David B. Bracewell
  */
@@ -91,16 +70,22 @@ public final class AnnotationType extends HierarchicalEnumValue {
    */
   public static AnnotationType ROOT = create("ROOT");
 
+
+  private transient final Lazy<Boolean> producesAnnotation = new Lazy<>(() -> Config.get("Annotation", name(), "producesAnnotation").asBooleanValue(true));
+  private transient final Lazy<Attribute> tagAttribute = new Lazy<>(() -> {
+    String attribute = Config.get("Annotation", name(), "tag").asString();
+    if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {
+      return getParent().getTagAttribute();
+    } else if (StringUtils.isNullOrBlank(attribute)) {
+      return Attrs.TAG;
+    }
+    return Attribute.create(attribute);
+  });
+
   private volatile transient Set<Attribute> definedAttributes = null;
 
   private AnnotationType(String name) {
     super(name);
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public List<AnnotationType> getChildren() {
-    return index.values().stream().filter(t -> t.getParent().equals(this)).collect(Collectors.toList());
   }
 
   /**
@@ -137,21 +122,6 @@ public final class AnnotationType extends HierarchicalEnumValue {
   }
 
   /**
-   * Gets tag attribute.
-   *
-   * @return the tag attribute
-   */
-  public Attribute getTagAttribute() {
-    String attribute = Config.get("Annotation", name(), "tag").asString();
-    if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {
-      return getParent().getTagAttribute();
-    } else if (StringUtils.isNullOrBlank(attribute)) {
-      return Attrs.TAG;
-    }
-    return Attribute.create(attribute);
-  }
-
-  /**
    * Determine if an Annotation type exists for the given name
    *
    * @param name the name
@@ -180,6 +150,20 @@ public final class AnnotationType extends HierarchicalEnumValue {
     return index.values();
   }
 
+  @Override
+  @SuppressWarnings("unchecked")
+  public List<AnnotationType> getChildren() {
+    return index.values().stream().filter(t -> t.getParent().equals(this)).collect(Collectors.toList());
+  }
+
+  /**
+   * Gets tag attribute.
+   *
+   * @return the tag attribute
+   */
+  public Attribute getTagAttribute() {
+    return tagAttribute.get();
+  }
 
   /**
    * Gets parent type of this one.
@@ -242,6 +226,10 @@ public final class AnnotationType extends HierarchicalEnumValue {
       return index.valueOf(name());
     }
     return index.register(this);
+  }
+
+  public boolean producesNewAnnotation() {
+    return producesAnnotation.get();
   }
 
 
