@@ -22,11 +22,8 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.annotator.RegexAnnotator;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
-import com.davidbracewell.io.Resources;
 
 import static com.davidbracewell.hermes.Types.SENTENCE;
 import static com.davidbracewell.hermes.Types.TOKEN;
@@ -37,10 +34,14 @@ import static com.davidbracewell.hermes.Types.TOKEN;
 public class CustomAnnotator {
 
   public static void main(String[] args) throws Exception {
-    Config.initialize("CustomAnnotator");
+    //Initializes configuration settings
+    Hermes.initializeApplication(args);
 
     //Create an ANIMAL_MENTION annotation type that is added to documents using a regular expression annotator.
     AnnotationType animalMention = AnnotationType.create("ANIMAL_MENTION");
+    //Here we will forgo the normal configuration setup and set the annotator directly on the pipeline.
+    //Note: that this only works in a non-distributed environment
+    //We will use a RegexAnnotator, which will add "\b" to the beginning and end of the pattern if it is not already there.
     Pipeline.setAnnotator(animalMention, Language.ENGLISH, new RegexAnnotator("(fox|dog)", animalMention));
 
     //Create a VERBS annotation type that is added to documents using a regular expression annotator.
@@ -49,11 +50,9 @@ public class CustomAnnotator {
 
     //Build a corpus from plain text with one document per line in a String resource
     Corpus.builder()
-      .source(DocumentFormats.PLAIN_TEXT_OPL, Resources.fromString(
-        "The quick brown fox jumps over the lazy dog.\n" +
-          "Now is the time for all good men to come to aid of their country.\n"
-        )
-      ).build()
+      .add(Document.create("The quick brown fox jumps over the lazy dog."))
+      .add(Document.create("Now is the time for all good men to come to aid of their country."))
+      .build()
       //Annotate the document for tokens, sentences, animal mentions, and verbs
       .annotate(TOKEN, SENTENCE, animalMention, verbs)
       //for each of the documents print out the animal mentions and verbs

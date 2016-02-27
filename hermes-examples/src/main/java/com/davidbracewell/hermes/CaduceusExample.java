@@ -21,8 +21,6 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.annotator.MaltParserAnnotator;
 import com.davidbracewell.hermes.caduceus.CaduceusProgram;
 import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.hermes.tag.Relations;
@@ -34,8 +32,9 @@ import com.davidbracewell.io.Resources;
 public class CaduceusExample {
 
   public static void main(String[] args) throws Exception {
-    Config.initialize("CaduceusExample");
-    Config.setProperty("Annotation.DEPENDENCY.annotator", MaltParserAnnotator.class.getName());
+    //Initializes configuration settings
+    Hermes.initializeApplication(args);
+
     //We use the example program
     CaduceusProgram program = CaduceusProgram.read(Resources.from("classpath:com/davidbracewell/hermes/example.yaml"));
 

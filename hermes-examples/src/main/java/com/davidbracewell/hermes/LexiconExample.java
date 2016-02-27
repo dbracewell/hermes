@@ -46,6 +46,7 @@ public class LexiconExample {
       .build()
       .annotate(Types.TOKEN, Types.SENTENCE, Types.ENTITY)
       .forEach(document -> document.get(Types.ENTITY).forEach(entity -> System.out.println(entity + "/" + entity.getTag().get())));
+    System.out.println();
 
     //Alternatively we can do everything in code if we are not working in a distributed environment
     Lexicon lexicon = LexiconSpec.builder()

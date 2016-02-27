@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Tag;
 import com.davidbracewell.collection.Collect;
+import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.tag.EntityType;
@@ -421,6 +422,10 @@ public final class Annotation extends Fragment implements Serializable {
     writer.writeKeyValue("start", start());
     writer.writeKeyValue("end", end());
     writer.writeKeyValue("id", getId());
+
+    if (Config.get("Annotation.writeContent").asBooleanValue(false)) {
+      writer.writeKeyValue("content", toString());
+    }
 
     if (getAttributeMap().size() > 0) {
       writer.beginObject("attributes");

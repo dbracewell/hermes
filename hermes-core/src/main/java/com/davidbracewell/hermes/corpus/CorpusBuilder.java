@@ -104,11 +104,11 @@ public class CorpusBuilder {
   public Corpus build() {
 
     if (isInMemory) {
-      Corpus corpus = new InMemoryCorpus(documents);
+      List<Document> dList = new LinkedList<>(documents);
       if (resource != null) {
-        corpus.union(new FileCorpus(documentFormat, resource, documentFactory).cache());
+        dList.addAll(new FileCorpus(documentFormat, resource, documentFactory).stream().collect());
       }
-      return corpus;
+      return new InMemoryCorpus(dList);
     }
 
     if (isDistributed) {

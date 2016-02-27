@@ -1,31 +1,22 @@
 package com.davidbracewell.hermes.driver;
 
 import com.davidbracewell.application.JavaFXApplication;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.io.resource.FileResource;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -35,7 +26,7 @@ import java.io.IOException;
  * @author David B. Bracewell
  */
 public class HermesFX extends JavaFXApplication {
-
+  private static final long serialVersionUID = 1L;
   private static final String STANDARD_BUTTON_STYLE = "-fx-text-fill: #666666;";
   private static final String HOVERED_BUTTON_STYLE = "-fx-text-fill: #000000;";
   private final Font TenPointBold = Font.font("System", FontWeight.BOLD, 10);
@@ -47,6 +38,7 @@ public class HermesFX extends JavaFXApplication {
   private HBox statusBar;
   private SplitPane workspace;
   private File currentDirectory = new File(".");
+  private Document currentDocument = null;
 
   public HermesFX() {
     super("HermesFX");
@@ -87,6 +79,23 @@ public class HermesFX extends JavaFXApplication {
     return viewMenu;
   }
 
+  void setDocument(File jsonFile) {
+    currentDirectory = jsonFile.getParentFile();
+    try {
+      currentDocument = Document.fromJson(new FileResource(jsonFile).readToString());
+      editor.setText(currentDocument.toString());
+      annotationList.setRoot(new TreeItem<>("ANNOTATIONS"));
+      annotationList.getRoot().getChildren().clear();
+      currentDocument.getAnnotationSet().getCompleted().forEach(type ->{
+        annotationList.getRoot().getChildren().add(new TreeItem<>(type.name()));
+      });
+      attributeList.setRoot(new TreeItem<>("ATTRIBUTES"));
+      currentDocument.attributes().forEach(attr -> attributeList.getRoot().getChildren().add(new TreeItem<>(attr.name() + "::" + currentDocument.get(attr).toString())));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
   Menu createFileMenu() {
     Menu menuFile = new Menu("_File");
     MenuItem fileOpen = new MenuItem("_Open");
@@ -94,14 +103,10 @@ public class HermesFX extends JavaFXApplication {
     fileOpen.setOnAction(a -> {
       FileChooser chooser = new FileChooser();
       chooser.setInitialDirectory(currentDirectory);
+      chooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Hermes JSON Format", "json"));
       File chose = chooser.showOpenDialog(null);
       if (chose != null) {
-        currentDirectory = chose.getParentFile();
-        try {
-          editor.setText(new FileResource(chose).readToString());
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+        setDocument(chose);
       }
     });
     MenuItem fileClose = new MenuItem("E_xit");
@@ -132,6 +137,15 @@ public class HermesFX extends JavaFXApplication {
     annotationList = new TreeView<>();
     VBox.setVgrow(annotationList, Priority.ALWAYS);
     annotationPane.getChildren().addAll(titleBar, annotationList);
+    TextFlow highlight = new TextFlow();
+    annotationList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+      AnnotationType type = Types.type(newValue.getValue());
+      currentDocument.get(type).forEach(a -> {
+        editor.selectRange(a.start(),a.end());
+        editor.setBackground(new Background(new BackgroundFill(Color.RED,null,null)));
+        System.out.println(a);
+      });
+    });
     return annotationPane;
   }
 

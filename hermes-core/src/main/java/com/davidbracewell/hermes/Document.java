@@ -64,6 +64,39 @@ public class Document extends HString {
   private volatile List<Annotation> tokens;
   private String id;
 
+
+  public static Document create(@NonNull String text) {
+    return DocumentFactory.getInstance().create(text);
+  }
+
+  public static Document create(@NonNull String text, @NonNull Language language) {
+    return DocumentFactory.getInstance().create(text, language);
+  }
+
+  public static Document create(@NonNull String text, @NonNull Language language, @NonNull Map<Attribute, ?> attributes) {
+    return DocumentFactory.getInstance().create(text, language, attributes);
+  }
+
+  public static Document create(@NonNull String text, @NonNull Map<Attribute, ?> attributes) {
+    return DocumentFactory.getInstance().create(text, Hermes.defaultLanguage(), attributes);
+  }
+
+  public static Document create(@NonNull String id, @NonNull String text) {
+    return DocumentFactory.getInstance().create(id, text);
+  }
+
+  public static Document create(@NonNull String id, @NonNull String text, @NonNull Language language) {
+    return DocumentFactory.getInstance().create(id, text, language);
+  }
+
+  public static Document create(@NonNull String id, @NonNull String text, @NonNull Language language, @NonNull Map<Attribute, ?> attributes) {
+    return DocumentFactory.getInstance().create(id, text, language, attributes);
+  }
+
+  public static Document create(@NonNull String id, @NonNull String text, @NonNull Map<Attribute, ?> attributes) {
+    return DocumentFactory.getInstance().create(id, text, Hermes.defaultLanguage(), attributes);
+  }
+
   /**
    * Instantiates a new Document.
    *

@@ -126,7 +126,7 @@ public class QueryParser {
       .add(Operator.OR)
       .add(Types.NOT)
       .add(Types.FIELD)
-      .add(CommonTypes.WORD, "(\"([^\"]|\\\\\")*\"|\\S+)")
+      .add(CommonTypes.WORD, "(\"([^\"]|\\\\\")*\"|[^\\s\\|\\&\\)\\(]+)")
       .build();
     this.grammar = new Grammar() {{
       register(CommonTypes.OPENPARENS, new GroupHandler(CommonTypes.CLOSEPARENS));
