@@ -39,6 +39,12 @@ public class DependencyParseExample {
     //Initializes configuration settings
     Hermes.initializeApplication(args);
 
+    //In order to run this example you will need to download a MaltParser model (http://www.maltparser.org/mco/mco.html)
+    //By default the model is expected to be located in /shared/data/models/en/engmalt.linear-1.7.mco
+    //This can be changed by uncommenting the following line and putting the location in the ""
+    //Config.setProperty("Annotation.DEPENDENCY.model.ENGLISH", "");
+
+
     //We will construct a corpus made up of the sample documents.
     Corpus corpus = Corpus.builder()
       .format(DocumentFormats.PLAIN_TEXT_OPL)
