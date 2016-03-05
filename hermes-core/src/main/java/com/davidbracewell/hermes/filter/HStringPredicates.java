@@ -4,10 +4,7 @@ import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableBiPredicate;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Attribute;
-import com.davidbracewell.hermes.Attrs;
-import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.regex.QueryToPredicate;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringPredicates;
@@ -74,6 +71,13 @@ public interface HStringPredicates {
     return contentMatch(cs -> regex.matcher(cs).find());
   }
 
+  /**
+   * Content regex match serializable predicate.
+   *
+   * @param pattern       the pattern
+   * @param caseSensitive the case sensitive
+   * @return the serializable predicate
+   */
   static SerializablePredicate<HString> contentRegexMatch(@NonNull final String pattern, boolean caseSensitive) {
     if (caseSensitive) {
       return contentRegexMatch(pattern);
@@ -109,6 +113,12 @@ public interface HStringPredicates {
     };
   }
 
+  /**
+   * Has tag instance serializable predicate.
+   *
+   * @param target the target
+   * @return the serializable predicate
+   */
   static SerializablePredicate<HString> hasTagInstance(@NonNull final String target) {
     return hString -> {
       if (hString.isAnnotation()) {
@@ -156,7 +166,7 @@ public interface HStringPredicates {
    * @return the serializable predicate
    */
   static SerializablePredicate<HString> isEmpty() {
-    return hString -> hString.isEmpty();
+    return Span::isEmpty;
   }
 
   /**
@@ -199,7 +209,7 @@ public interface HStringPredicates {
    * @return the serializable bi predicate
    */
   static SerializableBiPredicate<HString, HString> isOverlapping() {
-    return (hString, hString2) -> hString.overlaps(hString2);
+    return HString::overlaps;
   }
 
   /**
@@ -212,6 +222,13 @@ public interface HStringPredicates {
   }
 
 
+  /**
+   * Parse serializable predicate.
+   *
+   * @param query the query
+   * @return the serializable predicate
+   * @throws ParseException the parse exception
+   */
   static SerializablePredicate<HString> parse(@NonNull String query) throws ParseException {
     return QueryToPredicate.parse(query);
   }

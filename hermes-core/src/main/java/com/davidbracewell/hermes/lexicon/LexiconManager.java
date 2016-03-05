@@ -30,7 +30,6 @@ import com.davidbracewell.hermes.HString;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.reflection.BeanUtils;
 import com.davidbracewell.string.StringPredicates;
-import com.google.common.collect.Iterators;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -105,7 +104,7 @@ public final class LexiconManager implements Serializable {
 
     @Override
     public Iterator<String> iterator() {
-      return Iterators.emptyIterator();
+      return Collections.emptyIterator();
     }
 
     @Override

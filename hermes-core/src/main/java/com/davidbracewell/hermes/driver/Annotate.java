@@ -18,11 +18,11 @@ public class Annotate extends CommandLineApplication {
   Resource input;
   @Option(description = "Output corpus location", required = true)
   Resource output;
-  @Option(description = "Format of input corpus", required = true)
+  @Option(description = "Format of input corpus", defaultValue = "JSON_OPL")
   String inputFormat;
   @Option(description = "Distributed corpus", defaultValue = "false")
   boolean distributed;
-  @Option(description = "Annotations to add", required = true)
+  @Option(description = "Annotations to add", defaultValue = "TOKEN,SENTENCE,PART_OF_SPEECH,LEMMA,DEPENDENCY,PHRASE_CHUNK")
   AnnotationType[] annotations;
 
   public Annotate() {

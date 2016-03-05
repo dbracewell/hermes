@@ -24,18 +24,16 @@ package com.davidbracewell.hermes.filter;
 import com.davidbracewell.Language;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.HString;
-import lombok.Data;
 import lombok.NonNull;
-
-import java.io.Serializable;
+import lombok.Value;
 
 /**
  * <p>Filters HString based on their language. Useful in multi-language collections.</p>
  *
  * @author David B. Bracewell
  */
-@Data
-public class LanguageFilter implements SerializablePredicate<HString>, Serializable {
+@Value
+public class LanguageFilter implements SerializablePredicate<HString> {
   private static final long serialVersionUID = 1L;
   private final Language language;
 

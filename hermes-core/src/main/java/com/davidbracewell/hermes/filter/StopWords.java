@@ -109,6 +109,7 @@ public abstract class StopWords implements SerializablePredicate<HString> {
    * The type No opt stop words.
    */
   public static class NoOptStopWords extends StopWords {
+    private static final long serialVersionUID = 1L;
 
     @Override
     protected boolean isTokenStopWord(Annotation token) {
