@@ -24,6 +24,7 @@ package com.davidbracewell.hermes.tokenization;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.io.Resources;
+import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
@@ -96,7 +97,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
         throw new NoSuchElementException();
       }
 
-      Token token = buffer.remove();
+      Token token = consume();
       if (token.type.isInstance(TokenType.URL)) {
         token = checkURL(token);
       } else if (peekIsType(0, TokenType.PUNCTUATION) &&
@@ -131,7 +132,13 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
 
     private Token consume() {
       peek(0);
-      return buffer.isEmpty() ? null : buffer.remove();
+      while (!buffer.isEmpty()) {
+        Token token = buffer.remove();
+        if (token != null && !StringUtils.isNullOrBlank(token.text)) {
+          return token;
+        }
+      }
+      return null;
     }
 
     private boolean peekIsType(int distance, TokenType... types) {
@@ -149,12 +156,20 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
           if (token == null) {
             return null;
           }
-          buffer.add(token);
+          if (!StringUtils.isNullOrBlank(token.text)) {
+            buffer.add(token);
+          }
         } catch (IOException e) {
           throw Throwables.propagate(e);
         }
       }
       return buffer.get(distance);
+    }
+
+    private void addToBuffer(Token token) {
+      if (token != null && !StringUtils.isNullOrBlank(token.text)) {
+        buffer.addFirst(token);
+      }
     }
 
     private Token checkURL(Token n) {
@@ -174,7 +189,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
         Token nn = peek(0);
         if (nn != null && nn.charStartIndex == n.charEndIndex) {
           consume();
-          buffer.addFirst(new Token( //Add the bad tld
+          addToBuffer(new Token( //Add the bad tld
               tld + nn.text,
               TokenType.ALPHA_NUMERIC,
               n.charStartIndex + dot + 1,
@@ -183,7 +198,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
             )
           );
         } else {
-          buffer.addFirst(new Token( //Add the bad tld
+          addToBuffer(new Token( //Add the bad tld
               tld,
               TokenType.ALPHA_NUMERIC,
               n.charStartIndex + dot + 1,
@@ -193,7 +208,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
           );
         }
 
-        buffer.addFirst(new Token( //Add the dot to the buffer
+        addToBuffer(new Token( //Add the dot to the buffer
             n.text.substring(dot, dot + 1),
             TokenType.PUNCTUATION,
             n.charStartIndex + dot,

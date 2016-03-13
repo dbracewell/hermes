@@ -13,6 +13,7 @@ import com.davidbracewell.io.resource.Resource;
  * @author David B. Bracewell
  */
 public class Annotate extends CommandLineApplication {
+  private static final long serialVersionUID = 1L;
 
   @Option(description = "Input corpus location", required = true)
   Resource input;

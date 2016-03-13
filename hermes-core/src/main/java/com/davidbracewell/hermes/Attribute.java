@@ -21,7 +21,10 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.*;
+import com.davidbracewell.DynamicEnum;
+import com.davidbracewell.EnumValue;
+import com.davidbracewell.Language;
+import com.davidbracewell.Tag;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
@@ -84,9 +87,7 @@ public final class Attribute extends EnumValue {
     .put(Language.class, CommonCodecs.LANGUAGE)
     .build();
   private volatile ValueType valueType;
-  private volatile transient Lazy<AttributeValueCodec> codec = new Lazy<>(
-    () -> Config.get("Attribute", name(), "codec").as(AttributeValueCodec.class, defaultCodecs.get(getValueType().getType()))
-  );
+  private volatile transient AttributeValueCodec codec;
 
 
   private Attribute(String name) {
@@ -158,6 +159,17 @@ public final class Attribute extends EnumValue {
     return valueType.convert(list);
   }
 
+  private AttributeValueCodec getCodec() {
+    if (codec == null) {
+      synchronized (this) {
+        if (codec == null) {
+          codec = Config.get("Attribute", name(), "codec").as(AttributeValueCodec.class, defaultCodecs.get(getValueType().getType()));
+        }
+      }
+    }
+    return codec;
+  }
+
   static Tuple2<Attribute, Val> read(StructuredReader reader) throws IOException {
 
     Attribute attribute;
@@ -166,33 +178,33 @@ public final class Attribute extends EnumValue {
     switch (reader.peek()) {
       case BEGIN_OBJECT:
         attribute = Attribute.create(reader.beginObject());
-        if (attribute.codec.get() == null) {
+        if (attribute.getCodec() == null) {
           value = readObject(reader, attribute);
         } else {
-          value = attribute.codec.get().decode(reader, attribute, null);
+          value = attribute.getCodec().decode(reader, attribute, null);
         }
         reader.endObject();
         break;
       case BEGIN_ARRAY:
         attribute = Attribute.create(reader.beginArray());
-        if (attribute.codec.get() == null) {
+        if (attribute.getCodec() == null) {
           value = readList(reader, attribute);
         } else {
-          value = attribute.codec.get().decode(reader, attribute, null);
+          value = attribute.getCodec().decode(reader, attribute, null);
         }
         reader.endArray();
         break;
       default:
         Tuple2<String, Val> keyValue = reader.nextKeyValue();
         attribute = Attribute.create(keyValue.getKey());
-        if (attribute.codec.get() == null && Readable.class.isAssignableFrom(attribute.getValueType().getType())) {
+        if (attribute.getCodec() == null && Readable.class.isAssignableFrom(attribute.getValueType().getType())) {
           try {
             value = Reflect.onClass(attribute.getValueType().getType()).create();
             Cast.<Readable>as(value).read(reader);
           } catch (ReflectionException e) {
             throw Throwables.propagate(e);
           }
-        } else if (attribute.codec.get() == null) {
+        } else if (attribute.getCodec() == null) {
           value = attribute.getValueType().convert(keyValue.getValue());
         } else if (Readable.class.isAssignableFrom(attribute.getValueType().getType())) {
           try {
@@ -202,7 +214,7 @@ public final class Attribute extends EnumValue {
             throw Throwables.propagate(e);
           }
         } else {
-          value = attribute.codec.get().decode(reader, attribute, keyValue.getValue().get());
+          value = attribute.getCodec().decode(reader, attribute, keyValue.getValue().get());
         }
     }
 
@@ -282,7 +294,7 @@ public final class Attribute extends EnumValue {
   }
 
   void write(StructuredWriter writer, Object val) throws IOException {
-    AttributeValueCodec encoder = codec.get();
+    AttributeValueCodec encoder = getCodec();
     Val wrapped = val instanceof Val ? Cast.as(val) : Val.of(val);
     ValueType vType = getValueType();
 

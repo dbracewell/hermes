@@ -117,7 +117,7 @@ SUBDELIMS=("!"|"$"|"&"|"'"|"("|")"|"*"|"+"|","|";"|"=")
 PCT_ENCODED="%"{HEXDIG}{HEXDIG}
 HEXDIG=([:digit:]|"A"|"B"|"C"|"D"|"E"|"F"|"a"|"b"|"c"|"d"|"e"|"f")
 
-SGML = "<" [^>]+ ">"
+//#SGML = "<" [A-Za-z][^>]+ ">"
 
 
 //===================================================================================================================
@@ -150,7 +150,7 @@ WHITESPACE = [\p{Z}\t\f\r\n\p{C}]
  {ALPHANUM}/{PUNCTUATION}{PERSON_TITLE} {return attachToken(TokenType.ALPHA_NUMERIC);}
  {URI}/{WHITESPACE}|{PUNCTUATION}  {return attachToken(TokenType.URL);}
  {ACRONYM}              {return attachToken(TokenType.ACRONYM);}
- {SGML}                 {return attachToken(TokenType.SGML);}
+// {SGML}                 {return attachToken(TokenType.SGML);}
  {COMPANY}              {return attachToken(TokenType.COMPANY);}
  {UNDERSCORE}           {return attachToken(TokenType.ALPHA_NUMERIC);}
  {URI}                  {return attachToken(TokenType.URL);}

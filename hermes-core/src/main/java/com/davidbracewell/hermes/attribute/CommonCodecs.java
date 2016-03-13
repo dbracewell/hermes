@@ -165,6 +165,22 @@ public enum CommonCodecs implements AttributeValueCodec {
     public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
       return Language.fromString(value.toString());
     }
+  },
+  WIKI_LINKS {
+    @Override
+    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
+      writer.writeValue(value);
+    }
+
+    @Override
+    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+      return reader.nextMap();
+    }
+
+    @Override
+    public boolean isObject() {
+      return true;
+    }
   };
 
   @Override
