@@ -16,6 +16,6 @@ The core sub-module contains the basic api.
  <dependency>
      <groupId>com.davidbracewell</groupId>
      <artifactId>hermes-core</artifactId>
-     <version>0.0.1-SNAPSHOT</version>
+     <version>0.0.3-SNAPSHOT</version>
  </dependency>
 ```
