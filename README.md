@@ -30,13 +30,4 @@ A set of wrappers around the [OpenNLP](https://opennlp.apache.org/) framework fo
  </dependency>
 ```
 
-### MaltParser Backend
-A wrapper around [MaltParser](http://www.maltparser.org/) provides dependency relations between tokens.
-```
- <dependency>
-     <groupId>com.davidbracewell</groupId>
-     <artifactId>hermes-maltparser</artifactId>
-     <version>${VERSION}</version>
- </dependency>
-```
 

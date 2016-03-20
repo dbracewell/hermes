@@ -29,6 +29,8 @@ import com.davidbracewell.string.StringUtils;
  * @author David B. Bracewell
  */
 public class UnicodeNormalizer extends TextNormalizer {
+  private static final long serialVersionUID = 1L;
+
   @Override
   public String performNormalization(String input, Language inputLanguage) {
     return StringUtils.toCanonicalForm(input);

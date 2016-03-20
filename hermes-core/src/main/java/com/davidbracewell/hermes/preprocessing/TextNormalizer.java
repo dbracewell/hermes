@@ -44,7 +44,7 @@ public abstract class TextNormalizer implements Serializable {
    * @return The post-processed text
    */
   public final String apply(String input, Language inputLanguage) {
-    if (input != null && shouldApply(inputLanguage)) {
+    if (input != null && Config.get(this.getClass(), inputLanguage, "apply").asBoolean(true)) {
       return performNormalization(input, inputLanguage);
     }
     return input;
@@ -58,17 +58,5 @@ public abstract class TextNormalizer implements Serializable {
    * @return The post-processed text
    */
   protected abstract String performNormalization(String input, Language language);
-
-
-  /**
-   * Should apply.
-   *
-   * @param language the language
-   * @return the boolean
-   */
-  protected final boolean shouldApply(Language language) {
-    return Config.get(this.getClass(), language, "apply").asBoolean(true);
-  }
-
 
 }//END OF TextPreprocessor

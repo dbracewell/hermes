@@ -38,7 +38,7 @@ import java.util.logging.Level;
  *
  * @author David B. Bracewell
  */
-public class TextNormalization implements Serializable{
+public class TextNormalization implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private static TextNormalization INSTANCE;
@@ -110,9 +110,7 @@ public class TextNormalization implements Serializable{
     }
     String finalString = input;
     for (TextNormalizer textNormalizer : preprocessors) {
-      if (textNormalizer.shouldApply(language)) {
-        finalString = textNormalizer.apply(finalString, language);
-      }
+      finalString = textNormalizer.apply(finalString, language);
     }
     return finalString;
   }

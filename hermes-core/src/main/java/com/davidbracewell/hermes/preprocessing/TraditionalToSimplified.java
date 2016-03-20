@@ -33,9 +33,11 @@ import com.ibm.icu.text.Transliterator;
  * @author David B. Bracewell
  */
 public class TraditionalToSimplified extends TextNormalizer {
+  private static final long serialVersionUID = 1L;
+
   @Override
   protected String performNormalization(String input, Language language) {
-    if (language.equals(Language.CHINESE)) {
+    if (language == Language.CHINESE) {
       return Transliterator.getInstance("Traditional-Simplified").transform(input);
     }
     return input;
