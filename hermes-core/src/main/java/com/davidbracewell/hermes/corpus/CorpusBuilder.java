@@ -42,7 +42,7 @@ public class CorpusBuilder {
   private Resource resource = null;
   private List<Document> documents = new LinkedList<>();
   private DocumentFactory documentFactory = DocumentFactory.getInstance();
-  private DocumentFormat documentFormat = DocumentFormats.forName(DocumentFormats.JSON_OPL);
+  private CorpusFormat corpusFormat = CorpusFormats.forName(CorpusFormats.JSON_OPL);
 
 
   public CorpusBuilder inMemory() {
@@ -71,7 +71,7 @@ public class CorpusBuilder {
   }
 
   public CorpusBuilder format(@NonNull String format) {
-    this.documentFormat = DocumentFormats.forName(format);
+    this.corpusFormat = CorpusFormats.forName(format);
     return this;
   }
 
@@ -106,7 +106,7 @@ public class CorpusBuilder {
     if (isInMemory) {
       List<Document> dList = new LinkedList<>(documents);
       if (resource != null) {
-        dList.addAll(new FileCorpus(documentFormat, resource, documentFactory).stream().collect());
+        dList.addAll(new FileCorpus(corpusFormat, resource, documentFactory).stream().collect());
       }
       return new InMemoryCorpus(dList);
     }
@@ -114,7 +114,7 @@ public class CorpusBuilder {
     if (isDistributed) {
       Corpus corpus = null;
       if (resource != null) {
-        corpus = new SparkCorpus(resource.descriptor(), documentFormat, documentFactory);
+        corpus = new SparkCorpus(resource.descriptor(), corpusFormat, documentFactory);
         if (partitions > 0) {
           Cast.<SparkCorpus>as(corpus).repartition(partitions);
         }
@@ -137,7 +137,7 @@ public class CorpusBuilder {
       return new InMemoryCorpus(documents);
     }
 
-    Corpus corpus = new FileCorpus(documentFormat, resource, documentFactory);
+    Corpus corpus = new FileCorpus(corpusFormat, resource, documentFactory);
     if (documents.size() > 0) {
       corpus.union(new InMemoryCorpus(documents));
     }

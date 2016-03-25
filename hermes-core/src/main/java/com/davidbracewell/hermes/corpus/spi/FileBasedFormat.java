@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.corpus.spi;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormat;
+import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.hermes.corpus.FileCorpus;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
@@ -35,7 +35,7 @@ import java.io.Serializable;
 /**
  * @author David B. Bracewell
  */
-public abstract class FileBasedFormat implements DocumentFormat, Serializable {
+public abstract class FileBasedFormat implements CorpusFormat, Serializable {
   private static final long serialVersionUID = 1L;
 
   @Override

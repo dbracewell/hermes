@@ -25,7 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.concurrent.Broker;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
+import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.io.AsyncWriter;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
@@ -171,7 +171,7 @@ public final class Pipeline implements Serializable {
         builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer), numberOfThreads)
           .build().run();
         writer.close();
-        corpus = Corpus.builder().source(DocumentFormats.JSON_OPL, tempFile).build();
+        corpus = Corpus.builder().source(CorpusFormats.JSON_OPL, tempFile).build();
       } catch (Exception e) {
         throw Throwables.propagate(e);
       }

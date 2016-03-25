@@ -25,7 +25,7 @@ import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
+import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.io.Resources;
 
 import java.io.Serializable;
@@ -51,7 +51,7 @@ public class SparkSVOExample implements Serializable {
     //Build the corpus
     Corpus corpus = Corpus.builder()
       .distributed()
-      .format(DocumentFormats.PLAIN_TEXT_OPL)
+      .format(CorpusFormats.PLAIN_TEXT_OPL)
       //You can substitute the file for one you have. Here I am using a 1,000,000 sentence corpus from news articles with
       // one sentence (treated as a document) per line.
       .source(Resources.fromFile("/shared/data/corpora/en/Raw/eng_news_2005_1M-sentences.txt")).build()

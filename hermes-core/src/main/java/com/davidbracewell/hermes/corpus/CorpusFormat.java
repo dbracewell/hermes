@@ -36,7 +36,7 @@ import java.io.IOException;
  *
  * @author David B. Bracewell
  */
-public interface DocumentFormat {
+public interface CorpusFormat {
 
   /**
    * Create corpus.

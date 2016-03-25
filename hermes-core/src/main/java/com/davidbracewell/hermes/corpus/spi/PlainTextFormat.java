@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.corpus.DocumentFormat;
+import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
 import org.kohsuke.MetaInfServices;
 
@@ -35,7 +35,7 @@ import java.util.Collections;
  *
  * @author David B. Bracewell
  */
-@MetaInfServices(DocumentFormat.class)
+@MetaInfServices(CorpusFormat.class)
 public class PlainTextFormat extends FileBasedFormat {
   private static final long serialVersionUID = 1L;
 

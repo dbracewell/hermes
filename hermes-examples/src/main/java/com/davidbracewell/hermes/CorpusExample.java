@@ -26,7 +26,7 @@ import com.davidbracewell.apollo.ml.clustering.topic.GibbsLDA;
 import com.davidbracewell.apollo.ml.clustering.topic.LDAModel;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
+import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotation;
 import com.davidbracewell.io.Resources;
@@ -58,7 +58,7 @@ public class CorpusExample {
       //documents are defined as plain text with one document per line.
       //The source method will load documents in the given format from the given resource (by default the Hermes json
       //format is assumed.)
-      .source(DocumentFormats.PLAIN_TEXT_OPL, Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
+      .source(CorpusFormats.PLAIN_TEXT_OPL, Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
 
       //Documents may also be specified via add and addAll methods. This is useful for building in memory corpora.
       //.add(Document.create("Document 1"))

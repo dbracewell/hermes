@@ -31,6 +31,7 @@ import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.*;
@@ -306,7 +307,7 @@ public interface Corpus extends Iterable<Document> {
    * @param function the function
    * @return the corpus
    */
-  Corpus map(@NonNull SerializableFunction<Document,Document> function);
+  Corpus map(@NonNull SerializableFunction<Document, Document> function);
 
   /**
    * Gets data set type.
@@ -354,9 +355,11 @@ public interface Corpus extends Iterable<Document> {
    */
   default Counter<String> documentFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
     return Counters.newHashMapCounter(
-      stream()
-        .flatMap(document -> document.get(type).stream().map(toString).distinct().collect(Collectors.toList()))
-        .countByValue()
+      Cast.cast(
+        stream()
+          .flatMap(document -> document.get(type).stream().map(toString).distinct().collect(Collectors.toList()))
+          .countByValue()
+      )
     );
   }
 
@@ -498,26 +501,28 @@ public interface Corpus extends Iterable<Document> {
    */
   default Counter<Tuple> tokenNGrams(int order, boolean removeStopWords, @NonNull SerializableFunction<? super HString, String> toStringFunction) {
     return Counters.newHashMapCounter(
-      stream()
-        .flatMap(document -> document.tokenNGrams(order, removeStopWords).stream().map(hString -> {
-          switch (order) {
-            case 1:
-              return Tuple1.of(toStringFunction.apply(hString));
-            case 2:
-              return Tuple2.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)));
-            case 3:
-              return Tuple3.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)), toStringFunction.apply(hString.tokenAt(2)));
-            case 4:
-              return Tuple4.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)), toStringFunction.apply(hString.tokenAt(2)), toStringFunction.apply(hString.tokenAt(3)));
-            default:
-              String[] source = new String[order];
-              for (int i = 0; i < order; i++) {
-                source[i] = toStringFunction.apply(hString.tokenAt(i));
-              }
-              return NTuple.of(source);
-          }
-        }).collect(Collectors.toList()))
-        .countByValue()
+      Cast.cast(
+        stream()
+          .flatMap(document -> document.tokenNGrams(order, removeStopWords).stream().map(hString -> {
+            switch (order) {
+              case 1:
+                return Tuple1.of(toStringFunction.apply(hString));
+              case 2:
+                return Tuple2.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)));
+              case 3:
+                return Tuple3.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)), toStringFunction.apply(hString.tokenAt(2)));
+              case 4:
+                return Tuple4.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)), toStringFunction.apply(hString.tokenAt(2)), toStringFunction.apply(hString.tokenAt(3)));
+              default:
+                String[] source = new String[order];
+                for (int i = 0; i < order; i++) {
+                  source[i] = toStringFunction.apply(hString.tokenAt(i));
+                }
+                return NTuple.of(source);
+            }
+          }).collect(Collectors.toList()))
+          .countByValue()
+      )
     );
   }
 
@@ -541,9 +546,11 @@ public interface Corpus extends Iterable<Document> {
    */
   default Counter<String> termFrequencies(@NonNull AnnotationType type, @NonNull SerializableFunction<? super Annotation, String> toString) {
     return Counters.newHashMapCounter(
-      stream()
-        .flatMap(document -> document.get(type).stream().map(toString).collect(Collectors.toList()))
-        .countByValue()
+      Cast.cast(
+        stream()
+          .flatMap(document -> document.get(type).stream().map(toString).collect(Collectors.toList()))
+          .countByValue()
+      )
     );
   }
 
@@ -566,8 +573,8 @@ public interface Corpus extends Iterable<Document> {
    * @throws IOException the io exception
    */
   default Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
-    DocumentFormat documentFormat = DocumentFormats.forName(format);
-    documentFormat.write(resource, this);
+    CorpusFormat corpusFormat = CorpusFormats.forName(format);
+    corpusFormat.write(resource, this);
     return builder().from(format, resource, getDocumentFactory()).build();
   }
 
@@ -579,7 +586,7 @@ public interface Corpus extends Iterable<Document> {
    * @throws IOException the io exception
    */
   default Corpus write(@NonNull Resource resource) throws IOException {
-    return write(DocumentFormats.JSON_OPL, resource);
+    return write(CorpusFormats.JSON_OPL, resource);
   }
 
   /**
@@ -602,7 +609,7 @@ public interface Corpus extends Iterable<Document> {
    * @throws IOException the io exception
    */
   default Corpus write(@NonNull String resource) throws IOException {
-    return write(DocumentFormats.JSON_OPL, resource);
+    return write(CorpusFormats.JSON_OPL, resource);
   }
 
   /**

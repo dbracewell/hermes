@@ -122,7 +122,7 @@ public class CorpusTest {
   public void mStreamTest() {
     Config.initializeTest();
     Corpus corpus = Corpus.builder()
-      .source(DocumentFormats.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/docs/txt"))
+      .source(CorpusFormats.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/docs/txt"))
       .build()
       .filter(document -> true);
 
@@ -137,7 +137,7 @@ public class CorpusTest {
   public void resourceTest() {
     Config.initializeTest();
     Corpus corpus = Corpus.builder()
-      .source(DocumentFormats.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/docs/txt"))
+      .source(CorpusFormats.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/docs/txt"))
       .build();
 
     assertFalse(corpus.isEmpty());
@@ -221,7 +221,7 @@ public class CorpusTest {
   @Test
   public void unionTest() {
     Corpus c1 = Corpus.builder()
-      .source(DocumentFormats.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/docs/txt"))
+      .source(CorpusFormats.PLAIN_TEXT, Resources.fromClasspath("com/davidbracewell/hermes/docs/txt"))
       .build();
     Corpus c2 = Corpus.builder()
       .inMemory()

@@ -32,16 +32,17 @@ import java.util.ServiceLoader;
 /**
  * @author David B. Bracewell
  */
-public final class DocumentFormats {
-  private static final Map<String, DocumentFormat> formats = new NormalizedStringMap<>();
+public final class CorpusFormats {
+  private static final Map<String, CorpusFormat> formats = new NormalizedStringMap<>();
+
 
   static {
-    for (DocumentFormat df : ServiceLoader.load(DocumentFormat.class)) {
+    for (CorpusFormat df : ServiceLoader.load(CorpusFormat.class)) {
       formats.put(df.name(), df);
     }
   }
 
-  public static DocumentFormat forName(@NonNull String name) {
+  public static CorpusFormat forName(@NonNull String name) {
     String format = StringUtils.trim(name).toUpperCase();
     boolean isOPL = format.endsWith("_OPL");
     final String normFormat = format.replaceAll("_OPL$", "").trim();
@@ -84,7 +85,7 @@ public final class DocumentFormats {
    */
   public static final String TSV = "TSV";
 
-  private DocumentFormats() {
+  private CorpusFormats() {
     throw new IllegalAccessError();
   }
 

@@ -25,7 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.annotator.LexiconAnnotator;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
+import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconSpec;
 import com.davidbracewell.io.Resources;
@@ -41,7 +41,7 @@ public class LexiconExample {
     //Load the config that defines the lexicon and annotator
     Config.loadConfig(Resources.fromClasspath("com/davidbracewell/hermes/example.conf"));
     Corpus.builder()
-      .format(DocumentFormats.PLAIN_TEXT_OPL)
+      .format(CorpusFormats.PLAIN_TEXT_OPL)
       .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
       .build()
       .annotate(Types.TOKEN, Types.SENTENCE, Types.ENTITY)
@@ -61,7 +61,7 @@ public class LexiconExample {
     Pipeline.setAnnotator(Types.ENTITY, Language.ENGLISH, new LexiconAnnotator(Types.ENTITY, lexicon));
 
     Corpus.builder()
-      .format(DocumentFormats.PLAIN_TEXT_OPL)
+      .format(CorpusFormats.PLAIN_TEXT_OPL)
       .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
       .build()
       .annotate(Types.TOKEN, Types.SENTENCE, Types.ENTITY)

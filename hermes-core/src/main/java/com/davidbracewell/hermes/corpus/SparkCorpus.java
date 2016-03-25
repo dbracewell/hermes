@@ -34,19 +34,19 @@ public class SparkCorpus implements Corpus, Serializable {
    * Instantiates a new Spark corpus.
    *
    * @param corpusLocation  the corpus location
-   * @param documentFormat  the document format
+   * @param corpusFormat  the document format
    * @param documentFactory the document factory
    */
   @SuppressWarnings("unchecked")
-  public SparkCorpus(@NonNull String corpusLocation, @NonNull DocumentFormat documentFormat, @NonNull DocumentFactory documentFactory) {
-    if (documentFormat.isOnePerLine() && documentFormat.extension().toUpperCase().startsWith("JSON")) {
+  public SparkCorpus(@NonNull String corpusLocation, @NonNull CorpusFormat corpusFormat, @NonNull DocumentFactory documentFactory) {
+    if (corpusFormat.isOnePerLine() && corpusFormat.extension().toUpperCase().startsWith("JSON")) {
       this.stream = new SparkDocumentStream(Streams.textFile(corpusLocation, true));
-    } else if (documentFormat.isOnePerLine()) {
+    } else if (corpusFormat.isOnePerLine()) {
       Broadcast<Config> configBroadcast = Spark.context().broadcast(Config.getInstance());
       this.stream = new SparkDocumentStream(Streams.textFile(corpusLocation, true).flatMap(
         line -> {
           Hermes.initializeWorker(configBroadcast.getValue());
-          return documentFormat.create(Resources.fromString(line), documentFactory)
+          return corpusFormat.create(Resources.fromString(line), documentFactory)
             .stream()
             .map(Document::toJson)
             .collect();
@@ -61,7 +61,7 @@ public class SparkCorpus implements Corpus, Serializable {
             .values()
             .flatMap(str -> {
               Hermes.initializeWorker(configBroadcast.getValue());
-              return documentFormat.create(Resources.fromString(str), documentFactory)
+              return corpusFormat.create(Resources.fromString(str), documentFactory)
                 .stream()
                 .map(Document::toJson)
                 .collect();
@@ -135,7 +135,7 @@ public class SparkCorpus implements Corpus, Serializable {
 
   @Override
   public Corpus write(@NonNull String format, @NonNull String resource) throws IOException {
-    DocumentFormat outFormat = DocumentFormats.forName(format);
+    CorpusFormat outFormat = CorpusFormats.forName(format);
     if (!outFormat.isOnePerLine()) {
       throw new IllegalArgumentException(format + " must be one per line!");
     }

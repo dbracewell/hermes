@@ -52,7 +52,7 @@ public class FileCorpus implements Corpus, Serializable {
   private static final long serialVersionUID = 1L;
   private static final Logger log = Logger.getLogger(FileCorpus.class);
 
-  private final DocumentFormat documentFormat;
+  private final CorpusFormat corpusFormat;
   private final Resource resource;
   private final DocumentFactory documentFactory;
   private long size = -1;
@@ -60,12 +60,12 @@ public class FileCorpus implements Corpus, Serializable {
   /**
    * Instantiates a new file based corpus
    *
-   * @param documentFormat  the corpus format
+   * @param corpusFormat  the corpus format
    * @param resource        the resource containing the corpus
    * @param documentFactory the document factory to use when constructing documents
    */
-  public FileCorpus(@NonNull DocumentFormat documentFormat, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
-    this.documentFormat = documentFormat;
+  public FileCorpus(@NonNull CorpusFormat corpusFormat, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
+    this.corpusFormat = corpusFormat;
     this.resource = resource;
     this.documentFactory = documentFactory;
   }
@@ -75,7 +75,7 @@ public class FileCorpus implements Corpus, Serializable {
   public Iterator<Document> iterator() {
     return new RecursiveDocumentIterator(resource, documentFactory, ((resource1, documentFactory1) -> {
       try {
-        return documentFormat.read(resource1, documentFactory1);
+        return corpusFormat.read(resource1, documentFactory1);
       } catch (IOException e) {
         log.warn("Error reading {0} : {1}", resource1, e);
         return Collections.emptyList();
@@ -86,8 +86,8 @@ public class FileCorpus implements Corpus, Serializable {
 
   @Override
   public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
-    DocumentFormat documentFormat = DocumentFormats.forName(format);
-    if (documentFormat == this.documentFormat) {
+    CorpusFormat corpusFormat = CorpusFormats.forName(format);
+    if (corpusFormat == this.corpusFormat) {
       try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
         try (MStream<String> lines = this.resource.lines()) {
           AtomicLong count = new AtomicLong();

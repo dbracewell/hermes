@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
+import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.tuple.Tuple2;
 
@@ -47,7 +47,7 @@ public class DependencyParseExample {
 
     //We will construct a corpus made up of the sample documents.
     Corpus corpus = Corpus.builder()
-      .format(DocumentFormats.PLAIN_TEXT_OPL)
+      .format(CorpusFormats.PLAIN_TEXT_OPL)
       .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
       .build()
       //Annotate for Dependency, which will also annotate for Token, Sentence, and Part of Speech

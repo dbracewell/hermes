@@ -6,7 +6,7 @@ import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusBuilder;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
+import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.io.resource.Resource;
 
 /**
@@ -42,7 +42,7 @@ public class Annotate extends CommandLineApplication {
     }
     builder.build()
       .annotate(annotations)
-      .write(DocumentFormats.JSON_OPL, output);
+      .write(CorpusFormats.JSON_OPL, output);
   }
 
 }// END OF Annotate

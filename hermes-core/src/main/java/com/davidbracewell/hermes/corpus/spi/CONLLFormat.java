@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.corpus.spi;
 import com.davidbracewell.SystemInfo;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.corpus.DocumentFormat;
+import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
@@ -40,7 +40,7 @@ import java.util.List;
 /**
  * @author David B. Bracewell
  */
-@MetaInfServices(DocumentFormat.class)
+@MetaInfServices(CorpusFormat.class)
 public class CONLLFormat extends FileBasedFormat {
   private static final long serialVersionUID = 1L;
 

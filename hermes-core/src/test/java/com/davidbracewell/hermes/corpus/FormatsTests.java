@@ -79,7 +79,7 @@ public class FormatsTests {
   @Test
   public void testCSVRead() throws Exception {
     Config.setProperty("CSVCorpus.hasHeader", "true");
-    Cast.<CSVCorpus>as(DocumentFormats.forName("CSV")).clearFields();
+    Cast.<CSVCorpus>as(CorpusFormats.forName("CSV")).clearFields();
     Corpus c = Corpus.builder()
       .format("CSV")
       .source(Resources.fromClasspath("com/davidbracewell/hermes/docs/dsv/test.csv"))

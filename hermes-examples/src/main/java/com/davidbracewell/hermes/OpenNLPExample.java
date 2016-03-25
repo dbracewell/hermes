@@ -23,7 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.DocumentFormats;
+import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.io.Resources;
 
 import static com.davidbracewell.hermes.Types.*;
@@ -46,7 +46,7 @@ public class OpenNLPExample {
     Config.setProperty("data.cp", "/shared/data/models"); //This is the root
 
     Corpus corpus = Corpus.builder()
-      .format(DocumentFormats.PLAIN_TEXT_OPL)
+      .format(CorpusFormats.PLAIN_TEXT_OPL)
       .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
       .build()
       .annotate(TOKEN, SENTENCE, PART_OF_SPEECH, ENTITY);
