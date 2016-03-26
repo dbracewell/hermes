@@ -32,14 +32,13 @@ import com.google.common.collect.Maps;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.function.Predicate;
 
 /**
  * The type Stop words.
  *
  * @author David B. Bracewell
  */
-public abstract class StopWords implements SerializablePredicate<HString> {
+public abstract class StopWords implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private static volatile Map<Language, StopWords> stopWordLists = Maps.newConcurrentMap();
@@ -87,23 +86,18 @@ public abstract class StopWords implements SerializablePredicate<HString> {
 
   }
 
-  @Override
-  public final boolean test(HString input) {
-    return !isStopWord(input);
+  public static SerializablePredicate<HString> isStopWord() {
+    return hString -> {
+      if (hString == null) {
+        return true;
+      }
+      return StopWords.getInstance(hString.getLanguage()).isStopWord(hString);
+    };
   }
 
-  /**
-   * String predicate.
-   *
-   * @return the predicate
-   */
-  public Predicate<CharSequence> stringPredicate() {
-    return STOPWORD_PREDICATE;
+  public static SerializablePredicate<HString> isNotStopWord() {
+    return isStopWord().negate();
   }
-
-  private final Predicate<CharSequence> STOPWORD_PREDICATE = (Serializable & Predicate<CharSequence>)
-    (input -> isStopWord(input.toString()));
-
 
   /**
    * The type No opt stop words.

@@ -68,6 +68,53 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
 
+  public HString trimLeft(@NonNull Predicate<? super Annotation> toTrimPredicate) {
+    int start = 0;
+    while (start < tokenLength() && toTrimPredicate.test(tokenAt(start))) {
+      start++;
+    }
+    if (start < tokenLength()) {
+      return tokenAt(start).union(tokenAt(tokenLength() - 1));
+    }
+    return Fragments.empty(document());
+  }
+
+  public HString trimRight(@NonNull Predicate<? super Annotation> toTrimPredicate) {
+    int end = tokenLength() - 1;
+    while (end >= 0 && toTrimPredicate.test(tokenAt(end))) {
+      end--;
+    }
+    if (end > 0) {
+      return tokenAt(0).union(tokenAt(end));
+    } else if (end == 0) {
+      return tokenAt(0);
+    }
+    return Fragments.empty(document());
+  }
+
+  public HString trim(@NonNull Predicate<? super Annotation> toTrimPredicate) {
+    return trimRight(toTrimPredicate).trimLeft(toTrimPredicate);
+  }
+
+  public List<HString> split(@NonNull Predicate<? super Annotation> delimiterPredicate) {
+    List<HString> result = new ArrayList<>();
+    int start = -1;
+    for (int i = 0; i < tokenLength(); i++) {
+      if (delimiterPredicate.test(tokenAt(i))) {
+        if (start != -1) {
+          result.add(tokenAt(start).union(tokenAt(i - 1)));
+        }
+        start = -1;
+      } else if (start == -1) {
+        start = i;
+      }
+    }
+    if (start != -1) {
+      result.add(tokenAt(start).union(tokenAt(tokenLength() - 1)));
+    }
+    return result;
+  }
+
   /**
    * Creates a new string by performing a union over the spans of two or more HStrings. The new HString will have a
    * span that starts at the minimum starting position of the given strings and end at the maximum ending position of
@@ -598,7 +645,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return ngrams(
         order,
         annotationType,
-        StopWords.getInstance(getLanguage())
+        StopWords.isNotStopWord()
       );
     }
     return ngrams(
@@ -773,6 +820,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    *                                   than relativeEnd.
    */
   public HString substring(int relativeStart, int relativeEnd) {
+    System.err.println(relativeStart + " : " + relativeEnd + " : " + length() + " > " + start() + " > " + end());
     Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
     return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
   }

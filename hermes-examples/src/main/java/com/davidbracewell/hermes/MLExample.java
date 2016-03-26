@@ -180,7 +180,7 @@ public class MLExample {
     //Simple binary featurizer that converts tokens to lower case and removes stop words
     Featurizer<HString> featurizer =
       Featurizer.<HString>builder()
-        .add(BagOfAnnotation.binary(Types.TOKEN, HString::toLowerCase, StopWords.getInstance(Language.ENGLISH)))
+        .add(BagOfAnnotation.binary(Types.TOKEN, HString::toLowerCase, StopWords.isNotStopWord()))
         .build();
 
     //Build an in-memory dataset from a corpus constructed using the raw labels and documents in the String[][] above

@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.Language;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.filter.StopWords;
@@ -116,7 +115,7 @@ public class HStringTest {
     assertEquals(2, counts.get("time"), 0d);
     assertEquals(2d, counts.get("a"), 0d);
 
-    counts = document.count(Types.TOKEN, StopWords.getInstance(Language.ENGLISH), HString::toLowerCase);
+    counts = document.count(Types.TOKEN, StopWords.isNotStopWord(), HString::toLowerCase);
     assertEquals(0d, counts.get("a"), 0d);
 
     List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b"));

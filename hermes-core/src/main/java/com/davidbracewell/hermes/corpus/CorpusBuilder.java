@@ -75,6 +75,11 @@ public class CorpusBuilder {
     return this;
   }
 
+  public CorpusBuilder format(@NonNull CorpusFormat format) {
+    this.corpusFormat = format;
+    return this;
+  }
+
   public CorpusBuilder add(@NonNull Document document) {
     documents.add(document);
     return this;

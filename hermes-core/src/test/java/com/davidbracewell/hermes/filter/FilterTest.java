@@ -31,9 +31,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 
 /**
@@ -47,7 +45,7 @@ public class FilterTest {
     Document document = DocumentFactory.getInstance().create("This is a sample document. 100 is a number and ( is a punctuation.");
     Pipeline.process(document, Types.TOKEN);
     List<Annotation> results = document.get(Types.TOKEN).stream()
-      .filter(EnglishStopWords.getInstance())
+      .filter(StopWords.isNotStopWord())
       .collect(Collectors.toList());
     assertEquals(4, results.size());
   }

@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.clustering.topic.GibbsLDA;
 import com.davidbracewell.apollo.ml.clustering.topic.LDAModel;
 import com.davidbracewell.collection.Counter;
@@ -141,7 +140,7 @@ public class CorpusExample {
     //since lda doesn't care about word count we will make the features binary (1 if word is present, 0 if not)
     LDAModel model = lda.train(
       corpus.asClassificationDataSet(
-        new BagOfAnnotation(Types.TOKEN, HString::toLowerCase, StopWords.getInstance(Language.ENGLISH), true)
+        new BagOfAnnotation(Types.TOKEN, HString::toLowerCase, StopWords.isNotStopWord(), true)
       )
     );
 

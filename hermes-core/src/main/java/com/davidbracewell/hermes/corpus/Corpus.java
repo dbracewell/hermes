@@ -114,6 +114,16 @@ public interface Corpus extends Iterable<Document> {
   /**
    * Of corpus.
    *
+   * @param documents the document iterable
+   * @return the corpus
+   */
+  static Corpus of(@NonNull Document... documents) {
+    return new InMemoryCorpus(new ArrayList<>(Arrays.asList(documents)));
+  }
+
+  /**
+   * Of corpus.
+   *
    * @param documentCollection the document collection
    * @return the corpus
    */
