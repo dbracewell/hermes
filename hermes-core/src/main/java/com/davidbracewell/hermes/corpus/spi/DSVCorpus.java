@@ -36,8 +36,8 @@ public abstract class DSVCorpus extends ColumnBasedFormat {
       com.davidbracewell.io.CSV csv = com.davidbracewell.io.CSV.builder()
         .delimiter(delimiter);
 
-      if (Config.hasProperty("DSVCorpus.comment")) {
-        csv = csv.comment(Config.get("DSVCorpus.comment").asCharacterValue());
+      if (Config.hasProperty(configProperty, "comment")) {
+        csv = csv.comment(Config.get(configProperty,"comment").asCharacterValue());
       }
 
       CSVReader reader;

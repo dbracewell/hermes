@@ -583,8 +583,11 @@ public interface Corpus extends Iterable<Document> {
    * @throws IOException the io exception
    */
   default Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
-    CorpusFormat corpusFormat = CorpusFormats.forName(format);
-    corpusFormat.write(resource, this);
+    return write(CorpusFormats.forName(format), resource);
+  }
+
+  default Corpus write(@NonNull CorpusFormat format, @NonNull Resource resource) throws IOException {
+    format.write(resource, this);
     return builder().from(format, resource, getDocumentFactory()).build();
   }
 
@@ -608,6 +611,18 @@ public interface Corpus extends Iterable<Document> {
    * @throws IOException the io exception
    */
   default Corpus write(@NonNull String format, @NonNull String resource) throws IOException {
+    return write(format, Resources.from(resource));
+  }
+
+  /**
+   * Write corpus.
+   *
+   * @param format   the format
+   * @param resource the resource
+   * @return the corpus
+   * @throws IOException the io exception
+   */
+  default Corpus write(@NonNull CorpusFormat format, @NonNull String resource) throws IOException {
     return write(format, Resources.from(resource));
   }
 

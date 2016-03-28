@@ -106,6 +106,12 @@ public class CorpusBuilder {
     return format(format);
   }
 
+  public CorpusBuilder from(@NonNull CorpusFormat format, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
+    this.resource = resource;
+    this.documentFactory = documentFactory;
+    return format(format);
+  }
+
   public Corpus build() {
 
     if (isInMemory) {

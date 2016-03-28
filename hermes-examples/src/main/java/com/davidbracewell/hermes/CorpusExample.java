@@ -71,6 +71,8 @@ public class CorpusExample {
       .build();
 
 
+    corpus.query("[LANGUAGE]:ENGLISH").forEach(System.out::println);
+
     //Now that we have corpus, we can do some analysis.
 
     //First we might want to add some annotations.

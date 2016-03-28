@@ -55,7 +55,7 @@ public class SparkCorpus implements Corpus, Serializable {
     } else {
       Broadcast<Config> configBroadcast = Spark.context().broadcast(Config.getInstance());
       this.stream = new SparkDocumentStream(
-        new SparkStream<String>(
+        new SparkStream<>(
           Spark.context()
             .wholeTextFiles(corpusLocation)
             .values()
