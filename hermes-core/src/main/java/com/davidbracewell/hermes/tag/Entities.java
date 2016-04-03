@@ -24,6 +24,7 @@ package com.davidbracewell.hermes.tag;
 import com.davidbracewell.annotation.DynamicEnumeration;
 
 import static com.davidbracewell.hermes.tag.EntityType.ROOT;
+
 /**
  * The interface Entities.
  *

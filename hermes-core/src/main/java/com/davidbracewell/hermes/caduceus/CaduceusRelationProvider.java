@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.conversion.Val;
-import com.davidbracewell.hermes.tag.RelationType;
+import com.davidbracewell.hermes.RelationType;
 import lombok.Builder;
 import lombok.Value;
 

@@ -39,17 +39,10 @@ public interface Types {
    */
   AnnotationType ENTITY = AnnotationType.create("ENTITY");
   /**
-   * lemma annotation type
-   */
-  AnnotationType LEMMA = AnnotationType.create("LEMMA");
-  /**
    * lexicon match annotation type
    */
   AnnotationType LEXICON_MATCH = AnnotationType.create("LEXICON_MATCH");
-  /**
-   * part of speech annotation type
-   */
-  AnnotationType PART_OF_SPEECH = AnnotationType.create("PART_OF_SPEECH");
+
   /**
    * phrase chunk annotation type
    */
@@ -58,13 +51,7 @@ public interface Types {
    * sentence annotation type
    */
   AnnotationType SENTENCE = AnnotationType.create("SENTENCE");
-
-  /**
-   * The STEM.
-   */
-  AnnotationType STEM = AnnotationType.create("STEM");
-
-  /**
+/**
    * token annotation type
    */
   AnnotationType TOKEN = AnnotationType.create("TOKEN");
@@ -72,11 +59,6 @@ public interface Types {
    * The constant TOKEN_TYPE_ENTITY.
    */
   AnnotationType TOKEN_TYPE_ENTITY = AnnotationType.create("TOKEN_TYPE_ENTITY");
-  /**
-   * The constant TRANSLITERATION.
-   */
-  AnnotationType TRANSLITERATION = AnnotationType.create("TRANSLITERATION");
 
-  AnnotationType DEPENDENCY = AnnotationType.create("DEPENDENCY");
 
 }//END OF AnnotationTypes

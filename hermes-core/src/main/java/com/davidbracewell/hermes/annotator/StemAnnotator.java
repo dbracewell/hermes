@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Annotatable;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
@@ -52,12 +52,12 @@ public class StemAnnotator implements Annotator, Serializable {
   }
 
   @Override
-  public Set<AnnotationType> satisfies() {
-    return Collections.singleton(Types.STEM);
+  public Set<Annotatable> satisfies() {
+    return Collections.singleton(Attrs.STEM);
   }
 
   @Override
-  public Set<AnnotationType> requires() {
+  public Set<Annotatable> requires() {
     return Sets.newHashSet(Types.TOKEN);
   }
 

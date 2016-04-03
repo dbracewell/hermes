@@ -8,8 +8,8 @@ import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.Mode;
 import com.davidbracewell.hermes.tag.POS;
@@ -63,7 +63,7 @@ public class POSTrainer extends CommandLineApplication {
           .format(corpusFormat)
           .build()
           .stream()
-          .filter(d -> d.getAnnotationSet().isCompleted(Types.PART_OF_SPEECH))
+          .filter(d -> d.getAnnotationSet().isCompleted(Attrs.PART_OF_SPEECH))
           .flatMap(Document::sentences)
           .map(sentence -> {
             SequenceInput<Annotation> input = new SequenceInput<>();

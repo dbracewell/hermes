@@ -251,7 +251,7 @@ public class Document extends HString {
    *
    * @return the set
    */
-  public Set<AnnotationType> completedAnnotations() {
+  public Set<Annotatable> completedAnnotations() {
     return annotationSet.getCompleted();
   }
 
@@ -504,7 +504,7 @@ public class Document extends HString {
 
 
         writer.beginObject("completed");
-        for (AnnotationType type : getAnnotationSet().getCompleted()) {
+        for (Annotatable type : getAnnotationSet().getCompleted()) {
           writer.writeKeyValue(type.name(), getAnnotationSet().getAnnotationProvider(type));
         }
         writer.endObject();

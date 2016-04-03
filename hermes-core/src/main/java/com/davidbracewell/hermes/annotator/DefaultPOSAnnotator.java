@@ -23,9 +23,9 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.Annotatable;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.ml.pos.POSTagger;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
@@ -54,7 +54,7 @@ public class DefaultPOSAnnotator extends SentenceLevelAnnotator implements Seria
             if (classPath.exists()) {
               taggers.put(language, POSTagger.read(classPath));
             } else {
-              taggers.put(language, POSTagger.read(Config.get("Annotation.PART_OF_SPEECH", language, "model").asResource()));
+              taggers.put(language, POSTagger.read(Config.get("Attribute.PART_OF_SPEECH", language, "model").asResource()));
             }
           } catch (Exception e) {
             throw Throwables.propagate(e);
@@ -71,8 +71,8 @@ public class DefaultPOSAnnotator extends SentenceLevelAnnotator implements Seria
   }
 
   @Override
-  public Set<AnnotationType> satisfies() {
-    return Collections.singleton(Types.PART_OF_SPEECH);
+  public Set<Annotatable> satisfies() {
+    return Collections.singleton(Attrs.PART_OF_SPEECH);
   }
 
 }//END OF DefaultPOSAnnotator

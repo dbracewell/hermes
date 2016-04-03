@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.corpus;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Annotatable;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
@@ -52,7 +52,7 @@ public class MStreamCorpus implements Corpus, Serializable {
   }
 
   @Override
-  public Corpus annotate(@NonNull AnnotationType... types) {
+  public Corpus annotate(@NonNull Annotatable... types) {
     return new MStreamCorpus(stream.map(d -> {
       Pipeline.process(d, types);
       return d;

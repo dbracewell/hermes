@@ -19,27 +19,16 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.morphology;
-
-import com.davidbracewell.Language;
-import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.*;
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+package com.davidbracewell.hermes;
 
 /**
  * @author David B. Bracewell
  */
-public class EnglishStemmerTest {
+public interface Relations {
 
-  @Test
-  public void testStem() throws Exception {
-    Config.initializeTest();
-    Document document = DocumentFactory.getInstance().create("I was walking to the shore with no shoes.", Language.ENGLISH);
-    Pipeline.process(document, Types.TOKEN, Types.SENTENCE, Attrs.STEM);
-    assertEquals("wa walk", document.find("was walking").getStem());
-    assertEquals("shoe", document.find("shoes").getStem());
-    assertEquals("no", document.find("no").getStem());
+  static RelationType relation(String name) {
+    return RelationType.create(name);
   }
-}
+
+  RelationType DEPENDENCY = RelationType.create("DEPENDENCY");
+}//END OF Relations

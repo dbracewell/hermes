@@ -68,8 +68,8 @@ public class EnglishLemmatizerTest {
 
     document.find("was").first(Types.TOKEN).put(Attrs.PART_OF_SPEECH, POS.VBD);
     document.find("walking").first(Types.TOKEN).put(Attrs.PART_OF_SPEECH, POS.VBG);
-    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "");
-    Pipeline.process(document, Types.LEMMA);
+    document.getAnnotationSet().setIsCompleted(Attrs.PART_OF_SPEECH, true, "");
+    Pipeline.process(document, Attrs.LEMMA);
     assertEquals("be walk", document.find("was walking").getLemma());
   }
 }

@@ -139,7 +139,7 @@ public interface Corpus extends Iterable<Document> {
    * @param types The annotation types to annotate
    * @return A new corpus with the given annotation types present.
    */
-  Corpus annotate(AnnotationType... types);
+  Corpus annotate(Annotatable... types);
 
 
   /**
@@ -432,11 +432,11 @@ public interface Corpus extends Iterable<Document> {
    * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
    * sampling</a>.
    *
-   * @param count the number of documents to include in the sample
+   * @param size the number of documents to include in the sample
    * @return the sampled corpus
    */
-  default Corpus sample(int count) {
-    return sample(count, new Random());
+  default Corpus sample(int size) {
+    return sample(size, new Random());
   }
 
   /**

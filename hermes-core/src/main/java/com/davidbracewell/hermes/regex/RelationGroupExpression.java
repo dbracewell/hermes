@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.regex;
 
-import com.davidbracewell.hermes.tag.RelationType;
+import com.davidbracewell.hermes.RelationType;
 import com.davidbracewell.parsing.ParserTokenType;
 import com.davidbracewell.parsing.expressions.Expression;
 import com.davidbracewell.parsing.expressions.MultivalueExpression;

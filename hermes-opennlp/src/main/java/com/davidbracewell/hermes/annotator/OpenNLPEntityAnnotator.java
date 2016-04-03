@@ -90,12 +90,12 @@ public class OpenNLPEntityAnnotator implements Annotator, Serializable {
   }
 
   @Override
-  public Set<AnnotationType> satisfies() {
+  public Set<Annotatable> satisfies() {
     return Collections.singleton(OPENNLP_ENTITY);
   }
 
   @Override
-  public Set<AnnotationType> requires() {
+  public Set<Annotatable> requires() {
     return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN));
   }
 

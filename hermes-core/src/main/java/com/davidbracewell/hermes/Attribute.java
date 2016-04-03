@@ -69,7 +69,7 @@ import java.util.*;
  *
  * @author David B. Bracewell
  */
-public final class Attribute extends EnumValue {
+public final class Attribute extends EnumValue implements Annotatable {
 
   private static final DynamicEnum<Attribute> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
@@ -268,6 +268,11 @@ public final class Attribute extends EnumValue {
     return true;
   }
 
+  @Override
+  public String getTypeName() {
+    return "Attribute";
+  }
+
   /**
    * Gets class information for the type of values this attribute is expected to have. Types are defined via
    * configuration as follows: <code>Attribute.NAME.type = class</code>. If not defined String.class will be returned.
@@ -278,7 +283,11 @@ public final class Attribute extends EnumValue {
     if (valueType == null) {
       synchronized (this) {
         if (valueType == null) {
-          valueType = ValueType.fromConfig("Attribute" + "." + name());
+          if (Config.hasProperty("Attribute", name(), "type")) {
+            valueType = ValueType.fromConfig("Attribute" + "." + name() + ".type");
+          } else {
+            valueType = ValueType.fromConfig("Attribute" + "." + name());
+          }
         }
       }
     }

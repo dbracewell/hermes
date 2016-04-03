@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
 

@@ -22,12 +22,8 @@
 package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.Pipeline;
-import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.annotator.DocumentProvider;
-import com.davidbracewell.hermes.tag.RelationType;
 import com.davidbracewell.io.Resources;
 import org.junit.Test;
 

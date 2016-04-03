@@ -57,7 +57,7 @@ public final class Pipeline implements Serializable {
 
   private static final Logger log = Logger.getLogger(Pipeline.class);
   private static final long serialVersionUID = 1L;
-  private final AnnotationType[] annotationTypes;
+  private final Annotatable[] annotationTypes;
   private final int numberOfThreads;
   private long totalTime;
   private final Stopwatch timer = Stopwatch.createUnstarted();
@@ -67,12 +67,12 @@ public final class Pipeline implements Serializable {
   private final boolean returnCorpus;
 
 
-  private Pipeline(int numberOfThreads, int queueSize, Consumer<Document> onComplete, Collection<AnnotationType> annotationTypes, boolean returnCorpus) {
+  private Pipeline(int numberOfThreads, int queueSize, Consumer<Document> onComplete, Collection<Annotatable> annotationTypes, boolean returnCorpus) {
     this.returnCorpus = returnCorpus;
     Preconditions.checkArgument(numberOfThreads > 0, "Number of threads must be > 0");
     Preconditions.checkArgument(queueSize > 0, "Queue size must be > 0");
     this.queueSize = queueSize;
-    this.annotationTypes = Preconditions.checkNotNull(annotationTypes).toArray(new AnnotationType[1]);
+    this.annotationTypes = Preconditions.checkNotNull(annotationTypes).toArray(new Annotatable[annotationTypes.size()]);
     this.numberOfThreads = numberOfThreads;
     this.onComplete = Preconditions.checkNotNull(onComplete);
   }
@@ -100,12 +100,12 @@ public final class Pipeline implements Serializable {
    * @param textDocument    the document to be the annotate
    * @param annotationTypes the annotation types to be annotated
    */
-  public static void process(Document textDocument, AnnotationType... annotationTypes) {
+  public static void process(Document textDocument, Annotatable... annotationTypes) {
     if (annotationTypes == null || annotationTypes.length == 0) {
       return;
     }
 
-    for (AnnotationType annotationType : annotationTypes) {
+    for (Annotatable annotationType : annotationTypes) {
       if (annotationType == null) {
         continue;
       }
@@ -129,12 +129,12 @@ public final class Pipeline implements Serializable {
       }
 
       //Get the requirements out of the way
-      for (AnnotationType prereq : annotator.requires()) {
+      for (Annotatable prereq : annotator.requires()) {
         process(textDocument, prereq);
       }
 
       annotator.annotate(textDocument);
-      for (AnnotationType type : annotator.satisfies()) {
+      for (Annotatable type : annotator.satisfies()) {
         textDocument.getAnnotationSet().setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
       }
 
@@ -244,12 +244,12 @@ public final class Pipeline implements Serializable {
 
   private class AnnotateConsumer implements java.util.function.Consumer<Document>, Serializable {
     private static final long serialVersionUID = 1L;
-    private final AnnotationType[] annotationTypes;
+    private final Annotatable[] annotationTypes;
     private final java.util.function.Consumer<Document> onComplete;
     private final AtomicLong counter;
     private final AsyncWriter writer;
 
-    private AnnotateConsumer(AnnotationType[] annotationTypes, Consumer<Document> onComplete, AtomicLong counter, AsyncWriter writer) {
+    private AnnotateConsumer(Annotatable[] annotationTypes, Consumer<Document> onComplete, AtomicLong counter, AsyncWriter writer) {
       this.annotationTypes = annotationTypes;
       this.onComplete = onComplete;
       this.counter = counter;
@@ -280,7 +280,7 @@ public final class Pipeline implements Serializable {
   public static class Builder {
 
     int queueSize = 10000;
-    Set<AnnotationType> annotationTypes = new HashSet<>();
+    Set<Annotatable> annotationTypes = new HashSet<>();
     int numberOfThreads = Runtime.getRuntime().availableProcessors();
     java.util.function.Consumer<Document> onComplete = NoOpt.INSTANCE;
     boolean returnCorpus = true;
@@ -291,7 +291,7 @@ public final class Pipeline implements Serializable {
      * @param annotation the annotation
      * @return the builder
      */
-    public Builder addAnnotation(AnnotationType annotation) {
+    public Builder addAnnotation(Annotatable annotation) {
       annotationTypes.add(Preconditions.checkNotNull(annotation));
       return this;
     }
@@ -302,7 +302,7 @@ public final class Pipeline implements Serializable {
      * @param annotations the annotations
      * @return the builder
      */
-    public Builder addAnnotations(AnnotationType... annotations) {
+    public Builder addAnnotations(Annotatable... annotations) {
       Preconditions.checkNotNull(annotations);
       this.annotationTypes.addAll(Arrays.asList(annotations));
       return this;

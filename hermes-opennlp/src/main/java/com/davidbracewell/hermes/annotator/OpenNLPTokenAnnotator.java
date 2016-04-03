@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.annotator;
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Annotatable;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
@@ -64,7 +64,7 @@ public class OpenNLPTokenAnnotator implements Annotator, Serializable {
   }
 
   @Override
-  public Set<AnnotationType> satisfies() {
+  public Set<Annotatable> satisfies() {
     return Collections.singleton(Types.TOKEN);
   }
 

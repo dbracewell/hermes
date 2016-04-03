@@ -131,12 +131,12 @@ public class OpenNLPSentenceAnnotator implements Annotator {
   }
 
   @Override
-  public Set<AnnotationType> satisfies() {
+  public Set<Annotatable> satisfies() {
     return Collections.singleton(Types.SENTENCE);
   }
 
   @Override
-  public Set<AnnotationType> requires() {
+  public Set<Annotatable> requires() {
     return Collections.singleton(Types.TOKEN);
   }
 

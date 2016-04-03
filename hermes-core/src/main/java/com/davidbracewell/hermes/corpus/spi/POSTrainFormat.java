@@ -49,7 +49,7 @@ public class POSTrainFormat extends FileBasedFormat {
     document.createAnnotation(Types.SENTENCE, 0, document.length());
     document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
     document.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
-    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, complete, "PROVIDED");
+    document.getAnnotationSet().setIsCompleted(Attrs.PART_OF_SPEECH, complete, "PROVIDED");
     return document;
   }
 
@@ -76,7 +76,7 @@ public class POSTrainFormat extends FileBasedFormat {
 
   @Override
   public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
-    if( document.getAnnotationSet().isCompleted(Types.PART_OF_SPEECH)) {
+    if( document.getAnnotationSet().isCompleted(Attrs.PART_OF_SPEECH)) {
       try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
         for (Annotation sentence : document.sentences()) {
           writer.write(sentence.toPOSString('_'));

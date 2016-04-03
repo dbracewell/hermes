@@ -28,7 +28,6 @@ import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import com.davidbracewell.hermes.tag.Entities;
 import com.davidbracewell.hermes.tag.POS;
-import com.davidbracewell.hermes.tag.Relations;
 import com.davidbracewell.hermes.tag.StringTag;
 import org.junit.Before;
 import org.junit.Test;

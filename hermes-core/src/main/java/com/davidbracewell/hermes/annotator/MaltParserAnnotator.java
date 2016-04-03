@@ -23,11 +23,7 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Relation;
-import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.tag.Relations;
+import com.davidbracewell.hermes.*;
 import com.google.common.base.Throwables;
 import org.maltparser.concurrent.ConcurrentMaltParserModel;
 import org.maltparser.concurrent.ConcurrentMaltParserService;
@@ -50,7 +46,7 @@ public class MaltParserAnnotator extends SentenceLevelAnnotator {
       synchronized (this) {
         if (!models.containsKey(language)) {
           try {
-            models.put(language, ConcurrentMaltParserService.initializeParserModel(Config.get("Annotation.DEPENDENCY", language, "model").asResource().asURL().get()));
+            models.put(language, ConcurrentMaltParserService.initializeParserModel(Config.get("Relation.DEPENDENCY", language, "model").asResource().asURL().get()));
           } catch (Exception e) {
             throw Throwables.propagate(e);
           }
@@ -89,12 +85,12 @@ public class MaltParserAnnotator extends SentenceLevelAnnotator {
   }
 
   @Override
-  public Set<AnnotationType> satisfies() {
-    return Collections.singleton(Types.DEPENDENCY);
+  public Set<Annotatable> satisfies() {
+    return Collections.singleton(Relations.DEPENDENCY);
   }
 
   @Override
-  protected Set<AnnotationType> furtherRequires() {
-    return Collections.singleton(Types.PART_OF_SPEECH);
+  protected Set<Annotatable> furtherRequires() {
+    return Collections.singleton(Attrs.PART_OF_SPEECH);
   }
 }//END OF MaltParserAnnotator

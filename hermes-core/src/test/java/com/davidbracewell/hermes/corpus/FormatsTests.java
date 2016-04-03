@@ -23,6 +23,7 @@ package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.annotator.DocumentProvider;
@@ -114,7 +115,7 @@ public class FormatsTests {
     List<Document> documents = new ArrayList<>();
     c.forEach(documents::add);
     assertTrue(documents.get(0).getAnnotationSet().isCompleted(Types.TOKEN));
-    assertTrue(documents.get(0).getAnnotationSet().isCompleted(Types.PART_OF_SPEECH));
+    assertTrue(documents.get(0).getAnnotationSet().isCompleted(Attrs.PART_OF_SPEECH));
     assertTrue(documents.get(0).getAnnotationSet().isCompleted(Types.PHRASE_CHUNK));
   }
 

@@ -22,8 +22,8 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.collection.Collect;
+import com.davidbracewell.hermes.Annotatable;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.Entities;
@@ -68,12 +68,12 @@ public class TokenTypeEntityAnnotator extends SentenceLevelAnnotator {
   }
 
   @Override
-  public Set<AnnotationType> satisfies() {
+  public Set<Annotatable> satisfies() {
     return Collections.singleton(Types.TOKEN_TYPE_ENTITY);
   }
 
   @Override
-  protected Set<AnnotationType> furtherRequires() {
+  protected Set<Annotatable> furtherRequires() {
     return Collections.singleton(Types.TOKEN);
   }
 

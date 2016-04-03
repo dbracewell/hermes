@@ -24,13 +24,9 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.HierarchicalEnumValue;
-import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.hermes.annotator.Annotator;
-import com.davidbracewell.reflection.BeanUtils;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
 import java.io.ObjectStreamException;
@@ -64,7 +60,7 @@ import java.util.stream.Collectors;
  * annotators for English and Japanese which are beans defined elsewhere in the configuration. Finally, it defines a
  * <code>PATTERN</code> attribute relating to the pattern that was used to identify the entity. </p>
  */
-public final class AnnotationType extends HierarchicalEnumValue {
+public final class AnnotationType extends HierarchicalEnumValue implements Annotatable {
 
   private static final DynamicEnum<AnnotationType> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
@@ -187,23 +183,9 @@ public final class AnnotationType extends HierarchicalEnumValue {
     return AnnotationType.create(Config.get("Annotation", name(), "parent").asString("ROOT"));
   }
 
-  /**
-   * Gets the annotator associated with this type for a given language.
-   *
-   * @param language the language for which the annotator is needed.
-   * @return the annotator for this type and the given langauge
-   * @throws IllegalStateException If this type is a gold standard annotation.
-   */
-  public Annotator getAnnotator(@NonNull Language language) {
-    String key = Config.closestKey("Annotation", language, name(), "annotator");
-    if (StringUtils.isNullOrBlank(key)) {
-      throw new IllegalStateException("No annotator is defined for " + name() + " and " + language);
-    }
-
-    Annotator annotator = BeanUtils.parameterizeObject(Config.get(key).as(Annotator.class));
-    Preconditions.checkNotNull(annotator, "Could not create the annotator [" + Config.get(key) + "] for " + name());
-    Preconditions.checkArgument(annotator.satisfies().contains(this), "Attempting to register " + annotator.getClass().getName() + " for " + name() + " which it does not provide.");
-    return annotator;
+  @Override
+  public String getTypeName() {
+    return "Annotation";
   }
 
   /**
@@ -235,10 +217,5 @@ public final class AnnotationType extends HierarchicalEnumValue {
     }
     return index.register(this);
   }
-
-  public boolean producesNewAnnotation() {
-    return Config.get("Annotation", name(), "producesAnnotation").asBooleanValue(true);
-  }
-
 
 }//END OF AnnotationType

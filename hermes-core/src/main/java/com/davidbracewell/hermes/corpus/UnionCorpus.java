@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Annotatable;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.stream.MStream;
@@ -47,7 +47,7 @@ class UnionCorpus implements Corpus, Serializable {
   }
 
   @Override
-  public Corpus annotate(AnnotationType... types) {
+  public Corpus annotate(Annotatable... types) {
     return new UnionCorpus(c1.annotate(types), c2.annotate(types));
   }
 

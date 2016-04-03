@@ -80,13 +80,13 @@ public class OpenNLPPhraseChunkAnnotator implements Annotator, Serializable {
 
 
   @Override
-  public Set<AnnotationType> satisfies() {
+  public Set<Annotatable> satisfies() {
     return Collections.singleton(Types.PHRASE_CHUNK);
   }
 
   @Override
-  public Set<AnnotationType> requires() {
-    return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN, Types.PART_OF_SPEECH));
+  public Set<Annotatable> requires() {
+    return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN, Attrs.PART_OF_SPEECH));
   }
 
   @Override

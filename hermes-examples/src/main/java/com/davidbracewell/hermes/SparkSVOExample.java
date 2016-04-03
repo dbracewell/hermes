@@ -56,7 +56,7 @@ public class SparkSVOExample implements Serializable {
       // one sentence (treated as a document) per line.
       .source(Resources.fromFile("/shared/data/corpora/en/Raw/eng_news_2005_1M-sentences.txt")).build()
       .repartition(100)
-      .annotate(Types.DEPENDENCY);
+      .annotate(Relations.DEPENDENCY);
 
     Counter<String> svoCounts = Counters.newHashMapCounter(
       corpus.stream().flatMap(Document::sentences)

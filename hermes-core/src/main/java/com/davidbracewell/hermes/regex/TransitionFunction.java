@@ -25,7 +25,7 @@ import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.tag.RelationType;
+import com.davidbracewell.hermes.RelationType;
 import com.davidbracewell.string.StringUtils;
 
 import java.io.Serializable;

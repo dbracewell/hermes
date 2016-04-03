@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.Annotatable;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
@@ -59,7 +59,7 @@ public class InMemoryCorpus implements Corpus, Serializable {
   }
 
   @Override
-  public Corpus annotate(@NonNull AnnotationType... types) {
+  public Corpus annotate(@NonNull Annotatable... types) {
     Pipeline.builder().addAnnotations(types).returnCorpus(false).build().process(this);
     return this;
   }

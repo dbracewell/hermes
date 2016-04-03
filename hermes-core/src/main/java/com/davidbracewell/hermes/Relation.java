@@ -1,6 +1,5 @@
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.hermes.tag.RelationType;
 import lombok.NonNull;
 import lombok.Value;
 

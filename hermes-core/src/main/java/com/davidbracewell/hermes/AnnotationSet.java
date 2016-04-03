@@ -65,12 +65,11 @@ public interface AnnotationSet extends Iterable<Annotation> {
 
   /**
    * Sets the given annotation type as being completed or not
-   *
-   * @param type                 the annotation type
+   *  @param type                 the annotation type
    * @param isCompleted          True if the annotation is completed, False if not.
    * @param annotatorInformation the annotator information
    */
-  void setIsCompleted(AnnotationType type, boolean isCompleted, String annotatorInformation);
+  void setIsCompleted(Annotatable type, boolean isCompleted, String annotatorInformation);
 
   /**
    * Gets if the given annotation type is completed or not
@@ -78,7 +77,7 @@ public interface AnnotationSet extends Iterable<Annotation> {
    * @param type the annotation type
    * @return True if the annotation is completed, False if not.
    */
-  boolean isCompleted(AnnotationType type);
+  boolean isCompleted(Annotatable type);
 
   /**
    * Gets information on what annotator provided the annotation of the given type
@@ -86,14 +85,14 @@ public interface AnnotationSet extends Iterable<Annotation> {
    * @param type The annotation type
    * @return String representing the annotation provider or null
    */
-  String getAnnotationProvider(AnnotationType type);
+  String getAnnotationProvider(Annotatable type);
 
   /**
    * Gets completed annotations.
    *
    * @return Set of classes for completed annotations
    */
-  Set<AnnotationType> getCompleted();
+  Set<Annotatable> getCompleted();
 
   /**
    * Removes all annotations of a given type and marks that type as not completed.

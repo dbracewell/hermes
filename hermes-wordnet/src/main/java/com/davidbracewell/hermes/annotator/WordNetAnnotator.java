@@ -101,14 +101,14 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
   }
 
   @Override
-  public Set<AnnotationType> satisfies() {
+  public Set<Annotatable> satisfies() {
     return Collections.singleton(Types.WORD_SENSE);
   }
 
 
   @Override
-  protected Set<AnnotationType> furtherRequires() {
-    return Collections.singleton(Types.PART_OF_SPEECH);
+  protected Set<Annotatable> furtherRequires() {
+    return Collections.singleton(Attrs.PART_OF_SPEECH);
   }
 
 }// END OF WordNetAnnotator

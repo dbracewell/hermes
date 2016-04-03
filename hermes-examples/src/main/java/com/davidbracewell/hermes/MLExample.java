@@ -35,10 +35,10 @@ import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotation;
+import com.davidbracewell.stream.Streams;
 
 import java.util.Random;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 /**
  * @author David B. Bracewell
@@ -185,9 +185,8 @@ public class MLExample {
 
     //Build an in-memory dataset from a corpus constructed using the raw labels and documents in the String[][] above
     Dataset<Instance> dataset = Corpus.of(
-      Stream.of(training)
-        .map(example -> DocumentFactory.getInstance()
-          .create(example[1], Language.ENGLISH, Collect.map(label, example[0])))
+      Streams.of(training)
+        .map(example -> Document.create(example[1], Language.ENGLISH, Collect.map(label, example[0])))
     )
       .annotate(Types.TOKEN)
       .asClassificationDataSet(featurizer, label)

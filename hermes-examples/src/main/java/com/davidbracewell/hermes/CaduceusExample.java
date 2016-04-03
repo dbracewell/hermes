@@ -22,8 +22,6 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.hermes.caduceus.CaduceusProgram;
-import com.davidbracewell.hermes.tag.RelationType;
-import com.davidbracewell.hermes.tag.Relations;
 import com.davidbracewell.io.Resources;
 
 /**
@@ -41,7 +39,7 @@ public class CaduceusExample {
     Document document = DocumentFactory.getInstance().create(
       "John Doe spooked his family while they were on vacation in St. George Falls."
     );
-    Pipeline.process(document, Types.DEPENDENCY, Types.PHRASE_CHUNK, Types.ENTITY);
+    Pipeline.process(document, Relations.DEPENDENCY, Types.PHRASE_CHUNK, Types.ENTITY);
     program.execute(document);
 
     RelationType eventRole = Relations.relation("EVENT_ROLE");

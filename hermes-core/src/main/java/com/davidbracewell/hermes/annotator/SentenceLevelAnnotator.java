@@ -21,8 +21,8 @@
 
 package com.davidbracewell.hermes.annotator;
 
+import com.davidbracewell.hermes.Annotatable;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.google.common.collect.Sets;
@@ -55,7 +55,7 @@ public abstract class SentenceLevelAnnotator implements Annotator, Serializable 
 
 
   @Override
-  public final Set<AnnotationType> requires() {
+  public final Set<Annotatable> requires() {
     return Sets.union(Sets.newHashSet(Types.SENTENCE, Types.TOKEN), furtherRequires());
   }
 
@@ -64,7 +64,7 @@ public abstract class SentenceLevelAnnotator implements Annotator, Serializable 
    *
    * @return The annotations beyond sentence and token that are required for this annotator to perform annotation
    */
-  protected Set<AnnotationType> furtherRequires() {
+  protected Set<Annotatable> furtherRequires() {
     return Collections.emptySet();
   }
 
