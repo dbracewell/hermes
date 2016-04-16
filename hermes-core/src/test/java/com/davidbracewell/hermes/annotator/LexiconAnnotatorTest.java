@@ -43,6 +43,7 @@ public class LexiconAnnotatorTest {
     Config.initializeTest();
     Config.loadConfig(Resources.fromClasspath("com/davidbracewell/hermes/test.conf"));
     Document document = DocumentProvider.getAnnotatedDocument();
+
     LexiconManager.clear();
     LexiconAnnotator annotator = new LexiconAnnotator(
       Types.ENTITY,
@@ -51,8 +52,6 @@ public class LexiconAnnotatorTest {
 
 
     annotator.annotate(document);
-
-
     List<Annotation> entities = document.get(Types.ENTITY);
     assertFalse(entities.isEmpty());
     assertEquals("Alice", entities.get(0).toString());

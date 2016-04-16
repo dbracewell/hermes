@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.davidbracewell.hermes.Types.*;
 import static org.junit.Assert.*;
 
 /**
@@ -51,18 +52,18 @@ public class AnnotationTest {
     Document document = DocumentProvider.getAnnotatedDocument();
     List<Annotation> tokens = document.tokens();
 
-    TokenType type = tokens.get(0).get(Types.TOKEN_TYPE).cast();
-    tokens.get(0).putIfAbsent(Types.TOKEN_TYPE, TokenType.create("REALLYSTRANGETYPE"));
-    assertEquals(type, tokens.get(0).get(Types.TOKEN_TYPE).get());
+    TokenType type = tokens.get(0).get(TOKEN_TYPE).cast();
+    tokens.get(0).putIfAbsent(TOKEN_TYPE, TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(type, tokens.get(0).get(TOKEN_TYPE).get());
 
-    tokens.get(0).putIfAbsent(Types.TOKEN_TYPE, () -> TokenType.create("REALLYSTRANGETYPE"));
-    assertEquals(type, tokens.get(0).get(Types.TOKEN_TYPE).get());
+    tokens.get(0).putIfAbsent(TOKEN_TYPE, () -> TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(type, tokens.get(0).get(TOKEN_TYPE).get());
 
-    tokens.get(0).putIfAbsent(Types.ENTITY_TYPE, () -> TokenType.create("REALLYSTRANGETYPE"));
-    assertEquals(TokenType.create("REALLYSTRANGETYPE"), tokens.get(0).get(Types.ENTITY_TYPE).get());
+    tokens.get(0).putIfAbsent(ENTITY_TYPE, () -> TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(TokenType.create("REALLYSTRANGETYPE"), tokens.get(0).get(ENTITY_TYPE).get());
 
-    tokens.get(0).putIfAbsent(Types.CATEGORY, TokenType.create("REALLYSTRANGETYPE"));
-    assertEquals(TokenType.create("REALLYSTRANGETYPE"), tokens.get(0).get(Types.CATEGORY).get());
+    tokens.get(0).putIfAbsent(CATEGORY, TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(TokenType.create("REALLYSTRANGETYPE"), tokens.get(0).get(CATEGORY).get());
 
   }
 
@@ -71,8 +72,8 @@ public class AnnotationTest {
     Document document = DocumentProvider.getAnnotatedDocument();
     for (Annotation token : document.tokens()) {
       assertEquals(1, token.sentences().size(), 0d);
-      assertEquals(token.sentences().get(0), token.last(Types.SENTENCE));
-      assertEquals(token.sentences().get(0), token.first(Types.SENTENCE));
+      assertEquals(token.sentences().get(0), token.last(SENTENCE));
+      assertEquals(token.sentences().get(0), token.first(SENTENCE));
       assertEquals(token, token.firstToken());
       assertEquals(token, token.lastToken());
     }
@@ -95,38 +96,38 @@ public class AnnotationTest {
   public void parentChildTest() {
     Document document = DocumentFactory.getInstance().fromTokens(Arrays.asList("This", "is", "simple"));
     List<Annotation> tokens = document.tokens();
-    tokens.get(0).add(new Relation(Types.DEPENDENCY, "nsubj", tokens.get(2).getId()));
-    tokens.get(1).add(new Relation(Types.DEPENDENCY, "cop", tokens.get(2).getId()));
+    tokens.get(0).add(new Relation(DEPENDENCY, "nsubj", tokens.get(2).getId()));
+    tokens.get(1).add(new Relation(DEPENDENCY, "cop", tokens.get(2).getId()));
     assertTrue(tokens.get(0).parent().isPresent());
     assertEquals("simple", tokens.get(0).parent().get().toString());
-    assertEquals(1, tokens.get(0).get(Types.DEPENDENCY).size(), 0d);
-    assertEquals("simple", tokens.get(0).targets(Types.DEPENDENCY, "nsubj").get(0).toString());
-    assertEquals("simple", tokens.get(0).targets(Types.DEPENDENCY).get(0).toString());
+    assertEquals(1, tokens.get(0).get(DEPENDENCY).size(), 0d);
+    assertEquals("simple", tokens.get(0).targets(DEPENDENCY, "nsubj").get(0).toString());
+    assertEquals("simple", tokens.get(0).targets(DEPENDENCY).get(0).toString());
     assertTrue(tokens.get(1).parent().isPresent());
     assertEquals("simple", tokens.get(1).parent().get().toString());
     assertEquals(2, tokens.get(2).children().size());
 
-    Pipeline.process(document, Types.SENTENCE);
+    Pipeline.process(document, SENTENCE);
     assertEquals(2, tokens.get(2).children().size());
-    tokens.get(0).remove(tokens.get(0).get(Types.DEPENDENCY).get(0));
+    tokens.get(0).remove(tokens.get(0).get(DEPENDENCY).get(0));
     assertEquals(1, tokens.get(2).children().size());
 
-    Annotation sentence = document.first(Types.SENTENCE);
+    Annotation sentence = document.first(SENTENCE);
     assertFalse(sentence.isEmpty());
-    assertEquals(sentence, tokens.get(0).first(Types.SENTENCE));
-    assertEquals(sentence, tokens.get(1).first(Types.SENTENCE));
-    assertEquals(sentence, tokens.get(2).first(Types.SENTENCE));
+    assertEquals(sentence, tokens.get(0).first(SENTENCE));
+    assertEquals(sentence, tokens.get(1).first(SENTENCE));
+    assertEquals(sentence, tokens.get(2).first(SENTENCE));
   }
 
   @Test
   public void createTest() {
-    Annotation a = new Annotation(Fragments.string("test"), Types.ENTITY);
-    a.put(Types.ENTITY_TYPE, Entities.EMAIL);
+    Annotation a = new Annotation(Fragments.string("test"), ENTITY);
+    a.put(ENTITY_TYPE, Entities.EMAIL);
 
     assertNotNull(a);
     assertNull(a.document());
-    assertEquals(Types.ENTITY, a.getType());
-    assertTrue(a.isInstance(Types.ENTITY));
+    assertEquals(ENTITY, a.getType());
+    assertTrue(a.isInstance(ENTITY));
 
     assertTrue(a.isAnnotation());
     assertNotNull(a.asAnnotation().orElse(null));

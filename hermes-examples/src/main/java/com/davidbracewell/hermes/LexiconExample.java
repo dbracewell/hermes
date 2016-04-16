@@ -53,7 +53,7 @@ public class LexiconExample {
       .caseSensitive(false)
       .hasConstraints(false)
       .probabilistic(false)
-      .tagAttributeType(Types.ENTITY_TYPE)
+      .tagAttribute(Types.ENTITY_TYPE)
       .resource(Resources.fromClasspath("com/davidbracewell/hermes/people.dict"))
       .build().create();
 

@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.concurrent.Broker;
+import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
@@ -92,6 +93,18 @@ public final class Pipeline implements Serializable {
    */
   public static Builder builder() {
     return new Builder();
+  }
+
+  public static void process(Document textDocument, AnnotationType... annotationTypes) {
+    process(textDocument, Convert.convert(annotationTypes, AnnotatableType[].class));
+  }
+
+  public static void process(Document textDocument, AttributeType... attributeTypes) {
+    process(textDocument, Convert.convert(attributeTypes, AnnotatableType[].class));
+  }
+
+  public static void process(Document textDocument, RelationType... relationTypes) {
+    process(textDocument, Convert.convert(relationTypes, AnnotatableType[].class));
   }
 
   /**

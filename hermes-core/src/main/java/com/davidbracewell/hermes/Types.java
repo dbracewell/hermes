@@ -37,10 +37,6 @@ public interface Types {
    */
   AttributeType CATEGORY = AttributeType.create("CATEGORY");
   /**
-   * Document author
-   */
-  AttributeType COLLECTION = AttributeType.create("COLLECTION");
-  /**
    * Confidence value associated with an annotation
    */
   AttributeType CONFIDENCE = AttributeType.create("CONFIDENCE");
@@ -48,10 +44,6 @@ public interface Types {
    * The constant DEPENDENCY.
    */
   RelationType DEPENDENCY = RelationType.create("DEPENDENCY");
-  /**
-   * The constant DEPENDENCY_RELATION.
-   */
-  AttributeType DEPENDENCY_RELATION = AttributeType.create("DEPENDENCY_RELATION");
   /**
    * Entity annotation type
    */
@@ -69,11 +61,7 @@ public interface Types {
    */
   AttributeType INDEX = AttributeType.create("INDEX");
   /**
-   * Document keywords
-   */
-  AttributeType KEYPHRASES = AttributeType.create("KEYPHRASES");
-  /**
-   * The Language assocaited with a span
+   * The Language associated with a span
    */
   AttributeType LANGUAGE = AttributeType.create("LANGUAGE");
   /**
@@ -93,10 +81,6 @@ public interface Types {
    */
   AttributeType MATCHED_STRING = AttributeType.create("MATCHED_STRING");
   /**
-   * The constant PARENT.
-   */
-  AttributeType PARENT = AttributeType.create("PARENT");
-  /**
    * The part-of-speech assocaited with a span
    */
   AttributeType PART_OF_SPEECH = AttributeType.create("PART_OF_SPEECH");
@@ -104,10 +88,6 @@ public interface Types {
    * phrase chunk annotation type
    */
   AnnotationType PHRASE_CHUNK = AnnotationType.create("PHRASE_CHUNK");
-  /**
-   * Publication date of document
-   */
-  AttributeType PUBLICATION_DATE = AttributeType.create("PUBLICATION_DATE");
   /**
    * The constant SENSE.
    */

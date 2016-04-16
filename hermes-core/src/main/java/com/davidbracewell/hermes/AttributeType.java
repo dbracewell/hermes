@@ -283,11 +283,7 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
     if (valueType == null) {
       synchronized (this) {
         if (valueType == null) {
-          if (Config.hasProperty("Attribute", name(), "type")) {
-            valueType = ValueType.fromConfig("Attribute" + "." + name() + ".type");
-          } else {
-            valueType = ValueType.fromConfig("Attribute" + "." + name());
-          }
+          valueType = ValueType.fromConfig("Attribute" + "." + name());
         }
       }
     }

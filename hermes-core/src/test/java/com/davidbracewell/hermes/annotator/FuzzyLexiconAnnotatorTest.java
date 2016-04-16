@@ -61,7 +61,7 @@ public class FuzzyLexiconAnnotatorTest {
             "sitting the bank,ACTION\n" +
             "rabbit took a watch,ACTION\n"
         ))
-        .tagAttributeType(Types.TAG)
+        .tagAttribute(Types.TAG)
         .build().create();
     } catch (Exception e) {
       throw Throwables.propagate(e);

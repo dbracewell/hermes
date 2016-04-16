@@ -820,7 +820,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    *                                   than relativeEnd.
    */
   public HString substring(int relativeStart, int relativeEnd) {
-    System.err.println(relativeStart + " : " + relativeEnd + " : " + length() + " > " + start() + " > " + end());
     Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
     return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
   }
