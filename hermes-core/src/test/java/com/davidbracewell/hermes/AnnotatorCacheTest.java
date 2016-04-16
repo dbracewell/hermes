@@ -73,7 +73,7 @@ public class AnnotatorCacheTest {
     }
 
     @Override
-    public Set<Annotatable> satisfies() {
+    public Set<AnnotatableType> satisfies() {
       return Collections.singleton(Types.TOKEN);
     }
   }

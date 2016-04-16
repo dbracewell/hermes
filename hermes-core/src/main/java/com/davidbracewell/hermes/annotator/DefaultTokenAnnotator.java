@@ -21,7 +21,10 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.AnnotatableType;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tokenization.Tokenizer;
 import com.davidbracewell.hermes.tokenization.TokenizerFactory;
 
@@ -45,12 +48,12 @@ public class DefaultTokenAnnotator implements Annotator, Serializable {
     Tokenizer tokenizer = TokenizerFactory.create(document.getLanguage());
     for (Tokenizer.Token token : tokenizer.tokenize(document.toString())) {
       Annotation aToken = document.createAnnotation(Types.TOKEN, token.charStartIndex, token.charEndIndex, token.properties);
-      aToken.put(Attrs.TOKEN_TYPE, token.type);
+      aToken.put(Types.TOKEN_TYPE, token.type);
     }
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(Types.TOKEN);
   }
 

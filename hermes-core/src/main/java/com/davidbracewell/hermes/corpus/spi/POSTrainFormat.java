@@ -1,7 +1,10 @@
 package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.SystemInfo;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.resource.Resource;
@@ -43,13 +46,13 @@ public class POSTrainFormat extends FileBasedFormat {
       POS p = POS.fromString(pos.get(i));
       if (p != null && !p.isTag(POS.ANY)) {
         complete = true;
-        document.tokenAt(i).put(Attrs.PART_OF_SPEECH, p);
+        document.tokenAt(i).put(Types.PART_OF_SPEECH, p);
       }
     }
     document.createAnnotation(Types.SENTENCE, 0, document.length());
     document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
     document.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
-    document.getAnnotationSet().setIsCompleted(Attrs.PART_OF_SPEECH, complete, "PROVIDED");
+    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, complete, "PROVIDED");
     return document;
   }
 
@@ -62,7 +65,7 @@ public class POSTrainFormat extends FileBasedFormat {
       .forEach(line -> {
         Document document = processLine(line, documentFactory);
         if (document != null && document.tokenLength() > 0) {
-          document.put(Attrs.FILE, resource.descriptor());
+          document.put(Types.FILE, resource.descriptor());
           documents.add(document);
         }
       });
@@ -76,7 +79,7 @@ public class POSTrainFormat extends FileBasedFormat {
 
   @Override
   public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
-    if( document.getAnnotationSet().isCompleted(Attrs.PART_OF_SPEECH)) {
+    if( document.getAnnotationSet().isCompleted(Types.PART_OF_SPEECH)) {
       try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
         for (Annotation sentence : document.sentences()) {
           writer.write(sentence.toPOSString('_'));

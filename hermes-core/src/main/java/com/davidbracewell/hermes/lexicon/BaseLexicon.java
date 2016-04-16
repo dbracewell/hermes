@@ -23,9 +23,9 @@ package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attribute;
-import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.Types;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -42,7 +42,7 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
   private static final long serialVersionUID = 1L;
   private final boolean caseSensitive;
   private final boolean probabilistic;
-  private final Attribute tagAttribute;
+  private final AttributeType tagAttributeType;
   private int longestLemma = 0;
 
   /**
@@ -50,18 +50,17 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
    *
    * @param caseSensitive the case sensitive
    * @param probabilistic the probabilistic
-   * @param tagAttribute  the tag attribute
+   * @param tagAttributeType  the tag attribute
    */
-  public BaseLexicon(boolean caseSensitive, boolean probabilistic, Attribute tagAttribute) {
+  public BaseLexicon(boolean caseSensitive, boolean probabilistic, AttributeType tagAttributeType) {
     this.caseSensitive = caseSensitive;
     this.probabilistic = probabilistic;
-    this.tagAttribute = tagAttribute;
+    this.tagAttributeType = tagAttributeType;
   }
 
 
-  @Override
-  public Attribute getTagAttribute() {
-    return tagAttribute;
+  public AttributeType getTagAttributeType() {
+    return tagAttributeType;
   }
 
   /**
@@ -143,10 +142,10 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
 
   private HString createFragment(LexiconMatch match) {
     HString tmp = match.getSpan().document().substring(match.getSpan().start(), match.getSpan().end());
-    tmp.put(Attrs.CONFIDENCE, match.getScore());
-    tmp.put(Attrs.LEXICON_MATCH, match.getMatchedString());
-    if (tagAttribute != null) {
-      tmp.put(tagAttribute, match.getTag());
+    tmp.put(Types.CONFIDENCE, match.getScore());
+    tmp.put(Types.MATCHED_STRING, match.getMatchedString());
+    if (tagAttributeType != null) {
+      tmp.put(tagAttributeType, match.getTag());
     }
     return tmp;
   }

@@ -30,9 +30,11 @@ import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
 /**
+ * The interface Annotatable.
+ *
  * @author David B. Bracewell
  */
-public interface Annotatable {
+public interface AnnotatableType {
 
   /**
    * Gets the annotator associated with this type for a given language.
@@ -42,7 +44,7 @@ public interface Annotatable {
    * @throws IllegalStateException If this type is a gold standard annotation.
    */
   default Annotator getAnnotator(@NonNull Language language) {
-    String key = Config.closestKey(getTypeName(), language, name(), "annotator");
+    String key = Config.closestKey(type(), language, name(), "annotator");
     if (StringUtils.isNullOrBlank(key)) {
       throw new IllegalStateException("No annotator is defined for " + name() + " and " + language);
     }
@@ -53,8 +55,45 @@ public interface Annotatable {
     return annotator;
   }
 
-  String getTypeName();
+  /**
+   * Gets type name.
+   *
+   * @return the type name
+   */
+  String type();
 
+  /**
+   * Name string.
+   *
+   * @return the string
+   */
   String name();
+
+  /**
+   * Creates the appropriate annotatable from the given name.
+   *
+   * @param typeAndName The type and name separated by a period, e.g. Annotation.ENTITY
+   * @return The appropriate annotatable
+   * @throws IllegalArgumentException Invalid type or no type given.
+   */
+  static AnnotatableType of(@NonNull String typeAndName) {
+    String lower = typeAndName.toLowerCase();
+    int index = lower.indexOf('.');
+    if (index == -1) {
+      throw new IllegalArgumentException("No type specified.");
+    }
+    String type = lower.substring(0, index);
+    String typeName = typeAndName.substring(index + 1);
+    switch (type) {
+      case "annotation":
+        return AnnotationType.create(typeName);
+      case "attribute":
+        return AttributeType.create(typeName);
+      case "relation":
+        return RelationType.create(typeName);
+    }
+    throw new IllegalArgumentException(type + " is and invalid type.");
+  }
+
 
 }//END OF Annotatable

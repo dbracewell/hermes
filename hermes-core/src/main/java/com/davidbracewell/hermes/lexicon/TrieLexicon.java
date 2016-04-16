@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.collection.trie.PatriciaTrie;
-import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
 import lombok.NonNull;
 
@@ -46,10 +46,10 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    *
    * @param isCaseSensitive the is case sensitive
    * @param isProbabilistic the is probabilistic
-   * @param tagAttribute    the tag attribute
+   * @param tagAttributeType    the tag attribute
    */
-  public TrieLexicon(boolean isCaseSensitive, boolean isProbabilistic, Attribute tagAttribute) {
-    super(isCaseSensitive, isProbabilistic, tagAttribute);
+  public TrieLexicon(boolean isCaseSensitive, boolean isProbabilistic, AttributeType tagAttributeType) {
+    super(isCaseSensitive, isProbabilistic, tagAttributeType);
     this.trie = new PatriciaTrie<>();
   }
 

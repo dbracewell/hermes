@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.attribute;
 
-import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 
@@ -40,22 +40,22 @@ public interface AttributeValueCodec {
    * Encodes the given value.
    *
    * @param writer    the writer to write the encoding to
-   * @param attribute the attribute whose value is being encoded
+   * @param attributeType the attribute whose value is being encoded
    * @param value     the value to encode
    * @throws IOException something went wrong writing
    */
-  void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException;
+  void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException;
 
   /**
    * Decodes an attribute value from the given reader.
    *
    * @param reader    the reader to read from
-   * @param attribute the attribute whose value needs decoding
+   * @param attributeType the attribute whose value needs decoding
    * @param value     the value
    * @return the attribute value
    * @throws IOException something went wrong reading
    */
-  Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException;
+  Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException;
 
   boolean isObject();
 

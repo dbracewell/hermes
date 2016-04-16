@@ -23,8 +23,8 @@ package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Attribute;
-import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.AttributeType;
+import com.davidbracewell.hermes.Types;
 import lombok.Builder;
 import lombok.Value;
 
@@ -43,7 +43,7 @@ class CaduceusAnnotationProvider implements Serializable {
   private static final long serialVersionUID = 1L;
   private final String group;
   private final AnnotationType annotationType;
-  private final Map<Attribute, Val> attributes;
+  private final Map<AttributeType, Val> attributes;
 
   protected static CaduceusAnnotationProvider fromMap(Map<String, Object> groupMap, String programName, String ruleName) throws IOException {
     CaduceusAnnotationProviderBuilder builder = builder();
@@ -56,22 +56,22 @@ class CaduceusAnnotationProvider implements Serializable {
     builder.group(
       groupMap.containsKey("capture") ? groupMap.get("capture").toString() : "*"
     );
-    Map<Attribute, Val> attributeValMap = new HashMap<>();
+    Map<AttributeType, Val> attributeValMap = new HashMap<>();
     if (groupMap.containsKey("attributes")) {
       attributeValMap = readAttributes(CaduceusProgram.ensureList(groupMap.get("attributes"), "Attributes should be specified as a list."));
     }
-    attributeValMap.put(Attrs.LYRE_RULE, Val.of(programName + "::" + ruleName));
+    attributeValMap.put(Types.LYRE_RULE, Val.of(programName + "::" + ruleName));
     builder.attributes(attributeValMap);
     return builder.build();
   }
 
-  private static Map<Attribute, Val> readAttributes(List<Object> list) throws IOException {
-    Map<Attribute, Val> result = new HashMap<>();
+  private static Map<AttributeType, Val> readAttributes(List<Object> list) throws IOException {
+    Map<AttributeType, Val> result = new HashMap<>();
     for (Object o : list) {
       Map<String, Object> m = CaduceusProgram.ensureMap(o, "Attribute values should be key-value pairs");
       m.entrySet().forEach(entry -> {
-        Attribute attribute = Attribute.create(entry.getKey());
-        result.put(attribute, Val.of(attribute.getValueType().convert(entry.getValue())));
+        AttributeType attributeType = AttributeType.create(entry.getKey());
+        result.put(attributeType, Val.of(attributeType.getValueType().convert(entry.getValue())));
       });
     }
     return result;

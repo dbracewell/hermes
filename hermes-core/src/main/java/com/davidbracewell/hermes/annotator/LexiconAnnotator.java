@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.Annotatable;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.lexicon.Lexicon;
@@ -70,7 +70,7 @@ public class LexiconAnnotator extends SentenceLevelAnnotator implements Serializ
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(type);
   }
 

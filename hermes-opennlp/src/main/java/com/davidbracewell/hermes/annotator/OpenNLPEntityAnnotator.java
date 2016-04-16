@@ -63,8 +63,8 @@ public class OpenNLPEntityAnnotator implements Annotator, Serializable {
               tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
           ).putAll(
             Collect.map(
-              Attrs.ENTITY_TYPE, EntityType.create(span.getType().toUpperCase()),
-              Attrs.CONFIDENCE, probs[i]
+              Types.ENTITY_TYPE, EntityType.create(span.getType().toUpperCase()),
+              Types.CONFIDENCE, probs[i]
             )
           );
         }
@@ -90,12 +90,12 @@ public class OpenNLPEntityAnnotator implements Annotator, Serializable {
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(OPENNLP_ENTITY);
   }
 
   @Override
-  public Set<Annotatable> requires() {
+  public Set<AnnotatableType> requires() {
     return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN));
   }
 

@@ -57,7 +57,7 @@ import java.util.function.Predicate;
 public class Document extends HString {
 
   private static final long serialVersionUID = 1L;
-  private final Map<Attribute, Val> attributes = new HashMap<>(5);
+  private final Map<AttributeType, Val> attributes = new HashMap<>(5);
   private final String content;
   private final AtomicLong idGenerator = new AtomicLong(0);
   private final AnnotationSet annotationSet;
@@ -73,11 +73,11 @@ public class Document extends HString {
     return DocumentFactory.getInstance().create(text, language);
   }
 
-  public static Document create(@NonNull String text, @NonNull Language language, @NonNull Map<Attribute, ?> attributes) {
+  public static Document create(@NonNull String text, @NonNull Language language, @NonNull Map<AttributeType, ?> attributes) {
     return DocumentFactory.getInstance().create(text, language, attributes);
   }
 
-  public static Document create(@NonNull String text, @NonNull Map<Attribute, ?> attributes) {
+  public static Document create(@NonNull String text, @NonNull Map<AttributeType, ?> attributes) {
     return DocumentFactory.getInstance().create(text, Hermes.defaultLanguage(), attributes);
   }
 
@@ -89,11 +89,11 @@ public class Document extends HString {
     return DocumentFactory.getInstance().create(id, text, language);
   }
 
-  public static Document create(@NonNull String id, @NonNull String text, @NonNull Language language, @NonNull Map<Attribute, ?> attributes) {
+  public static Document create(@NonNull String id, @NonNull String text, @NonNull Language language, @NonNull Map<AttributeType, ?> attributes) {
     return DocumentFactory.getInstance().create(id, text, language, attributes);
   }
 
-  public static Document create(@NonNull String id, @NonNull String text, @NonNull Map<Attribute, ?> attributes) {
+  public static Document create(@NonNull String id, @NonNull String text, @NonNull Map<AttributeType, ?> attributes) {
     return DocumentFactory.getInstance().create(id, text, Hermes.defaultLanguage(), attributes);
   }
 
@@ -152,7 +152,7 @@ public class Document extends HString {
 
       Map<String, Val> docProperties = new HashMap<>();
       List<Annotation> annotations = new LinkedList<>();
-      Map<Attribute, Val> attributeValMap = Collections.emptyMap();
+      Map<AttributeType, Val> attributeValMap = Collections.emptyMap();
       Map<AnnotationType, String> completed = new HashMap<>();
 
       while (reader.peek() != ElementType.END_DOCUMENT) {
@@ -166,7 +166,7 @@ public class Document extends HString {
 
           switch (name) {
             case "attributes":
-              attributeValMap = Attribute.readAttributeList(reader);
+              attributeValMap = AttributeType.readAttributeList(reader);
               break;
             case "completed":
               while (reader.peek() != ElementType.END_OBJECT) {
@@ -225,7 +225,7 @@ public class Document extends HString {
   }
 
   @Override
-  public Set<Attribute> attributes() {
+  public Set<AttributeType> attributes() {
     return attributes.keySet();
   }
 
@@ -251,7 +251,7 @@ public class Document extends HString {
    *
    * @return the set
    */
-  public Set<Annotatable> completedAnnotations() {
+  public Set<AnnotatableType> completedAnnotations() {
     return annotationSet.getCompleted();
   }
 
@@ -274,13 +274,13 @@ public class Document extends HString {
    * @param type             the type of annotation
    * @param span             the span of the annotation
    * @param copyAttributes   the copy attributes
-   * @param filterAttributes the filter attributes
+   * @param filterAttributeTypes the filter attributes
    * @return the created annotation
    */
-  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span, boolean copyAttributes, Set<Attribute> filterAttributes) {
-    Map<Attribute, ?> map = copyAttributes ? span.getAttributeMap() : Collections.emptyMap();
-    if (filterAttributes != null) {
-      map = Maps.filterEntries(map, e -> filterAttributes.contains(e.getKey()));
+  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span, boolean copyAttributes, Set<AttributeType> filterAttributeTypes) {
+    Map<AttributeType, ?> map = copyAttributes ? span.getAttributeMap() : Collections.emptyMap();
+    if (filterAttributeTypes != null) {
+      map = Maps.filterEntries(map, e -> filterAttributeTypes.contains(e.getKey()));
     }
     return createAnnotation(type, span.start(), span.end(), map);
   }
@@ -307,7 +307,7 @@ public class Document extends HString {
    * @param attributeMap the attributes associated with the annotation
    * @return the created annotation
    */
-  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull Span span, @NonNull Map<Attribute, ?> attributeMap) {
+  public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull Span span, @NonNull Map<AttributeType, ?> attributeMap) {
     return createAnnotation(type, span.start(), span.end(), attributeMap);
   }
 
@@ -335,7 +335,7 @@ public class Document extends HString {
    * @param attributeMap the attributes associated with the annotation
    * @return the created annotation
    */
-  public Annotation createAnnotation(@NonNull AnnotationType type, int start, int end, @NonNull Map<Attribute, ?> attributeMap) {
+  public Annotation createAnnotation(@NonNull AnnotationType type, int start, int end, @NonNull Map<AttributeType, ?> attributeMap) {
     Preconditions.checkArgument(start >= start(), "Annotation must have a starting position >= the start of the document");
     Preconditions.checkArgument(end <= end(), "Annotation must have a ending position <= the end of the document");
     Annotation annotation = new Annotation(this, type, start, end);
@@ -420,7 +420,7 @@ public class Document extends HString {
   }
 
   @Override
-  protected Map<Attribute, Val> getAttributeMap() {
+  protected Map<AttributeType, Val> getAttributeMap() {
     return attributes;
   }
 
@@ -448,8 +448,8 @@ public class Document extends HString {
 
   @Override
   public Language getLanguage() {
-    if (contains(Attrs.LANGUAGE)) {
-      return get(Attrs.LANGUAGE).as(Language.class);
+    if (contains(Types.LANGUAGE)) {
+      return get(Types.LANGUAGE).as(Language.class);
     }
     return Hermes.defaultLanguage();
   }
@@ -494,7 +494,7 @@ public class Document extends HString {
 
       if (attributes.size() > 0) {
         writer.beginObject("attributes");
-        for (Map.Entry<Attribute, Val> entry : attributeValues()) {
+        for (Map.Entry<AttributeType, Val> entry : attributeValues()) {
           entry.getKey().write(writer, entry.getValue());
         }
         writer.endObject();
@@ -504,7 +504,7 @@ public class Document extends HString {
 
 
         writer.beginObject("completed");
-        for (Annotatable type : getAnnotationSet().getCompleted()) {
+        for (AnnotatableType type : getAnnotationSet().getCompleted()) {
           writer.writeKeyValue(type.name(), getAnnotationSet().getAnnotationProvider(type));
         }
         writer.endObject();

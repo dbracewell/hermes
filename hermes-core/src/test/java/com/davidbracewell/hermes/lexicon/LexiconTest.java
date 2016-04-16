@@ -1,7 +1,7 @@
 package com.davidbracewell.hermes.lexicon;
 
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Fragments;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.Entities;
 import com.davidbracewell.hermes.tag.StringTag;
 import org.junit.Test;
@@ -16,7 +16,7 @@ public class LexiconTest {
 
   @Test
   public void test() {
-    Lexicon lexicon = new TrieLexicon(true, true, Attrs.TAG);
+    Lexicon lexicon = new TrieLexicon(true, true, Types.TAG);
     lexicon.add("test"); //Add an entry with no tag and no probability
     lexicon.add("testing", 0.8, new StringTag("TEST"));
     lexicon.add("bark", 0.8);

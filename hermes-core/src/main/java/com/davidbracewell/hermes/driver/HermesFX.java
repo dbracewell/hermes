@@ -139,7 +139,7 @@ public class HermesFX extends JavaFXApplication {
     annotationPane.getChildren().addAll(titleBar, annotationList);
     TextFlow highlight = new TextFlow();
     annotationList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-      AnnotationType type = Types.type(newValue.getValue());
+      AnnotationType type = Types.annotation(newValue.getValue());
       currentDocument.get(type).forEach(a -> {
         editor.selectRange(a.start(),a.end());
         editor.setBackground(new Background(new BackgroundFill(Color.RED,null,null)));

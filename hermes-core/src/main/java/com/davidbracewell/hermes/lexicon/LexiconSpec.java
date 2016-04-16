@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.Tag;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.regex.QueryToPredicate;
 import com.davidbracewell.io.CSV;
@@ -51,7 +51,7 @@ public class LexiconSpec implements Serializable {
   private boolean probabilistic;
   private boolean hasConstraints;
   private boolean caseSensitive;
-  private Attribute tagAttribute;
+  private AttributeType tagAttributeType;
   private boolean useResourceNameAsTag;
   private Resource resource;
 
@@ -69,16 +69,16 @@ public class LexiconSpec implements Serializable {
    * @param hasConstraints       the has constraints
    * @param probabilistic        the probabilistic
    * @param resource             the resource
-   * @param tagAttribute         the tag attribute
+   * @param tagAttributeType         the tag attribute
    * @param useResourceNameAsTag the use resource name as tag
    */
   @Builder
-  public LexiconSpec(boolean caseSensitive, boolean hasConstraints, boolean probabilistic, Resource resource, Attribute tagAttribute, boolean useResourceNameAsTag) {
+  public LexiconSpec(boolean caseSensitive, boolean hasConstraints, boolean probabilistic, Resource resource, AttributeType tagAttributeType, boolean useResourceNameAsTag) {
     this.caseSensitive = caseSensitive;
     this.hasConstraints = hasConstraints;
     this.probabilistic = probabilistic;
     this.resource = resource;
-    this.tagAttribute = tagAttribute;
+    this.tagAttributeType = tagAttributeType;
     this.useResourceNameAsTag = useResourceNameAsTag;
   }
 
@@ -89,7 +89,7 @@ public class LexiconSpec implements Serializable {
    * @throws Exception the exception
    */
   public Lexicon create() throws Exception {
-    Lexicon lexicon = new TrieLexicon(caseSensitive, probabilistic, tagAttribute);
+    Lexicon lexicon = new TrieLexicon(caseSensitive, probabilistic, tagAttributeType);
     if (resource != null) {
       String base = resource.baseName().replaceFirst("\\.[^\\.]*$", "");
       try (CSVReader reader = CSV.builder().reader(resource)) {
@@ -100,15 +100,15 @@ public class LexiconSpec implements Serializable {
           SerializablePredicate<HString> constraint = null;
 
           int nc = 1;
-          if (tagAttribute != null && !useResourceNameAsTag) {
-            tag = tagAttribute.getValueType().convert(row.get(nc));
+          if (tagAttributeType != null && !useResourceNameAsTag) {
+            tag = tagAttributeType.getValueType().convert(row.get(nc));
             if (tag == null) {
-              log.warn("{0} is an invalid {1}, skipping entry {2}.", row.get(nc), tagAttribute.name(), row);
+              log.warn("{0} is an invalid {1}, skipping entry {2}.", row.get(nc), tagAttributeType.name(), row);
               return;
             }
             nc++;
-          } else if (tagAttribute != null) {
-            tag = tagAttribute.getValueType().convert(base);
+          } else if (tagAttributeType != null) {
+            tag = tagAttributeType.getValueType().convert(base);
             Preconditions.checkNotNull(tag, row.get(nc) + " is an invalid tag.");
           }
 

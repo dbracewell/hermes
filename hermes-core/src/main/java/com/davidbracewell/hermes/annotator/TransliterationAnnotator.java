@@ -21,8 +21,7 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.Annotatable;
-import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.ibm.icu.text.Transliterator;
@@ -58,18 +57,18 @@ public class TransliterationAnnotator implements Annotator, Serializable {
   public void annotate(Document document) {
     Transliterator transliterator = Transliterator.getInstance(ID);
     document.tokens().forEach(token ->
-        token.put(Attrs.TRANSLITERATION, transliterator.transform(token.toString()))
+        token.put(Types.TRANSLITERATION, transliterator.transform(token.toString()))
     );
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
-    return Collections.singleton(Attrs.TRANSLITERATION);
+  public Set<AnnotatableType> satisfies() {
+    return Collections.singleton(Types.TRANSLITERATION);
   }
 
 
   @Override
-  public Set<Annotatable> requires() {
+  public Set<AnnotatableType> requires() {
     return Collections.singleton(Types.TOKEN);
   }
 

@@ -22,8 +22,7 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.Attribute;
-import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Fragments;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.parsing.*;
@@ -168,11 +167,11 @@ public class QueryParser {
       if (pe.operator.getType().isInstance(Types.NOT)) {
         return negate(generate(pe.right));
       } else if (pe.operator.getType().isInstance(Types.FIELD)) {
-        final Attribute attribute = Attrs.attribute(pe.operator.getText().substring(1, pe.operator.getText().length() - 2));
+        final AttributeType attributeType = com.davidbracewell.hermes.Types.attribute(pe.operator.getText().substring(1, pe.operator.getText().length() - 2));
         final SerializablePredicate<HString> predicate = generate(pe.right);
         return hString ->
-          hString.document().contains(attribute) &&
-            predicate.test(Fragments.string(hString.document().get(attribute).asString()));
+          hString.document().contains(attributeType) &&
+            predicate.test(Fragments.string(hString.document().get(attributeType).asString()));
       }
       return generate(pe.right);
     }

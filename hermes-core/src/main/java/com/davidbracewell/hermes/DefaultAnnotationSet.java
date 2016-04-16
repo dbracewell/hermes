@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class DefaultAnnotationSet implements AnnotationSet {
 
   private final AnnotationTree tree = new AnnotationTree();
-  private final Map<Annotatable, String> completed = new HashMap<>(4);
+  private final Map<AnnotatableType, String> completed = new HashMap<>(4);
   private final Map<Long, Annotation> idAnnotationMap = new HashMap<>(4);
 
   @Override
@@ -31,7 +31,7 @@ public class DefaultAnnotationSet implements AnnotationSet {
   }
 
   @Override
-  public void setIsCompleted(Annotatable type, boolean isCompleted, String annotatorInformation) {
+  public void setIsCompleted(AnnotatableType type, boolean isCompleted, String annotatorInformation) {
     if (isCompleted) {
       completed.put(type, annotatorInformation);
     } else {
@@ -40,17 +40,17 @@ public class DefaultAnnotationSet implements AnnotationSet {
   }
 
   @Override
-  public boolean isCompleted(Annotatable type) {
+  public boolean isCompleted(AnnotatableType type) {
     return completed.containsKey(type);
   }
 
   @Override
-  public String getAnnotationProvider(Annotatable type) {
+  public String getAnnotationProvider(AnnotatableType type) {
     return completed.get(type);
   }
 
   @Override
-  public Set<Annotatable> getCompleted() {
+  public Set<AnnotatableType> getCompleted() {
     return completed.keySet();
   }
 

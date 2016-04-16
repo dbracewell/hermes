@@ -23,7 +23,10 @@ package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.Pipeline;
+import com.davidbracewell.hermes.Types;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -37,7 +40,7 @@ public class EnglishStemmerTest {
   public void testStem() throws Exception {
     Config.initializeTest();
     Document document = DocumentFactory.getInstance().create("I was walking to the shore with no shoes.", Language.ENGLISH);
-    Pipeline.process(document, Types.TOKEN, Types.SENTENCE, Attrs.STEM);
+    Pipeline.process(document, Types.TOKEN, Types.SENTENCE, Types.STEM);
     assertEquals("wa walk", document.find("was walking").getStem());
     assertEquals("shoe", document.find("shoes").getStem());
     assertEquals("no", document.find("no").getStem());

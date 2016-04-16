@@ -33,12 +33,12 @@ public class IOBFieldProcessor implements FieldProcessor {
 
   private final int index;
   private final AnnotationType annotationType;
-  private final Attribute attribute;
+  private final AttributeType attributeType;
 
-  public IOBFieldProcessor(int index, AnnotationType annotationType, Attribute attribute) {
+  public IOBFieldProcessor(int index, AnnotationType annotationType, AttributeType attributeType) {
     this.index = index;
     this.annotationType = annotationType;
-    this.attribute = attribute;
+    this.attributeType = attributeType;
   }
 
 
@@ -73,16 +73,16 @@ public class IOBFieldProcessor implements FieldProcessor {
       annotationType,
       document.tokenAt(start).start(),
       document.tokenAt(end - 1).end(),
-      Collect.map(attribute, attribute.getValueType().convert(tag))
+      Collect.map(attributeType, attributeType.getValueType().convert(tag))
     );
   }
 
   public static IOBFieldProcessor chunkProcessor(int index) {
-    return new IOBFieldProcessor(index, Types.PHRASE_CHUNK, Attrs.PART_OF_SPEECH);
+    return new IOBFieldProcessor(index, Types.PHRASE_CHUNK, Types.PART_OF_SPEECH);
   }
 
   public static IOBFieldProcessor nameEntityProcessor(int index) {
-    return new IOBFieldProcessor(index, Types.ENTITY, Attrs.ENTITY_TYPE);
+    return new IOBFieldProcessor(index, Types.ENTITY, Types.ENTITY_TYPE);
   }
 
   @Override

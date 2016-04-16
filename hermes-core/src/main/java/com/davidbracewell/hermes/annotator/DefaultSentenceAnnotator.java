@@ -22,8 +22,7 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.collection.Collect;
-import com.davidbracewell.hermes.Annotatable;
-import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.google.common.base.CharMatcher;
@@ -202,7 +201,7 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
         doc.createAnnotation(Types.SENTENCE,
           start,
           end,
-          Collect.map(Attrs.INDEX, index)
+          Collect.map(Types.INDEX, index)
         );
         index++;
         start = end;
@@ -213,7 +212,7 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(Types.SENTENCE);
   }
 

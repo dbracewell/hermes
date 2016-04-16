@@ -23,7 +23,10 @@ package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.Pipeline;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.POS;
 import org.junit.Test;
 
@@ -66,10 +69,10 @@ public class EnglishLemmatizerTest {
     Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
     assertEquals("walking", lemmatizer.lemmatize(document.find("walking")));
 
-    document.find("was").first(Types.TOKEN).put(Attrs.PART_OF_SPEECH, POS.VBD);
-    document.find("walking").first(Types.TOKEN).put(Attrs.PART_OF_SPEECH, POS.VBG);
-    document.getAnnotationSet().setIsCompleted(Attrs.PART_OF_SPEECH, true, "");
-    Pipeline.process(document, Attrs.LEMMA);
+    document.find("was").first(Types.TOKEN).put(Types.PART_OF_SPEECH, POS.VBD);
+    document.find("walking").first(Types.TOKEN).put(Types.PART_OF_SPEECH, POS.VBG);
+    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "");
+    Pipeline.process(document, Types.LEMMA);
     assertEquals("be walk", document.find("was walking").getLemma());
   }
 }

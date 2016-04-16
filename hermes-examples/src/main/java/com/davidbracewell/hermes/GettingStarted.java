@@ -62,7 +62,7 @@ public class GettingStarted {
     //Since HStrings act like super charged strings, we can do simple annotations using the builtin Java regex engine.
 
     //First define the type ANIMAL_MENTION (Note that Types.type(String) is the same as AnnotationType.create(String))
-    AnnotationType animalMention = Types.type("ANIMAL_MENTION");
+    AnnotationType animalMention = Types.annotation("ANIMAL_MENTION");
 
     //Second create annotations based on a regular expression match
     //We will match fox or dog with word breaks on both sides

@@ -72,7 +72,7 @@ public class AnnotatorCache {
    * @param language       The language of the annotator we want
    * @return An annotator that can annotate the given annotation class
    */
-  public Annotator get(@NonNull Annotatable annotationType, @NonNull Language language) {
+  public Annotator get(@NonNull AnnotatableType annotationType, @NonNull Language language) {
     String key = createKey(annotationType, language);
     if (!cache.containsKey(key)) {
       cache.put(key, annotationType.getAnnotator(language));
@@ -80,7 +80,7 @@ public class AnnotatorCache {
     return cache.get(key);
   }
 
-  private String createKey(Annotatable type, Language language) {
+  private String createKey(AnnotatableType type, Language language) {
     if (language == Language.UNKNOWN) {
       return type.name();
     }

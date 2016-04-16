@@ -24,7 +24,10 @@ package com.davidbracewell.hermes.annotator;
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.AnnotatableType;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Stopwatch;
@@ -79,7 +82,7 @@ public class OpenNLPSentenceAnnotator implements Annotator {
       while ((pos = findEOS(sentenceFragment)) != sentenceFragment.end()) {
         //There is a disagreement between what that tokenizer thinks is an aberviation or non-end of sentence
         //period and what the sentence segmenter says. Err on the side of the tokenizer.
-        document.createAnnotation(Types.SENTENCE, start, pos, Collect.map(Attrs.INDEX, index));
+        document.createAnnotation(Types.SENTENCE, start, pos, Collect.map(Types.INDEX, index));
         index++;
 
         start = pos;
@@ -89,7 +92,7 @@ public class OpenNLPSentenceAnnotator implements Annotator {
         sentenceFragment = document.substring(start, end);
       }
 
-      document.createAnnotation(Types.SENTENCE, sentenceFragment.start(), sentenceFragment.end(), Collect.map(Attrs.INDEX, index));
+      document.createAnnotation(Types.SENTENCE, sentenceFragment.start(), sentenceFragment.end(), Collect.map(Types.INDEX, index));
       index++;
     }
   }
@@ -131,12 +134,12 @@ public class OpenNLPSentenceAnnotator implements Annotator {
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(Types.SENTENCE);
   }
 
   @Override
-  public Set<Annotatable> requires() {
+  public Set<AnnotatableType> requires() {
     return Collections.singleton(Types.TOKEN);
   }
 

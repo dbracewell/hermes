@@ -23,10 +23,10 @@ package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.Attribute;
-import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.RelationType;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.filter.HStringPredicates;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
@@ -191,7 +191,7 @@ public final class QueryToPredicate {
   protected static SerializablePredicate<HString> valueExpressionToPredicate(Expression exp) throws ParseException {
 
     if (exp.match(RegexTokenTypes.NUMBER)) {
-      return a -> StringPredicates.IS_DIGIT.test(a) || a.getPOS().isInstance(POS.NUMBER) || TokenType.NUMBER.equals(a.get(Attrs.TOKEN_TYPE).cast());
+      return a -> StringPredicates.IS_DIGIT.test(a) || a.getPOS().isInstance(POS.NUMBER) || TokenType.NUMBER.equals(a.get(Types.TOKEN_TYPE).cast());
     }
 
     if (exp.match(RegexTokenTypes.LEXICON)) {
@@ -220,7 +220,7 @@ public final class QueryToPredicate {
 
     if (exp.match(RegexTokenTypes.ATTRMATCH)) {
       List<String> parts = StringUtils.split(exp.toString().substring(1), ':');
-      Attribute attrName = Attribute.create(StringUtils.unescape(parts.get(0), '\\'));
+      AttributeType attrName = AttributeType.create(StringUtils.unescape(parts.get(0), '\\'));
       Object attrValue = attrName.getValueType().convert(StringUtils.unescape(parts.get(1), '\\'));
       return HStringPredicates.attributeMatch(attrName, attrValue);
     }

@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.Annotatable;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.string.StringUtils;
@@ -82,7 +82,7 @@ public class RegexAnnotator implements Annotator, Serializable {
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(providedType);
   }
 

@@ -134,7 +134,7 @@ public class CaduceusRelationPoint {
 
     return getAnnotationStream(groups, matcher)
       .flatMap(a -> {
-          if (relationType.equals(Relations.DEPENDENCY)) {
+          if (relationType.equals(Types.DEPENDENCY)) {
             return a.children().stream().filter(a2 -> a2.dependencyRelation().filter(r -> r.getKey().equals(relationValue)).isPresent());
           }
           return a.sources(relationType, relationValue).stream();

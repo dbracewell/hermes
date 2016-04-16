@@ -28,7 +28,7 @@ import com.davidbracewell.tuple.Tuple2;
 
 import java.util.Optional;
 
-import static com.davidbracewell.hermes.Relations.DEPENDENCY;
+import static com.davidbracewell.hermes.Types.DEPENDENCY;
 import static com.davidbracewell.hermes.Types.PHRASE_CHUNK;
 
 /**

@@ -26,7 +26,6 @@ import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.io.Resources;
 
-import static com.davidbracewell.hermes.Attrs.PART_OF_SPEECH;
 import static com.davidbracewell.hermes.Types.*;
 
 /**

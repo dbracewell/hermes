@@ -31,7 +31,7 @@ import java.util.Collection;
 /**
  * @author David B. Bracewell
  */
-public final class RelationType extends EnumValue implements Annotatable {
+public final class RelationType extends EnumValue implements AnnotatableType {
 
   private static final DynamicEnum<RelationType> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
@@ -83,7 +83,7 @@ public final class RelationType extends EnumValue implements Annotatable {
   }
 
   @Override
-  public String getTypeName() {
+  public String type() {
     return "Relation";
   }
 

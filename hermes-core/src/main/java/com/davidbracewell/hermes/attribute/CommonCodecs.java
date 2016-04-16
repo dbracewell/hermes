@@ -25,7 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
-import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.tag.EntityType;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.structured.StructuredReader;
@@ -40,79 +40,79 @@ import java.util.Date;
 public enum CommonCodecs implements AttributeValueCodec {
   INTEGER {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
-      writer.writeKeyValue(attribute.name(), (Integer) value);
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
+      writer.writeKeyValue(attributeType.name(), (Integer) value);
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return Convert.convert(value, Integer.class);
     }
   },
   DOUBLE {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
-      writer.writeKeyValue(attribute.name(), value);
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
+      writer.writeKeyValue(attributeType.name(), value);
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return Convert.convert(value, Double.class);
     }
   },
   FLOAT {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
-      writer.writeKeyValue(attribute.name(), value);
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
+      writer.writeKeyValue(attributeType.name(), value);
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return Convert.convert(value, Float.class);
     }
   },
   LONG {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
-      writer.writeKeyValue(attribute.name(), value);
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
+      writer.writeKeyValue(attributeType.name(), value);
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return Convert.convert(value, Long.class);
     }
   },
   STRING {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
-      writer.writeKeyValue(attribute.name(), value);
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
+      writer.writeKeyValue(attributeType.name(), value);
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return value.toString();
     }
   },
   BOOLEAN {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
-      writer.writeKeyValue(attribute.name(), value);
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
+      writer.writeKeyValue(attributeType.name(), value);
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return Convert.convert(value, Boolean.class);
     }
   },
   TAG {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
       writer.writeKeyValue("tagClass", value.getClass().getName());
       writer.writeKeyValue("tagValue", value.toString());
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       Class<? extends Tag> tagClass = Cast.as(reader.nextKeyValue("tagClass").asClass());
       return reader.nextKeyValue("tagValue").as(tagClass);
     }
@@ -124,56 +124,56 @@ public enum CommonCodecs implements AttributeValueCodec {
   },
   PART_OF_SPEECH {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
-      writer.writeKeyValue(attribute.name(), value);
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
+      writer.writeKeyValue(attributeType.name(), value);
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return Convert.convert(value, POS.class);
     }
   },
   ENTITY_TYPE {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
-      writer.writeKeyValue(attribute.name(), value);
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
+      writer.writeKeyValue(attributeType.name(), value);
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return Convert.convert(value, EntityType.class);
     }
   },
   DATE {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
-      writer.writeKeyValue(attribute.name(), Cast.<Date>as(value).getTime());
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
+      writer.writeKeyValue(attributeType.name(), Cast.<Date>as(value).getTime());
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return new Date(Convert.convert(value, Long.class));
     }
   },
   LANGUAGE {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
-      writer.writeKeyValue(attribute.name(), Cast.<Language>as(value).toString());
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
+      writer.writeKeyValue(attributeType.name(), Cast.<Language>as(value).toString());
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return Language.fromString(value.toString());
     }
   },
   WIKI_LINKS {
     @Override
-    public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
+    public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
       writer.writeValue(value);
     }
 
     @Override
-    public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+    public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
       return reader.nextMap();
     }
 

@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Annotatable;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 
 import java.util.Collections;
@@ -55,14 +55,14 @@ public interface Annotator {
    *
    * @return the set of satisfied annotation types
    */
-  Set<Annotatable> satisfies();
+  Set<AnnotatableType> satisfies();
 
   /**
    * The annotation types required to be on a document before this annotator can annotate
    *
    * @return the set of required annotation types
    */
-  default Set<Annotatable> requires() {
+  default Set<AnnotatableType> requires() {
     return Collections.emptySet();
   }
 

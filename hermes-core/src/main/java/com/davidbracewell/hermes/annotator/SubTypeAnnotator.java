@@ -86,8 +86,8 @@ public class SubTypeAnnotator implements Annotator, Serializable {
       return a1;
     }
 
-    double a1S = a1.tokenLength() * a1.get(Attrs.CONFIDENCE).asDoubleValue(1.0);
-    double a2S = a2.tokenLength() * a2.get(Attrs.CONFIDENCE).asDoubleValue(1.0);
+    double a1S = a1.tokenLength() * a1.get(Types.CONFIDENCE).asDoubleValue(1.0);
+    double a2S = a2.tokenLength() * a2.get(Types.CONFIDENCE).asDoubleValue(1.0);
     if (a1S > a2S) {
       return a1;
     } else if (a2S > a1S) {
@@ -124,7 +124,7 @@ public class SubTypeAnnotator implements Annotator, Serializable {
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(annotationType);
   }
 

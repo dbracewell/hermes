@@ -21,7 +21,7 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
 
   private Annotation createAnnotation(Document document, Span span) {
     Annotation annotation = document.createAnnotation(Types.WORD_SENSE, span);
-    annotation.put(Attrs.SENSE, WordNet.getInstance().getSenses(annotation.toString(), POS.forText(annotation), document.getLanguage()));
+    annotation.put(Types.SENSE, WordNet.getInstance().getSenses(annotation.toString(), POS.forText(annotation), document.getLanguage()));
     return annotation;
   }
 
@@ -101,14 +101,14 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(Types.WORD_SENSE);
   }
 
 
   @Override
-  protected Set<Annotatable> furtherRequires() {
-    return Collections.singleton(Attrs.PART_OF_SPEECH);
+  protected Set<AnnotatableType> furtherRequires() {
+    return Collections.singleton(Types.PART_OF_SPEECH);
   }
 
 }// END OF WordNetAnnotator

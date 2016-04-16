@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.function.SerializableFunction;
-import com.davidbracewell.hermes.Annotatable;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
@@ -113,7 +113,7 @@ public class FileCorpus implements Corpus, Serializable {
   }
 
   @Override
-  public Corpus annotate(@NonNull Annotatable... types) {
+  public Corpus annotate(@NonNull AnnotatableType... types) {
     return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
   }
 

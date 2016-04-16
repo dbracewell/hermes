@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.attribute;
 
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
@@ -40,21 +40,21 @@ public abstract class CollectionCodec implements AttributeValueCodec, Serializab
   private static final long serialVersionUID = 1L;
 
   @Override
-  public final void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
+  public final void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
     for (Object o : Cast.<Collection<?>>as(value)) {
-      encodeElement(writer, attribute, o);
+      encodeElement(writer, attributeType, o);
     }
   }
 
-  protected abstract void encodeElement(StructuredWriter writer, Attribute attribute, Object element) throws IOException;
+  protected abstract void encodeElement(StructuredWriter writer, AttributeType attributeType, Object element) throws IOException;
 
   @Override
-  public final Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+  public final Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
     List<Object> list = new LinkedList<>();
     while (reader.peek() != ElementType.END_ARRAY) {
       list.add(reader.nextValue());
     }
-    return attribute.getValueType().convert(list);
+    return attributeType.getValueType().convert(list);
   }
 
 

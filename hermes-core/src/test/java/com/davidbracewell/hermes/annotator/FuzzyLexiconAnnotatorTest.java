@@ -22,7 +22,10 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Pipeline;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.lexicon.LexiconSpec;
@@ -58,7 +61,7 @@ public class FuzzyLexiconAnnotatorTest {
             "sitting the bank,ACTION\n" +
             "rabbit took a watch,ACTION\n"
         ))
-        .tagAttribute(Attrs.TAG)
+        .tagAttributeType(Types.TAG)
         .build().create();
     } catch (Exception e) {
       throw Throwables.propagate(e);

@@ -23,7 +23,6 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
@@ -60,7 +59,7 @@ public class LexiconAnnotatorTest {
     assertEquals("Alice", entities.get(1).toString());
     assertEquals("White Rabbit", entities.get(2).toString());
     assertEquals("think", entities.get(4).toString());
-    assertEquals(0.7d, entities.get(4).get(Attrs.CONFIDENCE).asDoubleValue(), 0.0d);
+    assertEquals(0.7d, entities.get(4).get(Types.CONFIDENCE).asDoubleValue(), 0.0d);
 
     document = DocumentProvider.getAnnotatedDocument();
     annotator = new LexiconAnnotator(

@@ -2,7 +2,7 @@ package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.function.SerializableFunction;
-import com.davidbracewell.hermes.Annotatable;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Hermes;
@@ -114,7 +114,7 @@ public class SparkCorpus implements Corpus, Serializable {
   }
 
   @Override
-  public Corpus annotate(@NonNull Annotatable... types) {
+  public Corpus annotate(@NonNull AnnotatableType... types) {
     return new SparkCorpus(stream.annotate(types));
   }
 

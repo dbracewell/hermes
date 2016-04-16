@@ -22,8 +22,8 @@
 package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.POS;
 
 import java.util.List;
@@ -50,11 +50,11 @@ public class POSFieldProcessor implements FieldProcessor {
           posStr = posStr.substring(0, posStr.indexOf('|'));
         }
         completed = true;
-        document.tokenAt(i).put(Attrs.PART_OF_SPEECH, POS.fromString(POSCorrection.pos(token.toString(), posStr)));
+        document.tokenAt(i).put(Types.PART_OF_SPEECH, POS.fromString(POSCorrection.pos(token.toString(), posStr)));
       }
     }
     if (completed) {
-      document.getAnnotationSet().setIsCompleted(Attrs.PART_OF_SPEECH, true, "PROVIDED");
+      document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
     }
   }
 

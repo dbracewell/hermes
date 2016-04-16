@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.tokenization;
 
 
-import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.AttributeType;
 import lombok.NonNull;
 
 import java.io.Reader;
@@ -87,7 +87,7 @@ public interface Tokenizer {
     /**
      * The Properties.
      */
-    public final Map<Attribute, Object> properties = new HashMap<>();
+    public final Map<AttributeType, Object> properties = new HashMap<>();
 
     /**
      * Default constructor

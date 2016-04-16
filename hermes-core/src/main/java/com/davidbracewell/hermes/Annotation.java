@@ -126,7 +126,7 @@ public final class Annotation extends Fragment implements Serializable {
   static Annotation read(StructuredReader reader) throws IOException {
     reader.beginObject();
     Map<String, Val> annotationProperties = new HashMap<>();
-    Map<Attribute, Val> attributeValMap = Collections.emptyMap();
+    Map<AttributeType, Val> attributeValMap = Collections.emptyMap();
     List<Relation> relations = new LinkedList<>();
 
     while (reader.peek() != ElementType.END_OBJECT) {
@@ -134,7 +134,7 @@ public final class Annotation extends Fragment implements Serializable {
         Collect.put(annotationProperties, reader.nextKeyValue());
       } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
         reader.beginObject("attributes");
-        attributeValMap = Attribute.readAttributeList(reader);
+        attributeValMap = AttributeType.readAttributeList(reader);
         reader.endObject();
       } else if (reader.peek() == ElementType.BEGIN_ARRAY) {
         reader.beginArray("relations");
@@ -199,7 +199,7 @@ public final class Annotation extends Fragment implements Serializable {
   @Override
   public Optional<Tuple2<String, Annotation>> dependencyRelation() {
     return getRelationStream(true)
-      .filter(r -> r.getType() == Relations.DEPENDENCY)
+      .filter(r -> r.getType() == Types.DEPENDENCY)
       .filter(r -> r.getTarget(this).isPresent())
       .filter(r -> !this.overlaps(r.getTarget(this).get()))
       .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).get()))
@@ -255,13 +255,13 @@ public final class Annotation extends Fragment implements Serializable {
     if (isInstance(Types.TOKEN)) {
       return Optional.ofNullable(getPOS());
     } else if (isInstance(Types.ENTITY)) {
-      return Optional.ofNullable(get(Attrs.ENTITY_TYPE).as(EntityType.class));
+      return Optional.ofNullable(get(Types.ENTITY_TYPE).as(EntityType.class));
     }
-    Attribute tagAttribute = annotationType.getTagAttribute();
-    if (tagAttribute == null) {
-      return Optional.ofNullable(get(Attrs.TAG).as(Tag.class));
+    AttributeType tagAttributeType = annotationType.getTagAttributeType();
+    if (tagAttributeType == null) {
+      return Optional.ofNullable(get(Types.TAG).as(Tag.class));
     }
-    return Optional.ofNullable(get(tagAttribute).as(Tag.class));
+    return Optional.ofNullable(get(tagAttributeType).as(Tag.class));
   }
 
   /**
@@ -299,7 +299,7 @@ public final class Annotation extends Fragment implements Serializable {
    * @return the boolean
    */
   public boolean isInstanceOfTag(String tag) {
-    return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute().getValueType().convert(tag)));
+    return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttributeType().getValueType().convert(tag)));
   }
 
   /**
@@ -427,7 +427,7 @@ public final class Annotation extends Fragment implements Serializable {
 
     if (getAttributeMap().size() > 0) {
       writer.beginObject("attributes");
-      for (Map.Entry<Attribute, Val> entry : attributeValues()) {
+      for (Map.Entry<AttributeType, Val> entry : attributeValues()) {
         entry.getKey().write(writer, entry.getValue());
       }
       writer.endObject();

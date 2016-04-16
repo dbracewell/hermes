@@ -23,9 +23,9 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Annotatable;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.pos.POSTagger;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
@@ -71,8 +71,8 @@ public class DefaultPOSAnnotator extends SentenceLevelAnnotator implements Seria
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
-    return Collections.singleton(Attrs.PART_OF_SPEECH);
+  public Set<AnnotatableType> satisfies() {
+    return Collections.singleton(Types.PART_OF_SPEECH);
   }
 
 }//END OF DefaultPOSAnnotator

@@ -23,9 +23,8 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Annotatable;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.POS;
 import com.google.common.base.Throwables;
@@ -54,7 +53,7 @@ public class OpenNLPPOSAnnotator extends SentenceLevelAnnotator {
     String[] tags = posTagger.tag(tokens);
     for (int i = 0; i < tokens.length; i++) {
       Annotation token = sentence.tokenAt(i);
-      token.put(Attrs.PART_OF_SPEECH, POS.fromString(tags[i]));
+      token.put(Types.PART_OF_SPEECH, POS.fromString(tags[i]));
     }
   }
 
@@ -74,12 +73,12 @@ public class OpenNLPPOSAnnotator extends SentenceLevelAnnotator {
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
-    return Collections.singleton(Attrs.PART_OF_SPEECH);
+  public Set<AnnotatableType> satisfies() {
+    return Collections.singleton(Types.PART_OF_SPEECH);
   }
 
   @Override
-  public Set<Annotatable> furtherRequires() {
+  public Set<AnnotatableType> furtherRequires() {
     return Collections.singleton(Types.TOKEN);
   }
 

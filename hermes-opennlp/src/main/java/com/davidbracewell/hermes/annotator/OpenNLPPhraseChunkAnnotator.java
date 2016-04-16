@@ -23,7 +23,10 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.AnnotatableType;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.POS;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
@@ -51,14 +54,14 @@ public class OpenNLPPhraseChunkAnnotator implements Annotator, Serializable {
       String[] pos = new String[tokenList.size()];
       for (int i = 0; i < tokenList.size(); i++) {
         tokens[i] = tokenList.get(i).toString();
-        pos[i] = tokenList.get(i).get(Attrs.PART_OF_SPEECH).as(POS.class).asString();
+        pos[i] = tokenList.get(i).get(Types.PART_OF_SPEECH).as(POS.class).asString();
       }
       Span[] chunks = chunker.chunkAsSpans(tokens, pos);
       for (Span span : chunks) {
         sentence.document().createAnnotation(
           Types.PHRASE_CHUNK,
           tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
-        ).put(Attrs.PART_OF_SPEECH, POS.valueOf(span.getType()));
+        ).put(Types.PART_OF_SPEECH, POS.valueOf(span.getType()));
       }
     }
   }
@@ -80,13 +83,13 @@ public class OpenNLPPhraseChunkAnnotator implements Annotator, Serializable {
 
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(Types.PHRASE_CHUNK);
   }
 
   @Override
-  public Set<Annotatable> requires() {
-    return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN, Attrs.PART_OF_SPEECH));
+  public Set<AnnotatableType> requires() {
+    return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN, Types.PART_OF_SPEECH));
   }
 
   @Override

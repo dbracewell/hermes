@@ -27,7 +27,7 @@ import com.davidbracewell.function.SerializableBinaryOperator;
 import com.davidbracewell.function.SerializableConsumer;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.Annotatable;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Hermes;
 import com.davidbracewell.hermes.Pipeline;
@@ -108,7 +108,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    * @param types the types
    * @return the spark document stream
    */
-  public SparkDocumentStream annotate(@NonNull Annotatable... types) {
+  public SparkDocumentStream annotate(@NonNull AnnotatableType... types) {
     documentsProcessed.setValue(0d);
     tokensProcessed.setValue(0d);
     return new SparkDocumentStream(source.map(json -> {

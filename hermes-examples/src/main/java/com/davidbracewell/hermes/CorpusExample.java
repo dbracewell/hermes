@@ -79,7 +79,7 @@ public class CorpusExample {
     //Annotation of corpora is done using multiple threads for in memory and on disk corpora
     //Since we are modifying the corpus we should capture the returned corpus as on disk and distributed corpora
     //would require.
-    corpus = corpus.annotate(Types.TOKEN, Types.SENTENCE, Attrs.LEMMA);
+    corpus = corpus.annotate(Types.TOKEN, Types.SENTENCE, Types.LEMMA);
 
     //One thing we might want to do is get term frequencies. We can define our "term" to be any annotation and can
     //provide a function to convert to string form (for example if you want to lower or upper case).

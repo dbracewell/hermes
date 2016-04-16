@@ -139,7 +139,7 @@ public interface Corpus extends Iterable<Document> {
    * @param types The annotation types to annotate
    * @return A new corpus with the given annotation types present.
    */
-  Corpus annotate(Annotatable... types);
+  Corpus annotate(AnnotatableType... types);
 
 
   /**
@@ -195,11 +195,11 @@ public interface Corpus extends Iterable<Document> {
   /**
    * As labeled stream m stream.
    *
-   * @param labelAttribute the label attribute
+   * @param labelAttributeType the label attribute
    * @return the m stream
    */
-  default MStream<LabeledDatum<HString>> asLabeledStream(@NonNull Attribute labelAttribute) {
-    return stream().map(hs -> hs.asLabeledData(labelAttribute));
+  default MStream<LabeledDatum<HString>> asLabeledStream(@NonNull AttributeType labelAttributeType) {
+    return stream().map(hs -> hs.asLabeledData(labelAttributeType));
   }
 
   /**
@@ -270,22 +270,22 @@ public interface Corpus extends Iterable<Document> {
    * As classification data set dataset.
    *
    * @param featurizer     the featurizer
-   * @param labelAttribute the label attribute
+   * @param labelAttributeType the label attribute
    * @return the dataset
    */
-  default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull Attribute labelAttribute) {
-    return Dataset.classification().type(getDataSetType()).source(asLabeledStream(labelAttribute).map(featurizer::extractLabeled)).build();
+  default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull AttributeType labelAttributeType) {
+    return Dataset.classification().type(getDataSetType()).source(asLabeledStream(labelAttributeType).map(featurizer::extractLabeled)).build();
   }
 
   /**
    * As regression data set dataset.
    *
    * @param featurizer     the featurizer
-   * @param labelAttribute the label attribute
+   * @param labelAttributeType the label attribute
    * @return the dataset
    */
-  default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull Attribute labelAttribute) {
-    return Dataset.regression().type(getDataSetType()).source(asLabeledStream(labelAttribute).map(featurizer::extractLabeled)).build();
+  default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull AttributeType labelAttributeType) {
+    return Dataset.regression().type(getDataSetType()).source(asLabeledStream(labelAttributeType).map(featurizer::extractLabeled)).build();
   }
 
   /**
@@ -317,7 +317,7 @@ public interface Corpus extends Iterable<Document> {
    * @param function the function
    * @return the corpus
    */
-  Corpus map(@NonNull SerializableFunction<Document, Document> function);
+  Corpus map(SerializableFunction<Document, Document> function);
 
   /**
    * Gets data set type.

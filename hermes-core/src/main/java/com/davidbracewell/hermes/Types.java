@@ -28,37 +28,160 @@ package com.davidbracewell.hermes;
  */
 public interface Types {
 
-  static AnnotationType type(String name) {
-    return AnnotationType.create(name);
-  }
-
-  AnnotationType WORD_SENSE = AnnotationType.create("WORD_SENSE");
-
+  /**
+   * Document author
+   */
+  AttributeType AUTHOR = AttributeType.create("AUTHOR");
+  /**
+   * Document CATEGORY
+   */
+  AttributeType CATEGORY = AttributeType.create("CATEGORY");
+  /**
+   * Document author
+   */
+  AttributeType COLLECTION = AttributeType.create("COLLECTION");
+  /**
+   * Confidence value associated with an annotation
+   */
+  AttributeType CONFIDENCE = AttributeType.create("CONFIDENCE");
+  /**
+   * The constant DEPENDENCY.
+   */
+  RelationType DEPENDENCY = RelationType.create("DEPENDENCY");
+  /**
+   * The constant DEPENDENCY_RELATION.
+   */
+  AttributeType DEPENDENCY_RELATION = AttributeType.create("DEPENDENCY_RELATION");
   /**
    * Entity annotation type
    */
   AnnotationType ENTITY = AnnotationType.create("ENTITY");
   /**
+   * The constant ENTITY_TYPE.
+   */
+  AttributeType ENTITY_TYPE = AttributeType.create("ENTITY_TYPE");
+  /**
+   * File used to create the document
+   */
+  AttributeType FILE = AttributeType.create("FILE");
+  /**
+   * The index of a span with regards to a document
+   */
+  AttributeType INDEX = AttributeType.create("INDEX");
+  /**
+   * Document keywords
+   */
+  AttributeType KEYPHRASES = AttributeType.create("KEYPHRASES");
+  /**
+   * The Language assocaited with a span
+   */
+  AttributeType LANGUAGE = AttributeType.create("LANGUAGE");
+  /**
+   * The lemma version of a span
+   */
+  AttributeType LEMMA = AttributeType.create("LEMMA");
+  /**
    * lexicon match annotation type
    */
   AnnotationType LEXICON_MATCH = AnnotationType.create("LEXICON_MATCH");
-
+  /**
+   * The constant LYRE_RULE.
+   */
+  AttributeType LYRE_RULE = AttributeType.create("LYRE_RULE");
+  /**
+   * The constant MATCHED_STRING.
+   */
+  AttributeType MATCHED_STRING = AttributeType.create("MATCHED_STRING");
+  /**
+   * The constant PARENT.
+   */
+  AttributeType PARENT = AttributeType.create("PARENT");
+  /**
+   * The part-of-speech assocaited with a span
+   */
+  AttributeType PART_OF_SPEECH = AttributeType.create("PART_OF_SPEECH");
   /**
    * phrase chunk annotation type
    */
   AnnotationType PHRASE_CHUNK = AnnotationType.create("PHRASE_CHUNK");
   /**
+   * Publication date of document
+   */
+  AttributeType PUBLICATION_DATE = AttributeType.create("PUBLICATION_DATE");
+  /**
+   * The constant SENSE.
+   */
+  AttributeType SENSE = AttributeType.create("SENSE");
+  /**
    * sentence annotation type
    */
   AnnotationType SENTENCE = AnnotationType.create("SENTENCE");
-/**
+  /**
+   * Document source
+   */
+  AttributeType SOURCE = AttributeType.create("SOURCE");
+  /**
+   * The STEM.
+   */
+  AttributeType STEM = AttributeType.create("STEM");
+  /**
+   * The tag associated with a span
+   */
+  AttributeType TAG = AttributeType.create("TAG");
+  /**
+   * Document title
+   */
+  AttributeType TITLE = AttributeType.create("TITLE");
+  /**
    * token annotation type
    */
   AnnotationType TOKEN = AnnotationType.create("TOKEN");
   /**
+   * The type of token
+   */
+  AttributeType TOKEN_TYPE = AttributeType.create("TOKEN_TYPE");
+  /**
    * The constant TOKEN_TYPE_ENTITY.
    */
   AnnotationType TOKEN_TYPE_ENTITY = AnnotationType.create("TOKEN_TYPE_ENTITY");
+  /**
+   * The TRANSLITERATION.
+   */
+  AttributeType TRANSLITERATION = AttributeType.create("TRANSLITERATION");
+  /**
+   * The constant WORD_SENSE.
+   */
+  AnnotationType WORD_SENSE = AnnotationType.create("WORD_SENSE");
+
+  /**
+   * Annotation annotation type.
+   *
+   * @param name the name
+   * @return the annotation type
+   */
+  static AnnotationType annotation(String name) {
+    return AnnotationType.create(name);
+  }
+
+  /**
+   * Attribute attribute type.
+   *
+   * @param name the name
+   * @return the attribute type
+   */
+  static AttributeType attribute(String name) {
+    return AttributeType.create(name);
+  }
+
+  /**
+   * Relation relation type.
+   *
+   * @param name the name
+   * @return the relation type
+   */
+  static RelationType relation(String name) {
+    return RelationType.create(name);
+  }
 
 
 }//END OF AnnotationTypes

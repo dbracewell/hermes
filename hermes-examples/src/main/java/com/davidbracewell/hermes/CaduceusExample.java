@@ -39,11 +39,11 @@ public class CaduceusExample {
     Document document = DocumentFactory.getInstance().create(
       "John Doe spooked his family while they were on vacation in St. George Falls."
     );
-    Pipeline.process(document, Relations.DEPENDENCY, Types.PHRASE_CHUNK, Types.ENTITY);
+    Pipeline.process(document, Types.DEPENDENCY, Types.PHRASE_CHUNK, Types.ENTITY);
     program.execute(document);
 
-    RelationType eventRole = Relations.relation("EVENT_ROLE");
-    AnnotationType eventType = Types.type("EVENT");
+    RelationType eventRole = Types.relation("EVENT_ROLE");
+    AnnotationType eventType = Types.annotation("EVENT");
     document.get(eventType).forEach(
       event -> {
         Annotation spooker = event.sources(eventRole, "SPOOKER").stream().findFirst().orElse(null);

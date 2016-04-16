@@ -34,7 +34,7 @@ import static org.junit.Assert.*;
 /**
  * @author David B. Bracewell
  */
-public class AttributeTest {
+public class AttributeTypeTest {
 
   @Before
   public void setUp() throws Exception {
@@ -43,30 +43,30 @@ public class AttributeTest {
 
   @Test
   public void testCreate() throws Exception {
-    assertEquals(Double.class, Attrs.CONFIDENCE.getValueType().getType());
-    assertEquals(Attrs.CONFIDENCE, Attribute.create("CONFIDENCE", Double.class));
-    assertEquals(Attrs.CONFIDENCE, Attribute.create("CONFIDENCE"));
-    assertNotNull(Attribute.create("DUMMY", String.class));
-    assertTrue(Attribute.isDefined("dummy"));
+    assertEquals(Double.class, Types.CONFIDENCE.getValueType().getType());
+    assertEquals(Types.CONFIDENCE, AttributeType.create("CONFIDENCE", Double.class));
+    assertEquals(Types.CONFIDENCE, AttributeType.create("CONFIDENCE"));
+    assertNotNull(AttributeType.create("DUMMY", String.class));
+    assertTrue(AttributeType.isDefined("dummy"));
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testBadCreate() throws Exception {
-    Attribute a = Attrs.CONFIDENCE;
-    Attribute.create("CONFIDENCE", Integer.class);
+    AttributeType a = Types.CONFIDENCE;
+    AttributeType.create("CONFIDENCE", Integer.class);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testBadCreate2() throws Exception {
-    Attribute.create("", Integer.class);
+    AttributeType.create("", Integer.class);
   }
 
   @Test
   public void checkValues() {
-    Attribute dummy = Attribute.create("DUMMY", String.class);
-    assertFalse(Attribute.values().isEmpty());
-    assertTrue(Attribute.values().contains(dummy));
-    assertEquals(dummy, Attribute.valueOf("dummy"));
+    AttributeType dummy = AttributeType.create("DUMMY", String.class);
+    assertFalse(AttributeType.values().isEmpty());
+    assertTrue(AttributeType.values().contains(dummy));
+    assertEquals(dummy, AttributeType.valueOf("dummy"));
   }
 
   @Test
@@ -76,12 +76,12 @@ public class AttributeTest {
     Document document = DocumentFactory.getInstance().create("This is a test.");
     Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
     //Set token type to wrong value type
-    document.tokenAt(0).put(Attrs.TOKEN_TYPE, 34);
+    document.tokenAt(0).put(Types.TOKEN_TYPE, 34);
     String json = document.toJson();
 
     //Reading back in token type is ignored for the first token, because it is not a valid type
     document = Document.fromJson(json);
-    assertNull(document.tokenAt(0).get(Attrs.TOKEN_TYPE).get());
+    assertNull(document.tokenAt(0).get(Types.TOKEN_TYPE).get());
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -90,7 +90,7 @@ public class AttributeTest {
     Config.setProperty("Attribute.ignoreTypeErrors", "false");
     Document document = DocumentFactory.getInstance().create("This is a test.");
     Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
-    document.tokenAt(0).put(Attrs.TOKEN_TYPE, 34);
+    document.tokenAt(0).put(Types.TOKEN_TYPE, 34);
     document.toJson();
   }
 
@@ -101,12 +101,12 @@ public class AttributeTest {
     Document document = DocumentFactory.getInstance().create("This is a test.");
     Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
     //Set token type to wrong value type
-    document.tokenAt(0).put(Attrs.TOKEN_TYPE, 34);
+    document.tokenAt(0).put(Types.TOKEN_TYPE, 34);
     String json = document.toJson();
 
     //Reading back in token type is ignored for the first token, because it is not a valid type
     document = Document.fromJson(json);
-    assertNull(document.tokenAt(0).get(Attrs.TOKEN_TYPE).get());
+    assertNull(document.tokenAt(0).get(Types.TOKEN_TYPE).get());
   }
 
   @Test
@@ -117,25 +117,25 @@ public class AttributeTest {
 
     Config.setProperty("Attribute.LIST.type", "List");
     Config.setProperty("Attribute.LIST.elementType", "String");
-    Attribute listAttribute = Attribute.create("LIST");
+    AttributeType listAttributeType = AttributeType.create("LIST");
 
     Config.setProperty("Attribute.MAP.type", "map");
     Config.setProperty("Attribute.MAP.keyType", "String");
     Config.setProperty("Attribute.MAP.valueType", "String");
-    Attribute mapAttribute = Attribute.create("MAP", Map.class);
+    AttributeType mapAttributeType = AttributeType.create("MAP", Map.class);
 
 
     Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
     //Set token type to wrong value type
-    document.tokenAt(0).put(listAttribute, Arrays.asList("One", "Two", "Three"));
-    document.tokenAt(1).put(mapAttribute, Collect.map("A", "B", "C", "D"));
+    document.tokenAt(0).put(listAttributeType, Arrays.asList("One", "Two", "Three"));
+    document.tokenAt(1).put(mapAttributeType, Collect.map("A", "B", "C", "D"));
     String json = document.toJson();
 
     //Reading back in token type is ignored for the first token, because it is not a valid type
     document = Document.fromJson(json);
 
-    assertEquals(Arrays.asList("One", "Two", "Three"), document.tokenAt(0).getAttributeAsList(listAttribute));
-    assertEquals(Collect.map("A", "B", "C", "D"), document.tokenAt(1).getAttributeAsMap(mapAttribute));
+    assertEquals(Arrays.asList("One", "Two", "Three"), document.tokenAt(0).getAttributeAsList(listAttributeType));
+    assertEquals(Collect.map("A", "B", "C", "D"), document.tokenAt(1).getAttributeAsMap(mapAttributeType));
 
   }
 

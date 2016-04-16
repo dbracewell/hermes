@@ -95,11 +95,11 @@ public class FuzzyLexiconAnnotator extends ViterbiAnnotator {
   protected void createAndAttachAnnotation(Document document, LexiconMatch match) {
     if (!StringUtils.isNullOrBlank(match.getMatchedString())) {
       Annotation annotation = document.createAnnotation(type, match.getSpan());
-      if (lexicon.getTagAttribute() != null) {
-        annotation.put(lexicon.getTagAttribute(), match.getTag());
+      if (lexicon.getTagAttributeType() != null) {
+        annotation.put(lexicon.getTagAttributeType(), match.getTag());
       }
-      annotation.put(Attrs.CONFIDENCE, match.getScore());
-      annotation.put(Attrs.LEXICON_MATCH, match.getMatchedString());
+      annotation.put(Types.CONFIDENCE, match.getScore());
+      annotation.put(Types.MATCHED_STRING, match.getMatchedString());
     }
   }
 
@@ -155,7 +155,7 @@ public class FuzzyLexiconAnnotator extends ViterbiAnnotator {
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(type);
   }
 

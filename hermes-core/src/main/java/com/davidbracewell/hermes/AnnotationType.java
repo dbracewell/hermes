@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
  * annotators for English and Japanese which are beans defined elsewhere in the configuration. Finally, it defines a
  * <code>PATTERN</code> attribute relating to the pattern that was used to identify the entity. </p>
  */
-public final class AnnotationType extends HierarchicalEnumValue implements Annotatable {
+public final class AnnotationType extends HierarchicalEnumValue implements AnnotatableType {
 
   private static final DynamicEnum<AnnotationType> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
@@ -71,8 +71,8 @@ public final class AnnotationType extends HierarchicalEnumValue implements Annot
   public static AnnotationType ROOT = create("ROOT");
 
 
-  private volatile transient Attribute tagAttribute = null;
-  private volatile transient Set<Attribute> definedAttributes = null;
+  private volatile transient AttributeType tagAttributeType = null;
+  private volatile transient Set<AttributeType> definedAttributeTypes = null;
 
   private AnnotationType(String name) {
     super(name);
@@ -151,22 +151,22 @@ public final class AnnotationType extends HierarchicalEnumValue implements Annot
    *
    * @return the tag attribute
    */
-  public Attribute getTagAttribute() {
-    if (tagAttribute == null) {
+  public AttributeType getTagAttributeType() {
+    if (tagAttributeType == null) {
       synchronized (this) {
-        if (tagAttribute == null) {
+        if (tagAttributeType == null) {
           String attribute = Config.get("Annotation", name(), "tag").asString();
           if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {
-            tagAttribute = getParent().getTagAttribute();
+            tagAttributeType = getParent().getTagAttributeType();
           } else if (StringUtils.isNullOrBlank(attribute)) {
-            tagAttribute = Attrs.TAG;
+            tagAttributeType = Types.TAG;
           } else {
-            tagAttribute = Attribute.create(attribute);
+            tagAttributeType = AttributeType.create(attribute);
           }
         }
       }
     }
-    return tagAttribute;
+    return tagAttributeType;
   }
 
   /**
@@ -184,7 +184,7 @@ public final class AnnotationType extends HierarchicalEnumValue implements Annot
   }
 
   @Override
-  public String getTypeName() {
+  public String type() {
     return "Annotation";
   }
 

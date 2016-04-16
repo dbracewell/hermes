@@ -69,9 +69,9 @@ import java.util.*;
  *
  * @author David B. Bracewell
  */
-public final class Attribute extends EnumValue implements Annotatable {
+public final class AttributeType extends EnumValue implements AnnotatableType {
 
-  private static final DynamicEnum<Attribute> index = new DynamicEnum<>();
+  private static final DynamicEnum<AttributeType> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
   private static final ImmutableMap<Class<?>, AttributeValueCodec> defaultCodecs = ImmutableMap.
     <Class<?>, AttributeValueCodec>builder()
@@ -90,7 +90,7 @@ public final class Attribute extends EnumValue implements Annotatable {
   private volatile transient AttributeValueCodec codec;
 
 
-  private Attribute(String name) {
+  private AttributeType(String name) {
     super(name);
   }
 
@@ -103,18 +103,18 @@ public final class Attribute extends EnumValue implements Annotatable {
    * @throws IllegalArgumentException If the name is invalid or an attribute exists with this name, but a differenty
    *                                  value type.
    */
-  public static Attribute create(String name, @NonNull Class<?> valueType) {
+  public static AttributeType create(String name, @NonNull Class<?> valueType) {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
     if (index.isDefined(name)) {
-      Attribute attribute = index.valueOf(name);
-      Preconditions.checkArgument(attribute.getValueType().getType().equals(valueType), "Attempting to register an existing attribute with a new value type.");
-      return attribute;
+      AttributeType attributeType = index.valueOf(name);
+      Preconditions.checkArgument(attributeType.getValueType().getType().equals(valueType), "Attempting to register an existing attribute with a new value type.");
+      return attributeType;
     }
-    Attribute attribute = index.register(new Attribute(name));
-    Config.setProperty("Attribute." + attribute.name() + ".type", valueType.getName());
-    return attribute;
+    AttributeType attributeType = index.register(new AttributeType(name));
+    Config.setProperty("Attribute." + attributeType.name() + ".type", valueType.getName());
+    return attributeType;
   }
 
   /**
@@ -124,11 +124,11 @@ public final class Attribute extends EnumValue implements Annotatable {
    * @return the attribute
    * @throws IllegalArgumentException If the name is invalid
    */
-  public static Attribute create(String name) {
+  public static AttributeType create(String name) {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
-    return index.register(new Attribute(name));
+    return index.register(new AttributeType(name));
   }
 
   /**
@@ -141,17 +141,17 @@ public final class Attribute extends EnumValue implements Annotatable {
     return index.isDefined(name);
   }
 
-  static Object readObject(StructuredReader reader, Attribute attribute) throws IOException {
-    ValueType valueType = attribute.getValueType();
+  static Object readObject(StructuredReader reader, AttributeType attributeType) throws IOException {
+    ValueType valueType = attributeType.getValueType();
     if (valueType.isMap()) {
       return valueType.convert(reader.nextMap());
     } else {
-      throw new RuntimeException(attribute.name() + " is not defined as Map and does not have a declared decoder.");
+      throw new RuntimeException(attributeType.name() + " is not defined as Map and does not have a declared decoder.");
     }
   }
 
-  static Object readList(StructuredReader reader, Attribute attribute) throws IOException {
-    ValueType valueType = attribute.getValueType();
+  static Object readList(StructuredReader reader, AttributeType attributeType) throws IOException {
+    ValueType valueType = attributeType.getValueType();
     List<Object> list = new ArrayList<>();
     while (reader.peek() != ElementType.END_ARRAY) {
       list.add(reader.nextValue().as(valueType.getParameterTypes()[0]));
@@ -170,61 +170,61 @@ public final class Attribute extends EnumValue implements Annotatable {
     return codec;
   }
 
-  static Tuple2<Attribute, Val> read(StructuredReader reader) throws IOException {
+  static Tuple2<AttributeType, Val> read(StructuredReader reader) throws IOException {
 
-    Attribute attribute;
+    AttributeType attributeType;
     Object value;
 
     switch (reader.peek()) {
       case BEGIN_OBJECT:
-        attribute = Attribute.create(reader.beginObject());
-        if (attribute.getCodec() == null) {
-          value = readObject(reader, attribute);
+        attributeType = AttributeType.create(reader.beginObject());
+        if (attributeType.getCodec() == null) {
+          value = readObject(reader, attributeType);
         } else {
-          value = attribute.getCodec().decode(reader, attribute, null);
+          value = attributeType.getCodec().decode(reader, attributeType, null);
         }
         reader.endObject();
         break;
       case BEGIN_ARRAY:
-        attribute = Attribute.create(reader.beginArray());
-        if (attribute.getCodec() == null) {
-          value = readList(reader, attribute);
+        attributeType = AttributeType.create(reader.beginArray());
+        if (attributeType.getCodec() == null) {
+          value = readList(reader, attributeType);
         } else {
-          value = attribute.getCodec().decode(reader, attribute, null);
+          value = attributeType.getCodec().decode(reader, attributeType, null);
         }
         reader.endArray();
         break;
       default:
         Tuple2<String, Val> keyValue = reader.nextKeyValue();
-        attribute = Attribute.create(keyValue.getKey());
-        if (attribute.getCodec() == null && Readable.class.isAssignableFrom(attribute.getValueType().getType())) {
+        attributeType = AttributeType.create(keyValue.getKey());
+        if (attributeType.getCodec() == null && Readable.class.isAssignableFrom(attributeType.getValueType().getType())) {
           try {
-            value = Reflect.onClass(attribute.getValueType().getType()).create();
+            value = Reflect.onClass(attributeType.getValueType().getType()).create();
             Cast.<Readable>as(value).read(reader);
           } catch (ReflectionException e) {
             throw Throwables.propagate(e);
           }
-        } else if (attribute.getCodec() == null) {
-          value = attribute.getValueType().convert(keyValue.getValue());
-        } else if (Readable.class.isAssignableFrom(attribute.getValueType().getType())) {
+        } else if (attributeType.getCodec() == null) {
+          value = attributeType.getValueType().convert(keyValue.getValue());
+        } else if (Readable.class.isAssignableFrom(attributeType.getValueType().getType())) {
           try {
-            value = Reflect.onClass(attribute.getValueType().getType()).create();
+            value = Reflect.onClass(attributeType.getValueType().getType()).create();
             Cast.<Readable>as(value).read(reader);
           } catch (ReflectionException e) {
             throw Throwables.propagate(e);
           }
         } else {
-          value = attribute.getCodec().decode(reader, attribute, keyValue.getValue().get());
+          value = attributeType.getCodec().decode(reader, attributeType, keyValue.getValue().get());
         }
     }
 
 
-    return Tuple2.of(attribute, Val.of(value));
+    return Tuple2.of(attributeType, Val.of(value));
   }
 
 
-  static Map<Attribute, Val> readAttributeList(StructuredReader reader) throws IOException {
-    Map<Attribute, Val> attributeValMap = new HashMap<>();
+  static Map<AttributeType, Val> readAttributeList(StructuredReader reader) throws IOException {
+    Map<AttributeType, Val> attributeValMap = new HashMap<>();
     while (reader.peek() != ElementType.END_OBJECT) {
       Collect.put(attributeValMap, read(reader));
     }
@@ -238,7 +238,7 @@ public final class Attribute extends EnumValue implements Annotatable {
    * @return the attribute for the string
    * @throws IllegalArgumentException if the name is not a valid attribute
    */
-  public static Attribute valueOf(String name) {
+  public static AttributeType valueOf(String name) {
     return index.valueOf(name);
   }
 
@@ -247,7 +247,7 @@ public final class Attribute extends EnumValue implements Annotatable {
    *
    * @return All known attribute names
    */
-  public static Collection<Attribute> values() {
+  public static Collection<AttributeType> values() {
     return index.values();
   }
 
@@ -269,7 +269,7 @@ public final class Attribute extends EnumValue implements Annotatable {
   }
 
   @Override
-  public String getTypeName() {
+  public String type() {
     return "Attribute";
   }
 

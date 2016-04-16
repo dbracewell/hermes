@@ -162,7 +162,7 @@ public class DocumentFactory implements Serializable {
    * @param attributeMap the attribute map
    * @return the document
    */
-  public Document create(@NonNull String content, @NonNull Language language, @NonNull Map<Attribute, ?> attributeMap) {
+  public Document create(@NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
     return create("", content, language, attributeMap);
   }
 
@@ -175,7 +175,7 @@ public class DocumentFactory implements Serializable {
    * @param attributeMap the attribute map
    * @return the document
    */
-  public Document create(@NonNull String id, @NonNull String content, @NonNull Language language, @NonNull Map<Attribute, ?> attributeMap) {
+  public Document create(@NonNull String id, @NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
     Document document = new Document(id, normalizer.normalize(content, language), language);
     document.putAll(attributeMap);
     document.setLanguage(language);
@@ -191,7 +191,7 @@ public class DocumentFactory implements Serializable {
    * @param attributeMap the attribute map
    * @return the document
    */
-  public Document createRaw(@NonNull String id, @NonNull String content, @NonNull Language language, @NonNull Map<Attribute, ?> attributeMap) {
+  public Document createRaw(@NonNull String id, @NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
     Document document = new Document(id, content, language);
     document.putAll(attributeMap);
     document.setLanguage(language);
@@ -228,7 +228,7 @@ public class DocumentFactory implements Serializable {
     Document doc = new Document("", content.toString().trim(), defaultLanguage);
     for (int idx = 0; idx < tokenSpans.size(); idx++) {
       doc.createAnnotation(Types.TOKEN, tokenSpans.get(idx));
-      Collect.map(Attrs.INDEX, idx);
+      Collect.map(Types.INDEX, idx);
     }
     doc.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
     return doc;
@@ -286,7 +286,7 @@ public class DocumentFactory implements Serializable {
    * @param attributeMap the attribute map
    * @return the document
    */
-  public Document createRaw(@NonNull String content, @NonNull Language language, @NonNull Map<Attribute, ?> attributeMap) {
+  public Document createRaw(@NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
     return createRaw("", content, language, attributeMap);
   }
 

@@ -41,7 +41,7 @@ public final class Fragments {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public Set<Attribute> attributes() {
+    public Set<AttributeType> attributes() {
       return Collections.emptySet();
     }
 
@@ -61,7 +61,7 @@ public final class Fragments {
     }
 
     @Override
-    protected Map<Attribute, Val> getAttributeMap() {
+    protected Map<AttributeType, Val> getAttributeMap() {
       return Collections.emptyMap();
     }
   };
@@ -125,7 +125,7 @@ public final class Fragments {
     private static final long serialVersionUID = 1L;
 
     private final String content;
-    private final Map<Attribute, Val> attributes = new HashMap<>(5);
+    private final Map<AttributeType, Val> attributes = new HashMap<>(5);
 
     private HStringImpl(@NonNull String content) {
       super(0, content.length());
@@ -133,7 +133,7 @@ public final class Fragments {
     }
 
     @Override
-    public Set<Attribute> attributes() {
+    public Set<AttributeType> attributes() {
       return attributes.keySet();
     }
 
@@ -163,7 +163,7 @@ public final class Fragments {
     }
 
     @Override
-    protected Map<Attribute, Val> getAttributeMap() {
+    protected Map<AttributeType, Val> getAttributeMap() {
       return attributes;
     }
 

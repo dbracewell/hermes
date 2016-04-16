@@ -40,7 +40,7 @@ import java.util.function.Predicate;
  */
 class Fragment extends HString {
   private static final long serialVersionUID = 1L;
-  private final Map<Attribute, Val> attributes = new HashMap<>(5);
+  private final Map<AttributeType, Val> attributes = new HashMap<>(5);
   private final Document owner;
 
   Fragment(Document owner, int start, int end) {
@@ -59,7 +59,7 @@ class Fragment extends HString {
   }
 
   @Override
-  public Set<Attribute> attributes() {
+  public Set<AttributeType> attributes() {
     return attributes.keySet();
   }
 
@@ -74,7 +74,7 @@ class Fragment extends HString {
   }
 
   @Override
-  protected Map<Attribute, Val> getAttributeMap() {
+  protected Map<AttributeType, Val> getAttributeMap() {
     return attributes;
   }
 

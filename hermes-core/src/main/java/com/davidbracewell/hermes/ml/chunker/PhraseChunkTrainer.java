@@ -30,7 +30,6 @@ import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
 import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
 import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.Corpus;
@@ -70,8 +69,8 @@ public class PhraseChunkTrainer extends BIOTrainer {
       .format(corpusFormat)
       .build()
       .map(d -> {
-        d.getAnnotationSet().setIsCompleted(Attrs.PART_OF_SPEECH,false,null);
-        Pipeline.process(d, Attrs.PART_OF_SPEECH);
+        d.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH,false,null);
+        Pipeline.process(d, Types.PART_OF_SPEECH);
         return d;
       })
       .asSequenceDataSet(new BIOLabelMaker(annotationType), featurizer);

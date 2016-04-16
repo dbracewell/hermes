@@ -130,7 +130,7 @@ public final class CaduceusProgram implements Serializable {
     return Cast.as(o);
   }
 
-  private Annotation createOrGet(Document document, AnnotationType type, HString span, Map<Attribute, Val> attributeValMap) {
+  private Annotation createOrGet(Document document, AnnotationType type, HString span, Map<AttributeType, Val> attributeValMap) {
     return document.substring(span.start(), span.end()).get(type).stream()
       .filter(a -> a.getType().equals(type) && a.attributeValues().equals(attributeValMap.entrySet()))
       .findFirst()

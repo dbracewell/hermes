@@ -169,7 +169,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   @Override
-  public Set<Map.Entry<Attribute, Val>> attributeValues() {
+  public Set<Map.Entry<AttributeType, Val>> attributeValues() {
     return getAttributeMap().entrySet();
   }
 
@@ -225,8 +225,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   @Override
-  public boolean contains(Attribute attribute) {
-    return attribute != null && getAttributeMap().containsKey(attribute);
+  public boolean contains(AttributeType attributeType) {
+    return attributeType != null && getAttributeMap().containsKey(attributeType);
   }
 
   /**
@@ -428,11 +428,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   @Override
-  public Val get(Attribute attribute) {
-    if (attribute == null) {
+  public Val get(AttributeType attributeType) {
+    if (attributeType == null) {
       return Val.NULL;
     }
-    return getAttributeMap().getOrDefault(attribute, Val.NULL);
+    return getAttributeMap().getOrDefault(attributeType, Val.NULL);
   }
 
   @Override
@@ -453,7 +453,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    *
    * @return The attribute names and values as a map
    */
-  protected abstract Map<Attribute, Val> getAttributeMap();
+  protected abstract Map<AttributeType, Val> getAttributeMap();
 
   /**
    * Gets the language of the HString. If no language is set for this HString, the language of document will be
@@ -462,8 +462,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @return The language of the HString
    */
   public Language getLanguage() {
-    if (contains(Attrs.LANGUAGE)) {
-      return get(Attrs.LANGUAGE).as(Language.class);
+    if (contains(Types.LANGUAGE)) {
+      return get(Types.LANGUAGE).as(Language.class);
     }
     if (document() == null) {
       return Hermes.defaultLanguage();
@@ -477,7 +477,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param language The language of the HString.
    */
   public void setLanguage(Language language) {
-    put(Attrs.LANGUAGE, language);
+    put(Types.LANGUAGE, language);
   }
 
   /**
@@ -488,8 +488,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public String getLemma() {
     if (isInstance(Types.TOKEN)) {
-      if (contains(Attrs.LEMMA)) {
-        return get(Attrs.LEMMA).asString();
+      if (contains(Types.LEMMA)) {
+        return get(Types.LEMMA).asString();
       }
       return toLowerCase();
     }
@@ -721,20 +721,20 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   }
 
   @Override
-  public Val put(Attribute attribute, Object value) {
-    if (attribute != null) {
+  public Val put(AttributeType attributeType, Object value) {
+    if (attributeType != null) {
       Val val = Val.of(value);
       if (val.isNull()) {
-        return remove(attribute);
+        return remove(attributeType);
       }
-      return getAttributeMap().put(attribute, val);
+      return getAttributeMap().put(attributeType, val);
     }
     return Val.NULL;
   }
 
   @Override
-  public Val remove(Attribute attribute) {
-    return getAttributeMap().remove(attribute);
+  public Val remove(AttributeType attributeType) {
+    return getAttributeMap().remove(attributeType);
   }
 
   /**
@@ -852,7 +852,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public String toPOSString(char delimiter) {
     return tokens().stream()
-      .map(t -> t.toString() + delimiter + t.get(Attrs.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
+      .map(t -> t.toString() + delimiter + t.get(Types.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
       .collect(Collectors.joining(" "));
   }
 
@@ -934,8 +934,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    */
   public String getStem() {
     if (isInstance(Types.TOKEN)) {
-      putIfAbsent(Attrs.STEM, Stemmers.getStemmer(getLanguage()).stem(this));
-      return get(Attrs.STEM).asString();
+      putIfAbsent(Types.STEM, Stemmers.getStemmer(getLanguage()).stem(this));
+      return get(Types.STEM).asString();
     }
     return tokens().stream()
       .map(HString::getStem)
@@ -1010,8 +1010,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return LabeledDatum.of(labelFunction.apply(this), this);
   }
 
-  public LabeledDatum<HString> asLabeledData(@NonNull Attribute attributeLabel) {
-    return LabeledDatum.of(get(attributeLabel), this);
+  public LabeledDatum<HString> asLabeledData(@NonNull AttributeType attributeTypeLabel) {
+    return LabeledDatum.of(get(attributeTypeLabel), this);
   }
 
   public SequenceInput<Annotation> asSequence() {

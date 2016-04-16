@@ -23,7 +23,10 @@ package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.SystemInfo;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
@@ -153,7 +156,7 @@ public class CONLLFormat extends FileBasedFormat {
             Document doc = createDocument(rows, documentFactory);
             doc.createAnnotation(Types.SENTENCE, 0, doc.length());
             doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
-            doc.put(Attrs.FILE, resource.descriptor());
+            doc.put(Types.FILE, resource.descriptor());
             documents.add(doc);
             rows.clear();
           } else {
@@ -178,7 +181,7 @@ public class CONLLFormat extends FileBasedFormat {
         Document doc = createDocument(rows, documentFactory);
         doc.createAnnotation(Types.SENTENCE, 0, doc.length());
         doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
-        doc.put(Attrs.FILE, resource.descriptor());
+        doc.put(Types.FILE, resource.descriptor());
         documents.add(doc);
         rows.clear();
       } else {
@@ -189,7 +192,7 @@ public class CONLLFormat extends FileBasedFormat {
       Document doc = createDocument(rows, documentFactory);
       sentenceBoundaries.forEach(t -> doc.createAnnotation(Types.SENTENCE, doc.tokenAt(t.v1).start(), doc.tokenAt(t.v2 - 1).end()));
       doc.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
-      doc.put(Attrs.FILE, resource.descriptor());
+      doc.put(Types.FILE, resource.descriptor());
       documents.add(doc);
     }
 

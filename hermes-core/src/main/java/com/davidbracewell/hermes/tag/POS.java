@@ -23,7 +23,6 @@ package com.davidbracewell.hermes.tag;
 
 import com.davidbracewell.Tag;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.string.StringPredicates;
@@ -425,8 +424,8 @@ public enum POS implements Tag {
   public static com.davidbracewell.hermes.tag.POS forText(HString text) {
     Preconditions.checkNotNull(text);
 
-    if (text.contains(Attrs.PART_OF_SPEECH)) {
-      return text.get(Attrs.PART_OF_SPEECH).cast();
+    if (text.contains(Types.PART_OF_SPEECH)) {
+      return text.get(Types.PART_OF_SPEECH).cast();
     }
     if (text.isInstance(Types.TOKEN)) {
       return null;
@@ -434,7 +433,7 @@ public enum POS implements Tag {
 
     com.davidbracewell.hermes.tag.POS tag = ANY;
     for (Annotation token : text.tokens()) {
-      Tag temp = token.get(Attrs.PART_OF_SPEECH).cast();
+      Tag temp = token.get(Types.PART_OF_SPEECH).cast();
       if (temp != null) {
         if (temp.isInstance(VERB)) {
           return VERB;

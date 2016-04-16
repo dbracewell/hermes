@@ -46,87 +46,87 @@ public interface AttributedObject {
    *
    * @return the attributes and their values
    */
-  Set<Map.Entry<Attribute, Val>> attributeValues();
+  Set<Map.Entry<AttributeType, Val>> attributeValues();
 
   /**
    * Gets the attributes associated with the object
    *
    * @return the attributes associated with the object.
    */
-  Set<Attribute> attributes();
+  Set<AttributeType> attributes();
 
   /**
    * Determines if an attribute of a given name is associated with the object
    *
-   * @param attribute The attribute name
+   * @param attributeType The attribute name
    * @return True if the attribute is associated with the object, False otherwise
    */
-  boolean contains(Attribute attribute);
+  boolean contains(AttributeType attributeType);
 
   /**
    * Gets the value for a given attribute name
    *
-   * @param attribute the attribute name
+   * @param attributeType the attribute name
    * @return the value associated with the attribute or null
    */
-  Val get(Attribute attribute);
+  Val get(AttributeType attributeType);
 
-  default <T> T get(@NonNull Attribute attribute, @NonNull Class<T> clazz) {
-    return get(attribute).as(clazz);
+  default <T> T get(@NonNull AttributeType attributeType, @NonNull Class<T> clazz) {
+    return get(attributeType).as(clazz);
   }
 
-  default int getAttributeAsInt(@NonNull Attribute attribute) {
-    return get(attribute).asIntegerValue();
+  default int getAttributeAsInt(@NonNull AttributeType attributeType) {
+    return get(attributeType).asIntegerValue();
   }
 
-  default double getAttributeAsDouble(@NonNull Attribute attribute) {
-    return get(attribute).asDouble();
+  default double getAttributeAsDouble(@NonNull AttributeType attributeType) {
+    return get(attributeType).asDouble();
   }
 
-  default String getAttributeAsString(@NonNull Attribute attribute) {
-    return get(attribute).asString();
+  default String getAttributeAsString(@NonNull AttributeType attributeType) {
+    return get(attributeType).asString();
   }
 
-  default <T> List<T> getAttributeAsList(@NonNull Attribute attribute) {
-    return get(attribute).cast();
+  default <T> List<T> getAttributeAsList(@NonNull AttributeType attributeType) {
+    return get(attributeType).cast();
   }
 
-  default <T extends Tag> T getAttributeAsTag(@NonNull Attribute attribute) {
-    return get(attribute).cast();
+  default <T extends Tag> T getAttributeAsTag(@NonNull AttributeType attributeType) {
+    return get(attributeType).cast();
   }
 
 
-  default <T> Set<T> getAttributeAsSet(@NonNull Attribute attribute) {
-    return get(attribute).cast();
+  default <T> Set<T> getAttributeAsSet(@NonNull AttributeType attributeType) {
+    return get(attributeType).cast();
   }
 
-  default <K, V> Map<K, V> getAttributeAsMap(@NonNull Attribute attribute) {
-    return get(attribute).cast();
+  default <K, V> Map<K, V> getAttributeAsMap(@NonNull AttributeType attributeType) {
+    return get(attributeType).cast();
   }
 
   /**
    * Sets the value of an attribute. Removes the attribute if the value is null and ignores setting a value if the
    * attribute is null.
    *
-   * @param attribute the attribute name
+   * @param attributeType the attribute name
    * @param value     the value
    * @return The old value of the attribute or null
    */
-  Val put(Attribute attribute, Object value);
+  Val put(AttributeType attributeType, Object value);
 
   /**
    * Sets the value of an attribute if a value is not already set. Removes the attribute if the value is null and
    * ignores setting a value if the attribute is null.
    *
-   * @param attribute the attribute name
+   * @param attributeType the attribute name
    * @param value     the value
    * @return The old value of the attribute or null
    */
-  default Val putIfAbsent(Attribute attribute, Object value) {
-    if (!contains(attribute)) {
+  default Val putIfAbsent(AttributeType attributeType, Object value) {
+    if (!contains(attributeType)) {
       synchronized (this) {
-        if (!contains(attribute)) {
-          return put(attribute, value);
+        if (!contains(attributeType)) {
+          return put(attributeType, value);
         }
       }
     }
@@ -137,15 +137,15 @@ public interface AttributedObject {
    * Sets the value of an attribute if a value is not already set. Removes the attribute if the value is null and
    * ignores setting a value if the attribute is null.
    *
-   * @param attribute the attribute name
+   * @param attributeType the attribute name
    * @param supplier  the supplier to generate the new value
    * @return The old value of the attribute or null
    */
-  default Val putIfAbsent(Attribute attribute, @NonNull Supplier<?> supplier) {
-    if (!contains(attribute)) {
+  default Val putIfAbsent(AttributeType attributeType, @NonNull Supplier<?> supplier) {
+    if (!contains(attributeType)) {
       synchronized (this) {
-        if (!contains(attribute)) {
-          return put(attribute, supplier.get());
+        if (!contains(attributeType)) {
+          return put(attributeType, supplier.get());
         }
       }
     }
@@ -157,7 +157,7 @@ public interface AttributedObject {
    *
    * @param map the attribute-value map
    */
-  default void putAll(Map<Attribute, ?> map) {
+  default void putAll(Map<AttributeType, ?> map) {
     if (map != null) {
       map.entrySet().stream().forEach(e -> this.put(e.getKey(), e.getValue()));
     }
@@ -166,10 +166,10 @@ public interface AttributedObject {
   /**
    * Removes an attribute from the object.
    *
-   * @param attribute the attribute name
+   * @param attributeType the attribute name
    * @return the value that was associated with the attribute
    */
-  Val remove(Attribute attribute);
+  Val remove(AttributeType attributeType);
 
 
 }//END OF AttributedObject

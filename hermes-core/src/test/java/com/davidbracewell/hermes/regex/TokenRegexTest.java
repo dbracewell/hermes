@@ -48,27 +48,27 @@ public class TokenRegexTest {
     Pipeline.process(document, Types.TOKEN, Types.SENTENCE, Types.ENTITY);
 
     //Add basic POS
-    document.tokenAt(0).put(Attrs.PART_OF_SPEECH, POS.NOUN);
-    document.tokenAt(1).put(Attrs.PART_OF_SPEECH, POS.VERB);
-    document.tokenAt(2).put(Attrs.PART_OF_SPEECH, POS.NOUN);
-    document.tokenAt(3).put(Attrs.PART_OF_SPEECH, POS.ADPOSITION);
-    document.tokenAt(4).put(Attrs.PART_OF_SPEECH, POS.DETERMINER);
-    document.tokenAt(5).put(Attrs.PART_OF_SPEECH, POS.NOUN);
-    document.tokenAt(6).put(Attrs.PART_OF_SPEECH, POS.ADPOSITION);
-    document.tokenAt(7).put(Attrs.PART_OF_SPEECH, POS.NUMBER);
-    document.tokenAt(8).put(Attrs.PART_OF_SPEECH, POS.NOUN);
-    document.tokenAt(9).put(Attrs.PART_OF_SPEECH, POS.PUNCTUATION);
+    document.tokenAt(0).put(Types.PART_OF_SPEECH, POS.NOUN);
+    document.tokenAt(1).put(Types.PART_OF_SPEECH, POS.VERB);
+    document.tokenAt(2).put(Types.PART_OF_SPEECH, POS.NOUN);
+    document.tokenAt(3).put(Types.PART_OF_SPEECH, POS.ADPOSITION);
+    document.tokenAt(4).put(Types.PART_OF_SPEECH, POS.DETERMINER);
+    document.tokenAt(5).put(Types.PART_OF_SPEECH, POS.NOUN);
+    document.tokenAt(6).put(Types.PART_OF_SPEECH, POS.ADPOSITION);
+    document.tokenAt(7).put(Types.PART_OF_SPEECH, POS.NUMBER);
+    document.tokenAt(8).put(Types.PART_OF_SPEECH, POS.NOUN);
+    document.tokenAt(9).put(Types.PART_OF_SPEECH, POS.PUNCTUATION);
 
     //Add some dependencies
-    document.tokenAt(0).add(new Relation(Relations.DEPENDENCY, "nsubj", document.tokenAt(1).getId()));
-    document.tokenAt(2).add(new Relation(Relations.DEPENDENCY, "dobj", document.tokenAt(1).getId()));
+    document.tokenAt(0).add(new Relation(Types.DEPENDENCY, "nsubj", document.tokenAt(1).getId()));
+    document.tokenAt(2).add(new Relation(Types.DEPENDENCY, "dobj", document.tokenAt(1).getId()));
 
     //Create some more entites
-    document.createAnnotation(Types.ENTITY, document.tokenAt(0), false).putAll(Collect.map(Attrs.ENTITY_TYPE, Entities.PERSON));
-    document.createAnnotation(Types.ENTITY, document.tokenAt(2), false).putAll(Collect.map(Attrs.ENTITY_TYPE, Entities.PERSON));
-    document.createAnnotation(Types.ENTITY, document.tokenAt(5), false).putAll(Collect.map(Attrs.ENTITY_TYPE, Entities.LOCATION));
+    document.createAnnotation(Types.ENTITY, document.tokenAt(0), false).putAll(Collect.map(Types.ENTITY_TYPE, Entities.PERSON));
+    document.createAnnotation(Types.ENTITY, document.tokenAt(2), false).putAll(Collect.map(Types.ENTITY_TYPE, Entities.PERSON));
+    document.createAnnotation(Types.ENTITY, document.tokenAt(5), false).putAll(Collect.map(Types.ENTITY_TYPE, Entities.LOCATION));
 
-    TrieLexicon lexicon = new TrieLexicon(false, false, Attribute.create("DUMMY_TAG"));
+    TrieLexicon lexicon = new TrieLexicon(false, false, AttributeType.create("DUMMY_TAG"));
     lexicon.add("seashore", new StringTag("BY_THE_SEA"));
 
     LexiconManager.register("testing.lexicon", lexicon);

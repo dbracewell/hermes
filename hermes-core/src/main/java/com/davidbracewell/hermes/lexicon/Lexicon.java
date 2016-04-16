@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.lexicon;
 
 
 import com.davidbracewell.Tag;
-import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Fragments;
 import com.davidbracewell.hermes.HString;
 import lombok.NonNull;
@@ -82,7 +82,7 @@ public interface Lexicon extends Predicate<HString>, Iterable<String> {
    *
    * @return the tag attribute
    */
-  Attribute getTagAttribute();
+  AttributeType getTagAttributeType();
 
   /**
    * Gets probability.

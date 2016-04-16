@@ -21,8 +21,7 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.Annotatable;
-import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.morphology.Stemmers;
@@ -47,17 +46,17 @@ public class StemAnnotator implements Annotator, Serializable {
     document.tokens().parallelStream()
         .forEach(token -> {
           String stem = Stemmers.getStemmer(token.getLanguage()).stem(token);
-          token.put(Attrs.STEM, stem);
+          token.put(Types.STEM, stem);
         });
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
-    return Collections.singleton(Attrs.STEM);
+  public Set<AnnotatableType> satisfies() {
+    return Collections.singleton(Types.STEM);
   }
 
   @Override
-  public Set<Annotatable> requires() {
+  public Set<AnnotatableType> requires() {
     return Sets.newHashSet(Types.TOKEN);
   }
 

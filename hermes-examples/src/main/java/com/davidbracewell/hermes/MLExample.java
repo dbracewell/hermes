@@ -175,7 +175,7 @@ public class MLExample {
     };
 
 
-    Attribute label = Attrs.attribute("LABEL");
+    AttributeType label = Types.attribute("LABEL");
 
     //Simple binary featurizer that converts tokens to lower case and removes stop words
     Featurizer<HString> featurizer =

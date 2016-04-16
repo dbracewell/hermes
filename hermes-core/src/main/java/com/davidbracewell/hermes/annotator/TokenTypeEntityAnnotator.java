@@ -22,9 +22,8 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.collection.Collect;
-import com.davidbracewell.hermes.Annotatable;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.Entities;
 import com.davidbracewell.hermes.tag.EntityType;
@@ -56,24 +55,24 @@ public class TokenTypeEntityAnnotator extends SentenceLevelAnnotator {
   @Override
   public void annotate(Annotation sentence) {
     sentence.tokens().forEach(token -> {
-      TokenType type = token.get(Attrs.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN);
+      TokenType type = token.get(Types.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN);
       if (mapping.containsKey(type)) {
         sentence.document().createAnnotation(
           Types.TOKEN_TYPE_ENTITY,
           token,
-          Collect.map(Attrs.ENTITY_TYPE, mapping.get(type), Attrs.CONFIDENCE, 1.0)
+          Collect.map(Types.ENTITY_TYPE, mapping.get(type), Types.CONFIDENCE, 1.0)
         );
       }
     });
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(Types.TOKEN_TYPE_ENTITY);
   }
 
   @Override
-  protected Set<Annotatable> furtherRequires() {
+  protected Set<AnnotatableType> furtherRequires() {
     return Collections.singleton(Types.TOKEN);
   }
 

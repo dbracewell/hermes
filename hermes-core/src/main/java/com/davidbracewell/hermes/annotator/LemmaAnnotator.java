@@ -21,8 +21,7 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.hermes.Annotatable;
-import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.morphology.Lemmatizers;
@@ -45,18 +44,18 @@ public class LemmaAnnotator implements Annotator, Serializable {
     document.tokens().stream()
       .forEach(token -> {
         String lemma = Lemmatizers.getLemmatizer(token.getLanguage()).lemmatize(token);
-        token.put(Attrs.LEMMA, lemma.toLowerCase());
+        token.put(Types.LEMMA, lemma.toLowerCase());
       });
   }
 
   @Override
-  public Set<Annotatable> satisfies() {
-    return Collections.singleton(Attrs.LEMMA);
+  public Set<AnnotatableType> satisfies() {
+    return Collections.singleton(Types.LEMMA);
   }
 
   @Override
-  public Set<Annotatable> requires() {
-    return Sets.newHashSet(Types.TOKEN, Attrs.PART_OF_SPEECH);
+  public Set<AnnotatableType> requires() {
+    return Sets.newHashSet(Types.TOKEN, Types.PART_OF_SPEECH);
   }
 
 }//END OF LemmaAnnotator

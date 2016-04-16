@@ -5,7 +5,7 @@ import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Index;
 import com.davidbracewell.collection.Indexes;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.io.resource.Resource;
@@ -66,7 +66,7 @@ public abstract class ColumnBasedFormat extends FileBasedFormat {
     String id = StringUtils.EMPTY;
     String content = StringUtils.EMPTY;
     Language language = documentFactory.getDefaultLanguage();
-    Map<Attribute, Object> attributeMap = new HashMap<>();
+    Map<AttributeType, Object> attributeMap = new HashMap<>();
 
     String idField = Config.get(configProperty, "idField").asString("ID").toUpperCase();
     String contentField = Config.get(configProperty, "contentField").asString("CONTENT").toUpperCase();
@@ -83,8 +83,8 @@ public abstract class ColumnBasedFormat extends FileBasedFormat {
       } else if (languageField.equalsIgnoreCase(fieldName)) {
         language = Language.fromString(field);
       } else {
-        Attribute attribute = Attribute.create(fieldName);
-        attributeMap.put(attribute, attribute.getValueType().convert(field));
+        AttributeType attributeType = AttributeType.create(fieldName);
+        attributeMap.put(attributeType, attributeType.getValueType().convert(field));
       }
     }
     return documentFactory.create(id, content, language, attributeMap);

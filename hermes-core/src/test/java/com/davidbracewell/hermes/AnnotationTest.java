@@ -51,18 +51,18 @@ public class AnnotationTest {
     Document document = DocumentProvider.getAnnotatedDocument();
     List<Annotation> tokens = document.tokens();
 
-    TokenType type = tokens.get(0).get(Attrs.TOKEN_TYPE).cast();
-    tokens.get(0).putIfAbsent(Attrs.TOKEN_TYPE, TokenType.create("REALLYSTRANGETYPE"));
-    assertEquals(type, tokens.get(0).get(Attrs.TOKEN_TYPE).get());
+    TokenType type = tokens.get(0).get(Types.TOKEN_TYPE).cast();
+    tokens.get(0).putIfAbsent(Types.TOKEN_TYPE, TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(type, tokens.get(0).get(Types.TOKEN_TYPE).get());
 
-    tokens.get(0).putIfAbsent(Attrs.TOKEN_TYPE, () -> TokenType.create("REALLYSTRANGETYPE"));
-    assertEquals(type, tokens.get(0).get(Attrs.TOKEN_TYPE).get());
+    tokens.get(0).putIfAbsent(Types.TOKEN_TYPE, () -> TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(type, tokens.get(0).get(Types.TOKEN_TYPE).get());
 
-    tokens.get(0).putIfAbsent(Attrs.ENTITY_TYPE, () -> TokenType.create("REALLYSTRANGETYPE"));
-    assertEquals(TokenType.create("REALLYSTRANGETYPE"), tokens.get(0).get(Attrs.ENTITY_TYPE).get());
+    tokens.get(0).putIfAbsent(Types.ENTITY_TYPE, () -> TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(TokenType.create("REALLYSTRANGETYPE"), tokens.get(0).get(Types.ENTITY_TYPE).get());
 
-    tokens.get(0).putIfAbsent(Attrs.CATEGORY, TokenType.create("REALLYSTRANGETYPE"));
-    assertEquals(TokenType.create("REALLYSTRANGETYPE"), tokens.get(0).get(Attrs.CATEGORY).get());
+    tokens.get(0).putIfAbsent(Types.CATEGORY, TokenType.create("REALLYSTRANGETYPE"));
+    assertEquals(TokenType.create("REALLYSTRANGETYPE"), tokens.get(0).get(Types.CATEGORY).get());
 
   }
 
@@ -95,20 +95,20 @@ public class AnnotationTest {
   public void parentChildTest() {
     Document document = DocumentFactory.getInstance().fromTokens(Arrays.asList("This", "is", "simple"));
     List<Annotation> tokens = document.tokens();
-    tokens.get(0).add(new Relation(Relations.DEPENDENCY, "nsubj", tokens.get(2).getId()));
-    tokens.get(1).add(new Relation(Relations.DEPENDENCY, "cop", tokens.get(2).getId()));
+    tokens.get(0).add(new Relation(Types.DEPENDENCY, "nsubj", tokens.get(2).getId()));
+    tokens.get(1).add(new Relation(Types.DEPENDENCY, "cop", tokens.get(2).getId()));
     assertTrue(tokens.get(0).parent().isPresent());
     assertEquals("simple", tokens.get(0).parent().get().toString());
-    assertEquals(1, tokens.get(0).get(Relations.DEPENDENCY).size(), 0d);
-    assertEquals("simple", tokens.get(0).targets(Relations.DEPENDENCY, "nsubj").get(0).toString());
-    assertEquals("simple", tokens.get(0).targets(Relations.DEPENDENCY).get(0).toString());
+    assertEquals(1, tokens.get(0).get(Types.DEPENDENCY).size(), 0d);
+    assertEquals("simple", tokens.get(0).targets(Types.DEPENDENCY, "nsubj").get(0).toString());
+    assertEquals("simple", tokens.get(0).targets(Types.DEPENDENCY).get(0).toString());
     assertTrue(tokens.get(1).parent().isPresent());
     assertEquals("simple", tokens.get(1).parent().get().toString());
     assertEquals(2, tokens.get(2).children().size());
 
     Pipeline.process(document, Types.SENTENCE);
     assertEquals(2, tokens.get(2).children().size());
-    tokens.get(0).remove(tokens.get(0).get(Relations.DEPENDENCY).get(0));
+    tokens.get(0).remove(tokens.get(0).get(Types.DEPENDENCY).get(0));
     assertEquals(1, tokens.get(2).children().size());
 
     Annotation sentence = document.first(Types.SENTENCE);
@@ -121,7 +121,7 @@ public class AnnotationTest {
   @Test
   public void createTest() {
     Annotation a = new Annotation(Fragments.string("test"), Types.ENTITY);
-    a.put(Attrs.ENTITY_TYPE, Entities.EMAIL);
+    a.put(Types.ENTITY_TYPE, Entities.EMAIL);
 
     assertNotNull(a);
     assertNull(a.document());

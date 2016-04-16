@@ -1,7 +1,7 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.hermes.Attribute;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.attribute.AttributeValueCodec;
 import com.davidbracewell.hermes.wordnet.Sense;
 import com.davidbracewell.hermes.wordnet.WordNet;
@@ -21,7 +21,7 @@ public class SenseCodec implements AttributeValueCodec, Serializable {
   private static final long serialVersionUID = 1L;
 
   @Override
-  public void encode(StructuredWriter writer, Attribute attribute, Object value) throws IOException {
+  public void encode(StructuredWriter writer, AttributeType attributeType, Object value) throws IOException {
     List<Sense> senses = Cast.as(value);
     for (Sense sense : senses) {
       writer.writeValue(sense.toString());
@@ -29,7 +29,7 @@ public class SenseCodec implements AttributeValueCodec, Serializable {
   }
 
   @Override
-  public Object decode(StructuredReader reader, Attribute attribute, Object value) throws IOException {
+  public Object decode(StructuredReader reader, AttributeType attributeType, Object value) throws IOException {
     List<Sense> senses = new ArrayList<>();
     while (reader.peek() != ElementType.END_ARRAY) {
       Sense sense = WordNet.getInstance().getSenseFromID(reader.nextValue().asString());

@@ -109,7 +109,7 @@ public interface HStringPredicates {
       if (hString.isAnnotation()) {
         return hString.asAnnotation().filter(a -> a.isInstanceOfTag(target)).isPresent();
       }
-      return hString.get(Attrs.TAG).equals(target);
+      return hString.get(Types.TAG).equals(target);
     };
   }
 
@@ -126,18 +126,18 @@ public interface HStringPredicates {
           .filter(a -> a.isInstanceOfTag(target))
           .isPresent();
       }
-      return hString.get(Attrs.TAG).equals(target);
+      return hString.get(Types.TAG).equals(target);
     };
   }
 
   /**
    * Has attribute serializable predicate.
    *
-   * @param attribute the attribute
+   * @param attributeType the attribute
    * @return the serializable predicate
    */
-  static SerializablePredicate<HString> hasAttribute(@NonNull final Attribute attribute) {
-    return hString -> hString.contains(attribute);
+  static SerializablePredicate<HString> hasAttribute(@NonNull final AttributeType attributeType) {
+    return hString -> hString.contains(attributeType);
   }
 
   /**
@@ -182,23 +182,23 @@ public interface HStringPredicates {
   /**
    * Attribute serializable predicate.
    *
-   * @param attribute the attribute
+   * @param attributeType the attribute
    * @param value     the value
    * @return the serializable predicate
    */
-  static SerializablePredicate<HString> attributeMatch(@NonNull final Attribute attribute, final Object value) {
-    final Object convertedValue = attribute.getValueType().convert(value);
-    final boolean isTag = Tag.class.isAssignableFrom(attribute.getValueType().getType());
+  static SerializablePredicate<HString> attributeMatch(@NonNull final AttributeType attributeType, final Object value) {
+    final Object convertedValue = attributeType.getValueType().convert(value);
+    final boolean isTag = Tag.class.isAssignableFrom(attributeType.getValueType().getType());
 
     return annotation -> {
       if (isTag) {
-        Tag tag = annotation.get(attribute).as(Tag.class);
+        Tag tag = annotation.get(attributeType).as(Tag.class);
         if (tag == null) {
           return false;
         }
         return tag.isInstance(Cast.<Tag>as(convertedValue));
       }
-      return annotation.get(attribute).equals(convertedValue);
+      return annotation.get(attributeType).equals(convertedValue);
     };
 
   }

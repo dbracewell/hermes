@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.filter;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.stream.MStream;
@@ -80,8 +80,8 @@ public class EnglishStopWords extends StopWords {
 
   @Override
   protected boolean isTokenStopWord(Annotation token) {
-    if (token.contains(Attrs.PART_OF_SPEECH)) {
-      POS tag = token.get(Attrs.PART_OF_SPEECH).as(POS.class);
+    if (token.contains(Types.PART_OF_SPEECH)) {
+      POS tag = token.get(Types.PART_OF_SPEECH).as(POS.class);
       if (tag != null) {
         if (tag.isInstance(POS.ADJECTIVE, POS.ADVERB, POS.NOUN, POS.VERB)) {
           return isStopWord(token.toString()) || isStopWord(token.getLemma());

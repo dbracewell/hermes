@@ -23,9 +23,8 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Annotatable;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Attrs;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTagger;
 import com.davidbracewell.io.Resources;
@@ -74,13 +73,13 @@ public class DefaultPhraseChunkAnnotator extends SentenceLevelAnnotator implemen
 
 
   @Override
-  public Set<Annotatable> satisfies() {
+  public Set<AnnotatableType> satisfies() {
     return Collections.singleton(Types.PHRASE_CHUNK);
   }
 
   @Override
-  protected Set<Annotatable> furtherRequires() {
-    return Collections.singleton(Attrs.PART_OF_SPEECH);
+  protected Set<AnnotatableType> furtherRequires() {
+    return Collections.singleton(Types.PART_OF_SPEECH);
   }
 
 }//END OF DefaultPhraseChunkAnnotator

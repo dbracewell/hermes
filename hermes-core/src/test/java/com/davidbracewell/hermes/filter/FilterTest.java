@@ -74,8 +74,8 @@ public class FilterTest {
     Config.initializeTest();
     Document document = DocumentFactory.getInstance().create("This is a sample document. 100 is a number and ( is a punctuation.");
     Pipeline.process(document, Types.TOKEN);
-    document.tokens().get(0).put(Attrs.PART_OF_SPEECH, POS.PRONOUN);
-    document.tokens().get(0).put(Attrs.CONFIDENCE, 0.9);
+    document.tokens().get(0).put(Types.PART_OF_SPEECH, POS.PRONOUN);
+    document.tokens().get(0).put(Types.CONFIDENCE, 0.9);
 
     List<Annotation> results = document.get(Types.TOKEN).stream()
       .filter(HStringPredicates.contentMatch("This"))
@@ -113,17 +113,17 @@ public class FilterTest {
     assertEquals(1, results.size());
 
     results = document.get(Types.TOKEN).stream()
-      .filter(HStringPredicates.hasAttribute(Attrs.PART_OF_SPEECH))
+      .filter(HStringPredicates.hasAttribute(Types.PART_OF_SPEECH))
       .collect(Collectors.toList());
     assertEquals(1, results.size());
 
     results = document.get(Types.TOKEN).stream()
-      .filter(HStringPredicates.attributeMatch(Attrs.PART_OF_SPEECH, "PRONOUN"))
+      .filter(HStringPredicates.attributeMatch(Types.PART_OF_SPEECH, "PRONOUN"))
       .collect(Collectors.toList());
     assertEquals(1, results.size());
 
     results = document.get(Types.TOKEN).stream()
-      .filter(HStringPredicates.attributeMatch(Attrs.CONFIDENCE, 0.9))
+      .filter(HStringPredicates.attributeMatch(Types.CONFIDENCE, 0.9))
       .collect(Collectors.toList());
     assertEquals(1, results.size());
 
