@@ -37,7 +37,7 @@ import java.util.function.Predicate;
  */
 public final class Fragments {
 
-  private static HString ORPHANED_EMPTY = new HString(0, 0) {
+  private static final HString ORPHANED_EMPTY = new HString(0, 0) {
     private static final long serialVersionUID = 1L;
 
     @Override
