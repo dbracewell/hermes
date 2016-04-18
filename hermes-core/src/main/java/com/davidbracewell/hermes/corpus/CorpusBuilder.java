@@ -44,6 +44,12 @@ public class CorpusBuilder {
   private DocumentFactory documentFactory = DocumentFactory.getInstance();
   private CorpusFormat corpusFormat = CorpusFormats.forName(CorpusFormats.JSON_OPL);
 
+  public CorpusBuilder distributed(boolean isDistributed) {
+    if (isDistributed) {
+      return distributed();
+    }
+    return offHeap();
+  }
 
   public CorpusBuilder inMemory() {
     this.isDistributed = false;

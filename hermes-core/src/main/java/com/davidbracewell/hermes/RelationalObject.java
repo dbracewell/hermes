@@ -103,6 +103,12 @@ public interface RelationalObject {
   }
 
 
+  /**
+   * Children list.
+   *
+   * @param relation the relation
+   * @return the list
+   */
   default List<Annotation> children(@NonNull String relation) {
     return children().stream().filter(a -> a.dependencyRelation().filter(r -> r.v1.equalsIgnoreCase(relation)).isPresent()).collect(Collectors.toList());
   }

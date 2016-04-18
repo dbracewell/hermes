@@ -46,8 +46,6 @@ public class SparkSVOExample implements Serializable {
     //We will run it local, so we set the spark master to local[*]
     Config.setProperty("spark.master", "local[*]");
 
-    System.out.println(Config.get("Annotation.PART_OF_SPEECH.model.ENGLISH"));
-
     //Build the corpus
     Corpus corpus = Corpus.builder()
       .distributed()
@@ -65,13 +63,11 @@ public class SparkSVOExample implements Serializable {
           sentence.tokens().stream().filter(token -> token.getPOS().isVerb())
             .forEach(predicate -> {
               List<Annotation> nsubjs = predicate.children("nsubj");
-              if (nsubjs.size() > 0) {
-                List<Annotation> dobjs = predicate.children("dobj");
-                if (dobjs.size() > 0) {
-                  for (Annotation nsubj : nsubjs) {
-                    for (Annotation dobj : dobjs) {
-                      svo.add(nsubj.toLowerCase() + "::" + predicate.toLowerCase() + "::" + dobj);
-                    }
+              List<Annotation> dobjs = predicate.children("dobj");
+              if (nsubjs.size() > 0 && dobjs.size() > 0) {
+                for (Annotation nsubj : nsubjs) {
+                  for (Annotation dobj : dobjs) {
+                    svo.add(nsubj.toLowerCase() + "::" + predicate.toLowerCase() + "::" + dobj);
                   }
                 }
               }
