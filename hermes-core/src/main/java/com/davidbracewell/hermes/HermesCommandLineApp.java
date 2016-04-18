@@ -61,7 +61,7 @@ public abstract class HermesCommandLineApp extends CommandLineApplication {
   /**
    * The Corpus.
    */
-  @Option(description = "The location to save the output of the processing.", required = true, aliases = {"o"})
+  @Option(description = "The location to save the output of the processing.", defaultValue = "stdout:", aliases = {"o"})
   Resource output;
 
   private final Set<String> requiredPackages = new HashSet<>();
