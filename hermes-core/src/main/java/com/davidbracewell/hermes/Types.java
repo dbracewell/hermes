@@ -21,6 +21,8 @@
 
 package com.davidbracewell.hermes;
 
+import lombok.NonNull;
+
 /**
  * <p>Common Annotation Types</p>
  *
@@ -163,5 +165,40 @@ public interface Types {
     return RelationType.create(name);
   }
 
+
+  /**
+   * Creates the appropriate annotatable from the given name.
+   *
+   * @param typeAndName The type and name separated by a period, e.g. Annotation.ENTITY
+   * @return The appropriate annotatable
+   * @throws IllegalArgumentException Invalid type or no type given.
+   */
+  static AnnotatableType from(@NonNull String typeAndName) {
+    String lower = typeAndName.toLowerCase();
+    int index = lower.indexOf('.');
+    if (index == -1) {
+      if (AnnotationType.isDefined(lower)) {
+        return AnnotationType.valueOf(lower);
+      } else if (AttributeType.isDefined(lower)) {
+        return AttributeType.valueOf(lower);
+      } else if (RelationType.isDefined(lower)) {
+        return RelationType.valueOf(lower);
+      }
+      throw new IllegalArgumentException("No type specified.");
+    }
+    String type = lower.substring(0, index);
+    String typeName = typeAndName.substring(index + 1);
+    switch (type) {
+      case "annotation":
+        return AnnotationType.create(typeName);
+      case "attribute":
+        return AttributeType.create(typeName);
+      case "relation":
+        return RelationType.create(typeName);
+    }
+
+
+    throw new IllegalArgumentException(type + " is and invalid type.");
+  }
 
 }//END OF AnnotationTypes

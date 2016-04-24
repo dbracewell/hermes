@@ -69,31 +69,7 @@ public interface AnnotatableType {
    */
   String name();
 
-  /**
-   * Creates the appropriate annotatable from the given name.
-   *
-   * @param typeAndName The type and name separated by a period, e.g. Annotation.ENTITY
-   * @return The appropriate annotatable
-   * @throws IllegalArgumentException Invalid type or no type given.
-   */
-  static AnnotatableType of(@NonNull String typeAndName) {
-    String lower = typeAndName.toLowerCase();
-    int index = lower.indexOf('.');
-    if (index == -1) {
-      throw new IllegalArgumentException("No type specified.");
-    }
-    String type = lower.substring(0, index);
-    String typeName = typeAndName.substring(index + 1);
-    switch (type) {
-      case "annotation":
-        return AnnotationType.create(typeName);
-      case "attribute":
-        return AttributeType.create(typeName);
-      case "relation":
-        return RelationType.create(typeName);
-    }
-    throw new IllegalArgumentException(type + " is and invalid type.");
-  }
+
 
 
 }//END OF Annotatable

@@ -153,7 +153,7 @@ public class Document extends HString {
       Map<String, Val> docProperties = new HashMap<>();
       List<Annotation> annotations = new LinkedList<>();
       Map<AttributeType, Val> attributeValMap = Collections.emptyMap();
-      Map<AnnotationType, String> completed = new HashMap<>();
+      Map<AnnotatableType, String> completed = new HashMap<>();
 
       while (reader.peek() != ElementType.END_DOCUMENT) {
         if (reader.peek() == ElementType.NAME) {
@@ -171,7 +171,7 @@ public class Document extends HString {
             case "completed":
               while (reader.peek() != ElementType.END_OBJECT) {
                 Tuple2<String, Val> keyValue = reader.nextKeyValue();
-                completed.put(AnnotationType.create(keyValue.getKey()), keyValue.getValue().asString());
+                completed.put(Types.from(keyValue.getKey()), keyValue.getValue().asString());
               }
               break;
             default:
@@ -271,9 +271,9 @@ public class Document extends HString {
    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
    * has a unique id assigned.
    *
-   * @param type             the type of annotation
-   * @param span             the span of the annotation
-   * @param copyAttributes   the copy attributes
+   * @param type                 the type of annotation
+   * @param span                 the span of the annotation
+   * @param copyAttributes       the copy attributes
    * @param filterAttributeTypes the filter attributes
    * @return the created annotation
    */
@@ -505,7 +505,7 @@ public class Document extends HString {
 
         writer.beginObject("completed");
         for (AnnotatableType type : getAnnotationSet().getCompleted()) {
-          writer.writeKeyValue(type.name(), getAnnotationSet().getAnnotationProvider(type));
+          writer.writeKeyValue(type.type() + "." + type.name(), getAnnotationSet().getAnnotationProvider(type));
         }
         writer.endObject();
 

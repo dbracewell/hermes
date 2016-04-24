@@ -1,32 +1,20 @@
 package com.davidbracewell.hermes.driver;
 
-import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
-import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.corpus.CorpusBuilder;
-import com.davidbracewell.hermes.corpus.CorpusFormats;
-import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.hermes.AnnotatableType;
+import com.davidbracewell.hermes.HermesCommandLineApp;
+import com.davidbracewell.hermes.Types;
 
 /**
  * @author David B. Bracewell
  */
-public class Annotate extends CommandLineApplication {
+public class Annotate extends HermesCommandLineApp {
   private static final long serialVersionUID = 1L;
 
-  @Option(description = "Input corpus location", required = true)
-  Resource input;
-  @Option(description = "Output corpus location", required = true)
-  Resource output;
-  @Option(description = "Format of input corpus", defaultValue = "JSON_OPL")
-  String inputFormat;
-  @Option(description = "Distributed corpus", defaultValue = "false")
-  boolean distributed;
-  @Option(description = "Annotations to add", defaultValue = "TOKEN,SENTENCE,PART_OF_SPEECH,LEMMA,DEPENDENCY,PHRASE_CHUNK")
-  AnnotationType[] annotations;
+  @Option(description = "Annotations to add", defaultValue = "Annotation.TOKEN,Annotation.SENTENCE,Attribute.PART_OF_SPEECH,Attribute.LEMMA,Relation.DEPENDENCY,Annotation.PHRASE_CHUNK", aliases = "t")
+  String[] types;
 
-  public Annotate() {
+  Annotate() {
     super("CorpusConvert");
   }
 
@@ -34,15 +22,20 @@ public class Annotate extends CommandLineApplication {
     new Annotate().run(args);
   }
 
+  private AnnotatableType[] convert() {
+    AnnotatableType[] convert = new AnnotatableType[types.length];
+    for (int i = 0; i < types.length; i++) {
+      convert[i] = Types.from(types[i]);
+    }
+    return convert;
+  }
+
+
   @Override
   protected void programLogic() throws Exception {
-    CorpusBuilder builder = Corpus.builder().from(inputFormat, input, DocumentFactory.getInstance());
-    if (distributed) {
-      builder = builder.distributed();
-    }
-    builder.build()
-      .annotate(annotations)
-      .write(CorpusFormats.JSON_OPL, output);
+    writeCorpus(
+      getCorpus().annotate(convert())
+    );
   }
 
 }// END OF Annotate

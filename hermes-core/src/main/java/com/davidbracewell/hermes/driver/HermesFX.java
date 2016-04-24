@@ -86,8 +86,13 @@ public class HermesFX extends JavaFXApplication {
       editor.setText(currentDocument.toString());
       annotationList.setRoot(new TreeItem<>("ANNOTATIONS"));
       annotationList.getRoot().getChildren().clear();
-      currentDocument.getAnnotationSet().getCompleted().forEach(type ->{
-        annotationList.getRoot().getChildren().add(new TreeItem<>(type.name()));
+      currentDocument.getAnnotationSet().getCompleted().forEach(type -> {
+        if (type.type().equalsIgnoreCase("annotation")) {
+          System.err.println(type);
+          TreeItem<String> parent = new TreeItem<>(type.name());
+          annotationList.getRoot().getChildren().add(parent);
+          currentDocument.get(AnnotationType.create(type.name()));
+        }
       });
       attributeList.setRoot(new TreeItem<>("ATTRIBUTES"));
       currentDocument.attributes().forEach(attr -> attributeList.getRoot().getChildren().add(new TreeItem<>(attr.name() + "::" + currentDocument.get(attr).toString())));
@@ -141,8 +146,8 @@ public class HermesFX extends JavaFXApplication {
     annotationList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
       AnnotationType type = Types.annotation(newValue.getValue());
       currentDocument.get(type).forEach(a -> {
-        editor.selectRange(a.start(),a.end());
-        editor.setBackground(new Background(new BackgroundFill(Color.RED,null,null)));
+        editor.selectRange(a.start(), a.end());
+        editor.setBackground(new Background(new BackgroundFill(Color.RED, null, null)));
         System.out.println(a);
       });
     });

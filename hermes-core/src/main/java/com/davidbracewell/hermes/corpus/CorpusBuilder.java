@@ -25,6 +25,7 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.io.resource.StringResource;
 import lombok.NonNull;
 
 import java.util.Collection;
@@ -119,6 +120,12 @@ public class CorpusBuilder {
   }
 
   public Corpus build() {
+
+    if (resource != null &&
+      (resource instanceof StringResource)
+      ) {
+      isInMemory = true;
+    }
 
     if (isInMemory) {
       List<Document> dList = new LinkedList<>(documents);

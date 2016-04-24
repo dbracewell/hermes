@@ -26,7 +26,9 @@ import com.davidbracewell.cli.Option;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.io.resource.Resource;
+import lombok.NonNull;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -55,14 +57,21 @@ public abstract class HermesCommandLineApp extends CommandLineApplication {
   /**
    * The Format.
    */
-  @Option(description = "The format of the corpus.", defaultValue = "JSON_OPL", aliases = {"f"})
-  String format;
+  @Option(description = "The format of the input corpus.", defaultValue = "JSON_OPL", aliases = {"if"})
+  String inputFormat;
 
   /**
    * The Corpus.
    */
   @Option(description = "The location to save the output of the processing.", defaultValue = "stdout:", aliases = {"o"})
   Resource output;
+
+  /**
+   * The Format.
+   */
+  @Option(description = "The format of the output corpus.", defaultValue = "JSON_OPL", aliases = {"of"})
+  String outputFormat;
+
 
   private final Set<String> requiredPackages = new HashSet<>();
 
@@ -75,8 +84,13 @@ public abstract class HermesCommandLineApp extends CommandLineApplication {
   public Corpus getCorpus() {
     return Corpus.builder()
       .distributed(distributed)
-      .source(format, input)
+      .source(inputFormat, input)
       .build();
+  }
+
+
+  public void writeCorpus(@NonNull Corpus corpus) throws IOException {
+    corpus.write(outputFormat, output);
   }
 
   /**
@@ -94,7 +108,7 @@ public abstract class HermesCommandLineApp extends CommandLineApplication {
    * @return the corpus format
    */
   public String getInputFormat() {
-    return format;
+    return inputFormat;
   }
 
   /**
