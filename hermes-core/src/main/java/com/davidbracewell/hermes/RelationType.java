@@ -35,6 +35,8 @@ public final class RelationType extends EnumValue implements AnnotatableType {
 
   private static final DynamicEnum<RelationType> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
+  private static final String typeName = "Relation";
+
 
   private RelationType(String name) {
     super(name);
@@ -50,7 +52,7 @@ public final class RelationType extends EnumValue implements AnnotatableType {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
-    return index.register(new RelationType(name));
+    return index.register(new RelationType(Types.toName(typeName, name)));
   }
 
   /**
@@ -60,7 +62,7 @@ public final class RelationType extends EnumValue implements AnnotatableType {
    * @return True if it exists, otherwise False
    */
   public static boolean isDefined(String name) {
-    return index.isDefined(name);
+    return index.isDefined(Types.toName(typeName, name));
   }
 
   /**
@@ -70,7 +72,7 @@ public final class RelationType extends EnumValue implements AnnotatableType {
    * @return the RelationType for the string
    */
   public static RelationType valueOf(String name) {
-    return index.valueOf(name);
+    return index.valueOf(Types.toName(typeName, name));
   }
 
   /**
@@ -84,7 +86,7 @@ public final class RelationType extends EnumValue implements AnnotatableType {
 
   @Override
   public String type() {
-    return "Relation";
+    return typeName;
   }
 
   private Object readResolve() throws ObjectStreamException {

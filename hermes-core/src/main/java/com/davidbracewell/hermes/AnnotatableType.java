@@ -48,7 +48,6 @@ public interface AnnotatableType {
     if (StringUtils.isNullOrBlank(key)) {
       throw new IllegalStateException("No annotator is defined for " + name() + " and " + language);
     }
-
     Annotator annotator = BeanUtils.parameterizeObject(Config.get(key).as(Annotator.class));
     Preconditions.checkNotNull(annotator, "Could not create the annotator [" + Config.get(key) + "] for " + name());
     Preconditions.checkArgument(annotator.satisfies().contains(this), "Attempting to register " + annotator.getClass().getName() + " for " + name() + " which it does not provide.");
@@ -69,7 +68,14 @@ public interface AnnotatableType {
    */
   String name();
 
-
+  /**
+   * As type name string.
+   *
+   * @return the string
+   */
+  default String asTypeName() {
+    return type() + "." + name();
+  }
 
 
 }//END OF Annotatable

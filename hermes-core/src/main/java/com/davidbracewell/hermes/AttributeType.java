@@ -88,7 +88,7 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
     .build();
   private volatile ValueType valueType;
   private volatile transient AttributeValueCodec codec;
-
+  private static final String typeName = "Attribute";
 
   private AttributeType(String name) {
     super(name);
@@ -107,6 +107,7 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
+    name = Types.toName(typeName, name);
     if (index.isDefined(name)) {
       AttributeType attributeType = index.valueOf(name);
       Preconditions.checkArgument(attributeType.getValueType().getType().equals(valueType), "Attempting to register an existing attribute with a new value type.");
@@ -128,7 +129,7 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
-    return index.register(new AttributeType(name));
+    return index.register(new AttributeType(Types.toName(typeName, name)));
   }
 
   /**
@@ -138,7 +139,7 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
    * @return True if it exists, otherwise False
    */
   public static boolean isDefined(String name) {
-    return index.isDefined(name);
+    return index.isDefined(Types.toName(typeName, name));
   }
 
   static Object readObject(StructuredReader reader, AttributeType attributeType) throws IOException {
@@ -239,7 +240,7 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
    * @throws IllegalArgumentException if the name is not a valid attribute
    */
   public static AttributeType valueOf(String name) {
-    return index.valueOf(name);
+    return index.valueOf(Types.toName(typeName, name));
   }
 
   /**

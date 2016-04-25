@@ -64,6 +64,7 @@ public final class AnnotationType extends HierarchicalEnumValue implements Annot
 
   private static final DynamicEnum<AnnotationType> index = new DynamicEnum<>();
   private static final long serialVersionUID = 1L;
+  private static final String typeName = "Annotation";
 
   /**
    * The constant ROOT representing the base annotation type.
@@ -90,6 +91,7 @@ public final class AnnotationType extends HierarchicalEnumValue implements Annot
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
+    name = Types.toName(typeName, name);
     if (index.isDefined(name) && !index.valueOf(name).getParent().equals(parent)) {
       throw new IllegalArgumentException("Attempting to register an existing annotation type with a different parent type.");
     }
@@ -108,7 +110,7 @@ public final class AnnotationType extends HierarchicalEnumValue implements Annot
     if (StringUtils.isNullOrBlank(name)) {
       throw new IllegalArgumentException(name + " is invalid");
     }
-    return index.register(new AnnotationType(name));
+    return index.register(new AnnotationType(Types.toName(typeName, name)));
   }
 
   /**
@@ -118,7 +120,7 @@ public final class AnnotationType extends HierarchicalEnumValue implements Annot
    * @return True if it exists, otherwise False
    */
   public static boolean isDefined(String name) {
-    return index.isDefined(name);
+    return index.isDefined(Types.toName(typeName, name));
   }
 
   /**
@@ -128,7 +130,7 @@ public final class AnnotationType extends HierarchicalEnumValue implements Annot
    * @return the AnnotationType for the string
    */
   public static AnnotationType valueOf(String name) {
-    return index.valueOf(name);
+    return index.valueOf(Types.toName(typeName, name));
   }
 
   /**
@@ -217,5 +219,7 @@ public final class AnnotationType extends HierarchicalEnumValue implements Annot
     }
     return index.register(this);
   }
+
+
 
 }//END OF AnnotationType

@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 /**
@@ -169,14 +170,14 @@ public interface Types {
   /**
    * Creates the appropriate annotatable from the given name.
    *
-   * @param typeAndName The type and name separated by a period, e.g. Annotation.ENTITY
+   * @param string The type and name separated by a period, e.g. Annotation.ENTITY
    * @return The appropriate annotatable
    * @throws IllegalArgumentException Invalid type or no type given.
    */
-  static AnnotatableType from(@NonNull String typeAndName) {
-    String lower = typeAndName.toLowerCase();
-    int index = lower.indexOf('.');
-    if (index == -1) {
+  static AnnotatableType from(@NonNull String string) {
+    String[] typeAndName = string.split("\\.", 2);
+    if (typeAndName.length == 1) {
+      String lower = typeAndName[0].toLowerCase();
       if (AnnotationType.isDefined(lower)) {
         return AnnotationType.valueOf(lower);
       } else if (AttributeType.isDefined(lower)) {
@@ -186,19 +187,61 @@ public interface Types {
       }
       throw new IllegalArgumentException("No type specified.");
     }
-    String type = lower.substring(0, index);
-    String typeName = typeAndName.substring(index + 1);
-    switch (type) {
+    return from(typeAndName[0], typeAndName[1]);
+  }
+
+  /**
+   * From annotatable type.
+   *
+   * @param type the type
+   * @param name the name
+   * @return the annotatable type
+   */
+  static AnnotatableType from(@NonNull String type, @NonNull String name) {
+    switch (type.toLowerCase()) {
       case "annotation":
-        return AnnotationType.create(typeName);
+        return AnnotationType.create(name);
       case "attribute":
-        return AttributeType.create(typeName);
+        return AttributeType.create(name);
       case "relation":
-        return RelationType.create(typeName);
+        return RelationType.create(name);
     }
-
-
     throw new IllegalArgumentException(type + " is and invalid type.");
   }
 
+  /**
+   * To name string.
+   *
+   * @param type the type
+   * @param name the name
+   * @return the string
+   */
+  static String toName(@NonNull String type, @NonNull String name) {
+    type = type.toLowerCase();
+    if (!type.endsWith(".")) {
+      type = type + ".";
+    }
+    return name.toLowerCase().startsWith(type) ? name.substring(type.length()) : name;
+  }
+
+  /**
+   * To type name string.
+   *
+   * @param type the type
+   * @param name the name
+   * @return the string
+   */
+  static String toTypeName(@NonNull String type, @NonNull String name) {
+    int dot = name.indexOf('.');
+    if (dot < 0) {
+      return StringUtils.toTitleCase(type) + "." + name;
+    }
+
+    String sub = name.substring(0, dot);
+    if (sub.equalsIgnoreCase(type)) {
+      return StringUtils.toTitleCase(type) + name.substring(dot);
+    }
+
+    return StringUtils.toTitleCase(type) + "." + name;
+  }
 }//END OF AnnotationTypes
