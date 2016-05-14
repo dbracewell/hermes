@@ -2,6 +2,12 @@
 
 A Natural Language Processing framework for Java based on the [Tipster Architecture](http://cs.nyu.edu/cs/faculty/grishman/tipster.html).
 
+## Build Status
+Master: https://travis-ci.org/dbracewell/hermes.svg?branch=master
+Develop: https://travis-ci.org/dbracewell/hermes.svg?branch=develop
+
+Note: All development is done on the Develop branch
+
 ## License
 Copyright 2015 David B. Bracewell
 
