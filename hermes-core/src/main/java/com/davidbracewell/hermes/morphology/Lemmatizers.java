@@ -25,7 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.google.common.collect.Maps;
 import lombok.NonNull;
 

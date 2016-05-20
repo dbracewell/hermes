@@ -2,8 +2,8 @@ package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.hermes.Fragments;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.tag.Entities;
-import com.davidbracewell.hermes.tag.StringTag;
+import com.davidbracewell.hermes.attribute.Entities;
+import com.davidbracewell.hermes.attribute.StringTag;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

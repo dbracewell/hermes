@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.corpus.spi;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 
 import java.util.List;
 

@@ -24,11 +24,11 @@ package com.davidbracewell.hermes.regex;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.attribute.Entities;
+import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.attribute.StringTag;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.lexicon.TrieLexicon;
-import com.davidbracewell.hermes.tag.Entities;
-import com.davidbracewell.hermes.tag.POS;
-import com.davidbracewell.hermes.tag.StringTag;
 import org.junit.Before;
 import org.junit.Test;
 

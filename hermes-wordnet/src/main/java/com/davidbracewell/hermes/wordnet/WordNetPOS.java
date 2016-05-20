@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.wordnet;
 
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.google.common.base.Preconditions;
 
 /**

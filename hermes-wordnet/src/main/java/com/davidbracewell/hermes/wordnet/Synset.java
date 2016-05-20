@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.wordnet;
 
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.wordnet.properties.Property;
 import com.davidbracewell.hermes.wordnet.properties.PropertyName;
 import com.davidbracewell.tuple.Tuple2;

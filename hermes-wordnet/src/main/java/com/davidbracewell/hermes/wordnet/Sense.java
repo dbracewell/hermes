@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.wordnet;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.google.common.collect.HashMultimap;
 
 import java.util.List;

@@ -10,9 +10,9 @@ import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.Mode;
-import com.davidbracewell.hermes.tag.POS;
 import com.davidbracewell.io.resource.Resource;
 
 import java.util.Objects;

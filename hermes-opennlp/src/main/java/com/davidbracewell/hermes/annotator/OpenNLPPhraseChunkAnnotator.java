@@ -27,7 +27,7 @@ import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import opennlp.tools.chunker.ChunkerME;

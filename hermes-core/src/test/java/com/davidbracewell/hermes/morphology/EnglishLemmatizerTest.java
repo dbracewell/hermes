@@ -27,7 +27,7 @@ import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

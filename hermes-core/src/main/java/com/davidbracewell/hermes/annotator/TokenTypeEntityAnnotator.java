@@ -25,7 +25,7 @@ import com.davidbracewell.collection.Collect;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.tag.Entities;
+import com.davidbracewell.hermes.attribute.Entities;
 import com.davidbracewell.hermes.tag.EntityType;
 import com.davidbracewell.hermes.tokenization.TokenType;
 import com.google.common.collect.ImmutableMap;

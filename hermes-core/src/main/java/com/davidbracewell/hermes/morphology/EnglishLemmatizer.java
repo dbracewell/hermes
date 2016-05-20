@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.trie.PatriciaTrie;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.structured.csv.CSVReader;

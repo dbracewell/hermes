@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.filter;
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import org.junit.Test;
 
 import java.util.List;

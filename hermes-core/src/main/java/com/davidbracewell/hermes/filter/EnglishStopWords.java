@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.filter;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.string.StringUtils;

@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.ml.pos;
 
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.sequence.SequenceValidator;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.string.StringPredicates;
 import com.davidbracewell.string.StringUtils;
 

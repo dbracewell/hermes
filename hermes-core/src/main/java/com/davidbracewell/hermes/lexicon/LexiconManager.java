@@ -46,7 +46,7 @@ public final class LexiconManager implements Serializable {
   private static final Cache<String, Lexicon> lexiconCache = CacheManager.getInstance().register(
     CacheSpec.<String, Lexicon>create()
       .engine("Guava")
-      .maxSize(50)
+      .maxSize(500)
       .loadingFunction(name -> createLexicon(name.toLowerCase()))
   );
 

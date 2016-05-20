@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.wordnet.io;
 
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.wordnet.*;
 import com.davidbracewell.hermes.wordnet.properties.Property;
 import com.davidbracewell.hermes.wordnet.properties.PropertyName;

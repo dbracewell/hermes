@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.tag;
+package com.davidbracewell.hermes.attribute;
 
 import com.davidbracewell.Tag;
 import com.davidbracewell.hermes.Annotation;
@@ -364,9 +364,9 @@ public enum POS implements Tag {
 
   static Map<String, POS> index = new HashMap<>();
   private final String tag;
-  private final com.davidbracewell.hermes.tag.POS parentType;
+  private final com.davidbracewell.hermes.attribute.POS parentType;
 
-  POS(com.davidbracewell.hermes.tag.POS parentType, String tag) {
+  POS(com.davidbracewell.hermes.attribute.POS parentType, String tag) {
     this.parentType = parentType;
     this.tag = tag;
   }
@@ -384,7 +384,7 @@ public enum POS implements Tag {
    * @param tag The tag to parts
    * @return The <code>PartOfSpeech</code>
    */
-  public static com.davidbracewell.hermes.tag.POS fromString(String tag) {
+  public static com.davidbracewell.hermes.attribute.POS fromString(String tag) {
     if (StringUtils.isNullOrBlank(tag)) {
       return null;
     } else if (index.containsKey(tag.toUpperCase())) {
@@ -421,7 +421,7 @@ public enum POS implements Tag {
    * @param text The text
    * @return The part of speech
    */
-  public static com.davidbracewell.hermes.tag.POS forText(HString text) {
+  public static com.davidbracewell.hermes.attribute.POS forText(HString text) {
     Preconditions.checkNotNull(text);
 
     if (text.contains(Types.PART_OF_SPEECH)) {
@@ -431,7 +431,7 @@ public enum POS implements Tag {
       return null;
     }
 
-    com.davidbracewell.hermes.tag.POS tag = ANY;
+    com.davidbracewell.hermes.attribute.POS tag = ANY;
     for (Annotation token : text.tokens()) {
       Tag temp = token.get(Types.PART_OF_SPEECH).cast();
       if (temp != null) {
@@ -558,18 +558,18 @@ public enum POS implements Tag {
   /**
    * @return The parent part of speech or itself if it is a top level pos
    */
-  public com.davidbracewell.hermes.tag.POS getParentType() {
+  public com.davidbracewell.hermes.attribute.POS getParentType() {
     return parentType == null ? this : parentType;
   }
 
   /**
    * @return The universal tag
    */
-  public com.davidbracewell.hermes.tag.POS getUniversalTag() {
+  public com.davidbracewell.hermes.attribute.POS getUniversalTag() {
     if (this == ANY) {
       return ANY;
     }
-    com.davidbracewell.hermes.tag.POS tag = this;
+    com.davidbracewell.hermes.attribute.POS tag = this;
     while (tag != null && tag.getParentType() != ANY && !tag.isUniversal()) {
       tag = tag.getParentType();
     }
@@ -590,12 +590,12 @@ public enum POS implements Tag {
     if (tag == null) {
       return false;
     }
-    if (tag == com.davidbracewell.hermes.tag.POS.ANY) {
+    if (tag == com.davidbracewell.hermes.attribute.POS.ANY) {
       return true;
     }
-    if (tag instanceof com.davidbracewell.hermes.tag.POS) {
-      com.davidbracewell.hermes.tag.POS other = (com.davidbracewell.hermes.tag.POS) tag;
-      com.davidbracewell.hermes.tag.POS check = this;
+    if (tag instanceof com.davidbracewell.hermes.attribute.POS) {
+      com.davidbracewell.hermes.attribute.POS other = (com.davidbracewell.hermes.attribute.POS) tag;
+      com.davidbracewell.hermes.attribute.POS check = this;
       while (check != null) {
         if (check == other) {
           return true;

@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.wordnet.io;
 
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.wordnet.Sense;
 import com.davidbracewell.hermes.wordnet.Synset;
 import com.davidbracewell.hermes.wordnet.WordNetPOS;

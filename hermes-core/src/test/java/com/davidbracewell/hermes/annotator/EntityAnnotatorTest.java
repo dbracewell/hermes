@@ -26,7 +26,7 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.tag.Entities;
+import com.davidbracewell.hermes.attribute.Entities;
 import org.junit.Test;
 
 import java.util.List;

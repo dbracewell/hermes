@@ -23,7 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.annotator.DocumentProvider;
-import com.davidbracewell.hermes.tag.Entities;
+import com.davidbracewell.hermes.attribute.Entities;
 import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.structured.StructuredFormat;

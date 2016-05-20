@@ -28,6 +28,8 @@ import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
+import com.davidbracewell.apollo.stats.ContingencyTable;
+import com.davidbracewell.apollo.stats.ContingencyTableCalculator;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
@@ -269,7 +271,7 @@ public interface Corpus extends Iterable<Document> {
   /**
    * As classification data set dataset.
    *
-   * @param featurizer     the featurizer
+   * @param featurizer         the featurizer
    * @param labelAttributeType the label attribute
    * @return the dataset
    */
@@ -280,7 +282,7 @@ public interface Corpus extends Iterable<Document> {
   /**
    * As regression data set dataset.
    *
-   * @param featurizer     the featurizer
+   * @param featurizer         the featurizer
    * @param labelAttributeType the label attribute
    * @return the dataset
    */
@@ -564,6 +566,29 @@ public interface Corpus extends Iterable<Document> {
     );
   }
 
+  default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, boolean lemmatize) {
+    return significantBigrams(minCount, calculator, minScore, removeStopWords, h -> lemmatize ? h.getLemma() : h.toString());
+  }
+
+  default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, @NonNull SerializableFunction<? super Annotation, String> toString) {
+    Counter<Tuple> unigrams = tokenNGrams(1, removeStopWords, HString::toString);
+    Counter<Tuple> bigrams = tokenNGrams(2, removeStopWords, HString::toString).filterByValue(v -> v >= minCount);
+    Counter<Tuple> filtered = Counters.newHashMapCounter();
+    bigrams.items().forEach(bigram -> {
+      double score = calculator.calculate(
+        ContingencyTable.create2X2(bigrams.get(bigram),
+          unigrams.get(Tuples.tuple(bigram.get(0))),
+          unigrams.get(Tuples.tuple(bigram.get(1))),
+          unigrams.sum()
+        )
+      );
+      if (score >= minScore) {
+        filtered.set(bigram, score);
+      }
+    });
+    return filtered;
+  }
+
   /**
    * Union corpus.
    *
@@ -586,6 +611,14 @@ public interface Corpus extends Iterable<Document> {
     return write(CorpusFormats.forName(format), resource);
   }
 
+  /**
+   * Write corpus.
+   *
+   * @param format   the format
+   * @param resource the resource
+   * @return the corpus
+   * @throws IOException the io exception
+   */
   default Corpus write(@NonNull CorpusFormat format, @NonNull Resource resource) throws IOException {
     format.write(resource, this);
     return builder().from(format, resource, getDocumentFactory()).build();

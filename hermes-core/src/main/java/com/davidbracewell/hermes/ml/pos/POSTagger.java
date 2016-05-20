@@ -27,8 +27,8 @@ import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.ml.AnnotationTagger;
-import com.davidbracewell.hermes.tag.POS;
 
 /**
  * @author David B. Bracewell

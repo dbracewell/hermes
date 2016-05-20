@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.wordnet.io.properties;
 
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.Counters;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.wordnet.Synset;
 import com.davidbracewell.hermes.wordnet.WordNetPOS;
 import com.davidbracewell.hermes.wordnet.io.WordNetDB;

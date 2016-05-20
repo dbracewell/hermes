@@ -25,7 +25,7 @@ package com.davidbracewell.hermes.morphology;
 import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.tag.POS;
+import com.davidbracewell.hermes.attribute.POS;
 import lombok.NonNull;
 
 import java.util.List;

@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.tag;
+package com.davidbracewell.hermes.attribute;
 
 import com.davidbracewell.annotation.DynamicEnumeration;
 
