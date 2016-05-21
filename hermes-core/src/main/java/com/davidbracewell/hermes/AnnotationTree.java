@@ -361,7 +361,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
 
   @Override
   public Object[] toArray() {
-    return Collect.from(iterator()).toArray();
+    return Collect.stream(iterator()).toArray();
   }
 
   @Override

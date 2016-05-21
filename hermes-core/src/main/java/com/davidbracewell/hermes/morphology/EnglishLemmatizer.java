@@ -297,9 +297,9 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
   @Override
   public String lemmatize(@NonNull String string, @NonNull POS partOfSpeech) {
     if (partOfSpeech == POS.ANY) {
-      return Collect.from(doLemmatization(string, true, ALL_POS)).findFirst().orElse(string).toLowerCase();
+      return Collect.stream(doLemmatization(string, true, ALL_POS)).findFirst().orElse(string).toLowerCase();
     } else if (partOfSpeech.isInstance(ALL_POS)) {
-      return Collect.from(doLemmatization(string, true, partOfSpeech)).findFirst().orElse(string).toLowerCase();
+      return Collect.stream(doLemmatization(string, true, partOfSpeech)).findFirst().orElse(string).toLowerCase();
     }
     return string.toLowerCase();
   }

@@ -110,7 +110,7 @@ public interface Corpus extends Iterable<Document> {
    * @return the corpus
    */
   static Corpus of(@NonNull Iterable<Document> documentIterable) {
-    return new InMemoryCorpus(Collect.from(documentIterable).collect(Collectors.toList()));
+    return new InMemoryCorpus(Collect.stream(documentIterable).collect(Collectors.toList()));
   }
 
   /**
@@ -344,7 +344,7 @@ public interface Corpus extends Iterable<Document> {
     if (this instanceof InMemoryCorpus) {
       return this;
     }
-    return new InMemoryCorpus(Collect.from(this).collect(Collectors.toList()));
+    return new InMemoryCorpus(Collect.stream(this).collect(Collectors.toList()));
   }
 
   /**

@@ -143,7 +143,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   }
 
   @Override
-  public <R> MStream<R> flatMap(@NonNull SerializableFunction<? super Document, ? extends Iterable<? extends R>> mapper) {
+  public <R> MStream<R> flatMap(@NonNull SerializableFunction<? super Document, Iterable<? extends R>> mapper) {
     return source.flatMap(json -> {
       Hermes.initializeWorker(configBroadcast.getValue());
       return mapper.apply(Document.fromJson(json));
