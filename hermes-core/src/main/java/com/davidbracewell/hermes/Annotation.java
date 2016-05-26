@@ -26,7 +26,7 @@ import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
-import com.davidbracewell.hermes.tag.EntityType;
+import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;

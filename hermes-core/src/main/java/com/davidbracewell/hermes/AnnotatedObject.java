@@ -141,6 +141,9 @@ public interface AnnotatedObject {
    * @return the token annotation at the relative offset
    */
   default Annotation tokenAt(int tokenIndex) {
+    if (tokenIndex < 0 || tokenIndex >= tokenLength()) {
+      return Fragments.detachedEmptyAnnotation();
+    }
     return tokens().get(tokenIndex);
   }
 

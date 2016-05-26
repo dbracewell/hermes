@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.attribute;
 
 import com.davidbracewell.annotation.DynamicEnumeration;
 
-import static com.davidbracewell.hermes.tag.EntityType.ROOT;
+import static com.davidbracewell.hermes.attribute.EntityType.ROOT;
 
 /**
  * The interface Entities.
@@ -41,61 +41,61 @@ public interface Entities {
   /**
    * The constant PERSON.
    */
-  com.davidbracewell.hermes.tag.EntityType PERSON = com.davidbracewell.hermes.tag.EntityType.create("PERSON", ROOT);
+  com.davidbracewell.hermes.attribute.EntityType PERSON = com.davidbracewell.hermes.attribute.EntityType.create("PERSON", ROOT);
   /**
    * The constant ORGANIZATION.
    */
-  com.davidbracewell.hermes.tag.EntityType ORGANIZATION = com.davidbracewell.hermes.tag.EntityType.create("ORGANIZATION", ROOT);
+  com.davidbracewell.hermes.attribute.EntityType ORGANIZATION = com.davidbracewell.hermes.attribute.EntityType.create("ORGANIZATION", ROOT);
   /**
    * The constant LOCATION.
    */
-  com.davidbracewell.hermes.tag.EntityType LOCATION = com.davidbracewell.hermes.tag.EntityType.create("LOCATION", ROOT);
+  com.davidbracewell.hermes.attribute.EntityType LOCATION = com.davidbracewell.hermes.attribute.EntityType.create("LOCATION", ROOT);
   /**
    * The constant NUMBER.
    */
-  com.davidbracewell.hermes.tag.EntityType NUMBER = com.davidbracewell.hermes.tag.EntityType.create("NUMBER", ROOT);
+  com.davidbracewell.hermes.attribute.EntityType NUMBER = com.davidbracewell.hermes.attribute.EntityType.create("NUMBER", ROOT);
   /**
    * The constant MONEY.
    */
-  com.davidbracewell.hermes.tag.EntityType MONEY = com.davidbracewell.hermes.tag.EntityType.create("MONEY", NUMBER);
+  com.davidbracewell.hermes.attribute.EntityType MONEY = com.davidbracewell.hermes.attribute.EntityType.create("MONEY", NUMBER);
   /**
    * The constant PERCENTAGE.
    */
-  com.davidbracewell.hermes.tag.EntityType PERCENTAGE = com.davidbracewell.hermes.tag.EntityType.create("PERCENTAGE", NUMBER);
+  com.davidbracewell.hermes.attribute.EntityType PERCENTAGE = com.davidbracewell.hermes.attribute.EntityType.create("PERCENTAGE", NUMBER);
   /**
    * The constant DATE_TIME.
    */
-  com.davidbracewell.hermes.tag.EntityType DATE_TIME = com.davidbracewell.hermes.tag.EntityType.create("DATE_TIME", ROOT);
+  com.davidbracewell.hermes.attribute.EntityType DATE_TIME = com.davidbracewell.hermes.attribute.EntityType.create("DATE_TIME", ROOT);
   /**
    * The constant DATE.
    */
-  com.davidbracewell.hermes.tag.EntityType DATE = com.davidbracewell.hermes.tag.EntityType.create("DATE", DATE_TIME);
+  com.davidbracewell.hermes.attribute.EntityType DATE = com.davidbracewell.hermes.attribute.EntityType.create("DATE", DATE_TIME);
   /**
    * The constant TIME.
    */
-  com.davidbracewell.hermes.tag.EntityType TIME = com.davidbracewell.hermes.tag.EntityType.create("TIME", DATE_TIME);
+  com.davidbracewell.hermes.attribute.EntityType TIME = com.davidbracewell.hermes.attribute.EntityType.create("TIME", DATE_TIME);
   /**
    * The constant INTERNET.
    */
-  com.davidbracewell.hermes.tag.EntityType INTERNET = com.davidbracewell.hermes.tag.EntityType.create("INTERNET", ROOT);
+  com.davidbracewell.hermes.attribute.EntityType INTERNET = com.davidbracewell.hermes.attribute.EntityType.create("INTERNET", ROOT);
   /**
    * The constant EMAIL.
    */
-  com.davidbracewell.hermes.tag.EntityType EMAIL = com.davidbracewell.hermes.tag.EntityType.create("EMAIL", INTERNET);
+  com.davidbracewell.hermes.attribute.EntityType EMAIL = com.davidbracewell.hermes.attribute.EntityType.create("EMAIL", INTERNET);
   /**
    * The constant URL.
    */
-  com.davidbracewell.hermes.tag.EntityType URL = com.davidbracewell.hermes.tag.EntityType.create("URL", INTERNET);
+  com.davidbracewell.hermes.attribute.EntityType URL = com.davidbracewell.hermes.attribute.EntityType.create("URL", INTERNET);
   /**
    * The constant EMOTICON.
    */
-  com.davidbracewell.hermes.tag.EntityType EMOTICON = com.davidbracewell.hermes.tag.EntityType.create("EMOTICON", INTERNET);
+  com.davidbracewell.hermes.attribute.EntityType EMOTICON = com.davidbracewell.hermes.attribute.EntityType.create("EMOTICON", INTERNET);
   /**
    * The constant HASHTAG.
    */
-  com.davidbracewell.hermes.tag.EntityType HASH_TAG = com.davidbracewell.hermes.tag.EntityType.create("HASH_TAG", INTERNET);
+  com.davidbracewell.hermes.attribute.EntityType HASH_TAG = com.davidbracewell.hermes.attribute.EntityType.create("HASH_TAG", INTERNET);
   /**
    * The constant HASHTAG.
    */
-  com.davidbracewell.hermes.tag.EntityType REPLY = com.davidbracewell.hermes.tag.EntityType.create("REPLY", INTERNET);
+  com.davidbracewell.hermes.attribute.EntityType REPLY = com.davidbracewell.hermes.attribute.EntityType.create("REPLY", INTERNET);
 }//END OF Entities

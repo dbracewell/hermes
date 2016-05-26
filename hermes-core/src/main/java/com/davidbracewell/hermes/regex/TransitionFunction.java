@@ -70,7 +70,17 @@ interface TransitionFunction extends Serializable {
     @Override
     public NFA construct() {
       NFA nfa = new NFA();
-      nfa.start.connect(nfa.end, this);
+      NFA childNFA = child.construct();
+      nfa.start.emits = true;
+      nfa.start.name = name;
+      nfa.end.isAccept = true;
+      nfa.end.consumes = true;
+      nfa.end.name = name;
+
+      nfa.start.connect(childNFA.start);
+      childNFA.end.isAccept = false;
+      childNFA.end.connect(nfa.end);
+
       return nfa;
     }
 

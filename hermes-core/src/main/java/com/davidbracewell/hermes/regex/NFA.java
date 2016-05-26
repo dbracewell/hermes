@@ -22,16 +22,14 @@
 package com.davidbracewell.hermes.regex;
 
 
-import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.tuple.Tuple2;
+import com.davidbracewell.tuple.Tuples;
 import com.google.common.collect.ArrayListMultimap;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Implementation of a non-deterministic finite state automata that works on a Text
@@ -53,71 +51,88 @@ final class NFA implements Serializable {
     //The set of states that the NFA is in
     Set<State> states = new HashSet<>();
 
-    ArrayListMultimap<String, HString> namedGroups = ArrayListMultimap.create();
 
     //Add the start state
     states.add(new State(startIndex, start));
 
     //All the accept states that it enters
-    Set<State> accepts = new HashSet<>();
+    NavigableSet<State> accepts = new TreeSet<>();
 
     List<Annotation> tokens = input.tokens();
 
-    while (true) {
+
+    while (!states.isEmpty()) {
       Set<State> newStates = new HashSet<>(); //states after the next consumption
 
       for (State s : states) {
+
         if (s.node.accepts()) {
-          accepts.add(s);
+          if (s.stack.isEmpty() || (s.stack.size() == 1 && s.node.consumes && s.node.name.equals(s.stack.peek()))) {
+//            System.out.println("ACCEPTING: " + s.node.name + ", " + HString.union(tokens.subList(startIndex, s.inputPosition)) + " : " + s.stack);
+            accepts.add(s);
+          }
         }
+
+        Deque<Tuple2<String, Integer>> currentStack = s.stack;
+        if (s.node.emits) {
+//          System.out.println("EMITTING: " + s.node.name);
+          currentStack.push(Tuples.tuple(s.node.name, s.inputPosition));
+        }
+
         for (Node n : s.node.epsilons) {
-          State next = new State(s.inputPosition, n);
+          if (s.node.consumes) {
+            State next = new State(s.inputPosition, n, currentStack, s.namedGroups);
+            Tuple2<String, Integer> ng = next.stack.pop();
+//            System.out.println("CONSUMING: " + s.node.name + ", " + HString.union(tokens.subList(ng.v2, s.inputPosition)));
+            next.namedGroups.put(ng.getKey(), HString.union(tokens.subList(ng.v2, s.inputPosition)));
+            newStates.add(next);
+          }
+
+          State next = new State(s.inputPosition, n, currentStack, s.namedGroups);
           newStates.add(next);
         }
+
         if (s.inputPosition >= input.tokenLength()) {
           continue;
         }
+
         for (Transition t : s.node.transitions) {
           int len = t.transitionFunction.matches(tokens.get(s.inputPosition));
           if (len > 0) {
-            State next;
-            if (t.transitionFunction instanceof TransitionFunction.GroupMatcher) {
-              next = new State(s.inputPosition + len, t.destination, Cast.<TransitionFunction.GroupMatcher>as(t.transitionFunction).name);
-              namedGroups.put(Cast.<TransitionFunction.GroupMatcher>as(t.transitionFunction).name, HString.union(tokens.subList(s.inputPosition, s.inputPosition + len)));
-            } else {
-              next = new State(s.inputPosition + len, t.destination);
-            }
+            State next = new State(s.inputPosition + len, t.destination, currentStack, s.namedGroups);
             newStates.add(next);
           }
         }
       }
       states.clear();
       states = newStates;
-      if (states.isEmpty()) {
-        break;
-      }
     }
 
     if (accepts.isEmpty()) {
       return new Match(-1, null);
     }
 
-    int max = 0;
-    for (State s : accepts) {
-      max = Math.max(max, s.inputPosition);
+
+    State last = accepts.last();
+    int max = last.inputPosition;
+
+    State temp = accepts.last();
+    while (temp != null && temp.inputPosition >= max) {
+      temp = accepts.lower(temp);
     }
 
     if (max == startIndex) {
       max++;
     }
 
-    return new Match(max,namedGroups);
+    return new Match(max, last.namedGroups);
   }
 
-  static class State {
+  static class State implements Comparable<State> {
     final int inputPosition;
     final Node node;
-    final String matchName;
+    final Deque<Tuple2<String, Integer>> stack;
+    final ArrayListMultimap<String, HString> namedGroups = ArrayListMultimap.create();
 
     /**
      * Instantiates a new State.
@@ -126,15 +141,24 @@ final class NFA implements Serializable {
      * @param node          the node
      */
     public State(int inputPosition, Node node) {
-      this(inputPosition, node, null);
+      this(inputPosition, node, new LinkedList<>(), ArrayListMultimap.create());
     }
 
-    public State(int inputPosition, Node node, String matchName) {
+    public State(int inputPosition, Node node, Deque<Tuple2<String, Integer>> currentStack, ArrayListMultimap<String, HString> namedGroups) {
       this.inputPosition = inputPosition;
       this.node = node;
-      this.matchName = matchName;
+      this.stack = new LinkedList<>(currentStack);
+      this.namedGroups.putAll(namedGroups);
     }
 
+    private int score() {
+      return inputPosition + namedGroups.size() * namedGroups.values().stream().mapToInt(HString::tokenLength).sum();
+    }
+
+    @Override
+    public int compareTo(State o) {
+      return Integer.compare(score(), o.score());
+    }
   }//END OF NFA$State
 
   static class Transition implements Serializable {
@@ -167,6 +191,9 @@ final class NFA implements Serializable {
   static class Node implements Serializable {
     private static final long serialVersionUID = 1L;
     boolean isAccept;
+    String name = null;
+    boolean emits = false;
+    boolean consumes = false;
     final List<Transition> transitions = new ArrayList<>();
     final List<Node> epsilons = new ArrayList<>();
 

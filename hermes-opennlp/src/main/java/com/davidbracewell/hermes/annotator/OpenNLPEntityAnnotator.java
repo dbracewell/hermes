@@ -25,7 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.tag.EntityType;
+import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.io.resource.Resource;
 import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultimap;

@@ -33,7 +33,7 @@ import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.attribute.AttributeValueCodec;
 import com.davidbracewell.hermes.attribute.CommonCodecs;
 import com.davidbracewell.hermes.attribute.POS;
-import com.davidbracewell.hermes.tag.EntityType;
+import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.io.structured.*;
 import com.davidbracewell.io.structured.Readable;
 import com.davidbracewell.reflection.Reflect;
