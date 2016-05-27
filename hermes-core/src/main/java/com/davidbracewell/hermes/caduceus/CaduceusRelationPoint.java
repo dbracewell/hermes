@@ -22,7 +22,11 @@
 package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.RelationType;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.regex.QueryToPredicate;
 import com.davidbracewell.hermes.regex.TokenMatcher;
 import com.davidbracewell.parsing.ParseException;
@@ -73,7 +77,7 @@ public class CaduceusRelationPoint {
   }
 
 
-  protected static CaduceusRelationPoint fromMap(Map<String, Object> map) throws IOException {
+  static CaduceusRelationPoint fromMap(Map<String, Object> map) throws IOException {
     CaduceusRelationPointBuilder builder = CaduceusRelationPoint.builder();
 
     if (!map.containsKey("capture") && !map.containsKey("relation")) {
@@ -127,7 +131,7 @@ public class CaduceusRelationPoint {
    * @param groups the groups
    * @return the annotations
    */
-  public List<Annotation> getAnnotations(Multimap<String, Annotation> groups, TokenMatcher matcher) {
+  List<Annotation> getAnnotations(Multimap<String, Annotation> groups, TokenMatcher matcher) {
     if (relationType == null) {
       return getAnnotationStream(groups, matcher).filter(constraint).collect(Collectors.toList());
     }

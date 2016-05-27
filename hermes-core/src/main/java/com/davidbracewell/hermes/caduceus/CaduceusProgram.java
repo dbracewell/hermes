@@ -116,14 +116,14 @@ public final class CaduceusProgram implements Serializable {
     return program;
   }
 
-  protected static List<Object> ensureList(Object o, String error) throws IOException {
+  static List<Object> ensureList(Object o, String error) throws IOException {
     if (!(o instanceof List)) {
       throw new IOException("Invalid Caduceus Format: " + error);
     }
     return Cast.as(o);
   }
 
-  protected static Map<String, Object> ensureMap(Object o, String error) throws IOException {
+  static Map<String, Object> ensureMap(Object o, String error) throws IOException {
     if (!(o instanceof Map)) {
       throw new IOException("Invalid Caduceus Format: " + error);
     }

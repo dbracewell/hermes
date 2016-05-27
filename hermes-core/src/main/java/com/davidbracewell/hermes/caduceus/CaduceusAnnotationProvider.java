@@ -45,34 +45,32 @@ class CaduceusAnnotationProvider implements Serializable {
   private final AnnotationType annotationType;
   private final Map<AttributeType, Val> attributes;
 
-  protected static CaduceusAnnotationProvider fromMap(Map<String, Object> groupMap, String programName, String ruleName) throws IOException {
-    CaduceusAnnotationProviderBuilder builder = builder();
-
+  static CaduceusAnnotationProvider fromMap(Map<String, Object> groupMap, String programName, String ruleName) throws IOException {
     if (!groupMap.containsKey("type")) {
       throw new IOException("An annotation must provide a type.");
     }
 
-    builder.annotationType(AnnotationType.create(groupMap.get("type").toString()));
-    builder.group(
-      groupMap.containsKey("capture") ? groupMap.get("capture").toString() : "*"
-    );
     Map<AttributeType, Val> attributeValMap = new HashMap<>();
     if (groupMap.containsKey("attributes")) {
       attributeValMap = readAttributes(CaduceusProgram.ensureList(groupMap.get("attributes"), "Attributes should be specified as a list."));
     }
     attributeValMap.put(Types.CADUCEUS_RULE, Val.of(programName + "::" + ruleName));
-    builder.attributes(attributeValMap);
-    return builder.build();
+
+    return builder()
+      .annotationType(Types.annotation(groupMap.get("type").toString()))
+      .group(groupMap.getOrDefault("capture", "*").toString())
+      .attributes(attributeValMap)
+      .build();
   }
 
   private static Map<AttributeType, Val> readAttributes(List<Object> list) throws IOException {
     Map<AttributeType, Val> result = new HashMap<>();
     for (Object o : list) {
-      Map<String, Object> m = CaduceusProgram.ensureMap(o, "Attribute values should be key-value pairs");
-      m.entrySet().forEach(entry -> {
-        AttributeType attributeType = AttributeType.create(entry.getKey());
-        result.put(attributeType, Val.of(attributeType.getValueType().convert(entry.getValue())));
-      });
+      CaduceusProgram.ensureMap(o, "Attribute values should be key-value pairs").entrySet().stream()
+        .forEach(entry -> {
+          AttributeType attributeType = AttributeType.create(entry.getKey());
+          result.put(attributeType, Val.of(attributeType.getValueType().convert(entry.getValue())));
+        });
     }
     return result;
   }

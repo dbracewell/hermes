@@ -46,7 +46,7 @@ public class CaduceusRelationProvider implements Serializable {
   private final boolean isReciprocal;
 
 
-  protected static CaduceusRelationProvider fromMap(Map<String, Object> groupMap) throws IOException {
+  static CaduceusRelationProvider fromMap(Map<String, Object> groupMap) throws IOException {
     if (!groupMap.containsKey("type")) {
       throw new IOException("No type given for: " + groupMap);
     }
