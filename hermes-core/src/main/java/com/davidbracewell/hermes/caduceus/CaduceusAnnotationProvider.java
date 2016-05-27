@@ -30,9 +30,7 @@ import lombok.Value;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author David B. Bracewell
@@ -44,6 +42,7 @@ class CaduceusAnnotationProvider implements Serializable {
   private final String group;
   private final AnnotationType annotationType;
   private final Map<AttributeType, Val> attributes;
+  private final Set<String> requires;
 
   static CaduceusAnnotationProvider fromMap(Map<String, Object> groupMap, String programName, String ruleName) throws IOException {
     if (!groupMap.containsKey("type")) {
@@ -56,10 +55,16 @@ class CaduceusAnnotationProvider implements Serializable {
     }
     attributeValMap.put(Types.CADUCEUS_RULE, Val.of(programName + "::" + ruleName));
 
+    Set<String> requires = new HashSet<>();
+    if (groupMap.containsKey("requires")) {
+      requires.addAll(Val.of(groupMap.get("requires")).asList(String.class));
+    }
+
     return builder()
       .annotationType(Types.annotation(groupMap.get("type").toString()))
       .group(groupMap.getOrDefault("capture", "*").toString())
       .attributes(attributeValMap)
+      .requires(requires)
       .build();
   }
 

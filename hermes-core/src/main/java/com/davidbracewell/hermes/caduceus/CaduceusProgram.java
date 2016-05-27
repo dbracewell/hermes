@@ -38,9 +38,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The type Caduceus program.
@@ -147,21 +145,20 @@ public final class CaduceusProgram implements Serializable {
       TokenMatcher matcher = rule.getRegex().matcher(document);
       while (matcher.find()) {
         ArrayListMultimap<String, Annotation> groups = ArrayListMultimap.create();
+        ArrayListMultimap<CaduceusAnnotationProvider, Annotation> providers = ArrayListMultimap.create();
 
         //Process all the annotation providers
         rule.getAnnotationProviders().forEach(ap -> {
           if (ap.getGroup().equals("*")) {
-            groups.put(
-              ap.getGroup(),
-              createOrGet(document, ap.getAnnotationType(), matcher.group(), ap.getAttributes())
-            );
+            Annotation annotation = createOrGet(document, ap.getAnnotationType(), matcher.group(), ap.getAttributes());
+            groups.put(ap.getGroup(), annotation);
+            providers.put(ap, annotation);
           } else {
-            matcher.group(ap.getGroup()).forEach(g ->
-              groups.put(
-                ap.getGroup(),
-                createOrGet(document, ap.getAnnotationType(), g, ap.getAttributes())
-              )
-            );
+            matcher.group(ap.getGroup()).forEach(g -> {
+              Annotation annotation = createOrGet(document, ap.getAnnotationType(), g, ap.getAttributes());
+              groups.put(ap.getGroup(), annotation);
+              providers.put(ap, annotation);
+            });
           }
         });
 
@@ -185,9 +182,19 @@ public final class CaduceusProgram implements Serializable {
         }
 
 
+        Set<String> finalRelations = new HashSet<>();
         rule.getRelationProviders().stream()
           .filter(rp -> StringUtils.isNullOrBlank(rp.getRequires()) || relations.containsKey(rp.getRequires()))
-          .forEach(rp -> relations.get(rp.getName()).forEach(t -> t.getV1().add(t.getV2())));
+          .forEach(rp -> {
+            relations.get(rp.getName()).forEach(t -> {
+              t.getV1().add(t.getV2());
+              finalRelations.add(rp.getName());
+            });
+          });
+
+        providers.entries().stream()
+          .filter(entry -> !finalRelations.containsAll(entry.getKey().getRequires()))
+          .forEach(entry -> document.remove(entry.getValue()));
 
       }
     }

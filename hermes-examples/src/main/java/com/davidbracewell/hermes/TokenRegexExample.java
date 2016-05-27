@@ -99,6 +99,8 @@ public class TokenRegexExample {
     //Do the same as above, but use the parent of the URL Entity type, INTERNET
     doRegex("{ENTITY $INTERNET}", document);
 
+    doRegex("{@DEPENDENCY:nsubj $VERB}", document);
+
   }
 
   private static void doRegex(String pattern, Document document) throws ParseException {

@@ -4,10 +4,12 @@
     - capture: "*" #Create an EVENT anntotation from what is captured in the pattern
       type: EVENT
       attributes: [TAG: SPOOK_EVENT]
+      requires: [spooker, spookee]
   relations:
     - name: spookee #Create an EVENT_ROLE relation of type SPOOKEE between the captured text in pattern and its direct object
       type: EVENT_ROLE
       value: SPOOKEE
+      requries: spooker
       source:
         relation: DEPENDENCY:dobj
         annotation: PHRASE_CHUNK  #We will expand the direct object to the phrase chunk level
@@ -17,6 +19,7 @@
     - name: spooker #Create an EVENT_ROLE relation of type SPOOKER between the captured text in pattern and its subject
       type: EVENT_ROLE
       value: SPOOKER
+      requries: spookee
       source:
         relation: DEPENDENCY:nsubj
         annotation: PHRASE_CHUNK  #We will expand the nsubj to the phrase chunk level

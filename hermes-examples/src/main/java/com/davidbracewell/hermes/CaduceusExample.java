@@ -37,7 +37,7 @@ public class CaduceusExample {
     CaduceusProgram program = CaduceusProgram.read(Resources.from("classpath:com/davidbracewell/hermes/example.yaml"));
 
     Document document = DocumentFactory.getInstance().create(
-      "John Doe spooked his family while they were on vacation in St. George Falls."
+      "John Doe spooked his family while they were on vacation in St. George Falls. He was also spooked though."
     );
     Pipeline.process(document, Types.DEPENDENCY, Types.PHRASE_CHUNK);
     program.execute(document);
