@@ -29,6 +29,17 @@ public interface HStringPredicates {
     return charPredicate::test;
   }
 
+
+  /**
+   * Content serializable predicate.
+   *
+   * @param charPredicate the char predicate
+   * @return the serializable predicate
+   */
+  static SerializablePredicate<HString> lemmaMatch(@NonNull final SerializablePredicate<CharSequence> charPredicate) {
+    return hString -> charPredicate.test(hString.getLemma());
+  }
+
   /**
    * Content match serializable predicate.
    *
@@ -49,6 +60,18 @@ public interface HStringPredicates {
   static SerializablePredicate<HString> contentMatch(@NonNull final String target, final boolean caseSensitive) {
     return contentMatch(StringPredicates.MATCHES(target, caseSensitive));
   }
+
+  /**
+   * Content match serializable predicate.
+   *
+   * @param target        the target
+   * @param caseSensitive the case sensitive
+   * @return the serializable predicate
+   */
+  static SerializablePredicate<HString> lemmaMatch(@NonNull final String target, final boolean caseSensitive) {
+    return lemmaMatch(StringPredicates.MATCHES(target, caseSensitive));
+  }
+
 
   /**
    * Content regex match serializable predicate.
@@ -183,7 +206,7 @@ public interface HStringPredicates {
    * Attribute serializable predicate.
    *
    * @param attributeType the attribute
-   * @param value     the value
+   * @param value         the value
    * @return the serializable predicate
    */
   static SerializablePredicate<HString> attributeMatch(@NonNull final AttributeType attributeType, final Object value) {

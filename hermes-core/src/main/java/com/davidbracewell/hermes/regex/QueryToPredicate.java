@@ -209,8 +209,22 @@ public final class QueryToPredicate {
 
     if (exp.match(RegexTokenTypes.PATTERNTOKEN)) {
       String pattern = StringUtils.split(exp.toString(), ':').get(0);
-      boolean isCaseSensitive = !pattern.startsWith("(?i)");
-      if (!isCaseSensitive) pattern = pattern.substring(4);
+      boolean isCaseSensitive = true;
+      boolean matchLemma = false;
+      if (pattern.startsWith("(?")) {
+        int pos = pattern.indexOf(")");
+        for (int i = 2; i < pos; i++) {
+          if (pattern.charAt(i) == 'i') {
+            isCaseSensitive = false;
+          } else if (pattern.charAt(i) == 'l') {
+            matchLemma = true;
+          }
+        }
+        pattern = pattern.substring(pos + 1);
+      }
+      if (matchLemma) {
+        return HStringPredicates.lemmaMatch(StringUtils.unescape(pattern, '\\'), isCaseSensitive);
+      }
       return HStringPredicates.contentMatch(StringUtils.unescape(pattern, '\\'), isCaseSensitive);
     }
 

@@ -111,7 +111,7 @@ TLD = [a-zA-z]{2,4}
 DOMAINLABEL={ALPHANUM}(("-"|{ALPHANUM})*{ALPHANUM})?
 PORT=[:digit:]+
 PATH=("/"{SEGMENT})*
-SEGMENT=({UNRESERVED}|{PCT_ENCODED}|{SUBDELIMS}|":"|"@")*
+SEGMENT=({UNRESERVED}|[:digit:]|{PCT_ENCODED}|{SUBDELIMS}|":"|"@")*
 UNRESERVED=({ALPHANUM}|"-"|"."|"_"|"~")
 SUBDELIMS=("!"|"$"|"&"|"'"|"("|")"|"*"|"+"|","|";"|"=")
 PCT_ENCODED="%"{HEXDIG}{HEXDIG}

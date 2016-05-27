@@ -470,7 +470,11 @@ interface TransitionFunction extends Serializable {
       for (int j = 0; j < i; j++) {
         next = next.next();
       }
-      return i + c2.matches(next);
+      int j = c2.matches(next);
+      if (j == 0) {
+        return 0;
+      }
+      return i + j;
     }
 
     @Override

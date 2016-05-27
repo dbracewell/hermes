@@ -30,7 +30,7 @@ import com.davidbracewell.parsing.ParserTokenType;
  */
 public enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
   REGEX("/(\\\\.|[^/>])+?/i?"),
-  PATTERNTOKEN("(\\(\\?i\\))?(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+|(\"(\\\\.|[^\"])+?\")"),
+  PATTERNTOKEN("(\\(\\?[li]+\\))?(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+|(\"(\\\\.|[^\"])+?\")"),
   TAGMATCH("\\$(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+"),
   ATTRMATCH("\\$(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+:((\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+|(\"(\\\\.|[^\"])+?\"))"),
   LEXICON("\\%(\"[^\"]+\"|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E]+)"),

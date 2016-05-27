@@ -21,6 +21,9 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.hermes.lexicon.Lexicon;
+import com.davidbracewell.hermes.lexicon.LexiconManager;
+import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import com.davidbracewell.hermes.regex.TokenMatcher;
 import com.davidbracewell.hermes.regex.TokenRegex;
 import com.davidbracewell.parsing.ParseException;
@@ -49,21 +52,53 @@ public class TokenRegexExample {
         "when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then hurried on, " +
         "Alice started to her feet, for it flashed across her mind that she had never before seen a rabbit with either " +
         "a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she ran across the field after " +
-        "it, and fortunately was just in time to see it pop down a large rabbit-hole under the hedge. "
+        "it, and fortunately was just in time to see it pop down a large rabbit-hole under the hedge. Excerpt taken from: https://www.gutenberg.org/files/11/11-h/11-h.htm."
     );
-    Pipeline.process(document, Types.TOKEN, Types.SENTENCE, Types.PART_OF_SPEECH, Types.PHRASE_CHUNK, Types.DEPENDENCY, Types.ENTITY);
+    Pipeline.process(document, Types.TOKEN, Types.SENTENCE, Types.PART_OF_SPEECH, Types.PHRASE_CHUNK, Types.DEPENDENCY, Types.LEMMA, Types.ENTITY);
 
 
-    //Assume that a simple noun phrase followed by a simple verb phrase is a subject - predicate relationship
+
+    //Find all instances of Alice ignoring case
+    doRegex("(?i)alice", document);
+
+    //Narrow down the alices from above to only those followed by any form of the word "be"
+    doRegex("(?i)alice (?> (?l)be)", document);
+
+    //Find all instances of words matching the regular expression rab.* ignoring case
+    doRegex("/rab.*/i", document);
+
+    //Find a simple noun phrase made up of one or more nouns or pronouns followed by a
+    // simple verb phrase made up as one or more verbs. Label the noun phrase as the subject
+    // and the verb phrase as the predicate.
     doRegex("(?<SUBJECT> ($NOUN | $PRONOUN)+ ) (?<PREDICATE> $VERB+)", document);
 
-    //Find all nouns that have a parent that is a verb
-    doRegex("[ ($NOUN | $PRONOUN) & (/> $VERB)]", document);
+    //Lets take what we did above, but use Phrase Chunks
+    doRegex("(?<SUBJECT> {PHRASE_CHUNK $NOUN}) (?<PREDICATE> {PHRASE_CHUNK $VERB})", document);
 
-    //Find all nouns that have a parent that is a verb
-    doRegex("{PHRASE_CHUNK [^${STOPWORD} & $NOUN & (/> $VERB)] }", document);
+    //Find all the nsubj in the document
+    doRegex("@DEPENDENCY:nsubj", document);
 
-    doRegex("{PHRASE_CHUNK @DEPENDENCY:nsubj}", document);
+    //Extract all contiguous non-stopwords
+    doRegex("^${STOPWORD}+", document);
+
+    //Lets build a dummy lexicon
+    Lexicon lexicon = new TrieLexicon(false,false,Types.TAG);
+    lexicon.add("once");
+    lexicon.add("twice");
+    lexicon.add("was beginning to get"); //This will only match at the phrase chunk level
+    LexiconManager.register("wonderland", lexicon);
+
+    //Now we can use the lexicon as a match criteria in the regex
+    //Note that if the lexicon contains multiword expressions, you will
+    //need to make sure you are matching against an multiword annotation
+    doRegex("%wonderland | {PHRASE_CHUNK %wonderland}", document);
+
+    //We can match on arbitrary attributes, here we find all URL tokens
+    doRegex("$TOKEN_TYPE:URL", document);
+
+    //Do the same as above, but use the parent of the URL Entity type, INTERNET
+    doRegex("{ENTITY $INTERNET}", document);
+
   }
 
   private static void doRegex(String pattern, Document document) throws ParseException {
