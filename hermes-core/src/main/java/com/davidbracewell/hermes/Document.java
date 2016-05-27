@@ -505,7 +505,7 @@ public class Document extends HString {
 
         writer.beginObject("completed");
         for (AnnotatableType type : getAnnotationSet().getCompleted()) {
-          writer.writeKeyValue(type.asTypeName(), getAnnotationSet().getAnnotationProvider(type));
+          writer.writeKeyValue(type.canonicalName(), getAnnotationSet().getAnnotationProvider(type));
         }
         writer.endObject();
 

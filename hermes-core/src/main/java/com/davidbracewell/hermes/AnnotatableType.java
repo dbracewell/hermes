@@ -30,7 +30,9 @@ import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
 /**
- * The interface Annotatable.
+ * <p>An annotatable type is one that can be added to a document through the use of a {@link Pipeline}.
+ * The interface exists to unify {@link AnnotationType}s, {@link AttributeType}s, and {@link RelationType}s.
+ * </p>
  *
  * @author David B. Bracewell
  */
@@ -55,25 +57,25 @@ public interface AnnotatableType {
   }
 
   /**
-   * Gets type name.
+   * The type (Annotation, Attribute, Relation)
    *
-   * @return the type name
+   * @return the type
    */
   String type();
 
   /**
-   * Name string.
+   * The type name
    *
-   * @return the string
+   * @return the type name
    */
   String name();
 
   /**
-   * As type name string.
+   * The canonical name "type.name"
    *
    * @return the string
    */
-  default String asTypeName() {
+  default String canonicalName() {
     return type() + "." + name();
   }
 
