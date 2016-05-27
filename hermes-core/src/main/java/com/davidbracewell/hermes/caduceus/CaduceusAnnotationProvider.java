@@ -60,7 +60,7 @@ class CaduceusAnnotationProvider implements Serializable {
     if (groupMap.containsKey("attributes")) {
       attributeValMap = readAttributes(CaduceusProgram.ensureList(groupMap.get("attributes"), "Attributes should be specified as a list."));
     }
-    attributeValMap.put(Types.LYRE_RULE, Val.of(programName + "::" + ruleName));
+    attributeValMap.put(Types.CADUCEUS_RULE, Val.of(programName + "::" + ruleName));
     builder.attributes(attributeValMap);
     return builder.build();
   }

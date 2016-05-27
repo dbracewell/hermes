@@ -76,9 +76,9 @@ public interface Types {
    */
   AnnotationType LEXICON_MATCH = AnnotationType.create("LEXICON_MATCH");
   /**
-   * The constant LYRE_RULE.
+   * The constant CADUCEUS_RULE.
    */
-  AttributeType LYRE_RULE = AttributeType.create("LYRE_RULE");
+  AttributeType CADUCEUS_RULE = AttributeType.create("CADUCEUS_RULE");
   /**
    * The constant MATCHED_STRING.
    */

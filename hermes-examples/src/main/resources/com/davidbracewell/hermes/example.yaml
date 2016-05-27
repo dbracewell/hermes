@@ -1,5 +1,5 @@
 - name: spookEvent
-  pattern: [ /^spook/ & $VERB] #Match the word spook when it's a verb
+  pattern: [ /^spook/ & $VERB ] #Match the word spook when it's a verb
   annotations:
     - capture: "*" #Create an EVENT anntotation from what is captured in the pattern
       type: EVENT

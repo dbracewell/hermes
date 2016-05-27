@@ -39,7 +39,7 @@ public class CaduceusExample {
     Document document = DocumentFactory.getInstance().create(
       "John Doe spooked his family while they were on vacation in St. George Falls."
     );
-    Pipeline.process(document, Types.DEPENDENCY, Types.PHRASE_CHUNK, Types.ENTITY);
+    Pipeline.process(document, Types.DEPENDENCY, Types.PHRASE_CHUNK);
     program.execute(document);
 
     RelationType eventRole = Types.relation("EVENT_ROLE");
@@ -55,7 +55,6 @@ public class CaduceusExample {
       }
     );
 
-    document.get(Types.ENTITY).forEach(e -> System.out.println(e + "/" + e.getTag().get()));
   }
 
 }//END OF Sandbox
