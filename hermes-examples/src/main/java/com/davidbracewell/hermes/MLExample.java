@@ -33,8 +33,8 @@ import com.davidbracewell.apollo.ml.classification.bayes.NaiveBayesLearner;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
-import com.davidbracewell.hermes.filter.StopWords;
-import com.davidbracewell.hermes.ml.feature.BagOfAnnotation;
+import com.davidbracewell.hermes.ml.feature.BagOfAnnotations;
+import com.davidbracewell.hermes.ml.feature.ValueCalculator;
 import com.davidbracewell.stream.Streams;
 
 import java.util.Random;
@@ -178,10 +178,13 @@ public class MLExample {
     AttributeType label = Types.attribute("LABEL");
 
     //Simple binary featurizer that converts tokens to lower case and removes stop words
-    Featurizer<HString> featurizer =
-      Featurizer.<HString>builder()
-        .add(BagOfAnnotation.binary(Types.TOKEN, HString::toLowerCase, StopWords.isNotStopWord()))
-        .build();
+    Featurizer<HString> featurizer = Featurizer.chain(
+      BagOfAnnotations.builder()
+        .valueCalculator(ValueCalculator.Binary)
+        .lowerCase()
+        .ignoreStopWords()
+        .build()
+    );
 
     //Build an in-memory dataset from a corpus constructed using the raw labels and documents in the String[][] above
     Dataset<Instance> dataset = Corpus.of(
