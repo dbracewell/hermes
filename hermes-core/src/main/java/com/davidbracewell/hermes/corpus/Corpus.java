@@ -41,7 +41,8 @@ import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
-import com.davidbracewell.tuple.*;
+import com.davidbracewell.tuple.Tuple;
+import com.davidbracewell.tuple.Tuples;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.NonNull;
@@ -482,97 +483,82 @@ public interface Corpus extends Iterable<Document> {
 
 
   /**
-   * Token n grams counter.
+   * Ngrams counter.
    *
-   * @param order     the order
-   * @param lemmatize the lemmatize
+   * @param nGramSpec the n gram spec
    * @return the counter
    */
-  default Counter<Tuple> tokenNGrams(int order, boolean lemmatize) {
-    return tokenNGrams(order, false, hString -> lemmatize ? hString.getLemma() : hString.toString());
+  default Counter<Tuple> ngrams(@NonNull NGramSpec nGramSpec) {
+    return nGramSpec.getValueCalculator().adjust(Counters.newHashMapCounter(
+      stream().flatMap(doc ->
+        doc.ngrams(nGramSpec.getAnnotationType(), nGramSpec.getMin(), nGramSpec.getMax())
+          .stream()
+          .filter(nGramSpec.getFilter())
+          .map(
+            hString -> Tuples.tuple(
+              hString.get(nGramSpec.getAnnotationType())
+                .stream()
+                .map(nGramSpec.getToStringFunction())
+                .collect(Collectors.toList()))
+          ).collect(Collectors.toList())
+      ).countByValue()
+    ));
   }
 
   /**
-   * Token n grams counter.
+   * Terms counter.
    *
-   * @param order            the order
-   * @param toStringFunction the to string function
    * @return the counter
    */
-  default Counter<Tuple> tokenNGrams(int order, @NonNull SerializableFunction<? super HString, String> toStringFunction) {
-    return tokenNGrams(order, false, toStringFunction);
+  default Counter<String> terms() {
+    return terms(TermSpec.create());
   }
 
   /**
-   * Token n grams counter.
+   * Terms counter.
    *
-   * @param order            the order
-   * @param removeStopWords  the remove stop words
-   * @param toStringFunction the to string function
+   * @param termSpec the term spec
    * @return the counter
    */
-  default Counter<Tuple> tokenNGrams(int order, boolean removeStopWords, @NonNull SerializableFunction<? super HString, String> toStringFunction) {
-    return Counters.newHashMapCounter(
-      Cast.cast(
-        stream()
-          .flatMap(document -> document.tokenNGrams(order, removeStopWords).stream().map(hString -> {
-            switch (order) {
-              case 1:
-                return Tuple1.of(toStringFunction.apply(hString));
-              case 2:
-                return Tuple2.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)));
-              case 3:
-                return Tuple3.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)), toStringFunction.apply(hString.tokenAt(2)));
-              case 4:
-                return Tuple4.of(toStringFunction.apply(hString.tokenAt(0)), toStringFunction.apply(hString.tokenAt(1)), toStringFunction.apply(hString.tokenAt(2)), toStringFunction.apply(hString.tokenAt(3)));
-              default:
-                String[] source = new String[order];
-                for (int i = 0; i < order; i++) {
-                  source[i] = toStringFunction.apply(hString.tokenAt(i));
-                }
-                return NTuple.of(source);
-            }
-          }).collect(Collectors.toList()))
-          .countByValue()
+  default Counter<String> terms(@NonNull TermSpec termSpec) {
+    return termSpec.getValueCalculator().adjust(
+      Counters.newHashMapCounter(
+        stream().flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
+          .filter(termSpec.getFilter())
+          .map(termSpec.getToStringFunction())
+          .collect(Collectors.toList())
+        ).countByValue()
       )
     );
   }
 
   /**
-   * Calculates the total term frequency of the tokens in the corpus.
+   * Significant bigrams counter.
    *
-   * @param lemmatize True - count lemmas, False - count as is
-   * @return A counter containing term frequencies of the given annotation type
+   * @param minCount        the min count
+   * @param calculator      the calculator
+   * @param minScore        the min score
+   * @param removeStopWords the remove stop words
+   * @param lemmatize       the lemmatize
+   * @return the counter
    */
-  default Counter<String> termFrequencies(boolean lemmatize) {
-    return termFrequencies(Types.TOKEN, h -> lemmatize ? h.getLemma() : h.toString());
-  }
-
-  /**
-   * Calculates the total term frequency of annotations of the given type in the corpus. Annotations are transformed
-   * into strings using the given toString function.
-   *
-   * @param type     the annotation type to count.
-   * @param toString the function to convert Annotations into strings
-   * @return A counter containing total term frequencies of the given annotation type
-   */
-  default Counter<String> termFrequencies(@NonNull AnnotationType type, @NonNull SerializableFunction<? super Annotation, String> toString) {
-    return Counters.newHashMapCounter(
-      Cast.cast(
-        stream()
-          .flatMap(document -> document.get(type).stream().map(toString).collect(Collectors.toList()))
-          .countByValue()
-      )
-    );
-  }
-
   default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, boolean lemmatize) {
     return significantBigrams(minCount, calculator, minScore, removeStopWords, h -> lemmatize ? h.getLemma() : h.toString());
   }
 
+  /**
+   * Significant bigrams counter.
+   *
+   * @param minCount        the min count
+   * @param calculator      the calculator
+   * @param minScore        the min score
+   * @param removeStopWords the remove stop words
+   * @param toString        the to string
+   * @return the counter
+   */
   default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, @NonNull SerializableFunction<? super Annotation, String> toString) {
-    Counter<Tuple> unigrams = tokenNGrams(1, removeStopWords, HString::toString);
-    Counter<Tuple> bigrams = tokenNGrams(2, removeStopWords, HString::toString).filterByValue(v -> v >= minCount);
+    Counter<Tuple> unigrams = ngrams(NGramSpec.create().order(1));
+    Counter<Tuple> bigrams = ngrams(NGramSpec.create().order(2)).filterByValue(v -> v >= minCount);
     Counter<Tuple> filtered = Counters.newHashMapCounter();
     bigrams.items().forEach(bigram -> {
       double score = calculator.calculate(

@@ -19,35 +19,34 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.ml.feature;
+package com.davidbracewell.hermes.corpus;
 
-import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.hermes.ml.feature.AbstractNGramFeatureSpec;
 
 /**
  * @author David B. Bracewell
  */
-public abstract class NGramFeatureSpec<T extends NGramFeatureSpec> extends AbstractFeatureSpec<T> {
+public class NGramSpec extends AbstractNGramFeatureSpec<NGramSpec> {
   private static final long serialVersionUID = 1L;
-  private int min;
-  private int max;
 
-
-  public int getMax() {
-    return max;
+  public static NGramSpec create() {
+    return new NGramSpec();
   }
 
-  public T max(int max) {
-    this.max = max;
-    return Cast.as(this);
+  public static NGramSpec unigrams() {
+    return new NGramSpec();
   }
 
-  public int getMin() {
-    return min;
+  public static NGramSpec bigrams() {
+    return new NGramSpec().order(2);
   }
 
-  public T min(int min) {
-    this.min = min;
-    return Cast.as(this);
+  public static NGramSpec trigrams() {
+    return new NGramSpec().order(3);
   }
 
-}//END OF NGramFeatureSpec
+  public static NGramSpec order(int min, int max) {
+    return new NGramSpec().min(min).max(max);
+  }
+
+}//END OF NGramSpec

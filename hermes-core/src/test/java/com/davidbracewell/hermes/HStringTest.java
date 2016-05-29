@@ -53,12 +53,12 @@ public class HStringTest {
     List<HString> trigrams = hString.charNGrams(3);
     assertEquals(4, trigrams.size());
 
-    unigrams = hString.charNGrams(1, c -> c != 'a');
-    assertEquals(5, unigrams.size());
-    bigrams = hString.charNGrams(2, c -> c != 'a');
-    assertEquals(4, bigrams.size());
-    trigrams = hString.charNGrams(3, c -> c != 'a');
-    assertEquals(3, trigrams.size());
+//    unigrams = hString.charNGrams(1, c -> c != 'a');
+//    assertEquals(5, unigrams.size());
+//    bigrams = hString.charNGrams(2, c -> c != 'a');
+//    assertEquals(4, bigrams.size());
+//    trigrams = hString.charNGrams(3, c -> c != 'a');
+//    assertEquals(3, trigrams.size());
   }
 
   @Test
@@ -171,23 +171,8 @@ public class HStringTest {
     Document document = DocumentFactory.getInstance().create("Once upon a time there lived a princess who was stuck in time.");
     Pipeline.process(document, Types.TOKEN);
 
-    List<HString> ngrams = document.ngrams(1, Types.TOKEN);
+    List<HString> ngrams = document.ngrams(Types.TOKEN, 1);
     assertEquals(14, ngrams.size());
-
-    ngrams = document.ngrams(1, Types.TOKEN, true);
-    assertEquals(5, ngrams.size());
-
-    ngrams = document.ngrams(1, Types.TOKEN, hString -> hString.contentEqual("a"));
-    assertEquals(2, ngrams.size());
-
-    ngrams = document.tokenNGrams(1);
-    assertEquals(14, ngrams.size());
-
-    ngrams = document.tokenNGrams(1, true);
-    assertEquals(5, ngrams.size());
-
-    ngrams = document.tokenNGrams(1, hString -> hString.contentEqual("a"));
-    assertEquals(2, ngrams.size());
 
     ngrams = document.tokenNGrams(2);
     assertEquals(13, ngrams.size());

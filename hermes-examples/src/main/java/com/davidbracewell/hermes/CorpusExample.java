@@ -26,6 +26,8 @@ import com.davidbracewell.apollo.ml.clustering.topic.LDAModel;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
+import com.davidbracewell.hermes.corpus.NGramSpec;
+import com.davidbracewell.hermes.corpus.TermSpec;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotations;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.tuple.Tuple;
@@ -85,7 +87,7 @@ public class CorpusExample {
     //Here we will use a convenience method which will use the standard definition of term (i.e. a token) and
     //we will tell it to use the lemma version of the tokens. Since we annotated lemmas, we will actually get lemmas.
     //If we had not annotated with lemmas, it would simply lowercase the tokens.
-    Counter<String> termFrequencies = corpus.termFrequencies(true);
+    Counter<String> termFrequencies = corpus.terms(TermSpec.create().lemmatize());
 
     //Lets print out the top 10 terms
     System.out.println("Top 10 by Term Frequency");
@@ -108,7 +110,7 @@ public class CorpusExample {
 
     //Another thing we might want to do is extract all the bigrams in the corpus.
     //We will ignore bigrams with a stop word (e.g. the, it, of, etc.) and lowercase the output
-    Counter<Tuple> bigrams = corpus.tokenNGrams(2, true, HString::toLowerCase);
+    Counter<Tuple> bigrams = corpus.ngrams(NGramSpec.create().order(2).ignoreStopWords().lowerCase());
 
     //Lets print out the top 10 bigrams
     System.out.println("Top 10 Bigrams");

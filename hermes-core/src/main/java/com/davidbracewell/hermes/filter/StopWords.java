@@ -83,7 +83,33 @@ public abstract class StopWords implements Serializable {
       return isTokenStopWord(Cast.as(text));
     }
     return text.tokens().stream().allMatch(this::isTokenStopWord);
+  }
 
+  /**
+   * Returns true if any token in the supplied text is a stop word.
+   * @param text
+   * @return
+   */
+  public boolean hasStopWord(HString text) {
+    if (text == null) {
+      return true;
+    } else if (text.isInstance(Types.TOKEN)) {
+      return isTokenStopWord(Cast.as(text));
+    }
+    return text.tokens().stream().anyMatch(this::isTokenStopWord);
+  }
+
+  public static SerializablePredicate<HString> hasStopWord() {
+    return hString -> {
+      if (hString == null) {
+        return true;
+      }
+      return hString.tokens().stream().anyMatch(isStopWord());
+    };
+  }
+
+  public static SerializablePredicate<HString> notHasStopWord() {
+    return hasStopWord().negate();
   }
 
   public static SerializablePredicate<HString> isStopWord() {

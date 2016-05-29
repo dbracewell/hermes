@@ -24,7 +24,7 @@ public abstract class AbstractFeatureSpec<T extends AbstractFeatureSpec> impleme
 
   private AnnotationType annotationType = Types.TOKEN;
   private SerializableFunction<HString, String> toStringFunction = HString::toString;
-  private SerializablePredicate<HString> filter = hString -> false;
+  private SerializablePredicate<HString> filter = hString -> true;
   private ValueCalculator valueCalculator = ValueCalculator.Frequency;
 
   /**
@@ -37,6 +37,7 @@ public abstract class AbstractFeatureSpec<T extends AbstractFeatureSpec> impleme
     this.valueCalculator = valueCalculator;
     return Cast.as(this);
   }
+
 
   /**
    * Gets value calculator.
@@ -97,7 +98,7 @@ public abstract class AbstractFeatureSpec<T extends AbstractFeatureSpec> impleme
   }
 
   public T ignoreStopWords() {
-    this.filter = StopWords.isNotStopWord();
+    this.filter = StopWords.notHasStopWord();
     return Cast.as(this);
   }
 
@@ -109,15 +110,10 @@ public abstract class AbstractFeatureSpec<T extends AbstractFeatureSpec> impleme
   /**
    * Lemmatize t.
    *
-   * @param lemmatize the lemmatize
    * @return the t
    */
-  public T lemmatize(boolean lemmatize) {
-    if (lemmatize) {
-      toStringFunction = HString::getLemma;
-    } else {
-      toStringFunction = HString::toString;
-    }
+  public T lemmatize() {
+    toStringFunction = HString::getLemma;
     return Cast.as(this);
   }
 
