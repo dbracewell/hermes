@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 
 /**
+ * The type Hermes fx.
+ *
  * @author David B. Bracewell
  */
 public class HermesFX extends JavaFXApplication {
@@ -40,15 +42,28 @@ public class HermesFX extends JavaFXApplication {
   private File currentDirectory = new File(".");
   private Document currentDocument = null;
 
+  /**
+   * Instantiates a new Hermes fx.
+   */
   public HermesFX() {
     super("HermesFX");
   }
 
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   */
   public static void main(String[] args) {
     launch(args);
   }
 
 
+  /**
+   * Create view menu menu.
+   *
+   * @return the menu
+   */
   Menu createViewMenu() {
     Menu viewMenu = new Menu("_View");
     CheckMenuItem annotationWindow = new CheckMenuItem("A_nnotation Window");
@@ -79,6 +94,11 @@ public class HermesFX extends JavaFXApplication {
     return viewMenu;
   }
 
+  /**
+   * Sets document.
+   *
+   * @param jsonFile the json file
+   */
   void setDocument(File jsonFile) {
     currentDirectory = jsonFile.getParentFile();
     try {
@@ -101,6 +121,11 @@ public class HermesFX extends JavaFXApplication {
     }
   }
 
+  /**
+   * Create file menu menu.
+   *
+   * @return the menu
+   */
   Menu createFileMenu() {
     Menu menuFile = new Menu("_File");
     MenuItem fileOpen = new MenuItem("_Open");
