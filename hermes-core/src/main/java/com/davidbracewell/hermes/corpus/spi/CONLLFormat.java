@@ -116,7 +116,7 @@ public class CONLLFormat extends FileBasedFormat {
     List<String> tokens = new ArrayList<>();
     for (List<String> wordInfo : rows) {
       if (wordInfo.size() > wordIndex) {
-        String word = wordInfo.get(wordIndex).replaceAll(StringUtils.UNICODE_WHITESPACE_PLUS, "");
+        String word = wordInfo.get(wordIndex).replaceAll(StringUtils.MULTIPLE_WHITESPACE, "");
         switch (word) {
           case "\"\"":
           case "``":

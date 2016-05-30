@@ -76,7 +76,7 @@ final class NFA implements Serializable {
         Deque<Tuple2<String, Integer>> currentStack = s.stack;
         if (s.node.emits) {
 //          System.out.println("EMITTING: " + s.node.name);
-          currentStack.push(Tuples.tuple(s.node.name, s.inputPosition));
+          currentStack.push(Tuples.$(s.node.name, s.inputPosition));
         }
 
         for (Node n : s.node.epsilons) {

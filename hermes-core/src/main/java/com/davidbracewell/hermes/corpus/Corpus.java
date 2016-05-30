@@ -42,7 +42,6 @@ import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.tuple.Tuple;
-import com.davidbracewell.tuple.Tuples;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.NonNull;
@@ -53,6 +52,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.davidbracewell.tuple.Tuples.$;
 
 /**
  * <p>
@@ -495,11 +496,12 @@ public interface Corpus extends Iterable<Document> {
           .stream()
           .filter(nGramSpec.getFilter())
           .map(
-            hString -> Tuples.tuple(
+            hString -> $(
               hString.get(nGramSpec.getAnnotationType())
                 .stream()
                 .map(nGramSpec.getToStringFunction())
-                .collect(Collectors.toList()))
+                .collect(Collectors.toList())
+            )
           ).collect(Collectors.toList())
       ).countByValue()
     ));
@@ -563,8 +565,8 @@ public interface Corpus extends Iterable<Document> {
     bigrams.items().forEach(bigram -> {
       double score = calculator.calculate(
         ContingencyTable.create2X2(bigrams.get(bigram),
-          unigrams.get(Tuples.tuple(bigram.get(0))),
-          unigrams.get(Tuples.tuple(bigram.get(1))),
+          unigrams.get(bigram.slice(0, 1)),
+          unigrams.get(bigram.slice(1, 2)),
           unigrams.sum()
         )
       );

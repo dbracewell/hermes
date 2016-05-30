@@ -123,7 +123,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     return INSTANCE;
   }
 
-  private static Pattern WHITESPACE = Pattern.compile(StringUtils.UNICODE_WHITESPACE_PLUS);
+  private static Pattern WHITESPACE = Pattern.compile(StringUtils.MULTIPLE_WHITESPACE);
 
   private Set<String> doLemmatization(String word, boolean includeSelf, POS... tags) {
     Set<String> tokenLemmas = new LinkedHashSet<>();
