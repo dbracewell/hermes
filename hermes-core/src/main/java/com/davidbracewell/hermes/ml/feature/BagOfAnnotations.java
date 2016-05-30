@@ -23,6 +23,7 @@ package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.cache.Cached;
 import com.davidbracewell.collection.Counters;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.stream.MStream;
@@ -53,6 +54,7 @@ public class BagOfAnnotations implements Featurizer<HString> {
 
 
   @Override
+  @Cached(keyMaker = HStringKeyMaker.class)
   public Set<Feature> apply(HString hString) {
     MStream<String> stream = Streams.of(
       hString.stream(featureSpec.getAnnotationType())

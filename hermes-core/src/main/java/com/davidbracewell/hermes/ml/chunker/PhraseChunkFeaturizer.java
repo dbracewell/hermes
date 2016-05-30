@@ -25,6 +25,7 @@ import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.sequence.ContextualIterator;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
+import com.davidbracewell.cache.Cached;
 import com.davidbracewell.hermes.Annotation;
 
 import java.util.HashSet;
@@ -37,6 +38,7 @@ public class PhraseChunkFeaturizer implements SequenceFeaturizer<Annotation> {
   private static final long serialVersionUID = 1L;
 
   @Override
+  @Cached
   public Set<Feature> apply(ContextualIterator<Annotation> itr) {
     Set<Feature> features = new HashSet<>();
 

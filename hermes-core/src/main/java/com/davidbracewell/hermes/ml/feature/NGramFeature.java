@@ -23,7 +23,10 @@ package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.cache.Cached;
+import com.davidbracewell.collection.Counters;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.stream.Streams;
 
 import java.util.Set;
 
@@ -39,8 +42,16 @@ public class NGramFeature implements Featurizer<HString> {
   }
 
   @Override
+  @Cached(keyMaker = HStringKeyMaker.class)
   public Set<Feature> apply(HString hString) {
-    return null;
+    return spec.getValueCalculator().apply(
+      Counters.newHashMapCounter(
+        Streams.of(hString.ngrams(spec.getAnnotationType(), spec.getMin(), spec.getMax()), false)
+          .filter(spec.getFilter())
+          .map(spec.getToStringFunction())
+          .countByValue()
+      )
+    );
   }
 
 
@@ -51,7 +62,7 @@ public class NGramFeature implements Featurizer<HString> {
   public static class Builder extends AbstractNGramFeatureSpec<Builder> {
     private static final long serialVersionUID = 1L;
 
-    public NGramFeature build(){
+    public NGramFeature build() {
       return new NGramFeature(this);
     }
 
