@@ -97,11 +97,21 @@ public abstract class AbstractFeatureSpec<T extends AbstractFeatureSpec> impleme
     return toStringFunction;
   }
 
+  /**
+   * Ignore stop words t.
+   *
+   * @return the t
+   */
   public T ignoreStopWords() {
     this.filter = StopWords.notHasStopWord();
     return Cast.as(this);
   }
 
+  /**
+   * Lower case t.
+   *
+   * @return the t
+   */
   public T lowerCase() {
     this.toStringFunction = HString::toLowerCase;
     return Cast.as(this);

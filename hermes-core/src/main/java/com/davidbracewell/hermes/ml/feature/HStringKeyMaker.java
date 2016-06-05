@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.cache.KeyMaker;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.HString;
 
 import java.io.Serializable;
@@ -29,6 +30,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 /**
+ * <p>Simple key maker to cache HString feature extractors that looks at the HString and its POS.</p>
+ *
  * @author David B. Bracewell
  */
 public class HStringKeyMaker implements KeyMaker, Serializable {
@@ -40,7 +43,7 @@ public class HStringKeyMaker implements KeyMaker, Serializable {
     array[0] = clazz;
     array[1] = method;
     for (int i = 0, j = 2; i < args.length; i++, j++) {
-      array[j] = HString.class.isInstance(args[i]) ? args[i].toString() : args[i];
+      array[j] = HString.class.isInstance(args[i]) ? Cast.<HString>as(args[i]).toPOSString() : args[i];
     }
     return Arrays.hashCode(array);
   }
