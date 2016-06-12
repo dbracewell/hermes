@@ -27,7 +27,7 @@ import com.davidbracewell.cache.Cache;
 import com.davidbracewell.cache.CacheManager;
 import com.davidbracewell.cache.CacheSpec;
 import com.davidbracewell.collection.Counter;
-import com.davidbracewell.collection.Counters;
+import com.davidbracewell.collection.HashMapCounter;
 import com.davidbracewell.collection.Sorting;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
@@ -100,7 +100,7 @@ public class WordNet {
 
 
   private ListMultimap<Synset, Synset> dijkstra_path(Synset source) {
-    Counter<Synset> dist = Counters.newHashMapCounter();
+    Counter<Synset> dist = new HashMapCounter<>();
     Map<Synset, Synset> previous = new HashMap<>();
     Set<Synset> visited = Sets.newHashSet(source);
 

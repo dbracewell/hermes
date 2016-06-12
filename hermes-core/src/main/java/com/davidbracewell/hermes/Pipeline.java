@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.concurrent.Broker;
+import com.davidbracewell.concurrent.IterableProducer;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
@@ -159,7 +160,7 @@ public final class Pipeline implements Serializable {
     timer.start();
 
     Broker.Builder<Document> builder = Broker.<Document>builder()
-      .addProducer(new Producer(documents))
+      .addProducer(new IterableProducer<>(documents))
       .bufferSize(queueSize);
 
     Corpus corpus = documents;
@@ -224,23 +225,6 @@ public final class Pipeline implements Serializable {
     }
   }
 
-  private static class Producer extends Broker.Producer<Document> implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private final Corpus documents;
-
-    private Producer(Corpus documents) {
-      this.documents = documents;
-    }
-
-    @Override
-    public void produce() {
-      start();
-      for (Document document : documents) {
-        yield(document);
-      }
-      stop();
-    }
-  }
 
   private class AnnotateConsumer implements java.util.function.Consumer<Document>, Serializable {
     private static final long serialVersionUID = 1L;

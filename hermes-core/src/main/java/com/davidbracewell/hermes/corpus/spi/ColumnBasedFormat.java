@@ -2,8 +2,8 @@ package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
+import com.davidbracewell.collection.HashMapIndex;
 import com.davidbracewell.collection.Index;
-import com.davidbracewell.collection.Indexes;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Document;
@@ -23,7 +23,7 @@ public abstract class ColumnBasedFormat extends FileBasedFormat {
   /**
    * The Field names.
    */
-  protected final Index<String> fieldNames = Indexes.newIndex();
+  protected final Index<String> fieldNames = new HashMapIndex<>();
   protected final String configProperty;
 
   /**

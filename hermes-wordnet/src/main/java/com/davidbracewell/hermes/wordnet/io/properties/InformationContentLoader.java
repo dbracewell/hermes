@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.wordnet.io.properties;
 
 import com.davidbracewell.collection.Counter;
-import com.davidbracewell.collection.Counters;
+import com.davidbracewell.collection.HashMapCounter;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.wordnet.Synset;
 import com.davidbracewell.hermes.wordnet.WordNetPOS;
@@ -55,8 +55,8 @@ public class InformationContentLoader extends WordNetPropertyLoader {
 
   @Override
   public void load(WordNetDB db) {
-    Counter<String> ic = Counters.newHashMapCounter();
-    Counter<POS> roots = Counters.newHashMapCounter();
+    Counter<String> ic = new HashMapCounter<>();
+    Counter<POS> roots = new HashMapCounter<>();
     try (MStream<String> stream = resource.lines()) {
       stream.forEach(line -> {
         line = line.trim();

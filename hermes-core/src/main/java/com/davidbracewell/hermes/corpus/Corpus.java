@@ -32,7 +32,7 @@ import com.davidbracewell.apollo.stats.ContingencyTable;
 import com.davidbracewell.apollo.stats.ContingencyTableCalculator;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
-import com.davidbracewell.collection.Counters;
+import com.davidbracewell.collection.HashMapCounter;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
@@ -368,7 +368,7 @@ public interface Corpus extends Iterable<Document> {
    * @return A counter containing document frequencies of the given annotation type
    */
   default Counter<String> documentFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
-    return Counters.newHashMapCounter(
+    return new HashMapCounter<>(
       Cast.cast(
         stream()
           .flatMap(document -> document.get(type).stream().map(toString).distinct().collect(Collectors.toList()))
@@ -490,7 +490,7 @@ public interface Corpus extends Iterable<Document> {
    * @return the counter
    */
   default Counter<Tuple> ngrams(@NonNull NGramSpec nGramSpec) {
-    return nGramSpec.getValueCalculator().adjust(Counters.newHashMapCounter(
+    return nGramSpec.getValueCalculator().adjust(new HashMapCounter<>(
       stream().flatMap(doc ->
         doc.ngrams(nGramSpec.getAnnotationType(), nGramSpec.getMin(), nGramSpec.getMax())
           .stream()
@@ -524,7 +524,7 @@ public interface Corpus extends Iterable<Document> {
    */
   default Counter<String> terms(@NonNull TermSpec termSpec) {
     return termSpec.getValueCalculator().adjust(
-      Counters.newHashMapCounter(
+      new HashMapCounter<>(
         stream().flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
           .filter(termSpec.getFilter())
           .map(termSpec.getToStringFunction())
@@ -561,7 +561,7 @@ public interface Corpus extends Iterable<Document> {
   default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, @NonNull SerializableFunction<? super Annotation, String> toString) {
     Counter<Tuple> unigrams = ngrams(NGramSpec.create().order(1));
     Counter<Tuple> bigrams = ngrams(NGramSpec.create().order(2)).filterByValue(v -> v >= minCount);
-    Counter<Tuple> filtered = Counters.newHashMapCounter();
+    Counter<Tuple> filtered = new HashMapCounter<>();
     bigrams.items().forEach(bigram -> {
       double score = calculator.calculate(
         ContingencyTable.create2X2(bigrams.get(bigram),

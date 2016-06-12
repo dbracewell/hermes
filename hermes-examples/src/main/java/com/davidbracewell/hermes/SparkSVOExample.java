@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.collection.Counter;
-import com.davidbracewell.collection.Counters;
+import com.davidbracewell.collection.HashMapCounter;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
@@ -56,7 +56,7 @@ public class SparkSVOExample implements Serializable {
       .repartition(100)
       .annotate(Types.DEPENDENCY);
 
-    Counter<String> svoCounts = Counters.newHashMapCounter(
+    Counter<String> svoCounts = new HashMapCounter<>(
       corpus.stream().flatMap(Document::sentences)
         .flatMap(sentence -> {
           List<String> svo = new LinkedList<>();

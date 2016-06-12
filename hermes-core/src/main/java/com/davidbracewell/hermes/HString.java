@@ -25,7 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Counter;
-import com.davidbracewell.collection.Counters;
+import com.davidbracewell.collection.HashMapCounter;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.attribute.POS;
@@ -281,7 +281,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @return A counter whose key is the content of the annotations of the given type
    */
   public Counter<String> count(AnnotationType type, @NonNull Predicate<? super Annotation> predicate, @NonNull Function<? super Annotation, String> transform) {
-    return Counters.newHashMapCounter(get(type).stream()
+    return new HashMapCounter<>(get(type).stream()
       .filter(predicate)
       .map(transform)
       .collect(Collectors.toList())
