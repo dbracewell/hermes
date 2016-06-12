@@ -27,14 +27,14 @@
     <parent>
         <groupId>com.davidbracewell</groupId>
         <artifactId>hermes</artifactId>
-        <version>0.3</version>
+        <version>0.4-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
     <dependencies>
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>hermes-core</artifactId>
-            <version>0.3</version>
+            <version>0.4-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
