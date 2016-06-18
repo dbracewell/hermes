@@ -28,7 +28,7 @@ import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
 import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
-import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
+import com.davidbracewell.apollo.ml.sequence.linear.MEMMLearner;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
@@ -69,7 +69,7 @@ public class PhraseChunkTrainer extends BIOTrainer {
       .format(corpusFormat)
       .build()
       .map(d -> {
-        d.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH,false,null);
+        d.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, false, null);
         Pipeline.process(d, Types.PART_OF_SPEECH);
         return d;
       })
@@ -88,7 +88,7 @@ public class PhraseChunkTrainer extends BIOTrainer {
 
   @Override
   protected SequenceLabelerLearner getLearner() {
-    SequenceLabelerLearner learner = new CRFTrainer();
+    SequenceLabelerLearner learner = new MEMMLearner();
     learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
     learner.setValidator(new BIOValidator());
     learner.setParameter("maxIterations", 200);
