@@ -1,7 +1,7 @@
 package com.davidbracewell.hermes.ml.pos;
 
 import com.davidbracewell.apollo.ml.Dataset;
-import com.davidbracewell.apollo.ml.classification.linear.AveragedPerceptronLearner;
+import com.davidbracewell.apollo.ml.classification.AveragedPerceptronLearner;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
 import com.davidbracewell.apollo.ml.sequence.*;

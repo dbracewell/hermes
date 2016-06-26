@@ -49,9 +49,7 @@ import java.util.stream.Collectors;
  * <code>getTag()</code>. </p> <p>Type information is defined via configuration. An Example is as follows:</p> {@code
  * Annotation{ ENTITY { attributes = ENTITY_TYPE, CONFIDENCE tag = ENTITY_TYPE } REGEX_ENTITY { parent = ENTITY
  * annotator = @{DEFAULT_ENTITY_REGEX} annotator { ENGLISH = @{ENGLISH_ENTITY_REGEX} JAPANESE =
- *
- * @author David B. Bracewell
- * @{JAPANESE_ENTITY_REGEX} } attributes = PATTERN } } }* <p> In the example shown above, we define the
+  * @{JAPANESE_ENTITY_REGEX} } attributes = PATTERN } } }* <p> In the example shown above, we define the
  * <code>ENTITY</code> and
  * <code>REGEX_ENTITY</code> types. The <code>Entity</code> type has two attributes associated with it which relate to
  * the type of entity and the confidence that the span of text is an entity of the given type. The
@@ -219,7 +217,6 @@ public final class AnnotationType extends HierarchicalEnumValue implements Annot
     }
     return index.register(this);
   }
-
 
 
 }//END OF AnnotationType
