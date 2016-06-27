@@ -229,7 +229,7 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
         pct.format(f1(g)),
         correct.get(g),
         missed.get(g),
-        correct.get(g)
+        incorrect.get(g)
       ))
     );
     tableFormatter.content(Arrays.asList(
