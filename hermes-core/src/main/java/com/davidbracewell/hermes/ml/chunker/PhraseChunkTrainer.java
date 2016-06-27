@@ -33,6 +33,7 @@ import com.davidbracewell.apollo.ml.sequence.linear.LibraryLoader;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.BIOLabelMaker;
 import com.davidbracewell.hermes.ml.BIOTrainer;
@@ -72,6 +73,11 @@ public class PhraseChunkTrainer extends BIOTrainer {
       .map(d -> {
         d.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, false, null);
         Pipeline.process(d, Types.PART_OF_SPEECH);
+        d.get(Types.PHRASE_CHUNK).forEach(annotation -> {
+          if (annotation.get(Types.PART_OF_SPEECH).as(POS.class).isInstance(POS.INTJ, POS.LST,POS.UCP)) {
+            d.remove(annotation);
+          }
+        });
         return d;
       })
       .asSequenceDataSet(new BIOLabelMaker(annotationType), featurizer);
@@ -97,7 +103,7 @@ public class PhraseChunkTrainer extends BIOTrainer {
     SequenceLabelerLearner learner = new CRFTrainer();
     learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
     learner.setValidator(new BIOValidator());
-    learner.setParameter("maxIterations", 20);
+    learner.setParameter("maxIterations", 200);
     learner.setParameter("verbose", true);
     return learner;
   }

@@ -38,6 +38,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import lombok.NonNull;
 
 import java.io.PrintStream;
+import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -74,7 +75,7 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
         String tag = lbl.substring(2);
         int start = i;
         i++;
-        while (i < result.length && result[i].startsWith("I-") ) {
+        while (i < result.length && result[i].startsWith("I-")) {
           i++;
         }
         tags.add(Tuple3.of(start, i, tag));
@@ -214,28 +215,40 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
     printStream.println("Total Predicted Phrases: " + totalPhrasesFound);
     printStream.println("Total Correct: " + correct.sum());
     TableFormatter tableFormatter = new TableFormatter();
+    tableFormatter.setMinCellWidth(5);
+    tableFormatter.setNumberFormatter(new DecimalFormat("#,###"));
+    DecimalFormat pct = new DecimalFormat("0.0%");
     tableFormatter
       .title("Tag Metrics")
-      .header(Arrays.asList(StringUtils.EMPTY, "P", "R", "F1"));
+      .header(Arrays.asList(StringUtils.EMPTY, "Precision", "Recall", "F1-Measure", "Correct", "Missed", "Incorrect"));
     sorted.forEach(g ->
       tableFormatter.content(Arrays.asList(
         g,
-        precision(g),
-        recall(g),
-        f1(g)
+        pct.format(precision(g)),
+        pct.format(recall(g)),
+        pct.format(f1(g)),
+        correct.get(g),
+        missed.get(g),
+        correct.get(g)
       ))
     );
     tableFormatter.content(Arrays.asList(
       "micro",
-      microPrecision(),
-      microRecall(),
-      microF1()
+      pct.format(microPrecision()),
+      pct.format(microRecall()),
+      pct.format(microF1()),
+      correct.sum(),
+      missed.sum(),
+      incorrect.sum()
     ));
     tableFormatter.content(Arrays.asList(
       "macro",
-      macroPrecision(),
-      macroRecall(),
-      macroF1()
+      pct.format(macroPrecision()),
+      pct.format(macroRecall()),
+      pct.format(macroF1()),
+      "-",
+      "-",
+      "-"
     ));
     tableFormatter.print(printStream);
 
