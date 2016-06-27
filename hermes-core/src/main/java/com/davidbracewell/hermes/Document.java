@@ -379,8 +379,8 @@ public class Document extends HString {
     return annotationSet.select(a -> a.isInstance(type));
   }
 
-  public void remove(Annotation annotation) {
-    annotationSet.remove(annotation);
+  public boolean remove(Annotation annotation) {
+    return annotationSet.remove(annotation);
   }
 
   public void removeAnnotationType(AnnotationType type) {

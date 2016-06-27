@@ -74,7 +74,7 @@ public class PhraseChunkTrainer extends BIOTrainer {
         d.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, false, null);
         Pipeline.process(d, Types.PART_OF_SPEECH);
         d.get(Types.PHRASE_CHUNK).forEach(annotation -> {
-          if (annotation.get(Types.PART_OF_SPEECH).as(POS.class).isInstance(POS.INTJ, POS.LST,POS.UCP)) {
+          if (annotation.get(Types.PART_OF_SPEECH).as(POS.class).isInstance(POS.INTJ, POS.LST, POS.UCP)) {
             d.remove(annotation);
           }
         });

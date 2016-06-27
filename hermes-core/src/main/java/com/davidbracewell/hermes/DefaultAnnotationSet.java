@@ -65,9 +65,12 @@ public class DefaultAnnotationSet implements AnnotationSet {
   }
 
   @Override
-  public void remove(Annotation annotation) {
-    tree.remove(annotation);
-    idAnnotationMap.remove(annotation.getId());
+  public boolean remove(Annotation annotation) {
+    boolean removed = tree.remove(annotation);
+    if (removed) {
+      idAnnotationMap.remove(annotation.getId());
+    }
+    return removed;
   }
 
   @Override

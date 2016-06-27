@@ -123,6 +123,24 @@ public class CONLLFormat extends FileBasedFormat {
           case "''":
             word = "\"";
             break;
+          case "-LRB-":
+            word = "(";
+            break;
+          case "-RRB-":
+            word = ")";
+            break;
+          case "-LSB-":
+            word = "[";
+            break;
+          case "-RSB-":
+            word = "]";
+            break;
+          case "-LCB-":
+            word = "{";
+            break;
+          case "-RCB-":
+            word = "}";
+            break;
         }
         tokens.add(word);
       } else {

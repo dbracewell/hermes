@@ -131,7 +131,7 @@ public interface AnnotationSet extends Iterable<Annotation> {
    *
    * @param annotation The annotation to detach
    */
-  void remove(Annotation annotation);
+  boolean remove(Annotation annotation);
 
   /**
    * Adds an annotation to the set

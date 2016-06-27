@@ -46,7 +46,6 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
   @Override
   public boolean add(Annotation annotation) {
     if (annotation != null) {
-
       Node z = new Node(annotation);
 
       //Empty tree, add this and return
@@ -70,6 +69,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
           iNode = iNode.right;
         }
       }
+
 
       z.parent = parent;
       size++;
@@ -173,13 +173,13 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
 
   private Node findNode(Node n, Span span) {
     while (!n.isNull()) {
-      int cmp = span.compareTo(n.span);
-      if (cmp < 0) {
-        n = n.left;
-      } else if (cmp > 0) {
-        n = n.right;
-      } else {
+      if (n.span.start() == span.start() && n.span.end() == span.end()) {
         return n;
+      }
+      if (span.start() <= n.span.start()) {
+        n = n.left;
+      } else {
+        n = n.right;
       }
     }
     return NULL;
@@ -386,7 +386,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
     /**
      * The Annotations.
      */
-    final List<Annotation> annotations = new LinkedList<>();
+    final Set<Annotation> annotations = new LinkedHashSet<>();
     /**
      * The Is red.
      */
