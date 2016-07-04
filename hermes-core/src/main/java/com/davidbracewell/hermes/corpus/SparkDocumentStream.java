@@ -61,7 +61,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    * @param source the source
    */
   public SparkDocumentStream(@NonNull MStream<String> source) {
-    this(source, Spark.context(source).broadcast(Config.getInstance()));
+    this(source, SparkStreamingContext.INSTANCE.broadcast(Config.getInstance()));
   }
 
   /**
@@ -331,7 +331,11 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    */
   public void updateConfig() {
     this.configBroadcast.unpersist(true);
-    this.configBroadcast = Cast.<SparkStreamingContext>as(getContext()).sparkContext().broadcast(Config.getInstance());
+    this.configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
+  }
+
+  public Broadcast<Config> getConfigBroadcast() {
+    return configBroadcast;
   }
 
 }//END OF SparkDocumentStream

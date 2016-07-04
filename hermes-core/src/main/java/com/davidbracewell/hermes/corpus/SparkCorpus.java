@@ -10,8 +10,8 @@ import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.io.resource.StringResource;
 import com.davidbracewell.stream.MStream;
-import com.davidbracewell.stream.Spark;
 import com.davidbracewell.stream.SparkStream;
+import com.davidbracewell.stream.SparkStreamingContext;
 import com.davidbracewell.stream.StreamingContext;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
@@ -43,7 +43,7 @@ public class SparkCorpus implements Corpus, Serializable {
         StreamingContext.distributed().textFile(corpusLocation)
       );
     } else if (corpusFormat.isOnePerLine()) {
-      Broadcast<Config> configBroadcast = Spark.context().broadcast(Config.getInstance());
+      Broadcast<Config> configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
       this.stream = new SparkDocumentStream(StreamingContext.distributed().textFile(corpusLocation).flatMap(
         line -> {
           Hermes.initializeWorker(configBroadcast.getValue());
@@ -54,10 +54,10 @@ public class SparkCorpus implements Corpus, Serializable {
         }
       ));
     } else {
-      Broadcast<Config> configBroadcast = Spark.context().broadcast(Config.getInstance());
+      Broadcast<Config> configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
       this.stream = new SparkDocumentStream(
         new SparkStream<>(
-          Spark.context()
+          SparkStreamingContext.INSTANCE.sparkContext()
             .wholeTextFiles(corpusLocation)
             .values()
             .flatMap(str -> {
@@ -173,4 +173,10 @@ public class SparkCorpus implements Corpus, Serializable {
   public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
     return new SparkCorpus(new SparkDocumentStream(stream.map(d -> function.apply(d).toJson())));
   }
-}
+
+  @Override
+  public StreamingContext getStreamingContext() {
+    return stream.getContext();
+  }
+
+}//END OF SparkCorpus

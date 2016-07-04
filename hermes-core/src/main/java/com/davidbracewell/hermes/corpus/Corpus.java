@@ -41,6 +41,7 @@ import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
+import com.davidbracewell.stream.StreamingContext;
 import com.davidbracewell.tuple.Tuple;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -702,6 +703,11 @@ public interface Corpus extends Iterable<Document> {
    */
   default boolean isOffHeap() {
     return false;
+  }
+
+
+  default StreamingContext getStreamingContext() {
+    return StreamingContext.local();
   }
 
 }//END OF Corpus

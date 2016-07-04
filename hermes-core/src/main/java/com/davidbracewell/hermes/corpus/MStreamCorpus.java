@@ -29,6 +29,7 @@ import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.stream.MStream;
+import com.davidbracewell.stream.StreamingContext;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -74,6 +75,11 @@ public class MStreamCorpus implements Corpus, Serializable {
   @Override
   public Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
     return new MStreamCorpus(stream.filter(filter), documentFactory);
+  }
+
+  @Override
+  public StreamingContext getStreamingContext() {
+    return stream.getContext();
   }
 
 }//END OF MStreamCorpus
