@@ -35,8 +35,7 @@ import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.stream.*;
 import com.google.common.collect.Iterators;
 import lombok.NonNull;
-import org.apache.spark.Accumulator;
-import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
 
 import java.io.IOException;
@@ -53,8 +52,6 @@ import java.util.stream.Collectors;
  */
 class SparkDocumentStream implements MStream<Document>, Serializable {
   private static final long serialVersionUID = 1L;
-  final Accumulator<Double> documentsProcessed;
-  final Accumulator<Double> tokensProcessed;
   private volatile MStream<String> source;
   private Broadcast<Config> configBroadcast;
 
@@ -76,21 +73,23 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   public SparkDocumentStream(@NonNull MStream<String> source, @NonNull Broadcast<Config> configBroadcast) {
     this.source = source;
     this.configBroadcast = configBroadcast;
-    this.documentsProcessed = getContext().accumulator(0d);
-    this.tokensProcessed = getContext().accumulator(0d);
 
   }
 
-  public void repartition(int numPartition) {
-    source = new SparkStream<>(Cast.<SparkStream<String>>as(source).getRDD().repartition(numPartition));
+  @Override
+  public MStream<Document> repartition(int numPartition) {
+    JavaRDD<String> rdd = Cast.<SparkStream<String>>as(source).getRDD().repartition(numPartition);
+    source = new SparkStream<>(rdd);
+    return this;
+  }
+
+  @Override
+  public StreamingContext getContext() {
+    return source.getContext();
   }
 
   private SparkDocumentStream of(@NonNull MStream<String> source) {
     return new SparkDocumentStream(source, configBroadcast);
-  }
-
-  private JavaSparkContext getContext() {
-    return Cast.<SparkStream>as(source).getContext();
   }
 
   /**
@@ -109,14 +108,10 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    * @return the spark document stream
    */
   public SparkDocumentStream annotate(@NonNull AnnotatableType... types) {
-    documentsProcessed.setValue(0d);
-    tokensProcessed.setValue(0d);
     return new SparkDocumentStream(source.map(json -> {
       Hermes.initializeWorker(configBroadcast.getValue());
       Document document = Document.fromJson(json);
       Pipeline.process(document, types);
-      documentsProcessed.add(1d);
-      tokensProcessed.add((double) document.tokenLength());
       return document.toJson();
     }));
   }
@@ -308,7 +303,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
     if (other instanceof SparkDocumentStream) {
       return of(source.union(Cast.<SparkDocumentStream>as(other).source));
     }
-    return of(source.union(other.map(doc -> doc.toJson())));
+    return of(source.union(other.map(Document::toJson)));
   }
 
   @Override
@@ -336,7 +331,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    */
   public void updateConfig() {
     this.configBroadcast.unpersist(true);
-    this.configBroadcast = Cast.<SparkStream>as(source).getContext().broadcast(Config.getInstance());
+    this.configBroadcast = Cast.<SparkStreamingContext>as(getContext()).sparkContext().broadcast(Config.getInstance());
   }
 
 }//END OF SparkDocumentStream

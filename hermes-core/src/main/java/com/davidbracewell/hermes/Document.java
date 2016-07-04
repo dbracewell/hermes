@@ -30,7 +30,6 @@ import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredFormat;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
-import com.davidbracewell.stream.Streams;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Preconditions;
@@ -42,6 +41,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * <p>The document is the central object class in the TIPSTER architecture. It serves as repository for Attributes and
@@ -389,7 +389,7 @@ public class Document extends HString {
 
   @Override
   public List<Annotation> getAllAnnotations() {
-    return Streams.of(annotationSet, false).collect();
+    return Collect.stream(annotationSet.iterator()).collect(Collectors.toList());
   }
 
   @Override

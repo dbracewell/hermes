@@ -35,7 +35,7 @@ import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotations;
 import com.davidbracewell.hermes.ml.feature.ValueCalculator;
-import com.davidbracewell.stream.Streams;
+import com.davidbracewell.stream.StreamingContext;
 
 import java.util.Random;
 import java.util.function.Supplier;
@@ -188,7 +188,7 @@ public class MLExample {
 
     //Build an in-memory dataset from a corpus constructed using the raw labels and documents in the String[][] above
     Dataset<Instance> dataset = Corpus.of(
-      Streams.of(training)
+      StreamingContext.local().stream(training)
         .map(example -> Document.create(example[1], Language.ENGLISH, Collect.map(label, example[0])))
     )
       .annotate(Types.TOKEN)

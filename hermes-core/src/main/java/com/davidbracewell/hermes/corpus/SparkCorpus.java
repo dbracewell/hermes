@@ -12,7 +12,7 @@ import com.davidbracewell.io.resource.StringResource;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.Spark;
 import com.davidbracewell.stream.SparkStream;
-import com.davidbracewell.stream.Streams;
+import com.davidbracewell.stream.StreamingContext;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 import org.apache.spark.broadcast.Broadcast;
@@ -20,7 +20,6 @@ import org.apache.spark.broadcast.Broadcast;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 
 /**
@@ -34,16 +33,18 @@ public class SparkCorpus implements Corpus, Serializable {
    * Instantiates a new Spark corpus.
    *
    * @param corpusLocation  the corpus location
-   * @param corpusFormat  the document format
+   * @param corpusFormat    the document format
    * @param documentFactory the document factory
    */
   @SuppressWarnings("unchecked")
   public SparkCorpus(@NonNull String corpusLocation, @NonNull CorpusFormat corpusFormat, @NonNull DocumentFactory documentFactory) {
     if (corpusFormat.isOnePerLine() && corpusFormat.extension().toUpperCase().startsWith("JSON")) {
-      this.stream = new SparkDocumentStream(Streams.textFile(corpusLocation, true));
+      this.stream = new SparkDocumentStream(
+        StreamingContext.distributed().textFile(corpusLocation)
+      );
     } else if (corpusFormat.isOnePerLine()) {
       Broadcast<Config> configBroadcast = Spark.context().broadcast(Config.getInstance());
-      this.stream = new SparkDocumentStream(Streams.textFile(corpusLocation, true).flatMap(
+      this.stream = new SparkDocumentStream(StreamingContext.distributed().textFile(corpusLocation).flatMap(
         line -> {
           Hermes.initializeWorker(configBroadcast.getValue());
           return corpusFormat.create(Resources.fromString(line), documentFactory)
@@ -64,7 +65,7 @@ public class SparkCorpus implements Corpus, Serializable {
               return corpusFormat.create(Resources.fromString(str), documentFactory)
                 .stream()
                 .map(Document::toJson)
-                .collect();
+                .collect().iterator();
             })
         )
       );
@@ -88,9 +89,8 @@ public class SparkCorpus implements Corpus, Serializable {
    * @param documents the documents
    */
   public SparkCorpus(@NonNull Collection<Document> documents) {
-    this.stream = new SparkDocumentStream(Streams.of(
-      documents.stream().map(Document::toJson).collect(Collectors.toList()),
-      true
+    this.stream = new SparkDocumentStream(StreamingContext.distributed().stream(
+      documents.stream().map(Document::toJson)
     ));
   }
 
