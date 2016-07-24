@@ -1,5 +1,6 @@
 package com.davidbracewell.hermes.driver;
 
+import com.davidbracewell.application.Application;
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.HermesCommandLineApp;
@@ -8,6 +9,7 @@ import com.davidbracewell.hermes.Types;
 /**
  * @author David B. Bracewell
  */
+@Application.Description("Annotates a corpus with the given annotatable types.")
 public class Annotate extends HermesCommandLineApp {
   private static final long serialVersionUID = 1L;
 
@@ -15,7 +17,7 @@ public class Annotate extends HermesCommandLineApp {
   String[] types;
 
   Annotate() {
-    super("CorpusConvert");
+    super("Annotate");
   }
 
   public static void main(String[] args) {
