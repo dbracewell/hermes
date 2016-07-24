@@ -26,7 +26,7 @@ import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.cache.Cached;
 import com.davidbracewell.collection.HashMapCounter;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.stream.Streams;
+import com.davidbracewell.stream.StreamingContext;
 
 import java.util.Set;
 
@@ -46,7 +46,7 @@ public class NGramFeature implements Featurizer<HString> {
   public Set<Feature> apply(HString hString) {
     return spec.getValueCalculator().apply(
       new HashMapCounter<>(
-        Streams.of(hString.ngrams(spec.getAnnotationType(), spec.getMin(), spec.getMax()), false)
+        StreamingContext.local().stream(hString.ngrams(spec.getAnnotationType(), spec.getMin(), spec.getMax()))
           .filter(spec.getFilter())
           .map(spec.getToStringFunction())
           .countByValue()

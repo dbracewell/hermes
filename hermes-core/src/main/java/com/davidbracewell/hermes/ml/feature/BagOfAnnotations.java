@@ -27,7 +27,7 @@ import com.davidbracewell.cache.Cached;
 import com.davidbracewell.collection.HashMapCounter;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.stream.MStream;
-import com.davidbracewell.stream.Streams;
+import com.davidbracewell.stream.StreamingContext;
 
 import java.util.Set;
 
@@ -56,7 +56,7 @@ public class BagOfAnnotations implements Featurizer<HString> {
   @Override
   @Cached(keyMaker = HStringKeyMaker.class)
   public Set<Feature> apply(HString hString) {
-    MStream<String> stream = Streams.of(
+    MStream<String> stream = StreamingContext.local().stream(
       hString.stream(featureSpec.getAnnotationType())
         .filter(featureSpec.getFilter())
         .map(featureSpec.getToStringFunction())

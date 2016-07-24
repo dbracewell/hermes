@@ -121,9 +121,7 @@ public class CorpusBuilder {
 
   public Corpus build() {
 
-    if (resource != null &&
-      (resource instanceof StringResource)
-      ) {
+    if (resource != null && (resource instanceof StringResource)) {
       isInMemory = true;
     }
 
