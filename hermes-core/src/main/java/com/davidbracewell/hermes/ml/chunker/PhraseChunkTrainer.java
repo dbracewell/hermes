@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.ml.chunker;
 
-import com.davidbracewell.apollo.ml.Dataset;
+import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
@@ -38,6 +38,7 @@ import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.BIOLabelMaker;
 import com.davidbracewell.hermes.ml.BIOTrainer;
 import com.davidbracewell.hermes.ml.BIOValidator;
+import com.google.common.collect.Range;
 
 /**
  * The type Phrase chunk trainer.
@@ -90,7 +91,7 @@ public class PhraseChunkTrainer extends BIOTrainer {
 
   @Override
   protected PreprocessorList<Sequence> getPreprocessors() {
-    return PreprocessorList.create(new CountFilter(d -> d >= 2).asSequenceProcessor());
+    return PreprocessorList.create(new CountFilter(Range.open(0.0, (double) minFeatureCount)).asSequenceProcessor());
   }
 
   @Override

@@ -22,7 +22,6 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.apollo.ml.Dataset;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.Learner;
@@ -30,6 +29,7 @@ import com.davidbracewell.apollo.ml.classification.ClassifierEvaluation;
 import com.davidbracewell.apollo.ml.classification.ClassifierLearner;
 import com.davidbracewell.apollo.ml.classification.NaiveBayes;
 import com.davidbracewell.apollo.ml.classification.NaiveBayesLearner;
+import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;

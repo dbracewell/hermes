@@ -29,7 +29,6 @@ import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
-import com.davidbracewell.stream.JavaMStream;
 import com.davidbracewell.stream.MStream;
 import lombok.NonNull;
 
@@ -109,7 +108,7 @@ public class FileCorpus implements Corpus, Serializable {
 
   @Override
   public MStream<Document> stream() {
-    return new JavaMStream<>(iterator());
+    return getStreamingContext().stream(iterator());
   }
 
   @Override

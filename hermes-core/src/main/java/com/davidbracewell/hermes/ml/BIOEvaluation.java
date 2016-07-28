@@ -21,8 +21,8 @@
 
 package com.davidbracewell.hermes.ml;
 
-import com.davidbracewell.apollo.ml.Dataset;
 import com.davidbracewell.apollo.ml.Evaluation;
+import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.sequence.Labeling;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;

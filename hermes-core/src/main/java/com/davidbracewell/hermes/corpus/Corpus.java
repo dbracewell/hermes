@@ -21,15 +21,16 @@
 
 package com.davidbracewell.hermes.corpus;
 
-import com.davidbracewell.apollo.ml.Dataset;
+import com.davidbracewell.apollo.ContingencyTable;
+import com.davidbracewell.apollo.ContingencyTableCalculator;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.LabeledDatum;
+import com.davidbracewell.apollo.ml.data.Dataset;
+import com.davidbracewell.apollo.ml.data.DatasetType;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
-import com.davidbracewell.apollo.stats.ContingencyTable;
-import com.davidbracewell.apollo.stats.ContingencyTableCalculator;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.HashMapCounter;
@@ -224,7 +225,7 @@ public interface Corpus extends Iterable<Document> {
    * @return the dataset
    */
   default Dataset<Sequence> asSequenceDataSet(@NonNull SequenceFeaturizer<Annotation> featurizer) {
-    return Dataset.sequence().type(Dataset.Type.InMemory).source(asSequenceStream().map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+    return Dataset.sequence().type(DatasetType.InMemory).source(asSequenceStream().map(seq -> featurizer.extractSequence(seq.iterator()))).build();
   }
 
   /**
@@ -329,13 +330,13 @@ public interface Corpus extends Iterable<Document> {
    *
    * @return the data set type
    */
-  default Dataset.Type getDataSetType() {
+  default DatasetType getDataSetType() {
     if (isInMemory()) {
-      return Dataset.Type.InMemory;
+      return DatasetType.InMemory;
     } else if (isDistributed()) {
-      return Dataset.Type.Distributed;
+      return DatasetType.Distributed;
     }
-    return Dataset.Type.OffHeap;
+    return DatasetType.OffHeap;
   }
 
   /**

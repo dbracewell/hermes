@@ -27,7 +27,6 @@ import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
-import com.davidbracewell.stream.JavaMStream;
 import com.davidbracewell.stream.MStream;
 import lombok.NonNull;
 
@@ -96,7 +95,7 @@ public class InMemoryCorpus implements Corpus, Serializable {
 
   @Override
   public MStream<Document> stream() {
-    return new JavaMStream<>(documents);
+    return getStreamingContext().stream(documents);
   }
 
   @Override

@@ -1,9 +1,8 @@
 package com.davidbracewell.hermes.ml.pos;
 
-import com.davidbracewell.apollo.ml.Dataset;
 import com.davidbracewell.apollo.ml.classification.AveragedPerceptronLearner;
-import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
-import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
+import com.davidbracewell.apollo.ml.data.Dataset;
+import com.davidbracewell.apollo.ml.data.DatasetType;
 import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
@@ -55,7 +54,7 @@ public class POSTrainer extends CommandLineApplication {
 
   protected Dataset<Sequence> loadDataset() throws Exception {
     return Dataset.sequence()
-      .type(Dataset.Type.InMemory)
+      .type(DatasetType.InMemory)
       .source(
         Corpus
           .builder()
@@ -83,14 +82,11 @@ public class POSTrainer extends CommandLineApplication {
   protected void train() throws Exception {
     Dataset<Sequence> train = loadDataset();
     if (minFeatureCount > 1) {
-      train = train.preprocess(PreprocessorList.create(new CountFilter(d -> d >= minFeatureCount).asSequenceProcessor()));
+//      train = train.preprocess(PreprocessorList.create(new CountFilter(Range.open((double) minFeatureCount, Double.MAX_VALUE)).asSequenceProcessor()));
     }
-    SequenceLabelerLearner learner =
-//      new MEMMLearner();
-      new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
-//      new CRFTrainer();
+    SequenceLabelerLearner learner = new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
     learner.setValidator(new POSValidator());
-    learner.setParameter("maxIterations", 250);
+    learner.setParameter("maxIterations", 200);
     learner.setParameter("tolerance", 1E-8);
     learner.setParameter("verbose", true);
     learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);

@@ -23,10 +23,7 @@ package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.function.SerializableBinaryOperator;
-import com.davidbracewell.function.SerializableConsumer;
-import com.davidbracewell.function.SerializableFunction;
-import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.function.*;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Hermes;
@@ -35,13 +32,11 @@ import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.stream.*;
 import com.google.common.collect.Iterators;
 import lombok.NonNull;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
-import java.util.function.ToDoubleFunction;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -78,8 +73,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
 
   @Override
   public MStream<Document> repartition(int numPartition) {
-    JavaRDD<String> rdd = Cast.<SparkStream<String>>as(source).getRDD().repartition(numPartition);
-    source = new SparkStream<>(rdd);
+    source = source.repartition(numPartition);
     return this;
   }
 
@@ -119,6 +113,11 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   @Override
   public void close() throws IOException {
     source.close();
+  }
+
+  @Override
+  public SerializableRunnable getOnCloseHandler() {
+    return source.getOnCloseHandler();
   }
 
   @Override
@@ -256,7 +255,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   }
 
   @Override
-  public void onClose(Runnable closeHandler) {
+  public void onClose(SerializableRunnable closeHandler) {
     source.onClose(closeHandler);
   }
 
@@ -266,27 +265,27 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   }
 
   @Override
-  public Optional<Document> max(@NonNull Comparator<? super Document> comparator) {
-    return source.map(json -> Document.fromJson(json)).max(comparator);
+  public Optional<Document> max(@NonNull SerializableComparator<? super Document> comparator) {
+    return source.map(Document::fromJson).max(comparator);
   }
 
   @Override
-  public Optional<Document> min(@NonNull Comparator<? super Document> comparator) {
-    return source.map(json -> Document.fromJson(json)).min(comparator);
+  public Optional<Document> min(@NonNull SerializableComparator<? super Document> comparator) {
+    return source.map(Document::fromJson).min(comparator);
   }
 
   @Override
   public <U> MPairStream<Document, U> zip(@NonNull MStream<U> other) {
-    return source.map(json -> Document.fromJson(json)).zip(other);
+    return source.map(Document::fromJson).zip(other);
   }
 
   @Override
   public MPairStream<Document, Long> zipWithIndex() {
-    return source.map(json -> Document.fromJson(json)).zipWithIndex();
+    return source.map(Document::fromJson).zipWithIndex();
   }
 
   @Override
-  public MDoubleStream mapToDouble(@NonNull ToDoubleFunction<? super Document> function) {
+  public MDoubleStream mapToDouble(@NonNull SerializableToDoubleFunction<? super Document> function) {
     return source.mapToDouble(json -> {
       Hermes.initializeWorker(configBroadcast.getValue());
       return function.applyAsDouble(Document.fromJson(json));

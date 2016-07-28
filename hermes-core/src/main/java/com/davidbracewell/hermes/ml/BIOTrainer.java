@@ -22,7 +22,7 @@
 
 package com.davidbracewell.hermes.ml;
 
-import com.davidbracewell.apollo.ml.Dataset;
+import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
 import com.davidbracewell.apollo.ml.sequence.*;
@@ -32,6 +32,7 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.io.resource.Resource;
+import com.google.common.collect.Range;
 
 /**
  * @author David B. Bracewell
@@ -65,7 +66,7 @@ public abstract class BIOTrainer extends CommandLineApplication {
   protected PreprocessorList<Sequence> getPreprocessors() {
     if (minFeatureCount > 1) {
       return PreprocessorList.create(
-        new CountFilter(d -> d >= minFeatureCount).asSequenceProcessor()
+        new CountFilter(Range.open(0.0, (double) minFeatureCount)).asSequenceProcessor()
       );
     }
     return PreprocessorList.create();
