@@ -3,6 +3,8 @@ package com.davidbracewell.hermes.ml.pos;
 import com.davidbracewell.apollo.ml.classification.AveragedPerceptronLearner;
 import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.data.DatasetType;
+import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
+import com.davidbracewell.apollo.ml.preprocess.filter.MinCountFilter;
 import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
@@ -82,7 +84,7 @@ public class POSTrainer extends CommandLineApplication {
   protected void train() throws Exception {
     Dataset<Sequence> train = loadDataset();
     if (minFeatureCount > 1) {
-//      train = train.preprocess(PreprocessorList.create(new CountFilter(Range.open((double) minFeatureCount, Double.MAX_VALUE)).asSequenceProcessor()));
+      train = train.preprocess(PreprocessorList.create(new MinCountFilter(minFeatureCount).asSequenceProcessor()));
     }
     SequenceLabelerLearner learner = new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
     learner.setValidator(new POSValidator());
