@@ -24,6 +24,9 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
+import com.davidbracewell.atlas.AdjacencyMatrix;
+import com.davidbracewell.atlas.Graph;
+import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.HashMapCounter;
 import com.davidbracewell.conversion.Cast;
@@ -31,6 +34,7 @@ import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.string.StringUtils;
+import com.davidbracewell.tuple.Tuple;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
@@ -40,6 +44,8 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static com.davidbracewell.tuple.Tuples.$;
 
 /**
  * <p>
@@ -219,7 +225,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     List<HString> ngrams = new ArrayList<>();
     for (int i = 0; i < length(); i++) {
       for (int j = i + minOrder; j <= length() && j <= i + maxOrder; j++) {
-        ngrams.add(substring(i,j));
+        ngrams.add(substring(i, j));
       }
     }
     return ngrams;
@@ -633,8 +639,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   /**
    * Ngrams list.
    *
-   * @param minOrder       the min order
-   * @param maxOrder       the max order
+   * @param minOrder the min order
+   * @param maxOrder the max order
    * @return the list
    */
   public List<HString> tokenNGrams(int minOrder, int maxOrder) {
@@ -788,7 +794,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    * @param relativeEnd   the relative end within this HString
    * @return the specified substring.
    * @throws IndexOutOfBoundsException - if the relativeStart is negative, or relativeEnd is larger than the length of
-   *                                                                   this HString object, or relativeStart is larger
+   *                                   this HString object, or relativeStart is larger
    *                                   than relativeEnd.
    */
   public HString substring(int relativeStart, int relativeEnd) {
@@ -990,5 +996,38 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return si;
   }
 
+  public Graph<Annotation> dependencyGraph() {
+    return annotationGraph($(Types.DEPENDENCY), Types.TOKEN);
+  }
+
+  public Graph<Annotation> dependencyGraph(AnnotationType type1, AnnotationType... other) {
+    return annotationGraph($(Types.DEPENDENCY), type1, other);
+  }
+
+  public Graph<Annotation> annotationGraph(Tuple relationTypes, AnnotationType type, AnnotationType... annotationTypes) {
+    Graph<Annotation> g = new AdjacencyMatrix<>(new RelationEdgeFactory());
+    List<Annotation> vertices = interleaved(type, annotationTypes);
+    Set<RelationType> relationTypeList = Collect.stream(relationTypes.iterator()).filter(r -> r instanceof RelationType)
+      .map(Cast::<RelationType>as).collect(Collectors.toSet());
+    g.addVertices(vertices);
+
+    for (Annotation source : vertices) {
+      Collection<Relation> relations = source.allRelations(true);
+      for (Relation relation : relations) {
+        if (relationTypeList.contains(relation.getType())) {
+          relation.getTarget(this).ifPresent(target -> {
+            if (g.containsVertex(target)) {
+              if (!g.containsEdge(source, target)) {
+                RelationEdge edge = g.addEdge(source, target);
+                edge.setRelation(relation.getValue());
+                edge.setRelationType(relation.getType());
+              }
+            }
+          });
+        }
+      }
+    }
+    return g;
+  }
 
 }//END OF HString

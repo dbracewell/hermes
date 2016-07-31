@@ -74,7 +74,6 @@ public class MaltParserAnnotator extends SentenceLevelAnnotator {
         ConcurrentDependencyNode node = graph.getTokenNode(i);
         ConcurrentDependencyEdge edge = node.getHeadEdge();
 
-//        System.out.println(node.getIndex() + ": " + node.getLabel(1) + " => " + node.getHead().getLabel(1));
 
         Annotation child = tokens.get(node.getIndex() - 1);
         if (edge.getSource().getIndex() != 0) {
