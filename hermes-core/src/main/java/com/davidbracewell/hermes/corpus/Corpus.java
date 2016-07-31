@@ -38,6 +38,7 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
@@ -560,9 +561,12 @@ public interface Corpus extends Iterable<Document> {
    * @param toString        the to string
    * @return the counter
    */
-  default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, @NonNull SerializableFunction<? super Annotation, String> toString) {
-    Counter<Tuple> unigrams = ngrams(NGramSpec.create().order(1));
-    Counter<Tuple> bigrams = ngrams(NGramSpec.create().order(2)).filterByValue(v -> v >= minCount);
+  default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, @NonNull SerializableFunction<HString, String> toString) {
+    Counter<Tuple> unigrams = ngrams(NGramSpec.create().toStringFunction(toString).order(1));
+    Counter<Tuple> bigrams = ngrams(NGramSpec.create()
+      .toStringFunction(toString)
+      .filter(hString -> !removeStopWords || !StopWords.getInstance(hString.getLanguage()).hasStopWord(hString))
+      .order(2)).filterByValue(v -> v >= minCount);
     Counter<Tuple> filtered = new HashMapCounter<>();
     bigrams.items().forEach(bigram -> {
       double score = calculator.calculate(

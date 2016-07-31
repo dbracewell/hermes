@@ -89,7 +89,7 @@ public class POSTrainer extends CommandLineApplication {
     SequenceLabelerLearner learner = new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
     learner.setValidator(new POSValidator());
     learner.setParameter("maxIterations", 200);
-    learner.setParameter("tolerance", 1E-8);
+    learner.setParameter("tolerance", 1E-4);
     learner.setParameter("verbose", true);
     learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
     SequenceLabeler labeler = learner.train(train);
