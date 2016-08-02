@@ -215,8 +215,8 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
   }
 
   @Override
-  public MStream<Document> sample(int number) {
-    return of(source.sample(number));
+  public MStream<Document> sample(boolean withReplacement, int number) {
+    return of(source.sample(withReplacement,number));
   }
 
   @Override
