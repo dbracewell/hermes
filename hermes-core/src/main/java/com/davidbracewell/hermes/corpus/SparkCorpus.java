@@ -125,7 +125,7 @@ public class SparkCorpus implements Corpus, Serializable {
 
   @Override
   public Corpus sample(int size) {
-    return new MStreamCorpus(stream.sample(size), getDocumentFactory());
+    return new MStreamCorpus(stream.sample(false, size), getDocumentFactory());
   }
 
   @Override
