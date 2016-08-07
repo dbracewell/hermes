@@ -30,6 +30,7 @@ public abstract class DSVCorpus extends ColumnBasedFormat {
     this.delimiter = delimiter;
   }
 
+
   @Override
   final Iterable<List<String>> rows(Resource resource) {
     try {

@@ -412,7 +412,7 @@ public enum POS implements Tag {
     } else if (!StringPredicates.HAS_LETTER.test(tag)) {
       return SYM;
     }
-    throw new IllegalArgumentException(tag + " is not a know PartOfSpeech");
+    throw new IllegalArgumentException(tag + " is not a known PartOfSpeech");
   }
 
   /**

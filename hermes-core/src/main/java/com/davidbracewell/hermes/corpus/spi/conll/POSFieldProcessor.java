@@ -19,49 +19,51 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.corpus.spi;
+package com.davidbracewell.hermes.corpus.spi.conll;
 
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.corpus.spi.CoNLLColumnProcessor;
+import com.davidbracewell.hermes.corpus.spi.CoNLLRow;
+import com.davidbracewell.hermes.corpus.spi.POSCorrection;
+import com.davidbracewell.tuple.Tuple2;
+import org.kohsuke.MetaInfServices;
 
 import java.util.List;
+import java.util.Map;
+
+import static com.davidbracewell.hermes.corpus.spi.CoNLLFormat.EMPTY_FIELD;
 
 /**
  * @author David B. Bracewell
  */
-public class POSFieldProcessor implements FieldProcessor {
-
-  private final int index;
-
-  public POSFieldProcessor(int index) {
-    this.index = index;
-  }
+@MetaInfServices
+public final class POSFieldProcessor implements CoNLLColumnProcessor {
 
   @Override
-  public void process(Document document, List<List<String>> rows) {
-    boolean completed = false;
-    for (int i = 0; i < rows.size(); i++) {
-      if (rows.get(i).size() > index && !rows.get(i).get(index).equals("_") && !rows.get(i).get(index).equals("-")) {
-        Annotation token = document.tokenAt(i);
-        String posStr = rows.get(i).get(index);
-        if (posStr.contains("|")) {
-          posStr = posStr.substring(0, posStr.indexOf('|'));
-        }
-        completed = true;
-        document.tokenAt(i).put(Types.PART_OF_SPEECH, POS.fromString(POSCorrection.pos(token.toString(), posStr)));
+  public void processInput(Document document, List<CoNLLRow> documentRows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
+    documentRows.forEach(row -> {
+      String posStr = row.getPos();
+      if (posStr.contains("|")) {
+        posStr = posStr.substring(0, posStr.indexOf('|'));
       }
-    }
-    if (completed) {
-      document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
-    }
+      document.getAnnotation(row.getAnnotationID()).get().put(Types.PART_OF_SPEECH, POS.fromString(POSCorrection.pos(row.getWord(), posStr)));
+
+    });
+    document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, true, "PROVIDED");
   }
 
   @Override
   public String processOutput(Annotation sentence, Annotation token, int index) {
     POS pos = token.getPOS();
-    return pos == null ? "-" : pos.asString();
+    return pos == null ? EMPTY_FIELD : pos.asString();
+  }
+
+  @Override
+  public String getFieldName() {
+    return "POS";
   }
 
 }//END OF POSFieldProcessor

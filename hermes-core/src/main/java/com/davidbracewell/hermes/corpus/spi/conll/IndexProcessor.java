@@ -19,28 +19,37 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.corpus.spi;
+package com.davidbracewell.hermes.corpus.spi.conll;
 
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.corpus.spi.CoNLLColumnProcessor;
+import com.davidbracewell.hermes.corpus.spi.CoNLLRow;
+import com.davidbracewell.tuple.Tuple2;
+import org.kohsuke.MetaInfServices;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author David B. Bracewell
  */
-public enum NoOptProcessor implements FieldProcessor {
-  INSTANCE;
+@MetaInfServices
+public final class IndexProcessor implements CoNLLColumnProcessor {
 
   @Override
-  public void process(Document document, List<List<String>> rows) {
+  public void processInput(Document document, List<CoNLLRow> documentRows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
 
   }
 
   @Override
-  public String processOutput(Annotation sentence, Annotation token, int index) {
-    return "-";
+  public String processOutput(Annotation document, Annotation token, int index) {
+    return Integer.toString(index + 1);
   }
 
+  @Override
+  public String getFieldName() {
+    return "INDEX";
+  }
 
-}//END OF NoOptProcessor
+}// END OF IndexProcessor

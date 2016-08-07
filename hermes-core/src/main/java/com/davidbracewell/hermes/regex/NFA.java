@@ -68,14 +68,12 @@ final class NFA implements Serializable {
 
         if (s.node.accepts()) {
           if (s.stack.isEmpty() || (s.stack.size() == 1 && s.node.consumes && s.node.name.equals(s.stack.peek()))) {
-//            System.out.println("ACCEPTING: " + s.node.name + ", " + HString.union(tokens.subList(startIndex, s.inputPosition)) + " : " + s.stack);
             accepts.add(s);
           }
         }
 
         Deque<Tuple2<String, Integer>> currentStack = s.stack;
         if (s.node.emits) {
-//          System.out.println("EMITTING: " + s.node.name);
           currentStack.push(Tuples.$(s.node.name, s.inputPosition));
         }
 
@@ -83,7 +81,6 @@ final class NFA implements Serializable {
           if (s.node.consumes) {
             State next = new State(s.inputPosition, n, currentStack, s.namedGroups);
             Tuple2<String, Integer> ng = next.stack.pop();
-//            System.out.println("CONSUMING: " + s.node.name + ", " + HString.union(tokens.subList(ng.v2, s.inputPosition)));
             next.namedGroups.put(ng.getKey(), HString.union(tokens.subList(ng.v2, s.inputPosition)));
             newStates.add(next);
           }

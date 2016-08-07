@@ -49,9 +49,24 @@ public interface POSCorrection {
         return "/";
     }
     switch (word) {
+      case "\"\"":
+      case "``":
+      case "''":
       case "”":
       case "“":
         return "\"";
+      case "-LRB-":
+        return "(";
+      case "-RRB-":
+        return ")";
+      case "-LSB-":
+        return "[";
+      case "-RSB-":
+        return "]";
+      case "-LCB-":
+        return "{";
+      case "-RCB-":
+        return "}";
       case "’s":
         return "'s";
       case "’":

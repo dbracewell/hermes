@@ -19,20 +19,26 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.corpus.spi;
+package com.davidbracewell.hermes.corpus.spi.conll;
 
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Document;
-
-import java.util.List;
+import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.corpus.spi.CoNLLColumnProcessor;
+import org.kohsuke.MetaInfServices;
 
 /**
  * @author David B. Bracewell
  */
-public interface FieldProcessor {
+@MetaInfServices(CoNLLColumnProcessor.class)
+public class PhraseChunkProcessor extends IOBFieldProcessor {
 
-  void process(Document document, List<List<String>> rows);
+  public PhraseChunkProcessor() {
+    super(Types.PHRASE_CHUNK, Types.PART_OF_SPEECH);
+  }
 
-  String processOutput(Annotation sentence, Annotation token, int index);
 
-}//END OF FieldProcessor
+  @Override
+  public String getFieldName() {
+    return "CHUNK";
+  }
+
+}//END OF PhraseChunkProcessor

@@ -24,8 +24,6 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
-import com.davidbracewell.atlas.AdjacencyMatrix;
-import com.davidbracewell.atlas.Graph;
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Counter;
 import com.davidbracewell.collection.HashMapCounter;
@@ -996,16 +994,16 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     return si;
   }
 
-  public Graph<Annotation> dependencyGraph() {
+  public RelationGraph dependencyGraph() {
     return annotationGraph($(Types.DEPENDENCY), Types.TOKEN);
   }
 
-  public Graph<Annotation> dependencyGraph(AnnotationType type1, AnnotationType... other) {
+  public RelationGraph dependencyGraph(AnnotationType type1, AnnotationType... other) {
     return annotationGraph($(Types.DEPENDENCY), type1, other);
   }
 
-  public Graph<Annotation> annotationGraph(Tuple relationTypes, AnnotationType type, AnnotationType... annotationTypes) {
-    Graph<Annotation> g = new AdjacencyMatrix<>(new RelationEdgeFactory());
+  public RelationGraph annotationGraph(Tuple relationTypes, AnnotationType type, AnnotationType... annotationTypes) {
+    RelationGraph g = new RelationGraph();
     List<Annotation> vertices = interleaved(type, annotationTypes);
     Set<RelationType> relationTypeList = Collect.stream(relationTypes.iterator()).filter(r -> r instanceof RelationType)
       .map(Cast::<RelationType>as).collect(Collectors.toSet());

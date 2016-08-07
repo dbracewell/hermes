@@ -1,7 +1,9 @@
 package com.davidbracewell.hermes;
 
+import lombok.Data;
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.Value;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -11,13 +13,20 @@ import java.util.Optional;
  *
  * @author David B. Bracewell
  */
-@Value
+@Data
 public class Relation implements Serializable {
   private static final long serialVersionUID = 1L;
   private final RelationType type;
-  private final String value;
+  @Getter
+  @Setter
+  private String value;
   private final long target;
 
+  public Relation(RelationType type, String value, long target) {
+    this.type = type;
+    this.value = value;
+    this.target = target;
+  }
 
   /**
    * Gets target.
@@ -28,5 +37,7 @@ public class Relation implements Serializable {
   public Optional<Annotation> getTarget(@NonNull HString hString) {
     return hString.document().getAnnotation(target);
   }
+
+
 
 }// END OF Relation
