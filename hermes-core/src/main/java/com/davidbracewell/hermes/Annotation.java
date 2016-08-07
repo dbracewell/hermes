@@ -201,8 +201,8 @@ public final class Annotation extends Fragment implements Serializable {
     return getRelationStream(true)
       .filter(r -> r.getType() == Types.DEPENDENCY)
       .filter(r -> r.getTarget(this).isPresent())
-      .filter(r -> !this.overlaps(r.getTarget(this).get()))
-      .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).get()))
+      .filter(r -> !this.overlaps(r.getTarget(this).orElse(null)))
+      .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).orElse(null)))
       .findFirst();
   }
 

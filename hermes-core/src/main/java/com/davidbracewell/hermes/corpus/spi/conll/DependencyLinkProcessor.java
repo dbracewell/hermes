@@ -55,9 +55,9 @@ public class DependencyLinkProcessor implements CoNLLColumnProcessor {
 
   @Override
   public String processOutput(Annotation document, Annotation token, int index) {
-    long targetID = token.dependencyRelation().map(Tuple2::getV2).map(Annotation::getId).orElse(-1L);
-    if (targetID == -1) {
-      return EMPTY_FIELD;
+    long targetID = token.dependencyRelation().map(Tuple2::getV2).map(Annotation::getId).orElse(0L);
+    if (targetID == 0L) {
+      return "0";
     }
     List<Annotation> sentence = document.tokens();
     for (int i = 0; i < sentence.size(); i++) {

@@ -49,7 +49,6 @@ import static com.davidbracewell.tuple.Tuples.$;
 @MetaInfServices(CorpusFormat.class)
 public class CoNLLFormat extends FileBasedFormat {
   private static final long serialVersionUID = 1L;
-  private volatile List<CoNLLColumnProcessor> processors;
   public static final String FIELDS_PROPERTY = "CONLL.fields";
   public static final String FS_PROPERTY = "CONLL.fs";
   public static final String DOC_PER_SENT_PROPERTY = "CONLL.docPerSent";
@@ -72,18 +71,11 @@ public class CoNLLFormat extends FileBasedFormat {
   }
 
   private List<CoNLLColumnProcessor> getProcessors() {
-    if (processors == null) {
-      synchronized (this) {
-        if (processors == null) {
-          List<String> fields = Config.get(FIELDS_PROPERTY).asList(String.class);
-          if (fields == null || fields.isEmpty()) {
-            fields = Arrays.asList("WORD", "POS", "CHUNK");
-          }
-          processors = CoNLLProcessors.get(fields);
-        }
-      }
+    List<String> fields = Config.get(FIELDS_PROPERTY).asList(String.class);
+    if (fields == null || fields.isEmpty()) {
+      fields = Arrays.asList("WORD", "POS", "CHUNK");
     }
-    return processors;
+    return CoNLLProcessors.get(fields);
   }
 
   private Document createDocument(String content, List<CoNLLRow> list, DocumentFactory documentFactory) {
@@ -201,7 +193,6 @@ public class CoNLLFormat extends FileBasedFormat {
         }
         builder.append(SystemInfo.LINE_SEPARATOR);
       }
-      builder.append(SystemInfo.LINE_SEPARATOR);
       builder.append(SystemInfo.LINE_SEPARATOR);
     }
     resource.write(builder.toString());
