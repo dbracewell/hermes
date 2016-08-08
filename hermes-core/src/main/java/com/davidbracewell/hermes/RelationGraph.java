@@ -31,8 +31,10 @@ import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.io.Resources;
+import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -61,11 +63,20 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
 //      )
 //    );
 
+    doc.dependencyGraph().render(Resources.from("/home/david/out.png"));
+  }
+
+
+  public void render(@NonNull Resource output) throws IOException{
+    render(output, GraphViz.Format.PNG);
+  }
+
+  public void render(@NonNull Resource output, @NonNull GraphViz.Format format) throws IOException{
     GraphViz<Annotation> graphViz = new GraphViz<>();
     graphViz.setVertexEncoder(v -> new Vertex(v.toString() + "_" + v.getPOS().toString(), Collections.emptyMap()));
     graphViz.setEdgeEncoder(e -> Collect.map("label", Cast.<RelationEdge>as(e).getRelation()));
-    graphViz.setFormat(GraphViz.Format.PNG);
-    graphViz.render(doc.dependencyGraph(), Resources.from("/home/david/out.png"));
+    graphViz.setFormat(format);
+    graphViz.render(this, output);
   }
 
   private static class MatchState {
