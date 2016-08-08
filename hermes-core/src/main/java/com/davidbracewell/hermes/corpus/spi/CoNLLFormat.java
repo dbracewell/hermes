@@ -144,7 +144,7 @@ public class CoNLLFormat extends FileBasedFormat {
             case "POS":
               row.setPos(parts.get(i));
               break;
-            case "DEPENDENCY_PARENT":
+            case "HEAD":
               row.setParent(Integer.parseInt(parts.get(i)));
               break;
             case "DEPENDENCY_RELATION":

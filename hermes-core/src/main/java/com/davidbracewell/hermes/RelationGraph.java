@@ -47,26 +47,25 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
 
   public static void main(String[] args) throws Exception {
     Config.initialize("");
-    Document doc = Document.create("1", "He walked quickly down the crowded street.");
+    Document doc = Document.create("1", "He quickly walked down the crowded street.");
     Pipeline.process(doc, Types.DEPENDENCY);
     RelationGraph g = doc.dependencyGraph();
     System.out.println(doc.toPOSString());
-    System.out.println(g.edges());
 //    System.out.println(g.shortestConnection(doc.tokenAt(0), doc.tokenAt(3)));
 
-    RelationGraph match = RelationGraph.from(
-      g.match(
-        (RelationEdge e) -> e.getRelation().equals("nsubj"),
-        (RelationEdge e) -> e.getRelation().equals("advmod"),
-        (RelationEdge e) -> e.getRelation().equals("prep")
-      )
-    );
+//    RelationGraph match = RelationGraph.from(
+//      g.match(
+//        (RelationEdge e) -> e.getRelation().equals("nsubj"),
+//        (RelationEdge e) -> e.getRelation().equals("advmod"),
+//        (RelationEdge e) -> e.getRelation().equals("prep")
+//      )
+//    );
 
     GraphViz<Annotation> graphViz = new GraphViz<>();
     graphViz.setVertexEncoder(v -> new Vertex(v.toString() + "_" + v.getPOS().toString(), Collections.emptyMap()));
     graphViz.setEdgeEncoder(e -> Collect.map("label", Cast.<RelationEdge>as(e).getRelation()));
     graphViz.setFormat(GraphViz.Format.PNG);
-    graphViz.render(match, Resources.from("/home/david/out.png"));
+    graphViz.render(doc.dependencyGraph(), Resources.from("/home/david/out.png"));
   }
 
   private static class MatchState {

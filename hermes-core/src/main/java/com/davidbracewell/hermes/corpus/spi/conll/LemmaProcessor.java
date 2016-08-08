@@ -23,7 +23,6 @@ package com.davidbracewell.hermes.corpus.spi.conll;
 
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.Relation;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.spi.CoNLLColumnProcessor;
 import com.davidbracewell.hermes.corpus.spi.CoNLLRow;
@@ -33,44 +32,27 @@ import org.kohsuke.MetaInfServices;
 import java.util.List;
 import java.util.Map;
 
-import static com.davidbracewell.hermes.corpus.spi.CoNLLFormat.EMPTY_FIELD;
-import static com.davidbracewell.tuple.Tuples.$;
-
 /**
  * @author David B. Bracewell
  */
 @MetaInfServices
-public class DependencyLinkProcessor implements CoNLLColumnProcessor {
+public class LemmaProcessor implements CoNLLColumnProcessor {
 
   @Override
   public void processInput(Document document, List<CoNLLRow> documentRows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
-    documentRows.forEach(row -> {
-      if (row.getParent() > 0) {
-        long target = sentenceIndexToAnnotationId.get($(row.getSentence(), row.getParent()));
-        document.getAnnotation(row.getAnnotationID()).get()
-          .add(new Relation(Types.DEPENDENCY, row.getDepRelation(), target));
-      }
-    });
+    documentRows
+      .stream()
+      .filter(row -> row.hasOther("LEMMA"))
+      .forEach(row -> document.getAnnotation(row.getAnnotationID()).ifPresent(a -> a.put(Types.LEMMA, row.getOther("LEMMA"))));
   }
 
   @Override
   public String processOutput(Annotation document, Annotation token, int index) {
-    long targetID = token.dependencyRelation().map(Tuple2::getV2).map(Annotation::getId).orElse(-1L);
-    if (targetID  < 0L) {
-      return "0";
-    }
-    List<Annotation> sentence = document.tokens();
-    for (int i = 0; i < sentence.size(); i++) {
-      if (sentence.get(i).getId() == targetID) {
-        return Integer.toString(i + 1);
-      }
-    }
-    return EMPTY_FIELD;
+    return token.getLemma();
   }
 
   @Override
   public String getFieldName() {
-    return "HEAD";
+    return "LEMMA";
   }
-
-}//END OF DependencyLinkProcessor
+}//END OF LemmaProcessor

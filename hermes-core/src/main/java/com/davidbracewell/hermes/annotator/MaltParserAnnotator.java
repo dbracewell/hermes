@@ -28,6 +28,7 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Relation;
 import com.davidbracewell.hermes.Types;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
 import org.maltparser.concurrent.ConcurrentMaltParserModel;
 import org.maltparser.concurrent.ConcurrentMaltParserService;
 import org.maltparser.concurrent.graph.ConcurrentDependencyEdge;
@@ -66,14 +67,13 @@ public class MaltParserAnnotator extends SentenceLevelAnnotator {
     String[] input = new String[tokens.size()];
     for (int i = 0; i < tokens.size(); i++) {
       Annotation token = tokens.get(i);
-      input[i] = i + "\t" + token.toString() + "\t-\t" + token.getPOS().asString() + "\t" + token.getPOS().asString() + "\t-";
+      input[i] = i + "\t" + token.toString() + "\t" + token.getLemma() + "\t" + token.getPOS().asString() + "\t" + token.getPOS().asString() + "\t-";
     }
     try {
       ConcurrentDependencyGraph graph = model.parse(input);
       for (int i = 1; i <= graph.nTokenNodes(); i++) {
         ConcurrentDependencyNode node = graph.getTokenNode(i);
         ConcurrentDependencyEdge edge = node.getHeadEdge();
-
 
         Annotation child = tokens.get(node.getIndex() - 1);
         if (edge.getSource().getIndex() != 0) {
@@ -93,6 +93,6 @@ public class MaltParserAnnotator extends SentenceLevelAnnotator {
 
   @Override
   protected Set<AnnotatableType> furtherRequires() {
-    return Collections.singleton(Types.PART_OF_SPEECH);
+    return ImmutableSet.of(Types.PART_OF_SPEECH,Types.LEMMA);
   }
 }//END OF MaltParserAnnotator
