@@ -9,6 +9,7 @@ import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
+import com.google.common.base.Preconditions;
 import lombok.NonNull;
 import org.kohsuke.MetaInfServices;
 
@@ -46,6 +47,7 @@ public class POSTrainFormat extends FileBasedFormat {
       POS p = POS.fromString(pos.get(i));
       if (p != null && !p.isTag(POS.ANY)) {
         complete = true;
+        Preconditions.checkArgument(!p.isPhraseTag(), p.asString());
         document.tokenAt(i).put(Types.PART_OF_SPEECH, p);
       }
     }

@@ -47,7 +47,7 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
 
   public static void main(String[] args) throws Exception {
     Config.initialize("");
-    Document doc = Document.create("1", "He quickly walked down the crowded street.");
+    Document doc = Document.create("1", "He walked quickly down the crowded street.");
     Pipeline.process(doc, Types.DEPENDENCY);
     RelationGraph g = doc.dependencyGraph();
     System.out.println(doc.toPOSString());
