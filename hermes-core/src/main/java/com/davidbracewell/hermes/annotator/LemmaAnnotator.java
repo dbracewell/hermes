@@ -41,11 +41,10 @@ public class LemmaAnnotator implements Annotator, Serializable {
 
   @Override
   public void annotate(Document document) {
-    document.tokens().stream()
-      .forEach(token -> {
-        String lemma = Lemmatizers.getLemmatizer(token.getLanguage()).lemmatize(token);
-        token.put(Types.LEMMA, lemma.toLowerCase());
-      });
+    document.tokens().forEach(token -> {
+      String lemma = Lemmatizers.getLemmatizer(token.getLanguage()).lemmatize(token);
+      token.put(Types.LEMMA, lemma.toLowerCase());
+    });
   }
 
   @Override
