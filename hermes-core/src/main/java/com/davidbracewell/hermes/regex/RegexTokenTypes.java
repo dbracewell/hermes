@@ -22,8 +22,11 @@
 package com.davidbracewell.hermes.regex;
 
 
+import com.davidbracewell.Regex;
 import com.davidbracewell.parsing.HasLexicalPattern;
 import com.davidbracewell.parsing.ParserTokenType;
+
+import static com.davidbracewell.Re.quote;
 
 /**
  * @author David B. Bracewell
@@ -32,27 +35,33 @@ public enum RegexTokenTypes implements ParserTokenType, HasLexicalPattern {
   REGEX("/(\\\\.|[^/>])+?/i?"),
   PATTERNTOKEN("(\\(\\?[li]+\\))?(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+|(\"(\\\\.|[^\"])+?\")"),
   TAGMATCH("\\$(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+"),
-  ATTRMATCH("\\$(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+:((\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+|(\"(\\\\.|[^\"])+?\"))"),
+  ATTRMATCH(
+    "\\$(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+:((\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+|(\"(\\\\.|[^\"])+?\"))"),
   LEXICON("\\%(\"[^\"]+\"|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E]+)"),
   ANNOTATION("\\{(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+"),
-  PUNCTUATION("\\$\\{PUNCT\\}"),
-  NUMBER("\\$\\{NUMBER\\}"),
-  STOPWORD("\\$\\{STOPWORD\\}"),
+  PUNCTUATION(quote("${PUNCT}")),
+  NUMBER(quote("${NUMBER}")),
+  STOPWORD(quote("${STOPWORD}")),
   ANY("~(\\d+)?"),
-  NOT("\\^"),
+  NOT(quote("^")),
   RANGE("\\{\\d+\\s*,\\s*(\\d+|\\*)\\}"),
-  LOOKAHEADPOST("\\(\\?>"),
-  NEGLOOKAHEADPOST("\\(\\?\\!>"),
+  LOOKAHEADPOST(quote("(?>")),
+  NEGLOOKAHEADPOST(quote("(?!>")),
   GROUP("\\(\\?<[A-Za-z_]+>"),
   PARENT("/>"),
   RELATION("@(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+(:(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?\\E])+)?"),
-  RELATIONGROUP("\\{@(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+(:(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+)?"),
-  ;
+  RELATIONGROUP("\\{@(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+(:(\\\\.|[^\\p{Z}\\Q@$%#/{}:\"()[]&|~+*?^\\E])+)?");
+
+  //@ followed by escaped char or (valid phrase followed by 0 or 1 (: followed by one or more escaped char or not resevered))
 
   private final String pattern;
 
   RegexTokenTypes(String pattern) {
     this.pattern = pattern;
+  }
+
+  RegexTokenTypes(Regex pattern) {
+    this.pattern = pattern.getPattern();
   }
 
   @Override

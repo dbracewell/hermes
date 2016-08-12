@@ -35,12 +35,19 @@ import java.util.Locale;
 import java.util.NoSuchElementException;
 
 /**
+ * The type Break iterator tokenizer.
+ *
  * @author David B. Bracewell
  */
 public class BreakIteratorTokenizer implements Tokenizer, Serializable {
   private static final long serialVersionUID = 1L;
   private final Locale locale;
 
+  /**
+   * Instantiates a new Break iterator tokenizer.
+   *
+   * @param locale the locale
+   */
   public BreakIteratorTokenizer(Locale locale) {
     this.locale = locale;
   }
