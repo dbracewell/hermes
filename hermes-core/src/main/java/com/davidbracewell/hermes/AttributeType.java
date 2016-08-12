@@ -32,10 +32,12 @@ import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.attribute.AttributeValueCodec;
 import com.davidbracewell.hermes.attribute.CommonCodecs;
-import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.attribute.EntityType;
-import com.davidbracewell.io.structured.*;
-import com.davidbracewell.io.structured.Readable;
+import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.io.structured.ElementType;
+import com.davidbracewell.io.structured.StructuredReader;
+import com.davidbracewell.io.structured.StructuredSerializable;
+import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.reflection.Reflect;
 import com.davidbracewell.reflection.ReflectionException;
 import com.davidbracewell.reflection.ValueType;
@@ -48,7 +50,12 @@ import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.ObjectStreamException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p> An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link
@@ -86,9 +93,9 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
     .put(Date.class, CommonCodecs.DATE)
     .put(Language.class, CommonCodecs.LANGUAGE)
     .build();
+  private static final String typeName = "Attribute";
   private volatile ValueType valueType;
   private volatile transient AttributeValueCodec codec;
-  private static final String typeName = "Attribute";
 
   private AttributeType(String name) {
     super(name);
@@ -110,7 +117,8 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
     name = Types.toName(typeName, name);
     if (index.isDefined(name)) {
       AttributeType attributeType = index.valueOf(name);
-      Preconditions.checkArgument(attributeType.getValueType().getType().equals(valueType), "Attempting to register an existing attribute with a new value type.");
+      Preconditions.checkArgument(attributeType.getValueType().getType().equals(valueType),
+                                  "Attempting to register an existing attribute with a new value type.");
       return attributeType;
     }
     AttributeType attributeType = index.register(new AttributeType(name));
@@ -160,17 +168,6 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
     return valueType.convert(list);
   }
 
-  private AttributeValueCodec getCodec() {
-    if (codec == null) {
-      synchronized (this) {
-        if (codec == null) {
-          codec = Config.get("Attribute", name(), "codec").as(AttributeValueCodec.class, defaultCodecs.get(getValueType().getType()));
-        }
-      }
-    }
-    return codec;
-  }
-
   static Tuple2<AttributeType, Val> read(StructuredReader reader) throws IOException {
 
     AttributeType attributeType;
@@ -198,19 +195,21 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
       default:
         Tuple2<String, Val> keyValue = reader.nextKeyValue();
         attributeType = AttributeType.create(keyValue.getKey());
-        if (attributeType.getCodec() == null && Readable.class.isAssignableFrom(attributeType.getValueType().getType())) {
+        if (attributeType.getCodec() == null && StructuredSerializable.class.isAssignableFrom(attributeType
+                                                                                  .getValueType()
+                                                                                  .getType())) {
           try {
             value = Reflect.onClass(attributeType.getValueType().getType()).create();
-            Cast.<Readable>as(value).read(reader);
+            Cast.<StructuredSerializable>as(value).read(reader);
           } catch (ReflectionException e) {
             throw Throwables.propagate(e);
           }
         } else if (attributeType.getCodec() == null) {
           value = attributeType.getValueType().convert(keyValue.getValue());
-        } else if (Readable.class.isAssignableFrom(attributeType.getValueType().getType())) {
+        } else if (StructuredSerializable.class.isAssignableFrom(attributeType.getValueType().getType())) {
           try {
             value = Reflect.onClass(attributeType.getValueType().getType()).create();
-            Cast.<Readable>as(value).read(reader);
+            Cast.<StructuredSerializable>as(value).read(reader);
           } catch (ReflectionException e) {
             throw Throwables.propagate(e);
           }
@@ -222,7 +221,6 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
 
     return Tuple2.of(attributeType, Val.of(value));
   }
-
 
   static Map<AttributeType, Val> readAttributeList(StructuredReader reader) throws IOException {
     Map<AttributeType, Val> attributeValMap = new HashMap<>();
@@ -250,6 +248,19 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
    */
   public static Collection<AttributeType> values() {
     return index.values();
+  }
+
+  private AttributeValueCodec getCodec() {
+    if (codec == null) {
+      synchronized (this) {
+        if (codec == null) {
+          codec = Config
+            .get("Attribute", name(), "codec")
+            .as(AttributeValueCodec.class, defaultCodecs.get(getValueType().getType()));
+        }
+      }
+    }
+    return codec;
   }
 
   boolean checkType(Val value) {
@@ -312,8 +323,8 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
         //No encoder is specified
         if (encoder == null) {
           //The value type already knows how to write, because it's Writable
-          if (Writable.class.isAssignableFrom(vType.getType())) {
-            Cast.<Writable>as(wrapped.get()).write(writer);
+          if (StructuredSerializable.class.isAssignableFrom(vType.getType())) {
+            Cast.<StructuredSerializable>as(wrapped.get()).write(writer);
           } else if (vType.isCollection()) {
             writer.beginArray(name());
             Collection<?> collection = wrapped.asCollection(valueType.getType(), valueType.getParameterTypes()[0]);

@@ -39,7 +39,11 @@ import lombok.NonNull;
 
 import java.io.PrintStream;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author David B. Bracewell
@@ -88,17 +92,17 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
     totalPhrasesFound += pred.size();
     totalPhrasesGold += gold.size();
     Sets.union(gold, pred).stream()
-      .map(Tuple3::getV3)
-      .forEach(tags::add);
+        .map(Tuple3::getV3)
+        .forEach(tags::add);
     Sets.intersection(gold, pred).stream()
-      .map(Tuple3::getV3)
-      .forEach(correct::increment);
+        .map(Tuple3::getV3)
+        .forEach(correct::increment);
     Sets.difference(gold, pred).stream()
-      .map(Tuple3::getV3)
-      .forEach(missed::increment);
+        .map(Tuple3::getV3)
+        .forEach(missed::increment);
     Sets.difference(pred, gold).stream()
-      .map(Tuple3::getV3)
-      .forEach(incorrect::increment);
+        .map(Tuple3::getV3)
+        .forEach(incorrect::increment);
   }
 
   /**
@@ -222,15 +226,15 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
       .title("Tag Metrics")
       .header(Arrays.asList(StringUtils.EMPTY, "Precision", "Recall", "F1-Measure", "Correct", "Missed", "Incorrect"));
     sorted.forEach(g ->
-      tableFormatter.content(Arrays.asList(
-        g,
-        pct.format(precision(g)),
-        pct.format(recall(g)),
-        pct.format(f1(g)),
-        correct.get(g),
-        missed.get(g),
-        incorrect.get(g)
-      ))
+                     tableFormatter.content(Arrays.asList(
+                       g,
+                       pct.format(precision(g)),
+                       pct.format(recall(g)),
+                       pct.format(f1(g)),
+                       correct.get(g),
+                       missed.get(g),
+                       incorrect.get(g)
+                     ))
     );
     tableFormatter.content(Arrays.asList(
       "micro",

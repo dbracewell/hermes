@@ -38,7 +38,14 @@ import com.google.common.collect.Maps;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -64,6 +71,31 @@ public class Document extends HString {
   private volatile List<Annotation> tokens;
   private String id;
 
+
+  /**
+   * Instantiates a new Document.
+   *
+   * @param id      the id
+   * @param content the content
+   */
+  Document(String id, @NonNull String content) {
+    this(id, content, null);
+  }
+
+  /**
+   * Instantiates a new Document.
+   *
+   * @param id       the id
+   * @param content  the content
+   * @param language the language
+   */
+  Document(String id, @NonNull String content, Language language) {
+    super(0, content.length());
+    this.content = content;
+    setId(id);
+    setLanguage(language);
+    this.annotationSet = new DefaultAnnotationSet();
+  }
 
   public static Document create(@NonNull String text) {
     return DocumentFactory.getInstance().create(text);
@@ -96,33 +128,6 @@ public class Document extends HString {
   public static Document create(@NonNull String id, @NonNull String text, @NonNull Map<AttributeType, ?> attributes) {
     return DocumentFactory.getInstance().create(id, text, Hermes.defaultLanguage(), attributes);
   }
-
-  /**
-   * Instantiates a new Document.
-   *
-   * @param id      the id
-   * @param content the content
-   */
-  Document(String id, @NonNull String content) {
-    this(id, content, null);
-  }
-
-
-  /**
-   * Instantiates a new Document.
-   *
-   * @param id       the id
-   * @param content  the content
-   * @param language the language
-   */
-  Document(String id, @NonNull String content, Language language) {
-    super(0, content.length());
-    this.content = content;
-    setId(id);
-    setLanguage(language);
-    this.annotationSet = new DefaultAnnotationSet();
-  }
-
 
   /**
    * Creates a document from a JSON representation (created by the write or toJson methods)
@@ -246,6 +251,14 @@ public class Document extends HString {
     return tokens;
   }
 
+  public boolean isCompleted(@NonNull AnnotatableType type) {
+    return annotationSet.isCompleted(type);
+  }
+
+  public void annotate(@NonNull AnnotatableType... types) {
+    Pipeline.process(this, types);
+  }
+
   /**
    * Completed annotations.
    *
@@ -336,7 +349,8 @@ public class Document extends HString {
    * @return the created annotation
    */
   public Annotation createAnnotation(@NonNull AnnotationType type, int start, int end, @NonNull Map<AttributeType, ?> attributeMap) {
-    Preconditions.checkArgument(start >= start(), "Annotation must have a starting position >= the start of the document");
+    Preconditions.checkArgument(start >= start(),
+                                "Annotation must have a starting position >= the start of the document");
     Preconditions.checkArgument(end <= end(), "Annotation must have a ending position <= the end of the document");
     Annotation annotation = new Annotation(this, type, start, end);
     annotation.setId(idGenerator.getAndIncrement());

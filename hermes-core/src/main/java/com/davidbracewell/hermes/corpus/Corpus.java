@@ -37,8 +37,16 @@ import com.davidbracewell.collection.HashMapCounter;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.AnnotatableType;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.AttributeType;
+import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.DocumentFactory;
+import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.filter.StopWords;
+import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
@@ -50,7 +58,13 @@ import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -148,10 +162,32 @@ public interface Corpus extends Iterable<Document> {
    */
   Corpus annotate(AnnotatableType... types);
 
+
+  default Corpus applyLexicon(@NonNull Lexicon lexicon, @NonNull AnnotationType type) {
+    return map(doc -> {
+      if (!doc.isCompleted(type)) {
+        lexicon.match(doc).forEach(match -> doc.createAnnotation(type, match));
+      }
+      return doc;
+    });
+  }
+
+  /**
+   * As embedding dataset dataset.
+   *
+   * @return the dataset
+   */
   default Dataset<Sequence> asEmbeddingDataset() {
     return asEmbeddingDataset(Types.TOKEN);
   }
 
+  /**
+   * As embedding dataset dataset.
+   *
+   * @param type1 the type 1
+   * @param types the types
+   * @return the dataset
+   */
   default Dataset<Sequence> asEmbeddingDataset(AnnotationType type1, AnnotationType... types) {
     return Dataset.embedding(
       getDataSetType(),
@@ -160,10 +196,10 @@ public interface Corpus extends Iterable<Document> {
         document.sentences().forEach(sentence -> {
           sentences.add(
             sentence.interleaved(type1, types)
-              .stream()
-              .filter(StopWords.isNotStopWord())
-              .map(HString::getLemma)
-              .collect(Collectors.toList())
+                    .stream()
+                    .filter(StopWords.isNotStopWord())
+                    .map(HString::getLemma)
+                    .collect(Collectors.toList())
           );
         });
         return sentences;
@@ -250,7 +286,11 @@ public interface Corpus extends Iterable<Document> {
    * @return the dataset
    */
   default Dataset<Sequence> asSequenceDataSet(@NonNull SequenceFeaturizer<Annotation> featurizer) {
-    return Dataset.sequence().type(DatasetType.InMemory).source(asSequenceStream().map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+    return Dataset
+      .sequence()
+      .type(DatasetType.InMemory)
+      .source(asSequenceStream().map(seq -> featurizer.extractSequence(seq.iterator())))
+      .build();
   }
 
   /**
@@ -261,7 +301,11 @@ public interface Corpus extends Iterable<Document> {
    * @return the dataset
    */
   default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull SequenceFeaturizer<Annotation> featurizer) {
-    return Dataset.sequence().type(getDataSetType()).source(asSequenceStream(sequenceType).map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+    return Dataset
+      .sequence()
+      .type(getDataSetType())
+      .source(asSequenceStream(sequenceType).map(seq -> featurizer.extractSequence(seq.iterator())))
+      .build();
   }
 
   /**
@@ -272,7 +316,11 @@ public interface Corpus extends Iterable<Document> {
    * @return the dataset
    */
   default Dataset<Sequence> asSequenceDataSet(@NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<Annotation> featurizer) {
-    return Dataset.sequence().type(getDataSetType()).source(asSequenceStream(labelFunction).map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+    return Dataset
+      .sequence()
+      .type(getDataSetType())
+      .source(asSequenceStream(labelFunction).map(seq -> featurizer.extractSequence(seq.iterator())))
+      .build();
   }
 
   /**
@@ -284,7 +332,11 @@ public interface Corpus extends Iterable<Document> {
    * @return the dataset
    */
   default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<Annotation> featurizer) {
-    return Dataset.sequence().type(getDataSetType()).source(asSequenceStream(sequenceType, labelFunction).map(seq -> featurizer.extractSequence(seq.iterator()))).build();
+    return Dataset
+      .sequence()
+      .type(getDataSetType())
+      .source(asSequenceStream(sequenceType, labelFunction).map(seq -> featurizer.extractSequence(seq.iterator())))
+      .build();
   }
 
   /**
@@ -305,7 +357,11 @@ public interface Corpus extends Iterable<Document> {
    * @return the dataset
    */
   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull AttributeType labelAttributeType) {
-    return Dataset.classification().type(getDataSetType()).source(asLabeledStream(labelAttributeType).map(featurizer::extractLabeled)).build();
+    return Dataset
+      .classification()
+      .type(getDataSetType())
+      .source(asLabeledStream(labelAttributeType).map(featurizer::extractLabeled))
+      .build();
   }
 
   /**
@@ -316,7 +372,11 @@ public interface Corpus extends Iterable<Document> {
    * @return the dataset
    */
   default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull AttributeType labelAttributeType) {
-    return Dataset.regression().type(getDataSetType()).source(asLabeledStream(labelAttributeType).map(featurizer::extractLabeled)).build();
+    return Dataset
+      .regression()
+      .type(getDataSetType())
+      .source(asLabeledStream(labelAttributeType).map(featurizer::extractLabeled))
+      .build();
   }
 
   /**
@@ -327,7 +387,11 @@ public interface Corpus extends Iterable<Document> {
    * @return the dataset
    */
   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Object> labelFunction) {
-    return Dataset.classification().type(getDataSetType()).source(asLabeledStream(labelFunction).map(featurizer::extractLabeled)).build();
+    return Dataset
+      .classification()
+      .type(getDataSetType())
+      .source(asLabeledStream(labelFunction).map(featurizer::extractLabeled))
+      .build();
   }
 
   /**
@@ -338,7 +402,11 @@ public interface Corpus extends Iterable<Document> {
    * @return the dataset
    */
   default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Double> labelFunction) {
-    return Dataset.regression().type(getDataSetType()).source(asLabeledStream(labelFunction).map(featurizer::extractLabeled)).build();
+    return Dataset
+      .regression()
+      .type(getDataSetType())
+      .source(asLabeledStream(labelFunction).map(featurizer::extractLabeled))
+      .build();
   }
 
 
@@ -519,17 +587,17 @@ public interface Corpus extends Iterable<Document> {
   default Counter<Tuple> ngrams(@NonNull NGramSpec nGramSpec) {
     return nGramSpec.getValueCalculator().adjust(new HashMapCounter<>(
       stream().flatMap(doc ->
-        doc.ngrams(nGramSpec.getAnnotationType(), nGramSpec.getMin(), nGramSpec.getMax())
-          .stream()
-          .filter(nGramSpec.getFilter())
-          .map(
-            hString -> $(
-              hString.get(nGramSpec.getAnnotationType())
-                .stream()
-                .map(nGramSpec.getToStringFunction())
-                .collect(Collectors.toList())
-            )
-          ).collect(Collectors.toList())
+                         doc.ngrams(nGramSpec.getAnnotationType(), nGramSpec.getMin(), nGramSpec.getMax())
+                            .stream()
+                            .filter(nGramSpec.getFilter())
+                            .map(
+                              hString -> $(
+                                hString.get(nGramSpec.getAnnotationType())
+                                       .stream()
+                                       .map(nGramSpec.getToStringFunction())
+                                       .collect(Collectors.toList())
+                              )
+                            ).collect(Collectors.toList())
       ).countByValue()
     ));
   }
@@ -553,9 +621,9 @@ public interface Corpus extends Iterable<Document> {
     return termSpec.getValueCalculator().adjust(
       new HashMapCounter<>(
         stream().flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
-          .filter(termSpec.getFilter())
-          .map(termSpec.getToStringFunction())
-          .collect(Collectors.toList())
+                                   .filter(termSpec.getFilter())
+                                   .map(termSpec.getToStringFunction())
+                                   .collect(Collectors.toList())
         ).countByValue()
       )
     );
@@ -572,7 +640,11 @@ public interface Corpus extends Iterable<Document> {
    * @return the counter
    */
   default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, boolean lemmatize) {
-    return significantBigrams(minCount, calculator, minScore, removeStopWords, h -> lemmatize ? h.getLemma() : h.toString());
+    return significantBigrams(minCount,
+                              calculator,
+                              minScore,
+                              removeStopWords,
+                              h -> lemmatize ? h.getLemma() : h.toString());
   }
 
   /**
@@ -588,16 +660,18 @@ public interface Corpus extends Iterable<Document> {
   default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, @NonNull SerializableFunction<HString, String> toString) {
     Counter<Tuple> unigrams = ngrams(NGramSpec.create().toStringFunction(toString).order(1));
     Counter<Tuple> bigrams = ngrams(NGramSpec.create()
-      .toStringFunction(toString)
-      .filter(hString -> !removeStopWords || !StopWords.getInstance(hString.getLanguage()).hasStopWord(hString))
-      .order(2)).filterByValue(v -> v >= minCount);
+                                             .toStringFunction(toString)
+                                             .filter(hString -> !removeStopWords || !StopWords
+                                               .getInstance(hString.getLanguage())
+                                               .hasStopWord(hString))
+                                             .order(2)).filterByValue(v -> v >= minCount);
     Counter<Tuple> filtered = new HashMapCounter<>();
     bigrams.items().forEach(bigram -> {
       double score = calculator.calculate(
         ContingencyTable.create2X2(bigrams.get(bigram),
-          unigrams.get(bigram.slice(0, 1)),
-          unigrams.get(bigram.slice(1, 2)),
-          unigrams.sum()
+                                   unigrams.get(bigram.slice(0, 1)),
+                                   unigrams.get(bigram.slice(1, 2)),
+                                   unigrams.sum()
         )
       );
       if (score >= minScore) {
@@ -735,6 +809,11 @@ public interface Corpus extends Iterable<Document> {
   }
 
 
+  /**
+   * Gets streaming context.
+   *
+   * @return the streaming context
+   */
   default StreamingContext getStreamingContext() {
     return StreamingContext.local();
   }

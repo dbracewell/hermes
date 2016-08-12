@@ -60,12 +60,12 @@ public final class Pipeline implements Serializable {
   private static final long serialVersionUID = 1L;
   private final AnnotatableType[] annotationTypes;
   private final int numberOfThreads;
-  private long totalTime;
   private final Stopwatch timer = Stopwatch.createUnstarted();
   private final java.util.function.Consumer<Document> onComplete;
   private final int queueSize;
-  private AtomicLong documentsProcessed = new AtomicLong();
   private final boolean returnCorpus;
+  private long totalTime;
+  private AtomicLong documentsProcessed = new AtomicLong();
 
 
   private Pipeline(int numberOfThreads, int queueSize, Consumer<Document> onComplete, Collection<AnnotatableType> annotationTypes, boolean returnCorpus) {
@@ -73,17 +73,11 @@ public final class Pipeline implements Serializable {
     Preconditions.checkArgument(numberOfThreads > 0, "Number of threads must be > 0");
     Preconditions.checkArgument(queueSize > 0, "Queue size must be > 0");
     this.queueSize = queueSize;
-    this.annotationTypes = Preconditions.checkNotNull(annotationTypes).toArray(new AnnotatableType[annotationTypes.size()]);
+    this.annotationTypes = Preconditions
+      .checkNotNull(annotationTypes)
+      .toArray(new AnnotatableType[annotationTypes.size()]);
     this.numberOfThreads = numberOfThreads;
     this.onComplete = Preconditions.checkNotNull(onComplete);
-  }
-
-  public double getElapsedTime(@NonNull TimeUnit timeUnit) {
-    double totalNanoSeconds = totalTime + timer.elapsed(TimeUnit.NANOSECONDS);
-    if (timeUnit == TimeUnit.NANOSECONDS) {
-      return totalNanoSeconds;
-    }
-    return totalNanoSeconds / TimeUnit.NANOSECONDS.convert(1, timeUnit);
   }
 
   /**
@@ -95,13 +89,34 @@ public final class Pipeline implements Serializable {
     return new Builder();
   }
 
+  public static void process(@NonNull Document document, Annotator... annotators) {
+    if (annotators == null || annotators.length == 0) {
+      return;
+    }
+
+    for (Annotator annotator : annotators) {
+      if (annotator.satisfies().stream().allMatch(document::isCompleted)) {
+        continue;
+      }
+      for (AnnotatableType type : annotator.requires()) {
+        process(document, type);
+      }
+      annotator.annotate(document);
+      for (AnnotatableType type : annotator.satisfies()) {
+        document
+          .getAnnotationSet()
+          .setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
+      }
+    }
+  }
+
   /**
    * Annotates a document with the given annotation types.
    *
    * @param textDocument    the document to be the annotate
    * @param annotationTypes the annotation types to be annotated
    */
-  public static void process(Document textDocument, AnnotatableType... annotationTypes) {
+  public static void process(@NonNull Document textDocument, AnnotatableType... annotationTypes) {
     if (annotationTypes == null || annotationTypes.length == 0) {
       return;
     }
@@ -136,10 +151,24 @@ public final class Pipeline implements Serializable {
 
       annotator.annotate(textDocument);
       for (AnnotatableType type : annotator.satisfies()) {
-        textDocument.getAnnotationSet().setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
+        textDocument
+          .getAnnotationSet()
+          .setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
       }
 
     }
+  }
+
+  public static void setAnnotator(@NonNull AnnotationType annotationType, @NonNull Language language, @NonNull Annotator annotator) {
+    AnnotatorCache.getInstance().setAnnotator(annotationType, language, annotator);
+  }
+
+  public double getElapsedTime(@NonNull TimeUnit timeUnit) {
+    double totalNanoSeconds = totalTime + timer.elapsed(TimeUnit.NANOSECONDS);
+    if (timeUnit == TimeUnit.NANOSECONDS) {
+      return totalNanoSeconds;
+    }
+    return totalNanoSeconds / TimeUnit.NANOSECONDS.convert(1, timeUnit);
   }
 
   /**
@@ -169,8 +198,10 @@ public final class Pipeline implements Serializable {
       Resource tempFile = Resources.temporaryFile();
       tempFile.deleteOnExit();
       try (AsyncWriter writer = new AsyncWriter(tempFile.writer())) {
-        builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer), numberOfThreads)
-          .build().run();
+        builder
+          .addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer), numberOfThreads)
+          .build()
+          .run();
         writer.close();
         corpus = Corpus.builder().source(CorpusFormats.JSON_OPL, tempFile).build();
       } catch (Exception e) {
@@ -213,49 +244,12 @@ public final class Pipeline implements Serializable {
     return String.format("%.4g s", getElapsedTime(TimeUnit.SECONDS));
   }
 
-  public static void setAnnotator(@NonNull AnnotationType annotationType, @NonNull Language language, @NonNull Annotator annotator) {
-    AnnotatorCache.getInstance().setAnnotator(annotationType, language, annotator);
-  }
-
   private enum NoOpt implements java.util.function.Consumer<Document> {
     INSTANCE;
 
     @Override
     public void accept(Document input) {
     }
-  }
-
-
-  private class AnnotateConsumer implements java.util.function.Consumer<Document>, Serializable {
-    private static final long serialVersionUID = 1L;
-    private final AnnotatableType[] annotationTypes;
-    private final java.util.function.Consumer<Document> onComplete;
-    private final AtomicLong counter;
-    private final AsyncWriter writer;
-
-    private AnnotateConsumer(AnnotatableType[] annotationTypes, Consumer<Document> onComplete, AtomicLong counter, AsyncWriter writer) {
-      this.annotationTypes = annotationTypes;
-      this.onComplete = onComplete;
-      this.counter = counter;
-      this.writer = writer;
-    }
-
-    @Override
-    public void accept(Document document) {
-      if (document != null) {
-        process(document, annotationTypes);
-        counter.incrementAndGet();
-        if (writer != null) {
-          try {
-            writer.write(document.toJson() + "\n");
-          } catch (IOException e) {
-            throw Throwables.propagate(e);
-          }
-        }
-        onComplete.accept(document);
-      }
-    }
-
   }
 
   /**
@@ -340,5 +334,37 @@ public final class Pipeline implements Serializable {
     }
 
   }//END OF Pipeline$Builder
+
+  private class AnnotateConsumer implements java.util.function.Consumer<Document>, Serializable {
+    private static final long serialVersionUID = 1L;
+    private final AnnotatableType[] annotationTypes;
+    private final java.util.function.Consumer<Document> onComplete;
+    private final AtomicLong counter;
+    private final AsyncWriter writer;
+
+    private AnnotateConsumer(AnnotatableType[] annotationTypes, Consumer<Document> onComplete, AtomicLong counter, AsyncWriter writer) {
+      this.annotationTypes = annotationTypes;
+      this.onComplete = onComplete;
+      this.counter = counter;
+      this.writer = writer;
+    }
+
+    @Override
+    public void accept(Document document) {
+      if (document != null) {
+        process(document, annotationTypes);
+        counter.incrementAndGet();
+        if (writer != null) {
+          try {
+            writer.write(document.toJson() + "\n");
+          } catch (IOException e) {
+            throw Throwables.propagate(e);
+          }
+        }
+        onComplete.accept(document);
+      }
+    }
+
+  }
 
 }//END OF Pipeline
