@@ -31,20 +31,12 @@ import com.davidbracewell.apollo.ml.data.DatasetType;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
-import com.davidbracewell.collection.Collect;
-import com.davidbracewell.collection.Counter;
-import com.davidbracewell.collection.HashMapCounter;
+import com.davidbracewell.collection.counter.Counter;
+import com.davidbracewell.collection.counter.HashMapCounter;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.AnnotatableType;
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.AttributeType;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.io.Resources;
@@ -58,18 +50,13 @@ import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.davidbracewell.collection.CollectionHelpers.asStream;
 import static com.davidbracewell.tuple.Tuples.$;
 
 /**
@@ -129,7 +116,7 @@ public interface Corpus extends Iterable<Document> {
    * @return the corpus
    */
   static Corpus of(@NonNull Iterable<Document> documentIterable) {
-    return new InMemoryCorpus(Collect.stream(documentIterable).collect(Collectors.toList()));
+    return new InMemoryCorpus(asStream(documentIterable).collect(Collectors.toList()));
   }
 
   /**
@@ -441,7 +428,7 @@ public interface Corpus extends Iterable<Document> {
     if (this instanceof InMemoryCorpus) {
       return this;
     }
-    return new InMemoryCorpus(Collect.stream(this).collect(Collectors.toList()));
+    return new InMemoryCorpus(asStream(this).collect(Collectors.toList()));
   }
 
   /**

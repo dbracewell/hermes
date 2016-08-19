@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes.corpus.spi.conll;
 
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.AttributeType;
@@ -33,6 +32,7 @@ import com.davidbracewell.tuple.Tuple2;
 import java.util.List;
 import java.util.Map;
 
+import static com.davidbracewell.collection.map.Maps.map;
 import static com.davidbracewell.hermes.corpus.spi.CoNLLFormat.EMPTY_FIELD;
 
 /**
@@ -70,7 +70,11 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
           }
           i--;
           int end = rows.get(i).getEnd();
-          document.createAnnotation(annotationType, start, end, Collect.map(attributeType, attributeType.getValueType().convert(tag)));
+          document.createAnnotation(annotationType,
+                                    start,
+                                    end,
+                                    map(attributeType, attributeType.getValueType().convert(tag))
+          );
         }
       }
       i++;

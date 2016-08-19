@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
-import com.davidbracewell.collection.NormalizedStringMap;
+import com.davidbracewell.collection.map.NormalizedStringMap;
 import com.davidbracewell.hermes.corpus.spi.OnePerLineFormat;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;

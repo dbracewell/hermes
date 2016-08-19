@@ -50,6 +50,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.davidbracewell.collection.CollectionHelpers.asStream;
+
 /**
  * <p>The document is the central object class in the TIPSTER architecture. It serves as repository for Attributes and
  * Annotations. In the TIPSTER architecture a document is part of one or more collections and can only be accessed as a
@@ -403,7 +405,7 @@ public class Document extends HString {
 
   @Override
   public List<Annotation> getAllAnnotations() {
-    return Collect.stream(annotationSet.iterator()).collect(Collectors.toList());
+    return asStream(annotationSet.iterator()).collect(Collectors.toList());
   }
 
   @Override

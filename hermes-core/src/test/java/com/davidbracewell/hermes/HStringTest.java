@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.collection.Counter;
+import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.filter.StopWords;
 import org.junit.Before;

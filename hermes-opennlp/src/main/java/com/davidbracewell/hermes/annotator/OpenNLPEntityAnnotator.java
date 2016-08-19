@@ -22,7 +22,6 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.attribute.EntityType;
@@ -36,6 +35,8 @@ import opennlp.tools.namefind.TokenNameFinderModel;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+
+import static com.davidbracewell.collection.map.Maps.map;
 
 /**
  * @author David B. Bracewell
@@ -59,10 +60,10 @@ public class OpenNLPEntityAnnotator implements Annotator, Serializable {
         for (int i = 0; i < spans.length; i++) {
           opennlp.tools.util.Span span = spans[i];
           document.createAnnotation(
-              OPENNLP_ENTITY,
-              tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
+            OPENNLP_ENTITY,
+            tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
           ).putAll(
-            Collect.map(
+            map(
               Types.ENTITY_TYPE, EntityType.create(span.getType().toUpperCase()),
               Types.CONFIDENCE, probs[i]
             )
@@ -76,7 +77,7 @@ public class OpenNLPEntityAnnotator implements Annotator, Serializable {
     if (!models.containsKey(language)) {
       synchronized (OpenNLPEntityAnnotator.class) {
         if (!models.containsKey(language)) {
-          for (Resource resource : Config.get("opennlp", language, "entity","models").asList(Resource.class)) {
+          for (Resource resource : Config.get("opennlp", language, "entity", "models").asList(Resource.class)) {
             try {
               models.put(language, new TokenNameFinderModel(resource.inputStream()));
             } catch (IOException e) {

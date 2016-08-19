@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
@@ -33,6 +32,8 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
+import static com.davidbracewell.collection.map.Maps.map;
 
 /**
  * @author David B. Bracewell
@@ -60,7 +61,7 @@ public class TokenTypeEntityAnnotator extends SentenceLevelAnnotator {
         sentence.document().createAnnotation(
           Types.TOKEN_TYPE_ENTITY,
           token,
-          Collect.map(Types.ENTITY_TYPE, mapping.get(type), Types.CONFIDENCE, 1.0)
+          map(Types.ENTITY_TYPE, mapping.get(type), Types.CONFIDENCE, 1.0)
         );
       }
     });

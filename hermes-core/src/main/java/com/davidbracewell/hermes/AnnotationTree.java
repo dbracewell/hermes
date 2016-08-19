@@ -28,6 +28,8 @@ import com.davidbracewell.conversion.Cast;
 import java.io.Serializable;
 import java.util.*;
 
+import static com.davidbracewell.collection.CollectionHelpers.asStream;
+
 /**
  * The type Annotation tree.
  *
@@ -361,7 +363,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
 
   @Override
   public Object[] toArray() {
-    return Collect.stream(iterator()).toArray();
+    return asStream(iterator()).toArray();
   }
 
   @Override

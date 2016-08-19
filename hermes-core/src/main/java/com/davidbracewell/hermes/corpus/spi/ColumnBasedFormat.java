@@ -2,8 +2,8 @@ package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Collect;
-import com.davidbracewell.collection.HashMapIndex;
-import com.davidbracewell.collection.Index;
+import com.davidbracewell.collection.index.HashMapIndex;
+import com.davidbracewell.collection.index.Index;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Document;

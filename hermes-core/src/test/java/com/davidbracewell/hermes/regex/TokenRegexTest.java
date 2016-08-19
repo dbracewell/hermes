@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes.regex;
 
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.attribute.Entities;
@@ -32,6 +31,7 @@ import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.davidbracewell.collection.map.Maps.map;
 import static org.junit.Assert.*;
 
 /**
@@ -64,9 +64,9 @@ public class TokenRegexTest {
     document.tokenAt(2).add(new Relation(Types.DEPENDENCY, "dobj", document.tokenAt(1).getId()));
 
     //Create some more entites
-    document.createAnnotation(Types.ENTITY, document.tokenAt(0), false).putAll(Collect.map(Types.ENTITY_TYPE, Entities.PERSON));
-    document.createAnnotation(Types.ENTITY, document.tokenAt(2), false).putAll(Collect.map(Types.ENTITY_TYPE, Entities.PERSON));
-    document.createAnnotation(Types.ENTITY, document.tokenAt(5), false).putAll(Collect.map(Types.ENTITY_TYPE, Entities.LOCATION));
+    document.createAnnotation(Types.ENTITY, document.tokenAt(0), false).putAll(map(Types.ENTITY_TYPE, Entities.PERSON));
+    document.createAnnotation(Types.ENTITY, document.tokenAt(2), false).putAll(map(Types.ENTITY_TYPE, Entities.PERSON));
+    document.createAnnotation(Types.ENTITY, document.tokenAt(5), false).putAll(map(Types.ENTITY_TYPE, Entities.LOCATION));
 
     TrieLexicon lexicon = new TrieLexicon(false, false, AttributeType.create("DUMMY_TAG"));
     lexicon.add("seashore", new StringTag("BY_THE_SEA"));

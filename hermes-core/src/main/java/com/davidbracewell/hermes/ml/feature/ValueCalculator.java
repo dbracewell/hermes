@@ -1,7 +1,7 @@
 package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.collection.Counter;
+import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.function.SerializableFunction;
 import lombok.NonNull;
 

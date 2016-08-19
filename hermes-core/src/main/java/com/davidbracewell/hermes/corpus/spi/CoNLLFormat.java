@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.SystemInfo;
-import com.davidbracewell.collection.Collect;
+import com.davidbracewell.collection.map.Maps;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
@@ -55,7 +55,9 @@ public class CoNLLFormat extends FileBasedFormat {
   public static final String EMPTY_FIELD = "_";
 
   public static void setFields(@NonNull CoNLLColumnProcessor... types) {
-    Config.setProperty(FIELDS_PROPERTY, Stream.of(types).map(CoNLLColumnProcessor::getFieldName).collect(Collectors.joining(",")));
+    Config.setProperty(FIELDS_PROPERTY,
+                       Stream.of(types).map(CoNLLColumnProcessor::getFieldName).collect(Collectors.joining(","))
+    );
   }
 
   public static void setFields(@NonNull String... types) {
@@ -91,7 +93,11 @@ public class CoNLLFormat extends FileBasedFormat {
       token.setAnnotationID(document.createAnnotation(Types.TOKEN, token.getStart(), token.getEnd()).getId());
       sentenceIndexToIDMap.put($(token.getSentence(), token.getIndex()), token.getAnnotationID());
       if (!iterator.hasNext() || token.getSentence() != list.get(iterator.nextIndex()).getSentence()) {
-        document.createAnnotation(Types.SENTENCE, lastSentenceStart, token.getEnd(), Collect.map(Types.INDEX, sentenceIndex));
+        document.createAnnotation(Types.SENTENCE,
+                                  lastSentenceStart,
+                                  token.getEnd(),
+                                  Maps.map(Types.INDEX, sentenceIndex)
+        );
         sentenceIndex++;
         lastSentenceStart = -1;
       }
@@ -139,7 +145,9 @@ public class CoNLLFormat extends FileBasedFormat {
               row.setIndex(Integer.parseInt(parts.get(i)));
               break;
             case "WORD":
-              row.setWord(POSCorrection.word(parts.get(i).replaceAll(StringUtils.MULTIPLE_WHITESPACE, ""), POS.ANY.asString()));
+              row.setWord(POSCorrection.word(parts.get(i).replaceAll(StringUtils.MULTIPLE_WHITESPACE, ""),
+                                             POS.ANY.asString()
+              ));
               break;
             case "POS":
               row.setPos(parts.get(i));

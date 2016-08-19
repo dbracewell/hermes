@@ -23,7 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.apollo.ml.clustering.topic.GibbsLDA;
 import com.davidbracewell.apollo.ml.clustering.topic.LDAModel;
-import com.davidbracewell.collection.Counter;
+import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.hermes.corpus.NGramSpec;

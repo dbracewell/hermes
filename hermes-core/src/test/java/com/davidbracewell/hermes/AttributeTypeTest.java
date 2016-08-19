@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +28,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Map;
 
+import static com.davidbracewell.collection.map.Maps.map;
 import static org.junit.Assert.*;
 
 /**
@@ -128,14 +128,14 @@ public class AttributeTypeTest {
     Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
     //Set token type to wrong value type
     document.tokenAt(0).put(listAttributeType, Arrays.asList("One", "Two", "Three"));
-    document.tokenAt(1).put(mapAttributeType, Collect.map("A", "B", "C", "D"));
+    document.tokenAt(1).put(mapAttributeType, map("A", "B", "C", "D"));
     String json = document.toJson();
 
     //Reading back in token type is ignored for the first token, because it is not a valid type
     document = Document.fromJson(json);
 
     assertEquals(Arrays.asList("One", "Two", "Three"), document.tokenAt(0).getAttributeAsList(listAttributeType));
-    assertEquals(Collect.map("A", "B", "C", "D"), document.tokenAt(1).getAttributeAsMap(mapAttributeType));
+    assertEquals(map("A", "B", "C", "D"), document.tokenAt(1).getAttributeAsMap(mapAttributeType));
 
   }
 

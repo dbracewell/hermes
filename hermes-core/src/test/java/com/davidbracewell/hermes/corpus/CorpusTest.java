@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
-import com.davidbracewell.collection.Counter;
+import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;

@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.ml.feature;
 import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.cache.Cached;
-import com.davidbracewell.collection.HashMapCounter;
+import com.davidbracewell.collection.counter.HashMapCounter;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.stream.StreamingContext;
 

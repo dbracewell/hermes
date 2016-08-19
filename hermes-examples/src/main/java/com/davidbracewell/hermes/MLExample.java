@@ -30,7 +30,6 @@ import com.davidbracewell.apollo.ml.classification.ClassifierLearner;
 import com.davidbracewell.apollo.ml.classification.NaiveBayes;
 import com.davidbracewell.apollo.ml.classification.NaiveBayesLearner;
 import com.davidbracewell.apollo.ml.data.Dataset;
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotations;
@@ -39,6 +38,8 @@ import com.davidbracewell.stream.StreamingContext;
 
 import java.util.Random;
 import java.util.function.Supplier;
+
+import static com.davidbracewell.collection.map.Maps.map;
 
 /**
  * @author David B. Bracewell
@@ -180,26 +181,26 @@ public class MLExample {
     //Simple binary featurizer that converts tokens to lower case and removes stop words
     Featurizer<HString> featurizer = Featurizer.chain(
       BagOfAnnotations.builder()
-        .valueCalculator(ValueCalculator.Binary)
-        .lowerCase()
-        .ignoreStopWords()
-        .build()
+                      .valueCalculator(ValueCalculator.Binary)
+                      .lowerCase()
+                      .ignoreStopWords()
+                      .build()
     );
 
     //Build an in-memory dataset from a corpus constructed using the raw labels and documents in the String[][] above
     Dataset<Instance> dataset = Corpus.of(
       StreamingContext.local().stream(training)
-        .map(example -> Document.create(example[1], Language.ENGLISH, Collect.map(label, example[0])))
+                      .map(example -> Document.create(example[1], Language.ENGLISH, map(label, example[0])))
     )
-      .annotate(Types.TOKEN)
-      .asClassificationDataSet(featurizer, label)
-      .shuffle(new Random(1234));
+                                      .annotate(Types.TOKEN)
+                                      .asClassificationDataSet(featurizer, label)
+                                      .shuffle(new Random(1234));
 
     //Setup a supplier for a classification learner to use in cross validation
     Supplier<ClassifierLearner> supplier = Learner.classification()
-      .learnerClass(NaiveBayesLearner.class)
-      .parameter("modelType", NaiveBayes.ModelType.Bernoulli)
-      .supplier();
+                                                  .learnerClass(NaiveBayesLearner.class)
+                                                  .parameter("modelType", NaiveBayes.ModelType.Bernoulli)
+                                                  .supplier();
 
     //Perform 10-fold cross-validation and output the results to System.out
     new ClassifierEvaluation()

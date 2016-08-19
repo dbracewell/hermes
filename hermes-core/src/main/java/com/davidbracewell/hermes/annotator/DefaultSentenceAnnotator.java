@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.collection.Collect;
+import com.davidbracewell.collection.map.Maps;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
@@ -41,7 +41,8 @@ import java.util.Set;
 public class DefaultSentenceAnnotator implements Annotator, Serializable {
   private static final long serialVersionUID = 1L;
 
-  private static CharMatcher BAD_EOS = CharMatcher.INVISIBLE.and(CharMatcher.WHITESPACE).and(CharMatcher.BREAKING_WHITESPACE);
+  private static CharMatcher BAD_EOS = CharMatcher.INVISIBLE.and(CharMatcher.WHITESPACE)
+                                                            .and(CharMatcher.BREAKING_WHITESPACE);
   private final Set<String> noSentenceBreak = ImmutableSet.<String>builder()
     .add("mr.")
     .add("mrs.")
@@ -199,9 +200,9 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
       }
       if (!noSentenceBreak.contains(sentence)) {
         doc.createAnnotation(Types.SENTENCE,
-          start,
-          end,
-          Collect.map(Types.INDEX, index)
+                             start,
+                             end,
+                             Maps.map(Types.INDEX, index)
         );
         index++;
         start = end;

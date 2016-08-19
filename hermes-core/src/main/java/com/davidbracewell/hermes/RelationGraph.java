@@ -27,7 +27,6 @@ import com.davidbracewell.atlas.Vertex;
 import com.davidbracewell.atlas.algorithms.DijkstraShortestPath;
 import com.davidbracewell.atlas.algorithms.ShortestPath;
 import com.davidbracewell.atlas.io.GraphViz;
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.io.Resources;
@@ -39,13 +38,19 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.davidbracewell.collection.map.Maps.map;
+
 /**
  * @author David B. Bracewell
  */
 public class RelationGraph extends AdjacencyMatrix<Annotation> {
   private static final long serialVersionUID = 1L;
-  private volatile transient Lazy<ShortestPath<Annotation>> lazyShortestPath = new Lazy<>(() -> new DijkstraShortestPath<>(this));
-  private volatile transient Lazy<ShortestPath<Annotation>> lazyUnDirectedShortestPath = new Lazy<>(() -> new DijkstraShortestPath<>(this, true));
+  private volatile transient Lazy<ShortestPath<Annotation>> lazyShortestPath = new Lazy<>(() -> new DijkstraShortestPath<>(
+    this));
+  private volatile transient Lazy<ShortestPath<Annotation>> lazyUnDirectedShortestPath = new Lazy<>(() -> new DijkstraShortestPath<>(
+    this,
+    true
+  ));
 
   public static void main(String[] args) throws Exception {
     Config.initialize("");
@@ -67,14 +72,14 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
   }
 
 
-  public void render(@NonNull Resource output) throws IOException{
+  public void render(@NonNull Resource output) throws IOException {
     render(output, GraphViz.Format.PNG);
   }
 
-  public void render(@NonNull Resource output, @NonNull GraphViz.Format format) throws IOException{
+  public void render(@NonNull Resource output, @NonNull GraphViz.Format format) throws IOException {
     GraphViz<Annotation> graphViz = new GraphViz<>();
     graphViz.setVertexEncoder(v -> new Vertex(v.toString() + "_" + v.getPOS().toString(), Collections.emptyMap()));
-    graphViz.setEdgeEncoder(e -> Collect.map("label", Cast.<RelationEdge>as(e).getRelation()));
+    graphViz.setEdgeEncoder(e -> map("label", Cast.<RelationEdge>as(e).getRelation()));
     graphViz.setFormat(format);
     graphViz.render(this, output);
   }
@@ -94,15 +99,15 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
 
     public List<MatchState> next(Predicate<RelationEdge> p) {
       return open.stream()
-        .filter(e -> (visited.isEmpty()
-          || e.getSecondVertex().equals(visited.getLast().getSecondVertex())
-          || e.getFirstVertex().equals(visited.getLast().getSecondVertex())) && p.test(e))
-        .map(edge -> {
-          MatchState prime = new MatchState(visited, open);
-          prime.visited.add(edge);
-          prime.open.remove(edge);
-          return prime;
-        }).collect(Collectors.toList());
+                 .filter(e -> (visited.isEmpty()
+                   || e.getSecondVertex().equals(visited.getLast().getSecondVertex())
+                   || e.getFirstVertex().equals(visited.getLast().getSecondVertex())) && p.test(e))
+                 .map(edge -> {
+                   MatchState prime = new MatchState(visited, open);
+                   prime.visited.add(edge);
+                   prime.open.remove(edge);
+                   return prime;
+                 }).collect(Collectors.toList());
     }
 
   }
@@ -113,7 +118,7 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
     matches.add(new MatchState(edges()));
     for (Predicate<RelationEdge> predicate : predicates) {
       List<MatchState> prime = matches.stream().flatMap(m -> m.next(predicate).stream())
-        .collect(Collectors.toList());
+                                      .collect(Collectors.toList());
       matches.clear();
       matches.addAll(prime);
     }
@@ -156,23 +161,24 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
   public RelationGraph filterVertices(@NonNull Predicate<? super Annotation> vertexPredicate) {
     RelationGraph gPrime = new RelationGraph();
     vertices().stream().filter(vertexPredicate).forEach(gPrime::addVertex);
-    edges().stream().filter(e -> gPrime.containsVertex(e.getFirstVertex()) && gPrime.containsVertex(e.getSecondVertex()))
-      .forEach(gPrime::addEdge);
+    edges().stream()
+           .filter(e -> gPrime.containsVertex(e.getFirstVertex()) && gPrime.containsVertex(e.getSecondVertex()))
+           .forEach(gPrime::addEdge);
     return gPrime;
   }
 
   public RelationGraph filterEdges(@NonNull Predicate<RelationEdge> edgePredicate) {
     RelationGraph gPrime = new RelationGraph();
     edges().stream().filter(edgePredicate)
-      .forEach(e -> {
-        if (!gPrime.containsVertex(e.getFirstVertex())) {
-          gPrime.addVertex(e.getFirstVertex());
-        }
-        if (!gPrime.containsVertex(e.getSecondVertex())) {
-          gPrime.addVertex(e.getSecondVertex());
-        }
-        gPrime.addEdge(e);
-      });
+           .forEach(e -> {
+             if (!gPrime.containsVertex(e.getFirstVertex())) {
+               gPrime.addVertex(e.getFirstVertex());
+             }
+             if (!gPrime.containsVertex(e.getSecondVertex())) {
+               gPrime.addVertex(e.getSecondVertex());
+             }
+             gPrime.addEdge(e);
+           });
     return gPrime;
   }
 

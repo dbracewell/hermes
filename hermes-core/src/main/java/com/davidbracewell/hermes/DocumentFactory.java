@@ -22,7 +22,6 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.hermes.preprocessing.TextNormalization;
 import com.davidbracewell.hermes.preprocessing.TextNormalizer;
 import com.google.common.base.Joiner;
@@ -227,8 +226,8 @@ public class DocumentFactory implements Serializable {
     }
     Document doc = new Document("", content.toString().trim(), defaultLanguage);
     for (int idx = 0; idx < tokenSpans.size(); idx++) {
-      doc.createAnnotation(Types.TOKEN, tokenSpans.get(idx));
-      Collect.map(Types.INDEX, idx);
+      doc.createAnnotation(Types.TOKEN, tokenSpans.get(idx))
+         .put(Types.INDEX, idx);
     }
     doc.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
     return doc;
