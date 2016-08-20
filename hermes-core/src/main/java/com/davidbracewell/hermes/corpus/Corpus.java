@@ -31,6 +31,7 @@ import com.davidbracewell.apollo.ml.data.DatasetType;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
+import com.davidbracewell.collection.Streams;
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.HashMapCounter;
 import com.davidbracewell.conversion.Cast;
@@ -56,7 +57,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.davidbracewell.collection.CollectionHelpers.asStream;
 import static com.davidbracewell.tuple.Tuples.$;
 
 /**
@@ -116,7 +116,7 @@ public interface Corpus extends Iterable<Document> {
    * @return the corpus
    */
   static Corpus of(@NonNull Iterable<Document> documentIterable) {
-    return new InMemoryCorpus(asStream(documentIterable).collect(Collectors.toList()));
+    return new InMemoryCorpus(Streams.asStream(documentIterable).collect(Collectors.toList()));
   }
 
   /**
@@ -428,7 +428,7 @@ public interface Corpus extends Iterable<Document> {
     if (this instanceof InMemoryCorpus) {
       return this;
     }
-    return new InMemoryCorpus(asStream(this).collect(Collectors.toList()));
+    return new InMemoryCorpus(Streams.asStream(this).collect(Collectors.toList()));
   }
 
   /**

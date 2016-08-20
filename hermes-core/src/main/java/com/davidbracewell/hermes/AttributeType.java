@@ -25,7 +25,7 @@ import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
 import com.davidbracewell.Language;
 import com.davidbracewell.Tag;
-import com.davidbracewell.collection.Collect;
+import com.davidbracewell.collection.map.Maps;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
@@ -50,12 +50,7 @@ import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.ObjectStreamException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p> An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link
@@ -225,7 +220,7 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
   static Map<AttributeType, Val> readAttributeList(StructuredReader reader) throws IOException {
     Map<AttributeType, Val> attributeValMap = new HashMap<>();
     while (reader.peek() != ElementType.END_OBJECT) {
-      Collect.put(attributeValMap, read(reader));
+      Maps.put(attributeValMap, read(reader));
     }
     return attributeValMap;
   }

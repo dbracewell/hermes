@@ -23,12 +23,11 @@ package com.davidbracewell.hermes;
 
 import com.clearspring.analytics.util.Lists;
 import com.davidbracewell.collection.Collect;
+import com.davidbracewell.collection.Streams;
 import com.davidbracewell.conversion.Cast;
 
 import java.io.Serializable;
 import java.util.*;
-
-import static com.davidbracewell.collection.CollectionHelpers.asStream;
 
 /**
  * The type Annotation tree.
@@ -304,7 +303,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
   @Override
   public boolean retainAll(Collection<?> c) {
     if (c != null) {
-      Collection<Annotation> toRemove = Collect.difference(toList(), Cast.cast(c));
+      Collection<Annotation> toRemove = Collect.difference(ArrayList::new, toList(), Cast.cast(c));
       toRemove.forEach(this::remove);
       return containsAll(c);
     }
@@ -363,7 +362,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
 
   @Override
   public Object[] toArray() {
-    return asStream(iterator()).toArray();
+    return Streams.asStream(iterator()).toArray();
   }
 
   @Override
@@ -569,8 +568,8 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
             annotations.addAll(node.annotations);
           } else {
             node.annotations.stream()
-              .filter(a -> a.isInstance(type))
-              .forEach(annotations::add);
+                            .filter(a -> a.isInstance(type))
+                            .forEach(annotations::add);
           }
         }
       }

@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.collection.Collect;
+import com.davidbracewell.collection.Streams;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
@@ -38,19 +38,10 @@ import com.google.common.collect.Maps;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import static com.davidbracewell.collection.CollectionHelpers.asStream;
 
 /**
  * <p>The document is the central object class in the TIPSTER architecture. It serves as repository for Attributes and
@@ -165,7 +156,7 @@ public class Document extends HString {
       while (reader.peek() != ElementType.END_DOCUMENT) {
         if (reader.peek() == ElementType.NAME) {
 
-          Collect.put(docProperties, reader.nextKeyValue());
+          com.davidbracewell.collection.map.Maps.put(docProperties, reader.nextKeyValue());
 
         } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
 
@@ -405,7 +396,7 @@ public class Document extends HString {
 
   @Override
   public List<Annotation> getAllAnnotations() {
-    return asStream(annotationSet.iterator()).collect(Collectors.toList());
+    return Streams.asStream(annotationSet.iterator()).collect(Collectors.toList());
   }
 
   @Override

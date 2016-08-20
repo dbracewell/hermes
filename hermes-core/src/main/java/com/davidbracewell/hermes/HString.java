@@ -24,6 +24,7 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
+import com.davidbracewell.collection.Streams;
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.HashMapCounter;
 import com.davidbracewell.conversion.Cast;
@@ -42,7 +43,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.davidbracewell.collection.CollectionHelpers.asStream;
 import static com.davidbracewell.tuple.Tuples.$;
 
 /**
@@ -1005,8 +1005,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
   public RelationGraph annotationGraph(Tuple relationTypes, AnnotationType type, AnnotationType... annotationTypes) {
     RelationGraph g = new RelationGraph();
     List<Annotation> vertices = interleaved(type, annotationTypes);
-    Set<RelationType> relationTypeList = asStream(relationTypes.iterator()).filter(r -> r instanceof RelationType)
-      .map(Cast::<RelationType>as).collect(Collectors.toSet());
+    Set<RelationType> relationTypeList = Streams.asStream(relationTypes.iterator()).filter(r -> r instanceof RelationType)
+                                                .map(Cast::<RelationType>as).collect(Collectors.toSet());
     g.addVertices(vertices);
 
     for (Annotation source : vertices) {

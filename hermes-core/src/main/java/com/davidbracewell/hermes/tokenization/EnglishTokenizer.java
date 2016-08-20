@@ -55,17 +55,17 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
   public EnglishTokenizer() {
     try {
       this.abbreviations = Resources.fromClasspath("com/davidbracewell/hermes/tokenization/abbreviations.txt")
-        .readLines().stream()
-        .map(line -> line.trim().toLowerCase())
-        .collect(Collectors.toSet());
+                                    .readLines().stream()
+                                    .map(line -> line.trim().toLowerCase())
+                                    .collect(Collectors.toSet());
       this.tlds = Resources.fromClasspath("com/davidbracewell/hermes/tokenization/tlds.txt")
-        .readLines().stream()
-        .map(line -> line.trim().toLowerCase())
-        .collect(Collectors.toSet());
+                           .readLines().stream()
+                           .map(line -> line.trim().toLowerCase())
+                           .collect(Collectors.toSet());
       this.emoticons = new PatriciaTrie<>();
       Resources.fromClasspath("com/davidbracewell/hermes/tokenization/emoticons.txt").forEach(
         line -> emoticons.put(line.trim().toLowerCase(), line)
-      );
+                                                                                             );
     } catch (IOException e) {
       e.printStackTrace();
       throw Throwables.propagate(e);
@@ -190,39 +190,39 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
         if (nn != null && nn.charStartIndex == n.charEndIndex) {
           consume();
           addToBuffer(new Token( //Add the bad tld
-              tld + nn.text,
-              TokenType.ALPHA_NUMERIC,
-              n.charStartIndex + dot + 1,
-              nn.charEndIndex,
-              n.index
-            )
-          );
+                                 tld + nn.text,
+                                 TokenType.ALPHA_NUMERIC,
+                                 n.charStartIndex + dot + 1,
+                                 nn.charEndIndex,
+                                 n.index
+                      )
+                     );
         } else {
           addToBuffer(new Token( //Add the bad tld
-              tld,
-              TokenType.ALPHA_NUMERIC,
-              n.charStartIndex + dot + 1,
-              n.charEndIndex,
-              n.index
-            )
-          );
+                                 tld,
+                                 TokenType.ALPHA_NUMERIC,
+                                 n.charStartIndex + dot + 1,
+                                 n.charEndIndex,
+                                 n.index
+                      )
+                     );
         }
 
         addToBuffer(new Token( //Add the dot to the buffer
-            n.text.substring(dot, dot + 1),
-            TokenType.PUNCTUATION,
-            n.charStartIndex + dot,
-            n.charStartIndex + dot + 1,
-            n.index
-          )
-        );
+                               n.text.substring(dot, dot + 1),
+                               TokenType.PUNCTUATION,
+                               n.charStartIndex + dot,
+                               n.charStartIndex + dot + 1,
+                               n.index
+                    )
+                   );
 
         n = new Token( //Change the token to the first part of the bad url
-          n.text.substring(0, dot),
-          TokenType.ALPHA_NUMERIC,
-          n.charStartIndex,
-          n.charStartIndex + dot,
-          n.index
+                       n.text.substring(0, dot),
+                       TokenType.ALPHA_NUMERIC,
+                       n.charStartIndex,
+                       n.charStartIndex + dot,
+                       n.index
         );
 
       }

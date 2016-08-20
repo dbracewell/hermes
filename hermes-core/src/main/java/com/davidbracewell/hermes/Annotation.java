@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Tag;
-import com.davidbracewell.collection.Collect;
+import com.davidbracewell.collection.map.Maps;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
@@ -131,7 +131,7 @@ public final class Annotation extends Fragment implements Serializable {
 
     while (reader.peek() != ElementType.END_OBJECT) {
       if (reader.peek() == ElementType.NAME) {
-        Collect.put(annotationProperties, reader.nextKeyValue());
+        Maps.put(annotationProperties, reader.nextKeyValue());
       } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
         reader.beginObject("attributes");
         attributeValMap = AttributeType.readAttributeList(reader);
