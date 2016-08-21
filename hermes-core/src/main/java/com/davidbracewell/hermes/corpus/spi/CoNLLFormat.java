@@ -147,7 +147,8 @@ public class CoNLLFormat extends FileBasedFormat {
             case "WORD":
               row.setWord(POSCorrection.word(parts.get(i).replaceAll(StringUtils.MULTIPLE_WHITESPACE, ""),
                                              POS.ANY.asString()
-                                            ));
+                                            )
+                         );
               break;
             case "POS":
               row.setPos(parts.get(i));

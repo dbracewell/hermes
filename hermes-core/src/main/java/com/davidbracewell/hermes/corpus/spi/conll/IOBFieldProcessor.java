@@ -65,7 +65,7 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
     for (int i = 0; i < rows.size(); ) {
       if (rows.get(i).hasOther(TYPE)) {
         String value = rows.get(i).getOther(TYPE).toUpperCase();
-        if (value.startsWith("B-")) {
+        if (value.startsWith("B-") || value.startsWith("I-")) {
           int start = rows.get(i).getStart();
           String tag = value.substring(2);
           i++;
