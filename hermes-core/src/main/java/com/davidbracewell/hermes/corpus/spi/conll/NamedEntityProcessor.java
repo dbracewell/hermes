@@ -31,26 +31,26 @@ import org.kohsuke.MetaInfServices;
 @MetaInfServices(CoNLLColumnProcessor.class)
 public class NamedEntityProcessor extends IOBFieldProcessor {
 
-  public NamedEntityProcessor() {
-    super(Types.ENTITY, Types.ENTITY_TYPE);
-  }
+   public NamedEntityProcessor() {
+      super(Types.ENTITY, Types.ENTITY_TYPE);
+   }
 
-  @Override
-  public String getFieldName() {
-    return "ENTITY";
-  }
+   @Override
+   public String getFieldName() {
+      return "ENTITY";
+   }
 
-  @Override
-  protected String normalizeTag(String tag) {
-    tag = tag.toUpperCase();
-    switch (tag) {
-      case "PER":
-        return "PERSON";
-      case "ORG":
-        return "ORGANIZATION";
-      case "LOC":
-        return "LOCATION";
-    }
-    return tag;
-  }
+   @Override
+   protected String normalizeTag(String tag) {
+      tag = tag.toUpperCase();
+      switch (tag) {
+         case "PER":
+            return "PERSON";
+         case "ORG":
+            return "ORGANIZATION";
+         case "LOC":
+            return "LOCATION";
+      }
+      return tag.toUpperCase();
+   }
 }//END OF NamedEntityProcessor

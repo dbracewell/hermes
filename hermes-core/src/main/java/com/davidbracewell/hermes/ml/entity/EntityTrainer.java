@@ -31,38 +31,46 @@ import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTrainer;
 import com.davidbracewell.hermes.ml.BIOValidator;
 
+import java.util.Collections;
+import java.util.Set;
+
 /**
  * @author David B. Bracewell
  */
 public class EntityTrainer extends BIOTrainer {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  public EntityTrainer() {
-    super("EntityTrainer", Types.ENTITY);
-  }
+   public EntityTrainer() {
+      super("EntityTrainer", Types.ENTITY);
+   }
 
-  @Override
-  protected SequenceFeaturizer<Annotation> getFeaturizer() {
-    return new EntityFeaturizer();
-  }
+   @Override
+   protected SequenceFeaturizer<Annotation> getFeaturizer() {
+      return new EntityFeaturizer();
+   }
 
-  @Override
-  public void setup() throws Exception {
-    LibraryLoader.INSTANCE.load();
-  }
+   @Override
+   public void setup() throws Exception {
+      LibraryLoader.INSTANCE.load();
+   }
 
-  @Override
-  protected SequenceLabelerLearner getLearner() {
-    SequenceLabelerLearner learner = new CRFTrainer();
-    learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
-    learner.setValidator(new BIOValidator());
-    learner.setParameter("maxIterations", 200);
-    learner.setParameter("verbose", true);
-    return learner;
-  }
+   @Override
+   protected Set<String> validTags() {
+      return Collections.singleton("PERSON");
+   }
 
-  public static void main(String[] args) throws Exception {
-    new EntityTrainer().run(args);
-  }
+   @Override
+   protected SequenceLabelerLearner getLearner() {
+      SequenceLabelerLearner learner = new CRFTrainer();
+      learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
+      learner.setValidator(new BIOValidator());
+      learner.setParameter("maxIterations", 200);
+      learner.setParameter("verbose", true);
+      return learner;
+   }
+
+   public static void main(String[] args) throws Exception {
+      new EntityTrainer().run(args);
+   }
 
 }//END OF EntityTrainer

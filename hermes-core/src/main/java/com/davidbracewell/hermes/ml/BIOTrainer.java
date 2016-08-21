@@ -33,6 +33,9 @@ import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusType;
 import com.davidbracewell.io.resource.Resource;
 
+import java.util.Collections;
+import java.util.Set;
+
 /**
  * The type Bio trainer.
  * @author David B. Bracewell
@@ -120,6 +123,10 @@ public abstract class BIOTrainer extends CommandLineApplication {
     */
    protected abstract SequenceLabelerLearner getLearner();
 
+   protected Set<String> validTags() {
+      return Collections.emptySet();
+   }
+
    /**
     * Gets dataset.
     *
@@ -133,7 +140,7 @@ public abstract class BIOTrainer extends CommandLineApplication {
             .source(corpus)
             .format(corpusFormat)
             .build()
-            .asSequenceDataSet(new BIOLabelMaker(annotationType), featurizer);
+            .asSequenceDataSet(new BIOLabelMaker(annotationType, validTags()), featurizer);
    }
 
    /**

@@ -26,28 +26,37 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import lombok.NonNull;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author David B. Bracewell
  */
 public class BIOLabelMaker implements SerializableFunction<Annotation, String> {
-  private static final long serialVersionUID = 1L;
-  private final AnnotationType annotationType;
+   private static final long serialVersionUID = 1L;
+   private final AnnotationType annotationType;
+   private final Set<String> validTags;
 
-  public BIOLabelMaker(@NonNull AnnotationType annotationType) {
-    this.annotationType = annotationType;
-  }
+   public BIOLabelMaker(@NonNull AnnotationType annotationType) {
+      this.annotationType = annotationType;
+      this.validTags = Collections.emptySet();
+   }
 
-  @Override
-  public String apply(Annotation annotation) {
-    Optional<Annotation> target = annotation.get(annotationType).stream().findFirst();
-    if (target.isPresent()) {
-      if (target.get().start() == annotation.start()) {
-        return "B-" + target.get().getTag().get().name();
+   public BIOLabelMaker(@NonNull AnnotationType annotationType, Set<String> validTags) {
+      this.annotationType = annotationType;
+      this.validTags = validTags;
+   }
+
+   @Override
+   public String apply(Annotation annotation) {
+      Optional<Annotation> target = annotation.get(annotationType).stream().findFirst();
+      if (target.isPresent() && (validTags.isEmpty() || validTags.contains(target.get().getTag().get().name()))) {
+         if (target.get().start() == annotation.start()) {
+            return "B-" + target.get().getTag().get().name();
+         }
+         return "I-" + target.get().getTag().get().name();
       }
-      return "I-" + target.get().getTag().get().name();
-    }
-    return "O";
-  }
+      return "O";
+   }
 }//END OF BIOLabelMaker

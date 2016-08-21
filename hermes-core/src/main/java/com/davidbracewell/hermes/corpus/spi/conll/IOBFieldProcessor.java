@@ -40,60 +40,60 @@ import static com.davidbracewell.hermes.corpus.spi.CoNLLFormat.EMPTY_FIELD;
  */
 public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
 
-  private final AnnotationType annotationType;
-  private final AttributeType attributeType;
+   private final AnnotationType annotationType;
+   private final AttributeType attributeType;
 
-  public IOBFieldProcessor(AnnotationType annotationType, AttributeType attributeType) {
-    this.annotationType = annotationType;
-    this.attributeType = attributeType;
-  }
+   public IOBFieldProcessor(AnnotationType annotationType, AttributeType attributeType) {
+      this.annotationType = annotationType;
+      this.attributeType = attributeType;
+   }
 
-  private boolean isI(String value, String target) {
-    if (value == null || value.startsWith("O") || value.startsWith("B-")) {
-      return false;
-    }
-    return value.startsWith("I-") && value.substring(2).equals(target);
-  }
-
-  protected String normalizeTag(String tag){
-    return tag;
-  }
-
-  @Override
-  public void processInput(Document document, List<CoNLLRow> rows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
-    final String TYPE = getFieldName();
-    for (int i = 0; i < rows.size(); ) {
-      if (rows.get(i).hasOther(TYPE)) {
-        String value = rows.get(i).getOther(TYPE).toUpperCase();
-        if (value.startsWith("B-") || value.startsWith("I-")) {
-          int start = rows.get(i).getStart();
-          String tag = value.substring(2);
-          i++;
-          while (i < rows.size() && isI(rows.get(i).getOther(TYPE), tag)) {
-            i++;
-          }
-          i--;
-          int end = rows.get(i).getEnd();
-          document.createAnnotation(annotationType,
-                                    start,
-                                    end,
-                                    map(attributeType, attributeType.getValueType().convert(normalizeTag(tag)))
-                                   );
-        }
+   private boolean isI(String value, String target) {
+      if (value == null || value.startsWith("O") || value.startsWith("B-")) {
+         return false;
       }
-      i++;
-    }
-    document.getAnnotationSet().setIsCompleted(annotationType, true, "PROVIDED");
-  }
+      return value.startsWith("I-") && value.substring(2).toUpperCase().equals(target);
+   }
 
-  @Override
-  public String processOutput(Annotation document, Annotation token, int index) {
-    Annotation a = token.first(annotationType);
-    if (a.isDetached()) {
-      return EMPTY_FIELD;
-    }
-    return a.getTag().map(tag -> (a.firstToken() == token ? "B-" : "I-") + tag.name()).orElse(EMPTY_FIELD);
-  }
+   protected String normalizeTag(String tag) {
+      return tag;
+   }
+
+   @Override
+   public void processInput(Document document, List<CoNLLRow> rows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
+      final String TYPE = getFieldName();
+      for (int i = 0; i < rows.size(); ) {
+         if (rows.get(i).hasOther(TYPE)) {
+            String value = rows.get(i).getOther(TYPE).toUpperCase();
+            if (value.startsWith("B-") || value.startsWith("I-")) {
+               int start = rows.get(i).getStart();
+               String tag = value.substring(2);
+               i++;
+               while (i < rows.size() && isI(rows.get(i).getOther(TYPE), tag)) {
+                  i++;
+               }
+               i--;
+               int end = rows.get(i).getEnd();
+               document.createAnnotation(annotationType,
+                                         start,
+                                         end,
+                                         map(attributeType, attributeType.getValueType().convert(normalizeTag(tag)))
+                                        );
+            }
+         }
+         i++;
+      }
+      document.getAnnotationSet().setIsCompleted(annotationType, true, "PROVIDED");
+   }
+
+   @Override
+   public String processOutput(Annotation document, Annotation token, int index) {
+      Annotation a = token.first(annotationType);
+      if (a.isDetached()) {
+         return EMPTY_FIELD;
+      }
+      return a.getTag().map(tag -> (a.firstToken() == token ? "B-" : "I-") + tag.name()).orElse(EMPTY_FIELD);
+   }
 
 
 }//END OF IOBFieldProcessor

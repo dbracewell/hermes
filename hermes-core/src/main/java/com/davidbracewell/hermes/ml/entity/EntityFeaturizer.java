@@ -46,19 +46,13 @@ public class EntityFeaturizer implements SequenceFeaturizer<Annotation> {
       if (word.length() >= length && !word.equals("!DIGIT") && !word.equals("!YEAR") && !word.equals(BOS) && !word
             .equals(EOS)) {
          for (int li = 0; li < length; li++) {
-            features.add(
-                  Feature.TRUE(
-                        "suffix[" + position + "][" + (li + 1) + "]=" +
-                              word.substring(Math.max(word.length() - li - 1, 0))
-                              )
+            features.add(Feature.TRUE("suffix[" + position + "][" + (li + 1) + "]=" +
+                                            word.substring(Math.max(word.length() - li - 1, 0)))
                         );
          }
          for (int li = 0; li < length; li++) {
-            features.add(
-                  Feature.TRUE(
-                        "prefix[" + position + "][" + (li + 1) + "]=" +
-                              word.substring(0, Math.min(li + 1, word.length()))
-                              )
+            features.add(Feature.TRUE("prefix[" + position + "][" + (li + 1) + "]=" +
+                                            word.substring(0, Math.min(li + 1, word.length())))
                         );
          }
       }
@@ -115,24 +109,23 @@ public class EntityFeaturizer implements SequenceFeaturizer<Annotation> {
       p1.entrySet().stream().map(e -> Feature.TRUE(e.getKey(), e.getValue())).forEach(features::add);
       n1.entrySet().stream().map(e -> Feature.TRUE(e.getKey(), e.getValue())).forEach(features::add);
 
-//      features.add(Feature.TRUE("W[-1,0]", p1.get("W[-1]"), p0.get("W[0]")));
-//      features.add(Feature.TRUE("WShape[-1,0]", p1.get("WShape[-1]"), p0.get("WShape[0]")));
-//      features.add(Feature.TRUE("T[-1,0]", p1.get("T[-1]"), p0.get("T[0]")));
-//
-//      features.add(Feature.TRUE("W[0,+1]", p0.get("W[0]"), n1.get("W[1]")));
-//      features.add(Feature.TRUE("WShape[0,+1]", p0.get("WShape[0]"), n1.get("WShape[1]")));
-//      features.add(Feature.TRUE("T[0,+1]", p0.get("T[0]"), n1.get("T[1]")));
+      features.add(Feature.TRUE("W[-1,0]", p1.get("W[-1]"), p0.get("W[0]")));
+      features.add(Feature.TRUE("WShape[-1,0]", p1.get("WShape[-1]"), p0.get("WShape[0]")));
+      features.add(Feature.TRUE("T[-1,0]", p1.get("T[-1]"), p0.get("T[0]")));
+
+      features.add(Feature.TRUE("W[0,+1]", p0.get("W[0]"), n1.get("W[1]")));
+      features.add(Feature.TRUE("WShape[0,+1]", p0.get("WShape[0]"), n1.get("WShape[1]")));
+      features.add(Feature.TRUE("T[0,+1]", p0.get("T[0]"), n1.get("T[1]")));
 
       if (itr.getIndex() - 2 >= 0) {
          Map<String, String> p2 = generateFeatures(itr.getPrevious(-2).orElse(Fragments.detachedEmptyAnnotation()), -2);
          p2.entrySet().stream().map(e -> Feature.TRUE(e.getKey(), e.getValue())).forEach(features::add);
-//         features.add(Feature.TRUE("W[-2,-1]", p2.get("W[-2]"), p1.get("W[-1]")));
-//         features.add(Feature.TRUE("WShape[-2,-1]", p2.get("WShape[-2]"), p1.get("WShape[-1]")));
-//         features.add(Feature.TRUE("T[-2,-1]", p2.get("T[-2]"), p1.get("T[-1]")));
-//
-//         features.add(Feature.TRUE("W[-2,-1,0]", p2.get("W[-2]"), p1.get("W[-1]"), p0.get("W[0]")));
-//         features.add(Feature.TRUE("WShape[-2,-1,0]", p2.get("WShape[-2]"), p1.get("WShape[-1]"), p0.get("WShape[0]")));
-//         features.add(Feature.TRUE("T[-2,-1,0]", p2.get("T[-2]"), p1.get("T[-1]"), p0.get("T[0]")));
+         features.add(Feature.TRUE("W[-2,-1]", p2.get("W[-2]"), p1.get("W[-1]")));
+         features.add(Feature.TRUE("WShape[-2,-1]", p2.get("WShape[-2]"), p1.get("WShape[-1]")));
+         features.add(Feature.TRUE("T[-2,-1]", p2.get("T[-2]"), p1.get("T[-1]")));
+         features.add(Feature.TRUE("W[-2,-1,0]", p2.get("W[-2]"), p1.get("W[-1]"), p0.get("W[0]")));
+         features.add(Feature.TRUE("WShape[-2,-1,0]", p2.get("WShape[-2]"), p1.get("WShape[-1]"), p0.get("WShape[0]")));
+         features.add(Feature.TRUE("T[-2,-1,0]", p2.get("T[-2]"), p1.get("T[-1]"), p0.get("T[0]")));
       }
 
 
