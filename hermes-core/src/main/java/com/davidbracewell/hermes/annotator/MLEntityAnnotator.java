@@ -41,46 +41,45 @@ import java.util.concurrent.ConcurrentMap;
  * @author David B. Bracewell
  */
 public class MLEntityAnnotator extends SentenceLevelAnnotator implements Serializable {
-  private static final long serialVersionUID = 1L;
-  private volatile ConcurrentMap<Language, BIOTagger> taggers = new ConcurrentHashMap<>();
+   private static final long serialVersionUID = 1L;
+   private volatile ConcurrentMap<Language, BIOTagger> taggers = new ConcurrentHashMap<>();
 
 
-  private BIOTagger loadModel(Language language) {
-    if (!taggers.containsKey(language)) {
-      synchronized (this) {
-        if (!taggers.containsKey(language)) {
-          try {
-            Resource classPath = Resources.fromClasspath("hermes/models/" + language.getCode()
-                                                                                    .toLowerCase() + "/ner.model.gz");
-            if (classPath.exists()) {
-              taggers.put(language, BIOTagger.read(classPath));
-            } else {
-              taggers.put(language,
-                          BIOTagger.read(Config.get("Annotation.ML_ENTITY", language, "model").asResource())
-                         );
+   private BIOTagger loadModel(Language language) {
+      if (!taggers.containsKey(language)) {
+         synchronized (this) {
+            if (!taggers.containsKey(language)) {
+               try {
+                  Resource classPath = Resources.fromClasspath("hermes/models/" + language.getCode()
+                                                                                          .toLowerCase() + "/ner.model.gz");
+                  if (classPath.exists()) {
+                     taggers.put(language, BIOTagger.read(classPath));
+                  } else {
+                     taggers.put(language,
+                                 BIOTagger.read(Config.get("Annotation.ML_ENTITY", language, "model").asResource()));
+                  }
+               } catch (Exception e) {
+                  throw Throwables.propagate(e);
+               }
             }
-          } catch (Exception e) {
-            throw Throwables.propagate(e);
-          }
-        }
+         }
       }
-    }
-    return taggers.get(language);
-  }
+      return taggers.get(language);
+   }
 
-  @Override
-  public void annotate(Annotation sentence) {
-    loadModel(sentence.getLanguage()).tag(sentence);
-  }
+   @Override
+   public void annotate(Annotation sentence) {
+      loadModel(sentence.getLanguage()).tag(sentence);
+   }
 
 
-  @Override
-  public Set<AnnotatableType> satisfies() {
-    return Collections.singleton(Types.ML_ENTITY);
-  }
+   @Override
+   public Set<AnnotatableType> satisfies() {
+      return Collections.singleton(Types.ML_ENTITY);
+   }
 
-  @Override
-  protected Set<AnnotatableType> furtherRequires() {
-    return Collections.singleton(Types.PART_OF_SPEECH);
-  }
+   @Override
+   protected Set<AnnotatableType> furtherRequires() {
+      return Collections.singleton(Types.PART_OF_SPEECH);
+   }
 }//END OF MLEntityAnnotator

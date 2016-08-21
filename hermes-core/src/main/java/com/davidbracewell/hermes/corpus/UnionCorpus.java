@@ -37,57 +37,62 @@ import java.util.Iterator;
  * @author David B. Bracewell
  */
 class UnionCorpus implements Corpus, Serializable {
-  private static final long serialVersionUID = 1L;
-  private final Corpus c1;
-  private final Corpus c2;
+   private static final long serialVersionUID = 1L;
+   private final Corpus c1;
+   private final Corpus c2;
 
-  UnionCorpus(Corpus c1, Corpus c2) {
-    this.c1 = c1;
-    this.c2 = c2;
-  }
+   UnionCorpus(Corpus c1, Corpus c2) {
+      this.c1 = c1;
+      this.c2 = c2;
+   }
 
-  @Override
-  public Corpus annotate(AnnotatableType... types) {
-    return new UnionCorpus(c1.annotate(types), c2.annotate(types));
-  }
+   @Override
+   public Corpus annotate(AnnotatableType... types) {
+      return new UnionCorpus(c1.annotate(types), c2.annotate(types));
+   }
 
-  @Override
-  public DocumentFactory getDocumentFactory() {
-    return c1.getDocumentFactory();
-  }
+   @Override
+   public DocumentFactory getDocumentFactory() {
+      return c1.getDocumentFactory();
+   }
 
-  @Override
-  public MStream<Document> stream() {
-    return c1.stream().union(c2.stream());
-  }
+   @Override
+   public MStream<Document> stream() {
+      return c1.stream().union(c2.stream());
+   }
 
-  @Override
-  public Corpus cache() {
-    return new UnionCorpus(c1.cache(), c2.cache());
-  }
+   @Override
+   public CorpusType getCorpusType() {
+      return CorpusType.STREAM;
+   }
 
-  @Override
-  public Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
-    return new UnionCorpus(c1.filter(filter), c2.filter(filter));
-  }
+   @Override
+   public Corpus cache() {
+      return new UnionCorpus(c1.cache(), c2.cache());
+   }
 
-  @Override
-  public long size() {
-    return c1.size() + c2.size();
-  }
+   @Override
+   public Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
+      return new UnionCorpus(c1.filter(filter), c2.filter(filter));
+   }
 
-  @Override
-  public boolean isEmpty() {
-    return c1.isEmpty() && c2.isEmpty();
-  }
+   @Override
+   public long size() {
+      return c1.size() + c2.size();
+   }
 
-  @Override
-  public Iterator<Document> iterator() {
-    return Iterators.concat(c1.iterator(), c2.iterator());
-  }
+   @Override
+   public boolean isEmpty() {
+      return c1.isEmpty() && c2.isEmpty();
+   }
 
-  @Override
-  public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
-    return new MStreamCorpus(stream().map(function), DocumentFactory.getInstance());
-  }
+   @Override
+   public Iterator<Document> iterator() {
+      return Iterators.concat(c1.iterator(), c2.iterator());
+   }
+
+   @Override
+   public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+      return new MStreamCorpus(stream().map(function), DocumentFactory.getInstance());
+   }
 }//END OF UnionCorpus

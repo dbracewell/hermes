@@ -56,7 +56,7 @@ public class EntityTrainer extends BIOTrainer {
     SequenceLabelerLearner learner = new CRFTrainer();
     learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
     learner.setValidator(new BIOValidator());
-    learner.setParameter("maxIterations", 300);
+    learner.setParameter("maxIterations", 200);
     learner.setParameter("verbose", true);
     return learner;
   }

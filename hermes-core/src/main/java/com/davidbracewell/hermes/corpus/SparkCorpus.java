@@ -26,157 +26,163 @@ import java.util.Collection;
  * The type Spark corpus.
  */
 public class SparkCorpus implements Corpus, Serializable {
-  private static final long serialVersionUID = 1L;
-  private final SparkDocumentStream stream;
+   private static final long serialVersionUID = 1L;
+   private final SparkDocumentStream stream;
 
-  /**
-   * Instantiates a new Spark corpus.
-   *
-   * @param corpusLocation  the corpus location
-   * @param corpusFormat    the document format
-   * @param documentFactory the document factory
-   */
-  @SuppressWarnings("unchecked")
-  public SparkCorpus(@NonNull String corpusLocation, @NonNull CorpusFormat corpusFormat, @NonNull DocumentFactory documentFactory) {
-    if (corpusFormat.isOnePerLine() && corpusFormat.extension().toUpperCase().startsWith("JSON")) {
-      this.stream = new SparkDocumentStream(
-        StreamingContext.distributed().textFile(corpusLocation)
-      );
-    } else if (corpusFormat.isOnePerLine()) {
-      Broadcast<Config> configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
-      this.stream = new SparkDocumentStream(StreamingContext.distributed().textFile(corpusLocation).flatMap(
-        line -> {
-          Hermes.initializeWorker(configBroadcast.getValue());
-          return corpusFormat.create(Resources.fromString(line), documentFactory)
-            .stream()
-            .map(Document::toJson)
-            .collect();
-        }
-      ));
-    } else {
-      Broadcast<Config> configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
-      this.stream = new SparkDocumentStream(
-        new SparkStream<>(
-          SparkStreamingContext.INSTANCE.sparkContext()
-            .wholeTextFiles(corpusLocation)
-            .values()
-            .flatMap(str -> {
-              Hermes.initializeWorker(configBroadcast.getValue());
-              return corpusFormat.create(Resources.fromString(str), documentFactory)
-                .stream()
-                .map(Document::toJson)
-                .collect().iterator();
-            })
-        )
-      );
-    }
-  }
+   /**
+    * Instantiates a new Spark corpus.
+    *
+    * @param corpusLocation  the corpus location
+    * @param corpusFormat    the document format
+    * @param documentFactory the document factory
+    */
+   @SuppressWarnings("unchecked")
+   public SparkCorpus(@NonNull String corpusLocation, @NonNull CorpusFormat corpusFormat, @NonNull DocumentFactory documentFactory) {
+      if (corpusFormat.isOnePerLine() && corpusFormat.extension().toUpperCase().startsWith("JSON")) {
+         this.stream = new SparkDocumentStream(
+               StreamingContext.distributed().textFile(corpusLocation)
+         );
+      } else if (corpusFormat.isOnePerLine()) {
+         Broadcast<Config> configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
+         this.stream = new SparkDocumentStream(StreamingContext.distributed().textFile(corpusLocation).flatMap(
+               line -> {
+                  Hermes.initializeWorker(configBroadcast.getValue());
+                  return corpusFormat.create(Resources.fromString(line), documentFactory)
+                                     .stream()
+                                     .map(Document::toJson)
+                                     .collect();
+               }
+                                                                                                              ));
+      } else {
+         Broadcast<Config> configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
+         this.stream = new SparkDocumentStream(
+               new SparkStream<>(
+                     SparkStreamingContext.INSTANCE.sparkContext()
+                                                   .wholeTextFiles(corpusLocation)
+                                                   .values()
+                                                   .flatMap(str -> {
+                                                      Hermes.initializeWorker(configBroadcast.getValue());
+                                                      return corpusFormat.create(Resources.fromString(str),
+                                                                                 documentFactory)
+                                                                         .stream()
+                                                                         .map(Document::toJson)
+                                                                         .collect().iterator();
+                                                   })
+               )
+         );
+      }
+   }
 
-  /**
-   * Repartition.
-   *
-   * @param numPartitions the num partitions
-   */
-  @Override
-  public Corpus repartition(int numPartitions) {
-    stream.repartition(numPartitions);
-    return this;
-  }
+   @Override
+   public CorpusType getCorpusType() {
+      return CorpusType.DISTRIBUTED;
+   }
 
-  /**
-   * Instantiates a new Spark corpus.
-   *
-   * @param documents the documents
-   */
-  public SparkCorpus(@NonNull Collection<Document> documents) {
-    this.stream = new SparkDocumentStream(StreamingContext.distributed().stream(
-      documents.stream().map(Document::toJson)
-    ));
-  }
+   /**
+    * Repartition.
+    *
+    * @param numPartitions the num partitions
+    */
+   @Override
+   public Corpus repartition(int numPartitions) {
+      stream.repartition(numPartitions);
+      return this;
+   }
 
-  /**
-   * Instantiates a new Spark corpus.
-   *
-   * @param stream the stream
-   */
-  protected SparkCorpus(SparkDocumentStream stream) {
-    this.stream = stream;
-  }
+   /**
+    * Instantiates a new Spark corpus.
+    *
+    * @param documents the documents
+    */
+   public SparkCorpus(@NonNull Collection<Document> documents) {
+      this.stream = new SparkDocumentStream(StreamingContext.distributed().stream(
+            documents.stream().map(Document::toJson)
+                                                                                 ));
+   }
 
-  @Override
-  public DocumentFactory getDocumentFactory() {
-    return DocumentFactory.getInstance();
-  }
+   /**
+    * Instantiates a new Spark corpus.
+    *
+    * @param stream the stream
+    */
+   protected SparkCorpus(SparkDocumentStream stream) {
+      this.stream = stream;
+   }
 
-  @Override
-  public MStream<Document> stream() {
-    return stream;
-  }
+   @Override
+   public DocumentFactory getDocumentFactory() {
+      return DocumentFactory.getInstance();
+   }
 
-  @Override
-  public Corpus annotate(@NonNull AnnotatableType... types) {
-    return new SparkCorpus(stream.annotate(types));
-  }
+   @Override
+   public MStream<Document> stream() {
+      return stream;
+   }
 
-  @Override
-  public Corpus cache() {
-    return new SparkCorpus(new SparkDocumentStream(stream.getSource().cache()));
-  }
+   @Override
+   public Corpus annotate(@NonNull AnnotatableType... types) {
+      return new SparkCorpus(stream.annotate(types));
+   }
 
-  @Override
-  public Corpus sample(int size) {
-    return new MStreamCorpus(stream.sample(false, size), getDocumentFactory());
-  }
+   @Override
+   public Corpus cache() {
+      return new SparkCorpus(new SparkDocumentStream(stream.getSource().cache()));
+   }
 
-  @Override
-  public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
-    return write(format, resource.descriptor());
-  }
+   @Override
+   public Corpus sample(int size) {
+      return new MStreamCorpus(stream.sample(false, size), getDocumentFactory());
+   }
 
-  @Override
-  public Corpus write(@NonNull String format, @NonNull String resource) throws IOException {
-    CorpusFormat outFormat = CorpusFormats.forName(format);
-    if (!outFormat.isOnePerLine()) {
-      throw new IllegalArgumentException(format + " must be one per line!");
-    }
-    if (outFormat.extension().toLowerCase().startsWith("json")) {
-      stream.saveAsTextFile(resource);
-    } else {
-      stream.getSource().map(json -> {
-        Document document = Document.fromJson(json);
-        Resource tmp = new StringResource();
-        try {
-          outFormat.write(tmp, document);
-          return tmp.readToString().trim();
-        } catch (IOException e) {
-          e.printStackTrace();
-          return StringUtils.EMPTY;
-        }
-      })
-        .saveAsTextFile(resource);
-    }
-    return this;
-  }
+   @Override
+   public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
+      return write(format, resource.descriptor());
+   }
 
-  @Override
-  public Corpus updateConfig() {
-    stream.updateConfig();
-    return this;
-  }
+   @Override
+   public Corpus write(@NonNull String format, @NonNull String resource) throws IOException {
+      CorpusFormat outFormat = CorpusFormats.forName(format);
+      if (!outFormat.isOnePerLine()) {
+         throw new IllegalArgumentException(format + " must be one per line!");
+      }
+      if (outFormat.extension().toLowerCase().startsWith("json")) {
+         stream.saveAsTextFile(resource);
+      } else {
+         stream.getSource().map(json -> {
+            Document document = Document.fromJson(json);
+            Resource tmp = new StringResource();
+            try {
+               outFormat.write(tmp, document);
+               return tmp.readToString().trim();
+            } catch (IOException e) {
+               e.printStackTrace();
+               return StringUtils.EMPTY;
+            }
+         })
+               .saveAsTextFile(resource);
+      }
+      return this;
+   }
 
-  @Override
-  public boolean isDistributed() {
-    return true;
-  }
+   @Override
+   public Corpus updateConfig() {
+      stream.updateConfig();
+      return this;
+   }
 
-  @Override
-  public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
-    return new SparkCorpus(new SparkDocumentStream(stream.map(d -> function.apply(d).toJson())));
-  }
+   @Override
+   public boolean isDistributed() {
+      return true;
+   }
 
-  @Override
-  public StreamingContext getStreamingContext() {
-    return stream.getContext();
-  }
+   @Override
+   public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+      return new SparkCorpus(new SparkDocumentStream(stream.map(d -> function.apply(d).toJson())));
+   }
+
+   @Override
+   public StreamingContext getStreamingContext() {
+      return stream.getContext();
+   }
 
 }//END OF SparkCorpus

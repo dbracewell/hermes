@@ -45,61 +45,66 @@ import java.util.stream.Collectors;
  * @author David B. Bracewell
  */
 public class InMemoryCorpus implements Corpus, Serializable {
-  private static final long serialVersionUID = 1L;
-  private final List<Document> documents = new LinkedList<>();
+   private static final long serialVersionUID = 1L;
+   private final List<Document> documents = new LinkedList<>();
 
-  /**
-   * Instantiates a new In memory corpus.
-   *
-   * @param documentCollection the document collection
-   */
-  public InMemoryCorpus(@NonNull Collection<Document> documentCollection) {
-    documents.addAll(documentCollection);
-  }
+   /**
+    * Instantiates a new In memory corpus.
+    *
+    * @param documentCollection the document collection
+    */
+   public InMemoryCorpus(@NonNull Collection<Document> documentCollection) {
+      documents.addAll(documentCollection);
+   }
 
-  @Override
-  public Corpus annotate(@NonNull AnnotatableType... types) {
-    Pipeline.builder().addAnnotations(types).returnCorpus(false).build().process(this);
-    return this;
-  }
+   @Override
+   public CorpusType getCorpusType() {
+      return CorpusType.IN_MEMORY;
+   }
 
-  @Override
-  public Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
-    return new InMemoryCorpus(documents.stream().filter(filter).collect(Collectors.toList()));
-  }
+   @Override
+   public Corpus annotate(@NonNull AnnotatableType... types) {
+      Pipeline.builder().addAnnotations(types).returnCorpus(false).build().process(this);
+      return this;
+   }
 
-  @Override
-  public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
-    return new InMemoryCorpus(documents.stream().map(function).collect(Collectors.toList()));
-  }
+   @Override
+   public Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
+      return new InMemoryCorpus(documents.stream().filter(filter).collect(Collectors.toList()));
+   }
 
-  @Override
-  public DocumentFactory getDocumentFactory() {
-    return DocumentFactory.getInstance();
-  }
+   @Override
+   public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+      return new InMemoryCorpus(documents.stream().map(function).collect(Collectors.toList()));
+   }
 
-  @Override
-  public boolean isEmpty() {
-    return documents.isEmpty();
-  }
+   @Override
+   public DocumentFactory getDocumentFactory() {
+      return DocumentFactory.getInstance();
+   }
 
-  @Override
-  public Iterator<Document> iterator() {
-    return documents.iterator();
-  }
+   @Override
+   public boolean isEmpty() {
+      return documents.isEmpty();
+   }
 
-  @Override
-  public long size() {
-    return documents.size();
-  }
+   @Override
+   public Iterator<Document> iterator() {
+      return documents.iterator();
+   }
 
-  @Override
-  public MStream<Document> stream() {
-    return getStreamingContext().stream(documents);
-  }
+   @Override
+   public long size() {
+      return documents.size();
+   }
 
-  @Override
-  public boolean isInMemory() {
-    return true;
-  }
+   @Override
+   public MStream<Document> stream() {
+      return getStreamingContext().stream(documents);
+   }
+
+   @Override
+   public boolean isInMemory() {
+      return true;
+   }
 }//END OF InMemoryCorpus

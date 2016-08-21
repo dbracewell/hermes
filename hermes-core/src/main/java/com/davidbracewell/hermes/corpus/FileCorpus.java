@@ -48,94 +48,98 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author David B. Bracewell
  */
 public class FileCorpus implements Corpus, Serializable {
-  private static final long serialVersionUID = 1L;
-  private static final Logger log = Logger.getLogger(FileCorpus.class);
+   private static final long serialVersionUID = 1L;
+   private static final Logger log = Logger.getLogger(FileCorpus.class);
 
-  private final CorpusFormat corpusFormat;
-  private final Resource resource;
-  private final DocumentFactory documentFactory;
-  private long size = -1;
+   private final CorpusFormat corpusFormat;
+   private final Resource resource;
+   private final DocumentFactory documentFactory;
+   private long size = -1;
 
-  /**
-   * Instantiates a new file based corpus
-   *
-   * @param corpusFormat  the corpus format
-   * @param resource        the resource containing the corpus
-   * @param documentFactory the document factory to use when constructing documents
-   */
-  public FileCorpus(@NonNull CorpusFormat corpusFormat, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
-    this.corpusFormat = corpusFormat;
-    this.resource = resource;
-    this.documentFactory = documentFactory;
-  }
+   /**
+    * Instantiates a new file based corpus
+    *
+    * @param corpusFormat  the corpus format
+    * @param resource        the resource containing the corpus
+    * @param documentFactory the document factory to use when constructing documents
+    */
+   public FileCorpus(@NonNull CorpusFormat corpusFormat, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
+      this.corpusFormat = corpusFormat;
+      this.resource = resource;
+      this.documentFactory = documentFactory;
+   }
 
+   @Override
+   public CorpusType getCorpusType() {
+      return CorpusType.OFF_HEAP;
+   }
 
-  @Override
-  public Iterator<Document> iterator() {
-    return new RecursiveDocumentIterator(resource, documentFactory, ((resource1, documentFactory1) -> {
-      try {
-        return corpusFormat.read(resource1, documentFactory1);
-      } catch (IOException e) {
-        log.warn("Error reading {0} : {1}", resource1, e);
-        return Collections.emptyList();
+   @Override
+   public Iterator<Document> iterator() {
+      return new RecursiveDocumentIterator(resource, documentFactory, ((resource1, documentFactory1) -> {
+         try {
+            return corpusFormat.read(resource1, documentFactory1);
+         } catch (IOException e) {
+            log.warn("Error reading {0} : {1}", resource1, e);
+            return Collections.emptyList();
+         }
       }
-    }
-    ));
-  }
+      ));
+   }
 
-  @Override
-  public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
-    CorpusFormat corpusFormat = CorpusFormats.forName(format);
-    if (corpusFormat == this.corpusFormat) {
-      try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
-        try (MStream<String> lines = this.resource.lines()) {
-          AtomicLong count = new AtomicLong();
-          for (String line : Collect.asIterable(lines.iterator())) {
-            writer.write(line);
-            writer.write("\n");
-            if (count.incrementAndGet() % 1000 == 0) {
-              writer.flush();
+   @Override
+   public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
+      CorpusFormat corpusFormat = CorpusFormats.forName(format);
+      if (corpusFormat == this.corpusFormat) {
+         try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
+            try (MStream<String> lines = this.resource.lines()) {
+               AtomicLong count = new AtomicLong();
+               for (String line : Collect.asIterable(lines.iterator())) {
+                  writer.write(line);
+                  writer.write("\n");
+                  if (count.incrementAndGet() % 1000 == 0) {
+                     writer.flush();
+                  }
+               }
             }
-          }
-        }
+         }
+         return Corpus.builder().format(format).source(resource).build();
+      } else {
+         return Corpus.super.write(format, resource);
       }
-      return Corpus.builder().format(format).source(resource).build();
-    } else {
-      return Corpus.super.write(format, resource);
-    }
-  }
+   }
 
 
-  @Override
-  public MStream<Document> stream() {
-    return getStreamingContext().stream(iterator());
-  }
+   @Override
+   public MStream<Document> stream() {
+      return getStreamingContext().stream(iterator());
+   }
 
-  @Override
-  public Corpus annotate(@NonNull AnnotatableType... types) {
-    return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
-  }
+   @Override
+   public Corpus annotate(@NonNull AnnotatableType... types) {
+      return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
+   }
 
-  @Override
-  public DocumentFactory getDocumentFactory() {
-    return documentFactory;
-  }
+   @Override
+   public DocumentFactory getDocumentFactory() {
+      return documentFactory;
+   }
 
-  @Override
-  public long size() {
-    if (size == -1) {
-      size = stream().count();
-    }
-    return size;
-  }
+   @Override
+   public long size() {
+      if (size == -1) {
+         size = stream().count();
+      }
+      return size;
+   }
 
-  @Override
-  public boolean isOffHeap() {
-    return true;
-  }
+   @Override
+   public boolean isOffHeap() {
+      return true;
+   }
 
-  @Override
-  public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
-    return Corpus.builder().offHeap().addAll(stream().map(function).collect()).build();
-  }
+   @Override
+   public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+      return Corpus.builder().offHeap().addAll(stream().map(function).collect()).build();
+   }
 }//END OF FileCorpus

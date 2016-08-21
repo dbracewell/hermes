@@ -63,6 +63,11 @@ public class MStreamCorpus implements Corpus, Serializable {
   }
 
   @Override
+  public CorpusType getCorpusType() {
+    return null;
+  }
+
+  @Override
   public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
     return new MStreamCorpus(stream().map(Cast.as(function)), documentFactory);
   }

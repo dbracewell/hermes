@@ -796,13 +796,15 @@ public interface Corpus extends Iterable<Document> {
   }
 
 
+  CorpusType getCorpusType();
+
   /**
    * Gets streaming context.
    *
    * @return the streaming context
    */
   default StreamingContext getStreamingContext() {
-    return StreamingContext.local();
+    return getCorpusType().getStreamingContext();
   }
 
 }//END OF Corpus
