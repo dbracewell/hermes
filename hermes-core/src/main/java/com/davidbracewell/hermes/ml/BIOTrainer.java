@@ -24,11 +24,7 @@ package com.davidbracewell.hermes.ml;
 import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.apollo.ml.preprocess.filter.MinCountFilter;
-import com.davidbracewell.apollo.ml.sequence.Sequence;
-import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
-import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
-import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
-import com.davidbracewell.apollo.ml.sequence.SequenceValidator;
+import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.Annotation;
@@ -37,34 +33,74 @@ import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.io.resource.Resource;
 
 /**
+ * The type Bio trainer.
  * @author David B. Bracewell
  */
 public abstract class BIOTrainer extends CommandLineApplication {
   private static final long serialVersionUID = 1L;
 
+  /**
+   * The Annotation type.
+   */
   protected final AnnotationType annotationType;
+  /**
+   * The Corpus.
+   */
   @Option(description = "Location of the corpus to process", required = true)
   protected Resource corpus;
+  /**
+   * The Corpus format.
+   */
   @Option(name = "format", description = "Format of the corpus", required = true)
   protected String corpusFormat;
+  /**
+   * The Model.
+   */
   @Option(description = "Location to save model", required = true)
   protected Resource model;
+  /**
+   * The Min feature count.
+   */
   @Option(description = "Minimum count for a feature to be kept", defaultValue = "5")
   protected int minFeatureCount;
+  /**
+   * The Mode.
+   */
   @Option(description = "TEST or TRAIN", defaultValue = "TEST")
   protected Mode mode;
 
+  /**
+   * Instantiates a new Bio trainer.
+   *
+   * @param name the name
+   * @param annotationType the annotation type
+   */
   public BIOTrainer(String name, AnnotationType annotationType) {
     super(name);
     this.annotationType = annotationType;
   }
 
+  /**
+   * Gets validator.
+   *
+   * @return the validator
+   */
   protected SequenceValidator getValidator() {
     return new BIOValidator();
   }
 
+  /**
+   * Gets featurizer.
+   *
+   * @return the featurizer
+   */
   protected abstract SequenceFeaturizer<Annotation> getFeaturizer();
 
+  /**
+   * Gets preprocessors.
+   *
+   * @return the preprocessors
+   */
   protected PreprocessorList<Sequence> getPreprocessors() {
     if (minFeatureCount > 1) {
       return PreprocessorList.create(new MinCountFilter(minFeatureCount).asSequenceProcessor());
@@ -72,8 +108,19 @@ public abstract class BIOTrainer extends CommandLineApplication {
     return PreprocessorList.empty();
   }
 
+  /**
+   * Gets learner.
+   *
+   * @return the learner
+   */
   protected abstract SequenceLabelerLearner getLearner();
 
+  /**
+   * Gets dataset.
+   *
+   * @param featurizer the featurizer
+   * @return the dataset
+   */
   protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
     return Corpus
       .builder()
@@ -83,6 +130,11 @@ public abstract class BIOTrainer extends CommandLineApplication {
       .asSequenceDataSet(new BIOLabelMaker(annotationType), featurizer);
   }
 
+  /**
+   * Test.
+   *
+   * @throws Exception the exception
+   */
   protected void test() throws Exception {
     BIOTagger tagger = BIOTagger.read(model);
     Dataset<Sequence> test = getDataset(tagger.featurizer);
@@ -91,6 +143,11 @@ public abstract class BIOTrainer extends CommandLineApplication {
     eval.output(System.out);
   }
 
+  /**
+   * Train.
+   *
+   * @throws Exception the exception
+   */
   protected void train() throws Exception {
     final SequenceFeaturizer<Annotation> featurizer = getFeaturizer();
     Dataset<Sequence> train = getDataset(featurizer);

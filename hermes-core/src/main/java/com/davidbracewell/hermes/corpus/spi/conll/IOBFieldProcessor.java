@@ -55,6 +55,10 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
     return value.startsWith("I-") && value.substring(2).equals(target);
   }
 
+  protected String normalizeTag(String tag){
+    return tag;
+  }
+
   @Override
   public void processInput(Document document, List<CoNLLRow> rows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
     final String TYPE = getFieldName();
@@ -73,8 +77,8 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
           document.createAnnotation(annotationType,
                                     start,
                                     end,
-                                    map(attributeType, attributeType.getValueType().convert(tag))
-          );
+                                    map(attributeType, attributeType.getValueType().convert(normalizeTag(tag)))
+                                   );
         }
       }
       i++;

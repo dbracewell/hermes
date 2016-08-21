@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.lexicon;
 
-import com.davidbracewell.collection.trie.PatriciaTrie;
+import com.davidbracewell.collection.Trie;
 import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
 import lombok.NonNull;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  */
 public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
   private static final long serialVersionUID = 1L;
-  private final PatriciaTrie<List<LexiconEntry>> trie;
+  private final Trie<List<LexiconEntry>> trie;
 
   /**
    * Instantiates a new Trie lexicon.
@@ -50,7 +50,8 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    */
   public TrieLexicon(boolean isCaseSensitive, boolean isProbabilistic, AttributeType tagAttributeType) {
     super(isCaseSensitive, isProbabilistic, tagAttributeType);
-    this.trie = new PatriciaTrie<>();
+    this.trie = new Trie<>();
+    //new PatriciaTrie<>();
   }
 
   @Override
@@ -68,16 +69,16 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
     String str = normalize(hString);
     if (trie.containsKey(str)) {
       return trie.get(str).stream()
-        .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
-        .sorted()
-        .collect(Collectors.toList());
+                 .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
+                 .sorted()
+                 .collect(Collectors.toList());
     }
     str = normalize(hString.getLemma());
     if (trie.containsKey(str)) {
       return trie.get(str).stream()
-        .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
-        .sorted()
-        .collect(Collectors.toList());
+                 .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
+                 .sorted()
+                 .collect(Collectors.toList());
     }
     return Collections.emptyList();
   }
@@ -93,7 +94,8 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
 
   @Override
   public boolean isPrefixMatch(@NonNull HString hString) {
-    return trie.prefixMap(normalize(hString) + " ").size() > 0 || trie.prefixMap(normalize(hString.getLemma()) + " ").size() > 0;
+    return trie.prefix(normalize(hString)).size() > 0 || trie.prefix(normalize(hString.getLemma())).size() > 0;
+    //return trie.prefixMap(normalize(hString) + " ").size() > 0 || trie.prefixMap(normalize(hString.getLemma()) + " ").size() > 0;
   }
 
 

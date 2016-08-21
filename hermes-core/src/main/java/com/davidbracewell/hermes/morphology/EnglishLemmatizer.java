@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.collection.Streams;
+import com.davidbracewell.collection.Trie;
 import com.davidbracewell.collection.trie.PatriciaTrie;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.io.CSV;
@@ -90,7 +91,9 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     loadException(POS.ADVERB);
 
     this.lemmas = new PatriciaTrie<>();
-    try (CSVReader reader = CSV.builder().delimiter('\t').reader(Resources.fromClasspath("com/davidbracewell/hermes/morphology/en/lemmas.dict.gz"))) {
+    try (CSVReader reader = CSV.builder()
+                               .delimiter('\t')
+                               .reader(Resources.fromClasspath("com/davidbracewell/hermes/morphology/en/lemmas.dict.gz"))) {
       reader.forEach(row -> {
         if (row.size() >= 2) {
           String lemma = row.get(0).replace('_', ' ').toLowerCase();
@@ -226,8 +229,8 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
   }
 
   @Override
-  public PatriciaTrie<String> allPossibleLemmasAndPrefixes(@NonNull String string, @NonNull POS partOfSpeech) {
-    PatriciaTrie<String> lemmaSet = new PatriciaTrie<>();
+  public Trie<String> allPossibleLemmasAndPrefixes(@NonNull String string, @NonNull POS partOfSpeech) {
+    Trie<String> lemmaSet = new Trie<>();
     for (String lemma : doLemmatization(string, true, partOfSpeech)) {
       lemmaSet.putAll(Maps.asMap(lemmas.prefixMap(lemma + " ").keySet(), k -> k));
       if (lemmas.containsKey(lemma)) {
@@ -263,7 +266,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
     if (tags == null || tags.length == 0 || tags[0] == POS.ANY) {
       tags = ALL_POS;
     }
-    PatriciaTrie<String> prefixes = allPossibleLemmasAndPrefixes(words[0], POS.ANY);
+    Trie<String> prefixes = allPossibleLemmasAndPrefixes(words[0], POS.ANY);
     Set<String> lemmas = allAndSelf(words[0]);
     for (int i = 1; i < words.length; i++) {
       Set<String> nextSet = new HashSet<>();
@@ -272,7 +275,7 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
           String subPhrase = previous + " " + next;
           if (prefixes.containsKey(subPhrase)) {
             nextSet.add(subPhrase);
-          } else if (prefixes.prefixMap(subPhrase).size() > 0) {
+          } else if (prefixes.prefix(subPhrase).size() > 0) {
             nextSet.add(subPhrase);
           }
         }
@@ -291,7 +294,10 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
 
   @Override
   public boolean canLemmatize(String input, POS partOfSpeech) {
-    return partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB) && doLemmatization(input, false, partOfSpeech).size() > 0;
+    return partOfSpeech.isInstance(POS.NOUN, POS.VERB, POS.ADJECTIVE, POS.ADVERB) && doLemmatization(input,
+                                                                                                     false,
+                                                                                                     partOfSpeech
+                                                                                                    ).size() > 0;
   }
 
   @Override
@@ -307,7 +313,9 @@ public class EnglishLemmatizer implements Lemmatizer, Serializable {
   private void loadException(POS tag) {
     try {
       for (String line :
-        Resources.fromClasspath("com/davidbracewell/hermes/morphology/en").getChild(tag.asString().toLowerCase() + ".exc").readLines()) {
+        Resources.fromClasspath("com/davidbracewell/hermes/morphology/en")
+                 .getChild(tag.asString().toLowerCase() + ".exc")
+                 .readLines()) {
         if (!Strings.isNullOrEmpty(line)) {
           String[] parts = line.split("\\s+");
           Tuple2<POS, String> key = Tuple2.of(tag.getUniversalTag(), parts[0].replaceAll("_", " "));

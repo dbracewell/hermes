@@ -136,6 +136,8 @@ public interface Types {
    */
   AnnotationType WORD_SENSE = AnnotationType.create("WORD_SENSE");
 
+  AnnotationType ML_ENTITY = AnnotationType.create("ML_ENTITY");
+
   /**
    * Annotation annotation type.
    *

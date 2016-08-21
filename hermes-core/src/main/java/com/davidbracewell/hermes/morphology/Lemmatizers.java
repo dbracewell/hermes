@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.collection.trie.PatriciaTrie;
+import com.davidbracewell.collection.Trie;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.attribute.POS;
 import com.google.common.collect.Maps;
@@ -74,8 +74,8 @@ public final class Lemmatizers {
     }
 
     @Override
-    public PatriciaTrie<String> allPossibleLemmasAndPrefixes(@NonNull String string, POS partOfSpeech) {
-      return new PatriciaTrie<>(map(string, string));
+    public Trie<String> allPossibleLemmasAndPrefixes(@NonNull String string, POS partOfSpeech) {
+      return new Trie<>(map(string, string));
     }
 
     @Override

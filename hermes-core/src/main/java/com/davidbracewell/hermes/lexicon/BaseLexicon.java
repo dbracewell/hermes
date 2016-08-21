@@ -29,6 +29,7 @@ import com.davidbracewell.hermes.Types;
 import lombok.NonNull;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -137,6 +138,8 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
       }
       i = i - matches[i].getSpan().tokenLength();
     }
+
+    Collections.reverse(results);
     return results;
   }
 
@@ -159,7 +162,9 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
   protected List<HString> longestMatchFirst(@NonNull HString source) {
     List<HString> results = new LinkedList<>();
     List<Annotation> tokens = source.tokens();
-    Predicate<HString> prefix = (this instanceof PrefixSearchable) ? Cast.<PrefixSearchable>as(this)::isPrefixMatch : h -> true;
+    Predicate<HString> prefix = (this instanceof PrefixSearchable)
+                                ? Cast.<PrefixSearchable>as(this)::isPrefixMatch
+                                : h -> true;
 
     for (int i = 0; i < tokens.size(); ) {
       Annotation token = tokens.get(i);

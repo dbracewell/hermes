@@ -57,7 +57,7 @@ public class CoNLLFormat extends FileBasedFormat {
   public static void setFields(@NonNull CoNLLColumnProcessor... types) {
     Config.setProperty(FIELDS_PROPERTY,
                        Stream.of(types).map(CoNLLColumnProcessor::getFieldName).collect(Collectors.joining(","))
-    );
+                      );
   }
 
   public static void setFields(@NonNull String... types) {
@@ -68,7 +68,7 @@ public class CoNLLFormat extends FileBasedFormat {
     Config.setProperty(DOC_PER_SENT_PROPERTY, Boolean.toString(oneDocumentPerSentence));
   }
 
-  public static void setFieldSeparater(@NonNull String fs) {
+  public static void setFieldSeparator(@NonNull String fs) {
     Config.setProperty(FS_PROPERTY, fs);
   }
 
@@ -97,7 +97,7 @@ public class CoNLLFormat extends FileBasedFormat {
                                   lastSentenceStart,
                                   token.getEnd(),
                                   Maps.map(Types.INDEX, sentenceIndex)
-        );
+                                 );
         sentenceIndex++;
         lastSentenceStart = -1;
       }
@@ -147,7 +147,7 @@ public class CoNLLFormat extends FileBasedFormat {
             case "WORD":
               row.setWord(POSCorrection.word(parts.get(i).replaceAll(StringUtils.MULTIPLE_WHITESPACE, ""),
                                              POS.ANY.asString()
-              ));
+                                            ));
               break;
             case "POS":
               row.setPos(parts.get(i));

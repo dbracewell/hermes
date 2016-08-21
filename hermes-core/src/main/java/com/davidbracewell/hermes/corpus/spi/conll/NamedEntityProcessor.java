@@ -40,4 +40,17 @@ public class NamedEntityProcessor extends IOBFieldProcessor {
     return "ENTITY";
   }
 
+  @Override
+  protected String normalizeTag(String tag) {
+    tag = tag.toUpperCase();
+    switch (tag) {
+      case "PER":
+        return "PERSON";
+      case "ORG":
+        return "ORGANIZATION";
+      case "LOC":
+        return "LOCATION";
+    }
+    return tag;
+  }
 }//END OF NamedEntityProcessor

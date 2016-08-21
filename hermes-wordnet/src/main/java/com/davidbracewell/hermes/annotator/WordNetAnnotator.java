@@ -1,6 +1,6 @@
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.collection.trie.PatriciaTrie;
+import com.davidbracewell.collection.Trie;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.morphology.Lemmatizer;
@@ -21,7 +21,10 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
 
   private Annotation createAnnotation(Document document, Span span) {
     Annotation annotation = document.createAnnotation(Types.WORD_SENSE, span);
-    annotation.put(Types.SENSE, WordNet.getInstance().getSenses(annotation.toString(), POS.forText(annotation), document.getLanguage()));
+    annotation.put(Types.SENSE,
+                   WordNet.getInstance()
+                          .getSenses(annotation.toString(), POS.forText(annotation), document.getLanguage())
+                  );
     return annotation;
   }
 
@@ -38,7 +41,7 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
     Lemmatizer lemmatizer = Lemmatizers.getLemmatizer(sentence.getLanguage());
     for (int i = 0; i < tokens.size(); ) {
       Annotation token = tokens.get(i);
-      final PatriciaTrie<String> lemmas = lemmatizer.allPossibleLemmasAndPrefixes(tokens.get(i).toString(), POS.ANY);
+      final Trie<String> lemmas = lemmatizer.allPossibleLemmasAndPrefixes(tokens.get(i).toString(), POS.ANY);
 
       if (lemmas.size() > 0) {
 
@@ -50,7 +53,10 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
 
         } else if (lemmas.size() > 1) {
 
-          Set<String> working = getAllLemmas(token, lemmatizer).stream().filter(s -> lemmas.containsKey(s) || lemmas.prefixMap(s + " ").size() > 0).collect(Collectors.toSet());
+          Set<String> working = getAllLemmas(token, lemmatizer).stream()
+                                                               .filter(s -> lemmas.containsKey(s) || lemmas.prefix(s + " ")
+                                                                                                           .size() > 0)
+                                                               .collect(Collectors.toSet());
 
           if (lemmatizer.canLemmatize(token.toString(), token.getPOS())) {
             bestMatch = token;
@@ -68,7 +74,7 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
                 if (lemmas.containsKey(phrase)) {
                   nextSet.add(phrase);
                   matched = true;
-                } else if (lemmas.prefixMap(phrase).size() > 0) {
+                } else if (lemmas.prefix(phrase).size() > 0) {
                   nextSet.add(phrase);
                 }
               }
