@@ -31,9 +31,6 @@ import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTrainer;
 import com.davidbracewell.hermes.ml.BIOValidator;
 
-import java.util.Collections;
-import java.util.Set;
-
 /**
  * @author David B. Bracewell
  */
@@ -54,10 +51,10 @@ public class EntityTrainer extends BIOTrainer {
       LibraryLoader.INSTANCE.load();
    }
 
-   @Override
-   protected Set<String> validTags() {
-      return Collections.singleton("PERSON");
-   }
+//   @Override
+//   protected Set<String> validTags() {
+//      return Collections.singleton("PERSON");
+//   }
 
    @Override
    protected SequenceLabelerLearner getLearner() {

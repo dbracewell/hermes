@@ -73,7 +73,6 @@ public class BIOTagger extends AnnotationTagger {
       SequenceInput<Annotation> sequenceInput = new SequenceInput<>(sentence.tokens());
       Labeling result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
       for (int i = 0; i < sentence.tokenLength(); ) {
-         System.out.println(sentence.tokenAt(i) + " : " + result.getLabel(i));
          if (result.getLabel(i).equals("O")) {
             i++;
          } else {

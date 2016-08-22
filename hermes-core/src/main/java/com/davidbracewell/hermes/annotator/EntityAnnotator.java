@@ -31,13 +31,13 @@ import com.davidbracewell.hermes.Types;
  * @author David B. Bracewell
  */
 public class EntityAnnotator extends SubTypeAnnotator {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  /**
-   * Instantiates a new Entity annotator.
-   */
-  public EntityAnnotator() {
-    super(Types.ENTITY, false, Config.get(EntityAnnotator.class, "subTypes").asSet(AnnotationType.class));
-  }
+   /**
+    * Instantiates a new Entity annotator.
+    */
+   public EntityAnnotator() {
+      super(Types.ENTITY, false, Config.get(EntityAnnotator.class, "subTypes").asSet(AnnotationType.class));
+   }
 
 }//END OF EntityAnnotator
