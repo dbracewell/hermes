@@ -41,7 +41,7 @@ import static com.davidbracewell.collection.map.Maps.map;
 public class TokenTypeEntityAnnotator extends SentenceLevelAnnotator {
   private static final long serialVersionUID = 1L;
 
-  private static Map<TokenType, EntityType> mapping = ImmutableMap.<TokenType, EntityType>builder()
+  private static final Map<TokenType, EntityType> mapping = ImmutableMap.<TokenType, EntityType>builder()
     .put(TokenType.EMAIL, Entities.EMAIL)
     .put(TokenType.URL, Entities.URL)
     .put(TokenType.MONEY, Entities.MONEY)

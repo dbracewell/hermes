@@ -27,9 +27,7 @@ import com.davidbracewell.atlas.Vertex;
 import com.davidbracewell.atlas.algorithms.DijkstraShortestPath;
 import com.davidbracewell.atlas.algorithms.ShortestPath;
 import com.davidbracewell.atlas.io.GraphViz;
-import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
@@ -41,194 +39,244 @@ import java.util.stream.Collectors;
 import static com.davidbracewell.collection.map.Maps.map;
 
 /**
+ * The type Relation graph.
  * @author David B. Bracewell
  */
 public class RelationGraph extends AdjacencyMatrix<Annotation> {
-  private static final long serialVersionUID = 1L;
-  private volatile transient Lazy<ShortestPath<Annotation>> lazyShortestPath = new Lazy<>(() -> new DijkstraShortestPath<>(
-    this));
-  private volatile transient Lazy<ShortestPath<Annotation>> lazyUnDirectedShortestPath = new Lazy<>(() -> new DijkstraShortestPath<>(
-    this,
-    true
-  ));
+   private static final long serialVersionUID = 1L;
+   private volatile transient Lazy<ShortestPath<Annotation>> lazyShortestPath = new Lazy<>(
+         () -> new DijkstraShortestPath<>(this));
+   private volatile transient Lazy<ShortestPath<Annotation>> lazyUnDirectedShortestPath = new Lazy<>(
+         () -> new DijkstraShortestPath<>(this, true));
 
-  public static void main(String[] args) throws Exception {
-    Config.initialize("");
-    Document doc = Document.create("1", "He walked quickly down the crowded street.");
-    Pipeline.process(doc, Types.DEPENDENCY);
-    RelationGraph g = doc.dependencyGraph();
-    System.out.println(doc.toPOSString());
-//    System.out.println(g.shortestConnection(doc.tokenAt(0), doc.tokenAt(3)));
+   /**
+    * Render.
+    *
+    * @param output the output
+    * @throws IOException the io exception
+    */
+   public void render(@NonNull Resource output) throws IOException {
+      render(output, GraphViz.Format.PNG);
+   }
 
-//    RelationGraph match = RelationGraph.from(
-//      g.match(
-//        (RelationEdge e) -> e.getRelation().equals("nsubj"),
-//        (RelationEdge e) -> e.getRelation().equals("advmod"),
-//        (RelationEdge e) -> e.getRelation().equals("prep")
-//      )
-//    );
+   /**
+    * Render.
+    *
+    * @param output the output
+    * @param format the format
+    * @throws IOException the io exception
+    */
+   public void render(@NonNull Resource output, @NonNull GraphViz.Format format) throws IOException {
+      GraphViz<Annotation> graphViz = new GraphViz<>();
+      graphViz.setVertexEncoder(v -> new Vertex(v.toString() + "_" + v.getPOS().toString(), Collections.emptyMap()));
+      graphViz.setEdgeEncoder(e -> map("label", Cast.<RelationEdge>as(e).getRelation()));
+      graphViz.setFormat(format);
+      graphViz.render(this, output);
+   }
 
-    doc.dependencyGraph().render(Resources.from("/home/david/out.png"));
-  }
+   private static class MatchState {
+      private LinkedList<RelationEdge> visited = new LinkedList<>();
+      private Set<RelationEdge> open = new HashSet<>();
 
-
-  public void render(@NonNull Resource output) throws IOException {
-    render(output, GraphViz.Format.PNG);
-  }
-
-  public void render(@NonNull Resource output, @NonNull GraphViz.Format format) throws IOException {
-    GraphViz<Annotation> graphViz = new GraphViz<>();
-    graphViz.setVertexEncoder(v -> new Vertex(v.toString() + "_" + v.getPOS().toString(), Collections.emptyMap()));
-    graphViz.setEdgeEncoder(e -> map("label", Cast.<RelationEdge>as(e).getRelation()));
-    graphViz.setFormat(format);
-    graphViz.render(this, output);
-  }
-
-  private static class MatchState {
-    private LinkedList<RelationEdge> visited = new LinkedList<>();
-    private Set<RelationEdge> open = new HashSet<>();
-
-    public MatchState(Set<RelationEdge> open) {
-      this(Collections.emptyList(), open);
-    }
-
-    public MatchState(List<RelationEdge> visited, Set<RelationEdge> open) {
-      this.visited.addAll(visited);
-      this.open.addAll(open);
-    }
-
-    public List<MatchState> next(Predicate<RelationEdge> p) {
-      return open.stream()
-                 .filter(e -> (visited.isEmpty()
-                   || e.getSecondVertex().equals(visited.getLast().getSecondVertex())
-                   || e.getFirstVertex().equals(visited.getLast().getSecondVertex())) && p.test(e))
-                 .map(edge -> {
-                   MatchState prime = new MatchState(visited, open);
-                   prime.visited.add(edge);
-                   prime.open.remove(edge);
-                   return prime;
-                 }).collect(Collectors.toList());
-    }
-
-  }
-
-  @SafeVarargs
-  public final List<RelationEdge> match(Predicate<RelationEdge>... predicates) {
-    List<MatchState> matches = new ArrayList<>();
-    matches.add(new MatchState(edges()));
-    for (Predicate<RelationEdge> predicate : predicates) {
-      List<MatchState> prime = matches.stream().flatMap(m -> m.next(predicate).stream())
-                                      .collect(Collectors.toList());
-      matches.clear();
-      matches.addAll(prime);
-    }
-    matches.forEach(m -> System.out.println(m.visited));
-    return matches.get(0).visited;
-  }
-
-  public RelationGraph() {
-    super(new RelationEdgeFactory());
-  }
-
-  public List<RelationEdge> shortestPath(Annotation source, Annotation target) {
-    if (source == null || target == null) {
-      return null;
-    }
-    return Cast.as(lazyShortestPath.get().path(source, target));
-  }
-
-  public List<RelationEdge> shortestConnection(Annotation source, Annotation target) {
-    if (source == null || target == null) {
-      return null;
-    }
-    return Cast.as(lazyUnDirectedShortestPath.get().path(source, target));
-  }
-
-  public static RelationGraph from(Collection<RelationEdge> edges) {
-    RelationGraph gPrime = new RelationGraph();
-    edges.forEach(e -> {
-      if (!gPrime.containsVertex(e.getFirstVertex())) {
-        gPrime.addVertex(e.getFirstVertex());
+      /**
+       * Instantiates a new Match state.
+       *
+       * @param open the open
+       */
+      public MatchState(Set<RelationEdge> open) {
+         this(Collections.emptyList(), open);
       }
-      if (!gPrime.containsVertex(e.getSecondVertex())) {
-        gPrime.addVertex(e.getSecondVertex());
+
+      /**
+       * Instantiates a new Match state.
+       *
+       * @param visited the visited
+       * @param open the open
+       */
+      public MatchState(List<RelationEdge> visited, Set<RelationEdge> open) {
+         this.visited.addAll(visited);
+         this.open.addAll(open);
       }
-      gPrime.addEdge(e);
-    });
-    return gPrime;
-  }
 
-  public RelationGraph filterVertices(@NonNull Predicate<? super Annotation> vertexPredicate) {
-    RelationGraph gPrime = new RelationGraph();
-    vertices().stream().filter(vertexPredicate).forEach(gPrime::addVertex);
-    edges().stream()
-           .filter(e -> gPrime.containsVertex(e.getFirstVertex()) && gPrime.containsVertex(e.getSecondVertex()))
-           .forEach(gPrime::addEdge);
-    return gPrime;
-  }
+      /**
+       * Next list.
+       *
+       * @param p the p
+       * @return the list
+       */
+      public List<MatchState> next(Predicate<RelationEdge> p) {
+         return open.stream()
+                    .filter(e -> (visited.isEmpty()
+                          || e.getSecondVertex().equals(visited.getLast().getSecondVertex())
+                          || e.getFirstVertex().equals(visited.getLast().getSecondVertex())) && p.test(e))
+                    .map(edge -> {
+                       MatchState prime = new MatchState(visited, open);
+                       prime.visited.add(edge);
+                       prime.open.remove(edge);
+                       return prime;
+                    }).collect(Collectors.toList());
+      }
 
-  public RelationGraph filterEdges(@NonNull Predicate<RelationEdge> edgePredicate) {
-    RelationGraph gPrime = new RelationGraph();
-    edges().stream().filter(edgePredicate)
-           .forEach(e -> {
-             if (!gPrime.containsVertex(e.getFirstVertex())) {
-               gPrime.addVertex(e.getFirstVertex());
-             }
-             if (!gPrime.containsVertex(e.getSecondVertex())) {
-               gPrime.addVertex(e.getSecondVertex());
-             }
-             gPrime.addEdge(e);
-           });
-    return gPrime;
-  }
+   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public RelationEdge addEdge(Annotation fromVertex, Annotation toVertex) {
-    return super.addEdge(fromVertex, toVertex);
-  }
+   /**
+    * Match list.
+    *
+    * @param predicates the predicates
+    * @return the list
+    */
+   @SafeVarargs
+   public final List<RelationEdge> match(Predicate<RelationEdge>... predicates) {
+      List<MatchState> matches = new ArrayList<>();
+      matches.add(new MatchState(edges()));
+      for (Predicate<RelationEdge> predicate : predicates) {
+         List<MatchState> prime = matches.stream().flatMap(m -> m.next(predicate).stream())
+                                         .collect(Collectors.toList());
+         matches.clear();
+         matches.addAll(prime);
+      }
+      matches.forEach(m -> System.out.println(m.visited));
+      return matches.get(0).visited;
+   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public RelationEdge addEdge(Annotation fromVertex, Annotation toVertex, double weight) {
-    return super.addEdge(fromVertex, toVertex, weight);
-  }
+   /**
+    * Instantiates a new Relation graph.
+    */
+   public RelationGraph() {
+      super(new RelationEdgeFactory());
+   }
+
+   /**
+    * Shortest path list.
+    *
+    * @param source the source
+    * @param target the target
+    * @return the list
+    */
+   public List<RelationEdge> shortestPath(Annotation source, Annotation target) {
+      if (source == null || target == null) {
+         return null;
+      }
+      return Cast.as(lazyShortestPath.get().path(source, target));
+   }
+
+   /**
+    * Shortest connection list.
+    *
+    * @param source the source
+    * @param target the target
+    * @return the list
+    */
+   public List<RelationEdge> shortestConnection(Annotation source, Annotation target) {
+      if (source == null || target == null) {
+         return null;
+      }
+      return Cast.as(lazyUnDirectedShortestPath.get().path(source, target));
+   }
+
+   /**
+    * From relation graph.
+    *
+    * @param edges the edges
+    * @return the relation graph
+    */
+   public static RelationGraph from(Collection<RelationEdge> edges) {
+      RelationGraph gPrime = new RelationGraph();
+      edges.forEach(e -> {
+         if (!gPrime.containsVertex(e.getFirstVertex())) {
+            gPrime.addVertex(e.getFirstVertex());
+         }
+         if (!gPrime.containsVertex(e.getSecondVertex())) {
+            gPrime.addVertex(e.getSecondVertex());
+         }
+         gPrime.addEdge(e);
+      });
+      return gPrime;
+   }
+
+   /**
+    * Filter vertices relation graph.
+    *
+    * @param vertexPredicate the vertex predicate
+    * @return the relation graph
+    */
+   public RelationGraph filterVertices(@NonNull Predicate<? super Annotation> vertexPredicate) {
+      RelationGraph gPrime = new RelationGraph();
+      vertices().stream().filter(vertexPredicate).forEach(gPrime::addVertex);
+      edges().stream()
+             .filter(e -> gPrime.containsVertex(e.getFirstVertex()) && gPrime.containsVertex(e.getSecondVertex()))
+             .forEach(gPrime::addEdge);
+      return gPrime;
+   }
+
+   /**
+    * Filter edges relation graph.
+    *
+    * @param edgePredicate the edge predicate
+    * @return the relation graph
+    */
+   public RelationGraph filterEdges(@NonNull Predicate<RelationEdge> edgePredicate) {
+      RelationGraph gPrime = new RelationGraph();
+      edges().stream().filter(edgePredicate)
+             .forEach(e -> {
+                if (!gPrime.containsVertex(e.getFirstVertex())) {
+                   gPrime.addVertex(e.getFirstVertex());
+                }
+                if (!gPrime.containsVertex(e.getSecondVertex())) {
+                   gPrime.addVertex(e.getSecondVertex());
+                }
+                gPrime.addEdge(e);
+             });
+      return gPrime;
+   }
+
+   @Override
+   @SuppressWarnings("unchecked")
+   public RelationEdge addEdge(Annotation fromVertex, Annotation toVertex) {
+      return super.addEdge(fromVertex, toVertex);
+   }
+
+   @Override
+   @SuppressWarnings("unchecked")
+   public RelationEdge addEdge(Annotation fromVertex, Annotation toVertex, double weight) {
+      return super.addEdge(fromVertex, toVertex, weight);
+   }
 
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public RelationEdge getEdge(Annotation v1, Annotation v2) {
-    return super.getEdge(v1, v2);
-  }
+   @Override
+   @SuppressWarnings("unchecked")
+   public RelationEdge getEdge(Annotation v1, Annotation v2) {
+      return super.getEdge(v1, v2);
+   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public Set<RelationEdge> getInEdges(Annotation vertex) {
-    return super.getInEdges(vertex);
-  }
+   @Override
+   @SuppressWarnings("unchecked")
+   public Set<RelationEdge> getInEdges(Annotation vertex) {
+      return super.getInEdges(vertex);
+   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public RelationEdge removeEdge(Annotation fromVertex, Annotation toVertex) {
-    return super.removeEdge(fromVertex, toVertex);
-  }
+   @Override
+   @SuppressWarnings("unchecked")
+   public RelationEdge removeEdge(Annotation fromVertex, Annotation toVertex) {
+      return super.removeEdge(fromVertex, toVertex);
+   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public Set<RelationEdge> getOutEdges(Annotation vertex) {
-    return super.getOutEdges(vertex);
-  }
+   @Override
+   @SuppressWarnings("unchecked")
+   public Set<RelationEdge> getOutEdges(Annotation vertex) {
+      return super.getOutEdges(vertex);
+   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public Set<RelationEdge> getEdges(Annotation vertex) {
-    return super.getEdges(vertex);
-  }
+   @Override
+   @SuppressWarnings("unchecked")
+   public Set<RelationEdge> getEdges(Annotation vertex) {
+      return super.getEdges(vertex);
+   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public Set<RelationEdge> edges() {
-    return super.edges();
-  }
+   @Override
+   @SuppressWarnings("unchecked")
+   public Set<RelationEdge> edges() {
+      return super.edges();
+   }
 
 }//END OF RelationGraph
