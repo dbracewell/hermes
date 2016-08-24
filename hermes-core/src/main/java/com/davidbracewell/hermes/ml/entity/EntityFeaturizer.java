@@ -27,8 +27,6 @@ import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Fragments;
 import com.davidbracewell.hermes.StringAnalyzer;
-import com.davidbracewell.string.StringPredicates;
-import com.davidbracewell.string.StringUtils;
 
 import java.util.*;
 
@@ -82,18 +80,6 @@ public class EntityFeaturizer implements SequenceFeaturizer<Annotation> {
       map.put(create("T", position), annotation.getPOS().asString());
       String str = annotation.toString();
 
-      if (StringPredicates.IS_UPPER_CASE.test(str)) {
-         map.put(create("ALL_UPPER", position), StringUtils.EMPTY);
-      }
-      if (StringPredicates.HAS_CAPITAL_LETTER.test(str)) {
-         map.put(create("HAS_UPPER", position), StringUtils.EMPTY);
-      }
-      if (StringPredicates.HAS_DIGIT.test(str)) {
-         map.put(create("DIGIT", position), StringUtils.EMPTY);
-      }
-      if (StringPredicates.HAS_PUNCTUATION.test(str)) {
-         map.put(create("HAS_PUNCT", position), StringUtils.EMPTY);
-      }
       return map;
    }
 
@@ -120,12 +106,17 @@ public class EntityFeaturizer implements SequenceFeaturizer<Annotation> {
       if (itr.getIndex() - 2 >= 0) {
          Map<String, String> p2 = generateFeatures(itr.getPrevious(-2).orElse(Fragments.detachedEmptyAnnotation()), -2);
          p2.entrySet().stream().map(e -> Feature.TRUE(e.getKey(), e.getValue())).forEach(features::add);
-         features.add(Feature.TRUE("W[-2,-1]", p2.get("W[-2]"), p1.get("W[-1]")));
-         features.add(Feature.TRUE("WShape[-2,-1]", p2.get("WShape[-2]"), p1.get("WShape[-1]")));
-         features.add(Feature.TRUE("T[-2,-1]", p2.get("T[-2]"), p1.get("T[-1]")));
-         features.add(Feature.TRUE("W[-2,-1,0]", p2.get("W[-2]"), p1.get("W[-1]"), p0.get("W[0]")));
-         features.add(Feature.TRUE("WShape[-2,-1,0]", p2.get("WShape[-2]"), p1.get("WShape[-1]"), p0.get("WShape[0]")));
-         features.add(Feature.TRUE("T[-2,-1,0]", p2.get("T[-2]"), p1.get("T[-1]"), p0.get("T[0]")));
+//         features.add(Feature.TRUE("W[-2,-1]", p2.get("W[-2]"), p1.get("W[-1]")));
+//         features.add(Feature.TRUE("WShape[-2,-1]", p2.get("WShape[-2]"), p1.get("WShape[-1]")));
+//         features.add(Feature.TRUE("T[-2,-1]", p2.get("T[-2]"), p1.get("T[-1]")));
+//         features.add(Feature.TRUE("W[-2,-1,0]", p2.get("W[-2]"), p1.get("W[-1]"), p0.get("W[0]")));
+//         features.add(Feature.TRUE("WShape[-2,-1,0]", p2.get("WShape[-2]"), p1.get("WShape[-1]"), p0.get("WShape[0]")));
+//         features.add(Feature.TRUE("T[-2,-1,0]", p2.get("T[-2]"), p1.get("T[-1]"), p0.get("T[0]")));
+      }
+
+      if (itr.getIndex() + 2 < itr.size()) {
+         Map<String, String> n2 = generateFeatures(itr.getPrevious(2).orElse(Fragments.detachedEmptyAnnotation()), 2);
+         n2.entrySet().stream().map(e -> Feature.TRUE(e.getKey(), e.getValue())).forEach(features::add);
       }
 
 

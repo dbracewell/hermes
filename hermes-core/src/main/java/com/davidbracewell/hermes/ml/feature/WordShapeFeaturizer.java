@@ -19,63 +19,32 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes;
+package com.davidbracewell.hermes.ml.feature;
 
+import com.davidbracewell.apollo.ml.Feature;
+import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.hermes.HString;
 import com.davidbracewell.string.StringUtils;
 
 import java.util.Collections;
 import java.util.Set;
 
-import static com.davidbracewell.collection.Sets.set;
-
 /**
- * The interface String analyzer.
  * @author David B. Bracewell
  */
-public interface StringAnalyzer {
+public class WordShapeFeaturizer implements Featurizer<HString> {
+   private static final long serialVersionUID = 1L;
 
-   static Set<String> wordClasses(String string) {
-      if (StringUtils.isNullOrBlank(string)) {
-         return Collections.emptySet();
+   @Override
+   public Set<Feature> apply(HString string) {
+      if (string == null || string.isEmpty()) {
+         return Collections.singleton(Feature.TRUE("WordShape", "EMPTY"));
       }
-      Set<String> classes = set(
-            "AllCaps",
-            "InitialCap",
-            "AllLower"
-                               );
-
-      Character last = null;
-      for (char c : string.toCharArray()) {
-
-         if (Character.isLowerCase(c)) {
-
-            classes.remove("AllCaps");
-            if (last == null) {
-               classes.remove("InitialCap");
-            }
-
-
-         } else if (Character.isUpperCase(c)) {
-            classes.remove("AllLower");
-
-         }
-
-
-         last = c;
-      }
-
-
-      return classes;
+      return Collections.singleton(Feature.TRUE("WordShape", shape(string.toString())));
    }
 
 
-   /**
-    * Shape string.
-    *
-    * @param string the string
-    * @return the string
-    */
-   static String shape(String string) {
+   public static String shape(String string) {
       if (StringUtils.isNullOrBlank(string)) {
          return StringUtils.EMPTY;
       }
@@ -106,17 +75,4 @@ public interface StringAnalyzer {
       return builder.toString();
    }
 
-   /**
-    * Shape string.
-    *
-    * @param string the string
-    * @return the string
-    */
-   static String shape(HString string) {
-      if (string == null || string.isEmpty()) {
-         return StringUtils.EMPTY;
-      }
-      return shape(string.toString());
-   }
-
-}//END OF StringAnalyzer
+}//END OF WordShapeFeaturizer
