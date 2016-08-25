@@ -49,9 +49,8 @@ public class WordShapeFeaturizer implements Featurizer<HString> {
          return StringUtils.EMPTY;
       }
       StringBuilder builder = new StringBuilder();
-      String strForm = string.toString();
-      for (int ci = 0; ci < strForm.length(); ci++) {
-         char c = strForm.charAt(ci);
+      for (int ci = 0; ci < string.length(); ci++) {
+         char c = string.charAt(ci);
          if (Character.isUpperCase(c)) {
             builder.append("U");
          } else if (Character.isLowerCase(c)) {

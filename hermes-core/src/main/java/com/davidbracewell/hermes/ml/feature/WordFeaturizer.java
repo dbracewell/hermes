@@ -31,13 +31,13 @@ import java.util.Set;
 /**
  * @author David B. Bracewell
  */
-public class ToStringFeaturizer implements Featurizer<HString> {
+public class WordFeaturizer implements Featurizer<HString> {
    private static final long serialVersionUID = 1L;
    private final boolean lowerCase;
 
-   public ToStringFeaturizer() {this(true);}
+   public WordFeaturizer() {this(true);}
 
-   public ToStringFeaturizer(boolean lowerCase) {this.lowerCase = lowerCase;}
+   public WordFeaturizer(boolean lowerCase) {this.lowerCase = lowerCase;}
 
    @Override
    public Set<Feature> apply(HString s) {
@@ -50,4 +50,4 @@ public class ToStringFeaturizer implements Featurizer<HString> {
       return Collections.singleton(Feature.TRUE("Word", s.toString()));
    }
 
-}//END OF ToStringFeaturizer
+}//END OF WordFeaturizer
