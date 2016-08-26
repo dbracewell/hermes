@@ -68,7 +68,7 @@ CJ=[\u3100-\u312f\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF\u3300-\u337f\u3400-\u4d
 ALPHA=!(![:letter:]|{CJ})
 
 //Alphanumeric Character
-ALPHANUM = {ALPHA}({ALPHA}|[:digit:])*
+ALPHANUM = {ALPHA}"'"?({ALPHA}|[:digit:])*
 
 UNDERSCORE={ALPHANUM}("_"+){ALPHANUM}
 
