@@ -29,8 +29,8 @@ import com.davidbracewell.string.StringUtils;
 import java.util.Collections;
 import java.util.Set;
 
-import static com.davidbracewell.collection.Sets.asSet;
-import static com.davidbracewell.collection.Sets.linkedHashSet;
+import static com.davidbracewell.collection.set.Sets.asSet;
+import static com.davidbracewell.collection.set.Sets.linkedHashSet;
 
 /**
  * @author David B. Bracewell
