@@ -21,33 +21,30 @@
 
 package com.davidbracewell.hermes.ml.feature;
 
-import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.apollo.ml.PredicateFeaturizer;
 import com.davidbracewell.hermes.HString;
-
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * @author David B. Bracewell
  */
-public class WordFeaturizer implements Featurizer<HString> {
+public class WordFeaturizer extends PredicateFeaturizer<HString> {
    private static final long serialVersionUID = 1L;
    private final boolean lowerCase;
 
    public WordFeaturizer() {this(true);}
 
-   public WordFeaturizer(boolean lowerCase) {this.lowerCase = lowerCase;}
+   public WordFeaturizer(boolean lowerCase) {
+      super("Word");
+      this.lowerCase = lowerCase;
+   }
+
 
    @Override
-   public Set<Feature> apply(HString s) {
+   public String extractPredicate(HString s) {
       if (s == null || s.isEmpty()) {
-         return Collections.singleton(Feature.TRUE("Word", "--NULL--"));
+         return "--NULL--";
       }
-      if (lowerCase) {
-         return Collections.singleton(Feature.TRUE("Word", s.toLowerCase()));
-      }
-      return Collections.singleton(Feature.TRUE("Word", s.toString()));
+      return lowerCase ? s.toLowerCase() : s.toString();
    }
 
 }//END OF WordFeaturizer

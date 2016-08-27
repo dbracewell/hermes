@@ -21,15 +21,23 @@
 
 package com.davidbracewell.hermes.ml.entity;
 
-import com.davidbracewell.apollo.ml.sequence.*;
+import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
+import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
+import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
+import com.davidbracewell.apollo.ml.sequence.feature.NGramSequenceFeaturizer;
+import com.davidbracewell.apollo.ml.sequence.feature.WindowedSequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
 import com.davidbracewell.apollo.ml.sequence.linear.LibraryLoader;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTrainer;
+import com.davidbracewell.hermes.ml.BIOValidator;
 import com.davidbracewell.hermes.ml.feature.PartOfSpeechFeaturizer;
 import com.davidbracewell.hermes.ml.feature.WordClassFeaturizer;
 import com.davidbracewell.hermes.ml.feature.WordFeaturizer;
+
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * @author David B. Bracewell
@@ -44,12 +52,12 @@ public class EntityTrainer extends BIOTrainer {
    @Override
    @SuppressWarnings("unchecked")
    protected SequenceFeaturizer<Annotation> getFeaturizer() {
-      return SequenceFeaturizer.chain(new WindowedFeaturizer<>(2, 2, new WordFeaturizer()),
-                                      new WindowedFeaturizer<>(2, 2, new WordClassFeaturizer()),
-                                      new WindowedFeaturizer<>(2, 2, new PartOfSpeechFeaturizer()),
-                                      new BigramSequenceFeaturizer(new WordFeaturizer()),
-                                      new BigramSequenceFeaturizer(new WordClassFeaturizer()),
-                                      new BigramSequenceFeaturizer(new PartOfSpeechFeaturizer()));
+      return SequenceFeaturizer.chain(new WindowedSequenceFeaturizer<>(2, 2, new WordFeaturizer()),
+                                      new WindowedSequenceFeaturizer<>(2, 2, new WordClassFeaturizer()),
+                                      new WindowedSequenceFeaturizer<>(2, 2, new PartOfSpeechFeaturizer()),
+                                      new NGramSequenceFeaturizer<>(3, 3, new WordFeaturizer()),
+                                      new NGramSequenceFeaturizer<>(2, 2, new WordClassFeaturizer()),
+                                      new NGramSequenceFeaturizer<>(2, 2, new PartOfSpeechFeaturizer()));
    }
 
    @Override
@@ -57,18 +65,17 @@ public class EntityTrainer extends BIOTrainer {
       LibraryLoader.INSTANCE.load();
    }
 
-//   @Override
-//   protected Set<String> validTags() {
-//      return Collections.singleton("PERSON");
-//   }
+   @Override
+   protected Set<String> validTags() {
+      return Collections.singleton("PERSON");
+   }
 
    @Override
    protected SequenceLabelerLearner getLearner() {
-      SequenceLabelerLearner learner =
-            new CRFTrainer();
+      SequenceLabelerLearner learner = new CRFTrainer();
       learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
-//      learner.setValidator(new BIOValidator());
-      learner.setParameter("maxIterations", 100);
+      learner.setValidator(new BIOValidator());
+      learner.setParameter("maxIterations", 200);
       learner.setParameter("verbose", true);
       return learner;
    }

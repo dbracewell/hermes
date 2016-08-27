@@ -106,7 +106,6 @@ public class SubTypeAnnotator implements Annotator, Serializable {
     subTypes.forEach(subType -> Pipeline.process(document, subType));
     if (nonOverlapping) {
       List<Annotation> annotations = getAnnotations(document);
-
       for (Annotation a : annotations) {
         if (document.getAnnotationSet().contains(a)) {
           for (Annotation a2 : getAnnotations(a)) {
@@ -119,7 +118,6 @@ public class SubTypeAnnotator implements Annotator, Serializable {
           }
         }
       }
-
     }
   }
 

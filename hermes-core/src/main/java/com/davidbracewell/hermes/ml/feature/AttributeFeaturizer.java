@@ -22,20 +22,25 @@
 package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.apollo.ml.PredicateFeaturizer;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
+import lombok.NonNull;
 
 /**
  * @author David B. Bracewell
  */
-public class PartOfSpeechFeaturizer extends PredicateFeaturizer<HString> {
+public class AttributeFeaturizer extends PredicateFeaturizer<HString> {
    private static final long serialVersionUID = 1L;
+   private final AttributeType attributeType;
 
-   public PartOfSpeechFeaturizer() {
-      super("POS");
+   public AttributeFeaturizer(@NonNull AttributeType attributeType) {
+      super(attributeType.name());
+      this.attributeType = attributeType;
    }
 
    @Override
-   public String extractPredicate(HString input) {
-      return (input.getPOS() == null ? "--UNKNOWN--" : input.getPOS().asString());
+   public String extractPredicate(HString string) {
+      return string.get(attributeType).asString();
    }
-}//END OF PartOfSpeechFeaturizer
+
+}//END OF AttributeFeaturizer

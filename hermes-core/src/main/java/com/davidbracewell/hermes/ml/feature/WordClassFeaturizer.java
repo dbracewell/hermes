@@ -21,8 +21,7 @@
 
 package com.davidbracewell.hermes.ml.feature;
 
-import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.apollo.ml.PredicateFeaturizer;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.string.StringUtils;
 
@@ -35,71 +34,66 @@ import static com.davidbracewell.collection.set.Sets.linkedHashSet;
 /**
  * @author David B. Bracewell
  */
-public class WordClassFeaturizer implements Featurizer<HString> {
+public class WordClassFeaturizer extends PredicateFeaturizer<HString> {
    private static final long serialVersionUID = 1L;
    private static final Set<String> WORD_FEATURES = Collections
-         .unmodifiableSet(linkedHashSet("WordClass=ALL_UPPER_CASE",
-                                        "WordClass=ALL_DIGIT",
-                                        "WordClass=ALL_SYMBOL",
-                                        "WordClass=ALL_UPPER_DIGIT",
-                                        "WordClass=ALL_UPPER_SYMBOL",
-                                        "WordClass=ALL_DIGIT_SYMBOL",
-                                        "WordClass=ALL_UPPER_DIGIT_SYMBOL",
-                                        "WordClass=INITIAL_UPPER",
-                                        "WordClass=ALL_LETTER",
-                                        "WordClass=ALL_LETTER_NUMBER",
-                                        "WordClass=ALL_LOWER_CASE")
+         .unmodifiableSet(linkedHashSet("ALL_UPPER_CASE",
+                                        "ALL_DIGIT",
+                                        "ALL_SYMBOL",
+                                        "ALL_UPPER_DIGIT",
+                                        "ALL_UPPER_SYMBOL",
+                                        "ALL_DIGIT_SYMBOL",
+                                        "ALL_UPPER_DIGIT_SYMBOL",
+                                        "INITIAL_UPPER",
+                                        "ALL_LETTER",
+                                        "ALL_LETTER_NUMBER",
+                                        "ALL_LOWER_CASE")
                          );
 
-   @Override
-   public Set<Feature> apply(HString string) {
-      if (string == null || string.isEmpty()) {
-         return Collections.singleton(Feature.TRUE("WordClass", "NO"));
-      }
-      return Collections.singleton(Feature.TRUE(wordClass(string.toString())));
+
+   public WordClassFeaturizer() {
+      super("WordClass");
    }
 
-   public static String wordClass(String string) {
+   @Override
+   public String extractPredicate(HString string) {
       if (StringUtils.isNullOrBlank(string)) {
-         return Feature.TRUE("WordClass", "NO").getName();
+         return "No";
       }
 
-
       Set<String> features = asSet(WORD_FEATURES);
-
-
       for (int i = 0; i < string.length(); i++) {
          char c = string.charAt(i);
 
          if (i == 0 && !Character.isUpperCase(c)) {
-            features.remove("WordClass=INITIAL_UPPER");
+            features.remove("INITIAL_UPPER");
          }
 
          if (Character.isUpperCase(c)) {
-            features.remove("WordClass=ALL_LOWER_CASE");
-            features.remove("WordClass=ALL_DIGIT");
-            features.remove("WordClass=ALL_SYMBOL");
-            features.remove("WordClass=ALL_DIGIT_SYMBOL");
+            features.remove("ALL_LOWER_CASE");
+            features.remove("ALL_DIGIT");
+            features.remove("ALL_SYMBOL");
+            features.remove("ALL_DIGIT_SYMBOL");
          } else if (Character.isDigit(c) || c == ',' || c == '.') {
-            features.remove("WordClass=ALL_LOWER_CASE");
-            features.remove("WordClass=ALL_UPPER_CASE");
-            features.remove("WordClass=ALL_SYMBOL");
-            features.remove("WordClass=ALL_UPPER_SYMBOL");
-            features.remove("WordClass=ALL_LETTER");
+            features.remove("ALL_LOWER_CASE");
+            features.remove("ALL_UPPER_CASE");
+            features.remove("ALL_SYMBOL");
+            features.remove("ALL_UPPER_SYMBOL");
+            features.remove("ALL_LETTER");
          } else if (Character.isLowerCase(c)) {
-            features.remove("WordClass=ALL_UPPER_CASE");
-            features.remove("WordClass=ALL_DIGIT");
-            features.remove("WordClass=ALL_SYMBOL");
-            features.remove("WordClass=ALL_UPPER_DIGIT");
-            features.remove("WordClass=ALL_UPPER_SYMBOL");
-            features.remove("WordClass=ALL_DIGIT_SYMBOL");
-            features.remove("WordClass=ALL_UPPER_DIGIT_SYMBOL");
+            features.remove("ALL_UPPER_CASE");
+            features.remove("ALL_DIGIT");
+            features.remove("ALL_SYMBOL");
+            features.remove("ALL_UPPER_DIGIT");
+            features.remove("ALL_UPPER_SYMBOL");
+            features.remove("ALL_DIGIT_SYMBOL");
+            features.remove("ALL_UPPER_DIGIT_SYMBOL");
          } else {
-            features.remove("WordClass=ALL_UPPER_CASE");
-            features.remove("WordClass=ALL_DIGIT");
-            features.remove("WordClass=ALL_LETTER");
-            features.remove("WordClass=ALL_LETTER_NUMBER");
-            features.remove("WordClass=ALL_DIGIT_SYMBOL");
+            features.remove("ALL_UPPER_CASE");
+            features.remove("ALL_DIGIT");
+            features.remove("ALL_LETTER");
+            features.remove("ALL_LETTER_NUMBER");
+            features.remove("ALL_DIGIT_SYMBOL");
          }
       }
 
@@ -109,7 +103,7 @@ public class WordClassFeaturizer implements Featurizer<HString> {
          }
       }
 
-      return Feature.TRUE("WordClass", "NO").getName();
+      return "No";
    }
 
 }//END OF WordClassFeaturizer
