@@ -21,30 +21,24 @@
 
 package com.davidbracewell.hermes.ml.feature;
 
-import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.apollo.ml.PredicateFeaturizer;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.string.StringUtils;
-
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * @author David B. Bracewell
  */
-public class WordShapeFeaturizer implements Featurizer<HString> {
+public class WordShapeFeaturizer extends PredicateFeaturizer<HString> {
    private static final long serialVersionUID = 1L;
 
-   @Override
-   public Set<Feature> apply(HString string) {
-      if (string == null || string.isEmpty()) {
-         return Collections.singleton(Feature.TRUE("WordShape", "EMPTY"));
-      }
-      return Collections.singleton(Feature.TRUE("WordShape", shape(string.toString())));
+   public static final WordShapeFeaturizer INSTANCE = new WordShapeFeaturizer();
+
+   public WordShapeFeaturizer() {
+      super("WordShape");
    }
 
-
-   public static String shape(String string) {
+   @Override
+   public String extractPredicate(HString string) {
       if (StringUtils.isNullOrBlank(string)) {
          return StringUtils.EMPTY;
       }
@@ -73,5 +67,4 @@ public class WordShapeFeaturizer implements Featurizer<HString> {
       }
       return builder.toString();
    }
-
 }//END OF WordShapeFeaturizer

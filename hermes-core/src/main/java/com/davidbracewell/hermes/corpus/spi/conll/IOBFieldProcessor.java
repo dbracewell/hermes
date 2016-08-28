@@ -27,13 +27,13 @@ import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.corpus.spi.CoNLLColumnProcessor;
 import com.davidbracewell.hermes.corpus.spi.CoNLLRow;
+import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 
 import java.util.List;
 import java.util.Map;
 
 import static com.davidbracewell.collection.map.Maps.map;
-import static com.davidbracewell.hermes.corpus.spi.CoNLLFormat.EMPTY_FIELD;
 
 /**
  * @author David B. Bracewell
@@ -65,7 +65,7 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
       for (int i = 0; i < rows.size(); ) {
          if (rows.get(i).hasOther(TYPE)) {
             String value = rows.get(i).getOther(TYPE).toUpperCase();
-            if (value.startsWith("B-") || value.startsWith("I-")) {
+            if (StringUtils.isNotNullOrBlank(value) && (value.startsWith("B-") || value.startsWith("I-"))) {
                int start = rows.get(i).getStart();
                String tag = value.substring(2);
                i++;
@@ -74,11 +74,14 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
                }
                i--;
                int end = rows.get(i).getEnd();
-               document.createAnnotation(annotationType,
-                                         start,
-                                         end,
-                                         map(attributeType, attributeType.getValueType().convert(normalizeTag(tag)))
-                                        );
+               String normalizedTag = normalizeTag(tag);
+               if (StringUtils.isNotNullOrBlank(normalizedTag)) {
+                  document.createAnnotation(annotationType,
+                                            start,
+                                            end,
+                                            map(attributeType, attributeType.getValueType().convert(normalizeTag(tag)))
+                                           );
+               }
             }
          }
          i++;
@@ -90,9 +93,9 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
    public String processOutput(Annotation document, Annotation token, int index) {
       Annotation a = token.first(annotationType);
       if (a.isDetached()) {
-         return EMPTY_FIELD;
+         return "O";
       }
-      return a.getTag().map(tag -> (a.firstToken() == token ? "B-" : "I-") + tag.name()).orElse(EMPTY_FIELD);
+      return a.getTag().map(tag -> (a.firstToken() == token ? "B-" : "I-") + tag.name()).orElse("O");
    }
 
 

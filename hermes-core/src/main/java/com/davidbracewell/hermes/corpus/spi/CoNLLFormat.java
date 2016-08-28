@@ -153,6 +153,9 @@ public class CoNLLFormat extends FileBasedFormat {
             CoNLLRow row = new CoNLLRow();
             row.setSentence(sentenceIndex);
             for (int i = 0; i < processors.size(); i++) {
+               if (StringUtils.isNullOrBlank(parts.get(i))) {
+                  continue;
+               }
                switch (processors.get(i).getFieldName()) {
                   case "INDEX":
                      row.setIndex(Integer.parseInt(parts.get(i)));

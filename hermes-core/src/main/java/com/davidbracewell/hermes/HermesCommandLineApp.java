@@ -39,118 +39,118 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public abstract class HermesCommandLineApp extends CommandLineApplication {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
 
-  /**
-   * The Distributed.
-   */
-  @Option(description = "True if the corpus will work in distributed mode.", defaultValue = "false", aliases = {"d"})
-  boolean distributed;
+   /**
+    * The Distributed.
+    */
+   @Option(description = "True if the corpus will work in distributed mode.", defaultValue = "false", aliases = {"d"})
+   boolean distributed;
 
-  /**
-   * The Corpus.
-   */
-  @Option(description = "The location of the corpus to process.", required = true, aliases = {"i"})
-  Resource input;
+   /**
+    * The Corpus.
+    */
+   @Option(description = "The location of the corpus to process.", required = true, aliases = {"i"})
+   Resource input;
 
-  /**
-   * The Format.
-   */
-  @Option(description = "The format of the input corpus.", defaultValue = "JSON_OPL", aliases = {"if"})
-  String inputFormat;
+   /**
+    * The Format.
+    */
+   @Option(description = "The format of the input corpus.", defaultValue = "JSON_OPL", aliases = {"if"})
+   String inputFormat;
 
-  /**
-   * The Corpus.
-   */
-  @Option(description = "The location to save the output of the processing.", defaultValue = "stdout:", aliases = {"o"})
-  Resource output;
+   /**
+    * The Corpus.
+    */
+   @Option(description = "The location to save the output of the processing.", defaultValue = "stdout:", aliases = {"o"})
+   Resource output;
 
-  /**
-   * The Format.
-   */
-  @Option(description = "The format of the output corpus.", defaultValue = "JSON_OPL", aliases = {"of"})
-  String outputFormat;
-
-
-  private final Set<String> requiredPackages = new HashSet<>();
+   /**
+    * The Format.
+    */
+   @Option(description = "The format of the output corpus.", defaultValue = "JSON_OPL", aliases = {"of"})
+   String outputFormat;
 
 
-  /**
-   * Gets corpus.
-   *
-   * @return the corpus
-   */
-  public Corpus getCorpus() {
-    return Corpus.builder()
-      .distributed(distributed)
-      .source(inputFormat, input)
-      .build();
-  }
+   private final Set<String> requiredPackages = new HashSet<>();
 
 
-  public void writeCorpus(@NonNull Corpus corpus) throws IOException {
-    corpus.write(outputFormat, output);
-  }
+   /**
+    * Gets corpus.
+    *
+    * @return the corpus
+    */
+   public Corpus getCorpus() {
+      return Corpus.builder()
+                   .distributed(distributed)
+                   .source(inputFormat, input)
+                   .build();
+   }
 
-  /**
-   * Gets corpus.
-   *
-   * @return the corpus
-   */
-  public Resource getInputLocation() {
-    return input;
-  }
 
-  /**
-   * Gets corpus format.
-   *
-   * @return the corpus format
-   */
-  public String getInputFormat() {
-    return inputFormat;
-  }
+   public void writeCorpus(@NonNull Corpus corpus) throws IOException {
+      corpus.write(outputFormat, output);
+   }
 
-  /**
-   * Is distributed boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isDistributed() {
-    return distributed;
-  }
+   /**
+    * Gets corpus.
+    *
+    * @return the corpus
+    */
+   public Resource getInputLocation() {
+      return input;
+   }
 
-  /**
-   * Instantiates a new Hermes command line app.
-   *
-   * @param applicationName the application name
-   */
-  protected HermesCommandLineApp(String applicationName) {
-    super(applicationName);
-  }
+   /**
+    * Gets corpus format.
+    *
+    * @return the corpus format
+    */
+   public String getInputFormat() {
+      return inputFormat;
+   }
 
-  /**
-   * Instantiates a new Hermes command line app.
-   *
-   * @param applicationName  the application name
-   * @param requiredPackages the extra packages
-   */
-  protected HermesCommandLineApp(String applicationName, String... requiredPackages) {
-    super(applicationName);
-    if (requiredPackages != null) {
-      this.requiredPackages.addAll(Arrays.asList(requiredPackages));
-    }
-  }
+   /**
+    * Is distributed boolean.
+    *
+    * @return the boolean
+    */
+   public boolean isDistributed() {
+      return distributed;
+   }
 
-  public Resource getOutputLocation() {
-    return output;
-  }
+   /**
+    * Instantiates a new Hermes command line app.
+    *
+    * @param applicationName the application name
+    */
+   protected HermesCommandLineApp(String applicationName) {
+      super(applicationName);
+   }
 
-  @Override
-  public final void setup() throws Exception {
-    Hermes.initializeApplication(getName(), getAllArguments());
-    requiredPackages.forEach(Config::loadPackageConfig);
-    Config.setAllCommandLine(getAllArguments());
-  }
+   /**
+    * Instantiates a new Hermes command line app.
+    *
+    * @param applicationName  the application name
+    * @param requiredPackages the extra packages
+    */
+   protected HermesCommandLineApp(String applicationName, String... requiredPackages) {
+      super(applicationName);
+      if (requiredPackages != null) {
+         this.requiredPackages.addAll(Arrays.asList(requiredPackages));
+      }
+   }
+
+   public Resource getOutputLocation() {
+      return output;
+   }
+
+   @Override
+   public final void setup() throws Exception {
+      Hermes.initializeApplication(getName(), getAllArguments());
+      requiredPackages.forEach(Config::loadPackageConfig);
+      Config.setAllCommandLine(getAllArguments());
+   }
 
 }//END OF HermesCommandLineApp

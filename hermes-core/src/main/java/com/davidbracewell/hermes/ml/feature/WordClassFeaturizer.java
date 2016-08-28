@@ -36,6 +36,9 @@ import static com.davidbracewell.collection.set.Sets.linkedHashSet;
  */
 public class WordClassFeaturizer extends PredicateFeaturizer<HString> {
    private static final long serialVersionUID = 1L;
+
+   public static final WordClassFeaturizer INSTANCE = new WordClassFeaturizer();
+
    private static final Set<String> WORD_FEATURES = Collections
          .unmodifiableSet(linkedHashSet("ALL_UPPER_CASE",
                                         "ALL_DIGIT",

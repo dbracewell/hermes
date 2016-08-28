@@ -25,14 +25,14 @@ import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.sequence.ContextualIterator;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Fragments;
-import com.davidbracewell.hermes.StringAnalyzer;
+import com.davidbracewell.hermes.ml.feature.WordShapeFeaturizer;
+import com.davidbracewell.string.StringUtils;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 import static com.davidbracewell.apollo.ml.sequence.Sequence.BOS;
 import static com.davidbracewell.apollo.ml.sequence.Sequence.EOS;
-import static com.davidbracewell.collection.map.Maps.map;
 
 /**
  * @author David B. Bracewell
@@ -57,68 +57,29 @@ public class EntityFeaturizer implements SequenceFeaturizer<Annotation> {
    }
 
 
-   private String create(String name, int index) {
-      return name + "[" + index + "]";
-   }
-
-   private Map<String, String> generateFeatures(Annotation annotation, int position) {
-      if (annotation.isEmpty() && position == -1) {
-         return map(create("W", position), BOS,
-                    create("WShape", position), BOS,
-                    create("T", position), BOS);
-      } else if (annotation.isEmpty() && position == 1) {
-         return map(create("W", position), EOS,
-                    create("WShape", position), EOS,
-                    create("T", position), EOS);
-      } else if (annotation.isEmpty()) {
-         return Collections.emptyMap();
-      }
-
-      Map<String, String> map = new HashMap<>();
-      map.put(create("W", position), annotation.toLowerCase());
-      map.put(create("WShape", position), StringAnalyzer.shape(annotation));
-      map.put(create("T", position), annotation.getPOS().asString());
-      String str = annotation.toString();
-
-      return map;
+   private static Feature p(String name) {
+      return Feature.TRUE(name);
    }
 
    @Override
    public Set<Feature> apply(ContextualIterator<Annotation> itr) {
       Set<Feature> features = new HashSet<>();
 
-      Map<String, String> p0 = generateFeatures(itr.getCurrent(), 0);
-      Map<String, String> p1 = generateFeatures(itr.getPrevious(-1).orElse(Fragments.detachedEmptyAnnotation()), -1);
-      Map<String, String> n1 = generateFeatures(itr.getPrevious(+1).orElse(Fragments.detachedEmptyAnnotation()), +1);
-
-      p0.entrySet().stream().map(e -> Feature.TRUE(e.getKey(), e.getValue())).forEach(features::add);
-      p1.entrySet().stream().map(e -> Feature.TRUE(e.getKey(), e.getValue())).forEach(features::add);
-      n1.entrySet().stream().map(e -> Feature.TRUE(e.getKey(), e.getValue())).forEach(features::add);
-
-      features.add(Feature.TRUE("W[-1,0]", p1.get("W[-1]"), p0.get("W[0]")));
-      features.add(Feature.TRUE("WShape[-1,0]", p1.get("WShape[-1]"), p0.get("WShape[0]")));
-      features.add(Feature.TRUE("T[-1,0]", p1.get("T[-1]"), p0.get("T[0]")));
-
-      features.add(Feature.TRUE("W[0,+1]", p0.get("W[0]"), n1.get("W[1]")));
-      features.add(Feature.TRUE("WShape[0,+1]", p0.get("WShape[0]"), n1.get("WShape[1]")));
-      features.add(Feature.TRUE("T[0,+1]", p0.get("T[0]"), n1.get("T[1]")));
-
-      if (itr.getIndex() - 2 >= 0) {
-         Map<String, String> p2 = generateFeatures(itr.getPrevious(-2).orElse(Fragments.detachedEmptyAnnotation()), -2);
-         p2.entrySet().stream().map(e -> Feature.TRUE(e.getKey(), e.getValue())).forEach(features::add);
-//         features.add(Feature.TRUE("W[-2,-1]", p2.get("W[-2]"), p1.get("W[-1]")));
-//         features.add(Feature.TRUE("WShape[-2,-1]", p2.get("WShape[-2]"), p1.get("WShape[-1]")));
-//         features.add(Feature.TRUE("T[-2,-1]", p2.get("T[-2]"), p1.get("T[-1]")));
-//         features.add(Feature.TRUE("W[-2,-1,0]", p2.get("W[-2]"), p1.get("W[-1]"), p0.get("W[0]")));
-//         features.add(Feature.TRUE("WShape[-2,-1,0]", p2.get("WShape[-2]"), p1.get("WShape[-1]"), p0.get("WShape[0]")));
-//         features.add(Feature.TRUE("T[-2,-1,0]", p2.get("T[-2]"), p1.get("T[-1]"), p0.get("T[0]")));
+      String current = itr.getCurrent().toString();
+      if (current.length() == 2) {
+         features.add(p("2d"));
+      } else if (current.length() == 4) {
+         features.add(p("4d"));
       }
 
-      if (itr.getIndex() + 2 < itr.size()) {
-         Map<String, String> n2 = generateFeatures(itr.getPrevious(2).orElse(Fragments.detachedEmptyAnnotation()), 2);
-         n2.entrySet().stream().map(e -> Feature.TRUE(e.getKey(), e.getValue())).forEach(features::add);
+      if (current.length() == 2 && Character.isUpperCase(current.charAt(0)) && current.charAt(1) == '.') {
+         features.add(p("cp"));
       }
 
+      features.add(p(StringUtils.compactRepeatedChars(current)));
+      features.add(p(WordShapeFeaturizer.INSTANCE.extractPredicate(itr.getCurrent())));
+      features.add(p(StringUtils.compactRepeatedChars(WordShapeFeaturizer.INSTANCE.extractPredicate(itr.getCurrent()))));
+      affixes(current, 0, 4, features);
 
       return features;
    }

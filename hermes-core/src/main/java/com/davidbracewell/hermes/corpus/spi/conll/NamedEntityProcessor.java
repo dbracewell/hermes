@@ -50,7 +50,11 @@ public class NamedEntityProcessor extends IOBFieldProcessor {
             return "ORGANIZATION";
          case "LOC":
             return "LOCATION";
+         case "NORP":
+            return "ORGANIZATION";
+         case "GPE":
+            return "LOCATION";
       }
-      return tag.toUpperCase();
+      return tag;
    }
 }//END OF NamedEntityProcessor

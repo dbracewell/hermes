@@ -29,20 +29,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author David B. Bracewell
  */
 enum Configurator {
-  INSTANCE;
+   INSTANCE;
 
-  private volatile AtomicBoolean done = new AtomicBoolean(false);
+   private volatile AtomicBoolean done = new AtomicBoolean(false);
 
 
-  public void configure(Config config) {
-    if (!done.get()) {
-      synchronized (this) {
-        if (!done.get()) {
-          Config.setInstance(config);
-          done.set(true);
-        }
+   public void configure(Config config) {
+      if (!done.get()) {
+         synchronized (this) {
+            if (!done.get()) {
+               Config.setInstance(config);
+               done.set(true);
+            }
+         }
       }
-    }
-  }
+   }
 
 }//END OF Configurator
