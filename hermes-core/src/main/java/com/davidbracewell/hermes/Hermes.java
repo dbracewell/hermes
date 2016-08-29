@@ -52,10 +52,7 @@ public interface Hermes {
    * @return the string [ ]
    */
   static String[] initializeApplication(String programName, String[] args) {
-    String[] leftOver = Config.initialize(programName, args);
-    //Ensure that the core hermes config is loaded
-    Config.loadPackageConfig("com.davidbracewell.hermes");
-    return leftOver;
+    return Config.initialize(programName, args, "com.david.bracewell.hermes");
   }
 
   /**

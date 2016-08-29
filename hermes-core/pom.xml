@@ -46,7 +46,7 @@
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>mango-annotations</artifactId>
-            <version>0.2</version>
+            <version>0.3-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

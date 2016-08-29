@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.annotation.Preload;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
@@ -29,6 +30,7 @@ import lombok.NonNull;
  *
  * @author David B. Bracewell
  */
+@Preload
 public interface Types {
 
   /**
