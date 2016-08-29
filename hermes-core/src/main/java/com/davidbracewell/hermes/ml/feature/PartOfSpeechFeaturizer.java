@@ -21,20 +21,21 @@
 
 package com.davidbracewell.hermes.ml.feature;
 
-import com.davidbracewell.apollo.ml.BinaryFeaturizer;
+import com.davidbracewell.apollo.ml.PredicateFeaturizer;
 import com.davidbracewell.hermes.HString;
-
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * @author David B. Bracewell
  */
-public class PartOfSpeechFeaturizer extends BinaryFeaturizer<HString> {
+public class PartOfSpeechFeaturizer extends PredicateFeaturizer<HString> {
    private static final long serialVersionUID = 1L;
 
+   public PartOfSpeechFeaturizer() {
+      super("POS");
+   }
+
    @Override
-   protected Set<String> applyImpl(HString input) {
-      return Collections.singleton(input.getPOS() == null ? "--UNKNOWN--" : input.getPOS().asString());
+   public String extractPredicate(HString input) {
+      return (input.getPOS() == null ? "--UNKNOWN--" : input.getPOS().asString());
    }
 }//END OF PartOfSpeechFeaturizer

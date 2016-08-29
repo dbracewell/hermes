@@ -22,44 +22,25 @@
 package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.apollo.ml.PredicateFeaturizer;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
+import lombok.NonNull;
 
 /**
- * The type Word featurizer.
- *
  * @author David B. Bracewell
  */
-public class WordFeaturizer extends PredicateFeaturizer<HString> {
+public class AttributeFeaturizer extends PredicateFeaturizer<HString> {
    private static final long serialVersionUID = 1L;
-   private final boolean lowerCase;
+   private final AttributeType attributeType;
 
-   /**
-    * The constant INSTANCE.
-    */
-   public static final WordFeaturizer INSTANCE = new WordFeaturizer();
-
-   /**
-    * Instantiates a new Word featurizer.
-    */
-   public WordFeaturizer() {this(true);}
-
-   /**
-    * Instantiates a new Word featurizer.
-    *
-    * @param lowerCase the lower case
-    */
-   public WordFeaturizer(boolean lowerCase) {
-      super("Word");
-      this.lowerCase = lowerCase;
+   public AttributeFeaturizer(@NonNull AttributeType attributeType) {
+      super(attributeType.name());
+      this.attributeType = attributeType;
    }
-
 
    @Override
-   public String extractPredicate(HString s) {
-      if (s == null || s.isEmpty()) {
-         return "--NULL--";
-      }
-      return lowerCase ? s.toLowerCase() : s.toString();
+   public String extractPredicate(HString string) {
+      return string.get(attributeType).asString();
    }
 
-}//END OF WordFeaturizer
+}//END OF AttributeFeaturizer

@@ -44,7 +44,6 @@ public class MLEntityAnnotator extends SentenceLevelAnnotator implements Seriali
    private static final long serialVersionUID = 1L;
    private volatile ConcurrentMap<Language, BIOTagger> taggers = new ConcurrentHashMap<>();
 
-
    private BIOTagger loadModel(Language language) {
       if (!taggers.containsKey(language)) {
          synchronized (this) {
@@ -82,4 +81,5 @@ public class MLEntityAnnotator extends SentenceLevelAnnotator implements Seriali
    protected Set<AnnotatableType> furtherRequires() {
       return Collections.singleton(Types.PART_OF_SPEECH);
    }
+
 }//END OF MLEntityAnnotator
