@@ -23,13 +23,8 @@ package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.apollo.ml.PredicateFeaturizer;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.string.StringUtils;
 
-import java.util.Collections;
-import java.util.Set;
-
-import static com.davidbracewell.collection.set.Sets.asSet;
-import static com.davidbracewell.collection.set.Sets.linkedHashSet;
+import java.util.regex.Pattern;
 
 /**
  * @author David B. Bracewell
@@ -38,75 +33,63 @@ public class WordClassFeaturizer extends PredicateFeaturizer<HString> {
    private static final long serialVersionUID = 1L;
 
    public static final WordClassFeaturizer INSTANCE = new WordClassFeaturizer();
-
-   private static final Set<String> WORD_FEATURES = Collections
-         .unmodifiableSet(linkedHashSet("ALL_UPPER_CASE",
-                                        "ALL_DIGIT",
-                                        "ALL_SYMBOL",
-                                        "ALL_UPPER_DIGIT",
-                                        "ALL_UPPER_SYMBOL",
-                                        "ALL_DIGIT_SYMBOL",
-                                        "ALL_UPPER_DIGIT_SYMBOL",
-                                        "INITIAL_UPPER",
-                                        "ALL_LETTER",
-                                        "ALL_LETTER_NUMBER",
-                                        "ALL_LOWER_CASE")
-                         );
-
+   private static Pattern capPeriod = Pattern.compile("^[A-Z]\\.$");
 
    public WordClassFeaturizer() {
       super("WordClass");
    }
 
+
    @Override
    public String extractPredicate(HString string) {
-      if (StringUtils.isNullOrBlank(string)) {
-         return "No";
+      if (string == null || string.isEmpty()) {
+         return "other";
       }
 
-      Set<String> features = asSet(WORD_FEATURES);
-      for (int i = 0; i < string.length(); i++) {
-         char c = string.charAt(i);
+      if (Character.getType(string.charAt(0)) == Character.CURRENCY_SYMBOL) {
+         return "CURRENCY";
+      }
 
-         if (i == 0 && !Character.isUpperCase(c)) {
-            features.remove("INITIAL_UPPER");
-         }
+      if( string.contentEqualIgnoreCase("'s")){
+         return "POSSESSIVE";
+      }
 
-         if (Character.isUpperCase(c)) {
-            features.remove("ALL_LOWER_CASE");
-            features.remove("ALL_DIGIT");
-            features.remove("ALL_SYMBOL");
-            features.remove("ALL_DIGIT_SYMBOL");
-         } else if (Character.isDigit(c) || c == ',' || c == '.') {
-            features.remove("ALL_LOWER_CASE");
-            features.remove("ALL_UPPER_CASE");
-            features.remove("ALL_SYMBOL");
-            features.remove("ALL_UPPER_SYMBOL");
-            features.remove("ALL_LETTER");
-         } else if (Character.isLowerCase(c)) {
-            features.remove("ALL_UPPER_CASE");
-            features.remove("ALL_DIGIT");
-            features.remove("ALL_SYMBOL");
-            features.remove("ALL_UPPER_DIGIT");
-            features.remove("ALL_UPPER_SYMBOL");
-            features.remove("ALL_DIGIT_SYMBOL");
-            features.remove("ALL_UPPER_DIGIT_SYMBOL");
+      StringPattern pattern = StringPattern.recognize(string.toString());
+
+      String feat;
+      if (pattern.isAllLowerCaseLetter()) {
+         feat = "lc";
+      } else if (pattern.digits() == 2) {
+         feat = "2d";
+      } else if (pattern.digits() == 4) {
+         feat = "4d";
+      } else if (pattern.containsDigit()) {
+         if (pattern.containsLetters()) {
+            feat = "an";
+         } else if (pattern.containsHyphen()) {
+            feat = "dd";
+         } else if (pattern.containsSlash()) {
+            feat = "ds";
+         } else if (pattern.containsComma()) {
+            feat = "dc";
+         } else if (pattern.containsPeriod()) {
+            feat = "dp";
          } else {
-            features.remove("ALL_UPPER_CASE");
-            features.remove("ALL_DIGIT");
-            features.remove("ALL_LETTER");
-            features.remove("ALL_LETTER_NUMBER");
-            features.remove("ALL_DIGIT_SYMBOL");
+            feat = "num";
          }
+      } else if (pattern.isAllCapitalLetter() && string.length() == 1) {
+         feat = "sc";
+      } else if (pattern.isAllCapitalLetter()) {
+         feat = "ac";
+      } else if (capPeriod.matcher(string).find()) {
+         feat = "cp";
+      } else if (pattern.isInitialCapitalLetter()) {
+         feat = "ic";
+      } else {
+         feat = "other";
       }
 
-      for (String feature : WORD_FEATURES) {
-         if (features.contains(feature)) {
-            return feature;
-         }
-      }
-
-      return "No";
+      return feat;
    }
 
 }//END OF WordClassFeaturizer

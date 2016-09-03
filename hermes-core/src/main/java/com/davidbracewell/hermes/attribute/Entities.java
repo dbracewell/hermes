@@ -21,7 +21,8 @@
 
 package com.davidbracewell.hermes.attribute;
 
-import com.davidbracewell.annotation.DynamicEnumeration;
+
+import com.davidbracewell.annotation.Preload;
 
 import static com.davidbracewell.hermes.attribute.EntityType.ROOT;
 
@@ -30,106 +31,79 @@ import static com.davidbracewell.hermes.attribute.EntityType.ROOT;
  *
  * @author David B. Bracewell
  */
-@DynamicEnumeration(
-      className = "EntityType",
-      hierarchical = true,
-      configPrefix = "Entity",
-      rootName = "ENTITY"
-)
+@Preload
 public interface Entities {
 
    /**
     * The constant PERSON.
     */
-   com.davidbracewell.hermes.attribute.EntityType PERSON = com.davidbracewell.hermes.attribute.EntityType.create(
-         "PERSON",
-         ROOT);
+   EntityType PERSON = EntityType.create("PERSON", ROOT);
    /**
     * The constant ORGANIZATION.
     */
-   com.davidbracewell.hermes.attribute.EntityType ORGANIZATION = com.davidbracewell.hermes.attribute.EntityType.create(
-         "ORGANIZATION",
-         ROOT);
+   EntityType ORGANIZATION = EntityType.create("ORGANIZATION", ROOT);
    /**
     * The constant LOCATION.
     */
-   com.davidbracewell.hermes.attribute.EntityType LOCATION = com.davidbracewell.hermes.attribute.EntityType.create(
-         "LOCATION",
-         ROOT);
+   EntityType LOCATION = EntityType.create("LOCATION", ROOT);
    /**
     * The constant NUMBER.
     */
-   com.davidbracewell.hermes.attribute.EntityType NUMBER = com.davidbracewell.hermes.attribute.EntityType.create(
-         "NUMBER",
-         ROOT);
+   EntityType NUMBER = EntityType.create("NUMBER", ROOT);
 
-   com.davidbracewell.hermes.attribute.EntityType CARDINAL = com.davidbracewell.hermes.attribute.EntityType.create(
-         "CARDINAL",
-         NUMBER);
+   /**
+    * The constant CARDINAL.
+    */
+   EntityType CARDINAL = EntityType.create("CARDINAL", NUMBER);
 
-   com.davidbracewell.hermes.attribute.EntityType ORDIANL = com.davidbracewell.hermes.attribute.EntityType.create(
-         "ORDINAL",
-         NUMBER);
-
+   /**
+    * The constant ORDIANL.
+    */
+   EntityType ORDIANL = EntityType.create("ORDINAL", NUMBER);
 
    /**
     * The constant MONEY.
     */
-   com.davidbracewell.hermes.attribute.EntityType MONEY = com.davidbracewell.hermes.attribute.EntityType.create("MONEY",
-                                                                                                                NUMBER);
+   EntityType MONEY = EntityType.create("MONEY", NUMBER);
    /**
     * The constant PERCENTAGE.
     */
-   com.davidbracewell.hermes.attribute.EntityType PERCENTAGE = com.davidbracewell.hermes.attribute.EntityType.create(
-         "PERCENTAGE",
-         NUMBER);
+   EntityType PERCENTAGE = EntityType.create("PERCENTAGE", NUMBER);
    /**
     * The constant DATE_TIME.
     */
-   com.davidbracewell.hermes.attribute.EntityType DATE_TIME = com.davidbracewell.hermes.attribute.EntityType.create(
-         "DATE_TIME",
-         ROOT);
+   EntityType DATE_TIME = EntityType.create("DATE_TIME", ROOT);
    /**
     * The constant DATE.
     */
-   com.davidbracewell.hermes.attribute.EntityType DATE = com.davidbracewell.hermes.attribute.EntityType.create("DATE",
-                                                                                                               DATE_TIME);
+   EntityType DATE = EntityType.create("DATE", DATE_TIME);
    /**
     * The constant TIME.
     */
-   com.davidbracewell.hermes.attribute.EntityType TIME = com.davidbracewell.hermes.attribute.EntityType.create("TIME",
-                                                                                                               DATE_TIME);
+   EntityType TIME = EntityType.create("TIME", DATE_TIME);
    /**
     * The constant INTERNET.
     */
-   com.davidbracewell.hermes.attribute.EntityType INTERNET = com.davidbracewell.hermes.attribute.EntityType.create(
-         "INTERNET",
-         ROOT);
+   EntityType INTERNET = EntityType.create("INTERNET", ROOT);
    /**
     * The constant EMAIL.
     */
-   com.davidbracewell.hermes.attribute.EntityType EMAIL = com.davidbracewell.hermes.attribute.EntityType.create("EMAIL",
-                                                                                                                INTERNET);
+   EntityType EMAIL = EntityType.create("EMAIL", INTERNET);
    /**
     * The constant URL.
     */
-   com.davidbracewell.hermes.attribute.EntityType URL = com.davidbracewell.hermes.attribute.EntityType.create("URL",
-                                                                                                              INTERNET);
+   EntityType URL = EntityType.create("URL", INTERNET);
    /**
     * The constant EMOTICON.
     */
-   com.davidbracewell.hermes.attribute.EntityType EMOTICON = com.davidbracewell.hermes.attribute.EntityType.create(
-         "EMOTICON",
-         INTERNET);
+   EntityType EMOTICON = EntityType.create("EMOTICON", INTERNET);
    /**
     * The constant HASHTAG.
     */
-   com.davidbracewell.hermes.attribute.EntityType HASH_TAG = com.davidbracewell.hermes.attribute.EntityType.create(
-         "HASH_TAG",
-         INTERNET);
+   EntityType HASH_TAG = EntityType.create("HASH_TAG", INTERNET);
    /**
-    * The constant HASHTAG.
+    * The constant REPLY.
     */
-   com.davidbracewell.hermes.attribute.EntityType REPLY = com.davidbracewell.hermes.attribute.EntityType.create("REPLY",
-                                                                                                                INTERNET);
+   EntityType REPLY = EntityType.create("REPLY", INTERNET);
+
 }//END OF Entities

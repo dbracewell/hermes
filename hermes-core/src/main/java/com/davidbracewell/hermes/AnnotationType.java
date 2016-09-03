@@ -27,13 +27,13 @@ import com.davidbracewell.HierarchicalEnumValue;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.string.StringUtils;
+import com.google.common.collect.Sets;
 import lombok.NonNull;
 
-import java.io.ObjectStreamException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.davidbracewell.Validations.validateArgument;
 
 /**
  * <p> An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The
@@ -46,177 +46,163 @@ import java.util.stream.Collectors;
  * parent's
  * attributes. Attribute information on the type serves as documentation and is not type checked. Additionally, a "tag"
  * can be defined for a type using the <code>tag</code> property, which defines the attribute to return on calls to
- * <code>getTag()</code>. </p> <p>Type information is defined via configuration. An Example is as follows:</p> {@code
+ * <code>getTag()</code>. </p> <p>Type information is defined via configuration. An Example is as follows:</pre> {@code
  * Annotation{ ENTITY { attributes = ENTITY_TYPE, CONFIDENCE tag = ENTITY_TYPE } REGEX_ENTITY { parent = ENTITY
- * annotator = @{DEFAULT_ENTITY_REGEX} annotator { ENGLISH = @{ENGLISH_ENTITY_REGEX} JAPANESE =
-  * @{JAPANESE_ENTITY_REGEX} } attributes = PATTERN } } }* <p> In the example shown above, we define the
- * <code>ENTITY</code> and
- * <code>REGEX_ENTITY</code> types. The <code>Entity</code> type has two attributes associated with it which relate to
- * the type of entity and the confidence that the span of text is an entity of the given type. The
- * <code>REGEX_ENTITY</code> is a sub-type (child) of <code>ENTITY</code> and inherits all of its attributes. It
- * defines
- * annotators for English and Japanese which are beans defined elsewhere in the configuration. Finally, it defines a
- * <code>PATTERN</code> attribute relating to the pattern that was used to identify the entity. </p>
+ * annotator = @{DEFAULT_ENTITY_REGEX} annotator { ENGLISH = @{ENGLISH_ENTITY_REGEX} JAPANESE = }}}}</pre>
  */
-public final class AnnotationType extends HierarchicalEnumValue implements AnnotatableType {
+public final class AnnotationType extends HierarchicalEnumValue implements Comparable<AnnotationType>, AnnotatableType {
+   private static final long serialVersionUID = 1L;
+   private static final String typeName = "Annotation";
+   private volatile transient AttributeType tagAttributeType = null;
+   private volatile transient Set<AttributeType> definedAttributeTypes = null;
+   private static final Set<AnnotationType> values = Sets.newConcurrentHashSet();
 
-  private static final DynamicEnum<AnnotationType> index = new DynamicEnum<>();
-  private static final long serialVersionUID = 1L;
-  private static final String typeName = "Annotation";
-
-  /**
-   * The constant ROOT representing the base annotation type.
-   */
-  public static AnnotationType ROOT = create("ROOT");
+   /**
+    * The constant ROOT representing the base annotation type.
+    */
+   public static AnnotationType ROOT = create("ROOT", null);
 
 
-  private volatile transient AttributeType tagAttributeType = null;
-  private volatile transient Set<AttributeType> definedAttributeTypes = null;
+   private AnnotationType(String name, AnnotationType parent) {
+      super(name, parent);
+   }
 
-  private AnnotationType(String name) {
-    super(name);
-  }
 
-  /**
-   * Creates a new Annotation Type or retrieves an already existing one for a given name
-   *
-   * @param name   the name
-   * @param parent the parent
-   * @return the annotation type
-   * @throws IllegalArgumentException name is invalid, or annotation type already exists with different parent
-   */
-  public static AnnotationType create(String name, @NonNull AnnotationType parent) {
-    if (StringUtils.isNullOrBlank(name)) {
-      throw new IllegalArgumentException(name + " is invalid");
-    }
-    name = Types.toName(typeName, name);
-    if (index.isDefined(name) && !index.valueOf(name).getParent().equals(parent)) {
-      throw new IllegalArgumentException("Attempting to register an existing annotation type with a different parent type.");
-    }
-    AnnotationType type = index.register(new AnnotationType(name));
-    Config.setProperty("Annotation." + type.name() + ".parent", parent.name());
-    return type;
-  }
-
-  /**
-   * Creates a new Annotation Type or retrieves an already existing one for a given name
-   *
-   * @param name the name
-   * @return the annotation type
-   */
-  public static AnnotationType create(String name) {
-    if (StringUtils.isNullOrBlank(name)) {
-      throw new IllegalArgumentException(name + " is invalid");
-    }
-    return index.register(new AnnotationType(Types.toName(typeName, name)));
-  }
-
-  /**
-   * Determine if an Annotation type exists for the given name
-   *
-   * @param name the name
-   * @return True if it exists, otherwise False
-   */
-  public static boolean isDefined(String name) {
-    return index.isDefined(Types.toName(typeName, name));
-  }
-
-  /**
-   * Gets the AnnotationType from its name. Throws an <code>IllegalArgumentException</code> if the name is not valid.
-   *
-   * @param name the name as a string
-   * @return the AnnotationType for the string
-   */
-  public static AnnotationType valueOf(String name) {
-    return index.valueOf(Types.toName(typeName, name));
-  }
-
-  /**
-   * Returns the values (annotation types) for this dynamic enum
-   *
-   * @return All known Annotation Types
-   */
-  public static Collection<AnnotationType> values() {
-    return index.values();
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public List<AnnotationType> getChildren() {
-    return index.values().stream().filter(t -> t.getParent().equals(this)).collect(Collectors.toList());
-  }
-
-  /**
-   * Gets tag attribute.
-   *
-   * @return the tag attribute
-   */
-  public AttributeType getTagAttributeType() {
-    if (tagAttributeType == null) {
-      synchronized (this) {
-        if (tagAttributeType == null) {
-          String attribute = Config.get("Annotation", name(), "tag").asString();
-          if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {
-            tagAttributeType = getParent().getTagAttributeType();
-          } else if (StringUtils.isNullOrBlank(attribute)) {
-            tagAttributeType = Types.TAG;
-          } else {
-            tagAttributeType = AttributeType.create(attribute);
-          }
-        }
+   /**
+    * Creates a new Annotation Type or retrieves an already existing one for a given name
+    *
+    * @param name   the name
+    * @param parent the parent
+    * @return the annotation type
+    * @throws IllegalArgumentException name is invalid, or annotation type already exists with different parent
+    */
+   public static AnnotationType create(String name, AnnotationType parent) {
+      validateArgument(StringUtils.isNotNullOrBlank(name), name + " is invalid.");
+      AnnotationType toReturn = DynamicEnum.register(new AnnotationType(name, parent));
+      AnnotationType cp = toReturn.getParent().orElse(null);
+      if (parent != null && cp == null && toReturn != ROOT ) {
+         toReturn.parent = parent;
+         Config.setProperty(typeName + "." + toReturn.name() + ".parent", parent.name());
+      } else if( parent != null && cp != null && cp != parent ){
+         throw new IllegalArgumentException("Attempting to reassign " + name + "'s parent from " + cp + " to " + parent);
       }
-    }
-    return tagAttributeType;
-  }
+      values.add(toReturn);
+      return toReturn;
+   }
 
-  /**
-   * Gets parent type of this one.
-   *
-   * @return the parent type (ROOT if type is ROOT)
-   */
-  public AnnotationType getParent() {
-    return Cast.as(super.getParent());
-  }
+   /**
+    * Creates a new Annotation Type or retrieves an already existing one for a given name
+    *
+    * @param name the name
+    * @return the annotation type
+    */
+   public static AnnotationType create(String name) {
+      return create(name, null);
+   }
 
-  @Override
-  protected AnnotationType getParentConfig() {
-    return AnnotationType.create(Config.get("Annotation", name(), "parent").asString("ROOT"));
-  }
+   /**
+    * <p>Retrieves all currently known values of AnnotationType.</p>
+    *
+    * @return An unmodifiable collection of currently known values for AnnotationType.
+    */
+   public static Collection<AnnotationType> values() {
+      return Collections.unmodifiableSet(values);
+   }
 
-  @Override
-  public String type() {
-    return "Annotation";
-  }
+   /**
+    * <p>Returns the constant of AnnotationType with the specified name.The normalized version of the specified name will
+    * be matched allowing for case and space variations.</p>
+    *
+    * @return The constant of AnnotationType with the specified name
+    * @throws IllegalArgumentException if the specified name is not a member of AnnotationType.
+    */
+   public static AnnotationType valueOf(@NonNull String name) {
+      return DynamicEnum.valueOf(AnnotationType.class, name);
+   }
 
-  /**
-   * <p>Checks if this type is an instance of another type. Type B is an instance of Type A if A == B, B is the gold
-   * standard version of A, or A is in B's parent tree.</p>
-   *
-   * @param type the annotation type we are checking against
-   * @return True if this is an instance of the given type, False otherwise
-   */
-  public boolean isInstance(AnnotationType type) {
-    if (type == null) {
+   @Override
+   @SuppressWarnings("unchecked")
+   public List<AnnotationType> getChildren() {
+      return values().stream().filter(v -> this != v && v.getParent().filter(p -> p == this).isPresent()).collect(
+            Collectors.toList());
+   }
+
+   @Override
+   public int compareTo(@NonNull AnnotationType o) {
+      return canonicalName().compareTo(o.canonicalName());
+   }
+
+   @Override
+   @SuppressWarnings("unchecked")
+   public Optional<AnnotationType> getParent() {
+      return super.getParent();
+   }
+
+   @Override
+   @SuppressWarnings("unchecked")
+   protected AnnotationType getParentFromConfig() {
+      return Cast.as(Config.get(typeName, name(), "parent").as(getClass(), null));
+   }
+
+   @Override
+   @SuppressWarnings("unchecked")
+   public List<AnnotationType> getAncestors() {
+      return super.getAncestors();
+   }
+
+   /**
+    * <p>Checks if this type is an instance of another type. Type B is an instance of Type A if A == B, B is the gold
+    * standard version of A, or A is in B's parent tree.</p>
+    *
+    * @param type the annotation type we are checking against
+    * @return True if this is an instance of the given type, False otherwise
+    */
+   public boolean isInstance(AnnotationType type) {
+      if (type == null) {
+         return false;
+      } else if (this == type) {
+         return true;
+      } else if (type == ROOT) {
+         return true;
+      }
+      AnnotationType parent = getParent().orElse(ROOT);
+      while (!parent.equals(ROOT)) {
+         if (parent.equals(type)) {
+            return true;
+         }
+         parent = parent.getParent().orElse(ROOT);
+      }
       return false;
-    } else if (this.equals(type)) {
-      return true;
-    }
-    AnnotationType parent = getParent();
-    while (!parent.equals(ROOT)) {
-      if (parent.equals(type)) {
-        return true;
-      }
-      parent = parent.getParent();
-    }
-    return type.equals(ROOT);
-  }
+   }
 
-  private Object readResolve() throws ObjectStreamException {
-    if (isDefined(name())) {
-      return index.valueOf(name());
-    }
-    return index.register(this);
-  }
+   /**
+    * Gets tag attribute.
+    *
+    * @return the tag attribute
+    */
+   public AttributeType getTagAttributeType() {
+      if (tagAttributeType == null) {
+         synchronized (this) {
+            if (tagAttributeType == null) {
+               String attribute = Config.get(typeName, name(), "tag").asString();
+               if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {
+                  tagAttributeType = getParent().map(AnnotationType::getTagAttributeType).orElse(null);
+               } else if (StringUtils.isNullOrBlank(attribute)) {
+                  tagAttributeType = Types.TAG;
+               } else {
+                  tagAttributeType = AttributeType.create(attribute);
+               }
+            }
+         }
+      }
+      return tagAttributeType;
+   }
+
+
+   @Override
+   public String type() {
+      return typeName;
+   }
 
 
 }//END OF AnnotationType

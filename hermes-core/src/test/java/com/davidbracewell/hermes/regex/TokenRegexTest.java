@@ -245,7 +245,7 @@ public class TokenRegexTest {
     assertTrue(matcher.find());
     assertEquals("seashore", matcher.group().toString());
     assertTrue(matcher.find());
-    assertEquals("12:30pm", matcher.group().toString());
+    assertEquals("12:30pm yesterday", matcher.group().toString());
     assertFalse(matcher.find());
 
     matcher = TokenRegex.compile("{ENTITY $PERSON}").matcher(document);
@@ -263,7 +263,7 @@ public class TokenRegexTest {
     assertTrue(matcher.find());
     assertEquals("seashore", matcher.group().toString());
     assertTrue(matcher.find());
-    assertEquals("12:30pm", matcher.group().toString());
+    assertEquals("12:30pm yesterday", matcher.group().toString());
     assertFalse(matcher.find());
 
     matcher = TokenRegex.compile("^{ENTITY}").matcher(document);

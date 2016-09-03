@@ -23,78 +23,82 @@ package com.davidbracewell.hermes.wordnet.properties;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
+import com.google.common.collect.Sets;
+import lombok.NonNull;
 
-import java.io.ObjectStreamException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * <p>Dynamic enum for property names.</p>
  *
  * @author David B. Bracewell
  */
-public class PropertyName extends EnumValue {
-  private final static DynamicEnum<PropertyName> ENUM = new DynamicEnum<>();
-  private static final long serialVersionUID = -7353904628779809419L;
+public class PropertyName extends EnumValue implements Comparable<PropertyName> {
+   private static final long serialVersionUID = 1L;
+   private static final Set<PropertyName> values = Sets.newConcurrentHashSet();
 
-  PropertyName(String name) {
-    super(name);
-  }
+   private PropertyName(String name) {
+      super(name);
+   }
 
-  /**
-   * Value of.
-   *
-   * @param name the name
-   * @return the structured format
-   */
-  public static PropertyName valueOf(String name) {
-    return ENUM.valueOf(name);
-  }
+   /**
+    * <p>Creates a new or retrieves an existing instance of PropertyName with the given name.</p>
+    *
+    * @return The instance of PropertyName corresponding th the give name.
+    */
+   public static PropertyName create(@NonNull String name) {
+      PropertyName toReturn = DynamicEnum.register(new PropertyName(name));
+      values.add(toReturn);
+      return toReturn;
+   }
 
+   /**
+    * <p>Retrieves all currently known values of PropertyName.</p>
+    *
+    * @return An unmodifiable collection of currently known values for PropertyName.
+    */
+   public static Collection<PropertyName> values() {
+      return Collections.unmodifiableSet(values);
+   }
 
-  /**
-   * Values collection.
-   *
-   * @return the collection
-   */
-  public static Collection<PropertyName> values() {
-    return ENUM.values();
-  }
+   /**
+    * <p>Returns the constant of PropertyName with the specified name.The normalized version of the specified name will
+    * be matched allowing for case and space variations.</p>
+    *
+    * @return The constant of PropertyName with the specified name
+    * @throws IllegalArgumentException if the specified name is not a member of PropertyName.
+    */
+   public static PropertyName valueOf(@NonNull String name) {
+      return DynamicEnum.valueOf(PropertyName.class, name);
+   }
 
-  /**
-   * Create property name.
-   *
-   * @param name the name
-   * @return the property name
-   */
-  public static PropertyName create(String name) {
-    return ENUM.register(new PropertyName(name));
-  }
+   @Override
+   public int compareTo(@NonNull PropertyName o) {
+      return this.canonicalName().compareTo(o.canonicalName());
+   }
 
-  Object readResolve() throws ObjectStreamException {
-    return ENUM.register(this);
-  }
-
-
-  /**
-   * The constant INFO_CONTENT.
-   */
-  public static final PropertyName INFO_CONTENT = create("INFORMATION_CONTENT");
-  /**
-   * The constant INFO_CONTENT_RESNIK.
-   */
-  public static final PropertyName INFO_CONTENT_RESNIK = create("INFORMATION_CONTENT_RESNIK");
-  /**
-   * The constant SUMO_CONCEPT.
-   */
-  public static final PropertyName SUMO_CONCEPT = create("SUMO_CONCEPT");
-  /**
-   * The constant SENTIMENT.
-   */
-  public static final PropertyName SENTIMENT = create("SENTIMENT");
-  /**
-   * The constant DOMAIN.
-   */
-  public static final PropertyName DOMAIN = create("DOMAIN");
+   /**
+    * The constant INFO_CONTENT.
+    */
+   public static final PropertyName INFO_CONTENT = create("INFORMATION_CONTENT");
+   /**
+    * The constant INFO_CONTENT_RESNIK.
+    */
+   public static final PropertyName INFO_CONTENT_RESNIK = create("INFORMATION_CONTENT_RESNIK");
+   /**
+    * The constant SUMO_CONCEPT.
+    */
+   public static final PropertyName SUMO_CONCEPT = create("SUMO_CONCEPT");
+   /**
+    * The constant SENTIMENT.
+    */
+   public static final PropertyName SENTIMENT = create("SENTIMENT");
+   /**
+    * The constant DOMAIN.
+    */
+   public static final PropertyName DOMAIN = create("DOMAIN");
 
 
 }//END OF PropertyName

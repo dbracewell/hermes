@@ -60,392 +60,399 @@ import java.util.stream.Stream;
  */
 public final class Annotation extends Fragment implements Serializable {
 
-  private static final long serialVersionUID = 1L;
-  /**
-   * The ID associated with a detached annotation
-   */
-  public static long DETACHED_ID = Long.MIN_VALUE;
-  private final AnnotationType annotationType;
-  private final Set<Relation> relations = new HashSet<>();
-  private long id = DETACHED_ID;
-  private volatile transient Annotation[] tokens;
+   private static final long serialVersionUID = 1L;
+   /**
+    * The ID associated with a detached annotation
+    */
+   public static long DETACHED_ID = Long.MIN_VALUE;
+   private final AnnotationType annotationType;
+   private final Set<Relation> relations = new HashSet<>();
+   private long id = DETACHED_ID;
+   private volatile transient Annotation[] tokens;
 
-  /**
-   * Instantiates a new Annotation.
-   *
-   * @param owner          the document that owns this annotation
-   * @param annotationType The type of annotation
-   * @param start          the start
-   * @param end            the end
-   */
-  public Annotation(@NonNull Document owner, @NonNull AnnotationType annotationType, int start, int end) {
-    super(owner, start, end);
-    Preconditions.checkArgument(start <= end, "Annotations must have a start character index that is less than or equal to the ending index.");
-    this.annotationType = annotationType;
-  }
-
-
-  /**
-   * Instantiates a new Annotation.
-   *
-   * @param string         the string that this annotation will encompass
-   * @param annotationType the annotation type
-   */
-  public Annotation(@NonNull HString string, @NonNull AnnotationType annotationType) {
-    super(string);
-    this.annotationType = annotationType;
-  }
-
-  /**
-   * Instantiates a new Annotation.
-   */
-  protected Annotation() {
-    this.annotationType = AnnotationType.ROOT;
-  }
+   /**
+    * Instantiates a new Annotation.
+    *
+    * @param owner          the document that owns this annotation
+    * @param annotationType The type of annotation
+    * @param start          the start
+    * @param end            the end
+    */
+   public Annotation(@NonNull Document owner, @NonNull AnnotationType annotationType, int start, int end) {
+      super(owner, start, end);
+      Preconditions.checkArgument(start <= end,
+                                  "Annotations must have a start character index that is less than or equal to the ending index.");
+      this.annotationType = annotationType;
+   }
 
 
-  /**
-   * Instantiates a new Annotation.
-   *
-   * @param type  the type
-   * @param start the start
-   * @param end   the end
-   */
-  protected Annotation(AnnotationType type, int start, int end) {
-    super(null, start, end);
-    this.annotationType = type == null ? AnnotationType.ROOT : type;
-  }
+   /**
+    * Instantiates a new Annotation.
+    *
+    * @param string         the string that this annotation will encompass
+    * @param annotationType the annotation type
+    */
+   public Annotation(@NonNull HString string, @NonNull AnnotationType annotationType) {
+      super(string);
+      this.annotationType = annotationType;
+   }
 
-  /**
-   * Read annotation.
-   *
-   * @param reader the reader
-   * @return the annotation
-   * @throws IOException the io exception
-   */
-  static Annotation read(StructuredReader reader) throws IOException {
-    reader.beginObject();
-    Map<String, Val> annotationProperties = new HashMap<>();
-    Map<AttributeType, Val> attributeValMap = Collections.emptyMap();
-    List<Relation> relations = new LinkedList<>();
+   /**
+    * Instantiates a new Annotation.
+    */
+   protected Annotation() {
+      this.annotationType = AnnotationType.ROOT;
+   }
 
-    while (reader.peek() != ElementType.END_OBJECT) {
-      if (reader.peek() == ElementType.NAME) {
-        Maps.put(annotationProperties, reader.nextKeyValue());
-      } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
-        reader.beginObject("attributes");
-        attributeValMap = AttributeType.readAttributeList(reader);
-        reader.endObject();
-      } else if (reader.peek() == ElementType.BEGIN_ARRAY) {
-        reader.beginArray("relations");
-        while (reader.peek() != ElementType.END_ARRAY) {
-          reader.beginObject();
-          Map<String, Val> rel = reader.nextMap();
-          relations.add(new Relation(rel.get("type").as(RelationType.class), rel.get("value").asString(), rel.get("target").asLongValue()));
-          reader.endObject();
-        }
-        reader.endArray();
+
+   /**
+    * Instantiates a new Annotation.
+    *
+    * @param type  the type
+    * @param start the start
+    * @param end   the end
+    */
+   protected Annotation(AnnotationType type, int start, int end) {
+      super(null, start, end);
+      this.annotationType = type == null ? AnnotationType.ROOT : type;
+   }
+
+   /**
+    * Read annotation.
+    *
+    * @param reader the reader
+    * @return the annotation
+    * @throws IOException the io exception
+    */
+   static Annotation read(StructuredReader reader) throws IOException {
+      reader.beginObject();
+      Map<String, Val> annotationProperties = new HashMap<>();
+      Map<AttributeType, Val> attributeValMap = Collections.emptyMap();
+      List<Relation> relations = new LinkedList<>();
+
+      while (reader.peek() != ElementType.END_OBJECT) {
+         if (reader.peek() == ElementType.NAME) {
+            Maps.put(annotationProperties, reader.nextKeyValue());
+         } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
+            reader.beginObject("attributes");
+            attributeValMap = AttributeType.readAttributeList(reader);
+            reader.endObject();
+         } else if (reader.peek() == ElementType.BEGIN_ARRAY) {
+            reader.beginArray("relations");
+            while (reader.peek() != ElementType.END_ARRAY) {
+               reader.beginObject();
+               Map<String, Val> rel = reader.nextMap();
+               relations.add(new Relation(rel.get("type").as(RelationType.class),
+                                          rel.get("value").asString(),
+                                          rel.get("target").asLongValue()));
+               reader.endObject();
+            }
+            reader.endArray();
+         } else {
+            throw new IOException("Unexpected " + reader.peek());
+         }
+      }
+
+      Annotation annotation = Fragments.detachedAnnotation(
+            AnnotationType.create(annotationProperties.get("type").asString()),
+            annotationProperties.get("start").asIntegerValue(),
+            annotationProperties.get("end").asIntegerValue()
+                                                          );
+      annotation.relations.addAll(relations);
+      annotation.setId(annotationProperties.get("id").asLongValue());
+      annotation.putAll(attributeValMap);
+      reader.endObject();
+      return annotation;
+   }
+
+   @Override
+   public void add(@NonNull Relation relation) {
+      if (!relations.contains(relation)) {
+         relations.add(relation);
+      }
+   }
+
+   @Override
+   public void addAll(@NonNull Collection<Relation> relations) {
+      this.relations.addAll(relations);
+   }
+
+   @Override
+   public Collection<Relation> allRelations(boolean includeSubAnnotations) {
+      return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
+   }
+
+
+   @Override
+   public List<Annotation> children() {
+      List<Annotation> tokens;
+      if (document().getAnnotationSet().isCompleted(Types.SENTENCE)) {
+         tokens = first(Types.SENTENCE).tokens();
       } else {
-        throw new IOException("Unexpected " + reader.peek());
+         tokens = document().tokens();
       }
-    }
+      Set<Annotation> myTokens = new HashSet<>(tokens());
+      myTokens.add(this);
+      return tokens.stream()
+                   .filter(t -> !t.overlaps(this))
+                   .filter(t -> t.parent().filter(myTokens::contains).isPresent())
+                   .collect(Collectors.toList());
+   }
 
-    Annotation annotation = Fragments.detachedAnnotation(
-      AnnotationType.create(annotationProperties.get("type").asString()),
-      annotationProperties.get("start").asIntegerValue(),
-      annotationProperties.get("end").asIntegerValue()
-    );
-    annotation.relations.addAll(relations);
-    annotation.setId(annotationProperties.get("id").asLongValue());
-    annotation.putAll(attributeValMap);
-    reader.endObject();
-    return annotation;
-  }
+   @Override
+   public Optional<Tuple2<String, Annotation>> dependencyRelation() {
+      return getRelationStream(true)
+            .filter(r -> r.getType() == Types.DEPENDENCY)
+            .filter(r -> r.getTarget(this).isPresent())
+            .filter(r -> !this.overlaps(r.getTarget(this).orElse(null)))
+            .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).orElse(null)))
+            .findFirst();
+   }
 
-  @Override
-  public void add(@NonNull Relation relation) {
-    if (!relations.contains(relation)) {
-      relations.add(relation);
-    }
-  }
+   @Override
+   public List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
+      return getRelationStream(includeSubAnnotations).filter(r -> r.getType().equals(relationType))
+                                                     .collect(Collectors.toList());
+   }
 
-  @Override
-  public void addAll(@NonNull Collection<Relation> relations) {
-    this.relations.addAll(relations);
-  }
+   /**
+    * Gets the unique id associated with the annotation.
+    *
+    * @return the id of the annotation that is unique with in its document or <code>Annotation.DETACHED_ID</code> if the
+    * annotation is not attached to the document.
+    */
+   public long getId() {
+      return id;
+   }
 
-  @Override
-  public Collection<Relation> allRelations(boolean includeSubAnnotations) {
-    return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
-  }
+   /**
+    * Sets id.
+    *
+    * @param id the id
+    */
+   void setId(long id) {
+      this.id = id;
+   }
 
-
-  @Override
-  public List<Annotation> children() {
-    List<Annotation> tokens;
-    if (document().getAnnotationSet().isCompleted(Types.SENTENCE)) {
-      tokens = first(Types.SENTENCE).tokens();
-    } else {
-      tokens = document().tokens();
-    }
-    Set<Annotation> myTokens = new HashSet<>(tokens());
-    myTokens.add(this);
-    return tokens.stream()
-      .filter(t -> !t.overlaps(this))
-      .filter(t -> t.parent().filter(myTokens::contains).isPresent())
-      .collect(Collectors.toList());
-  }
-
-  @Override
-  public Optional<Tuple2<String, Annotation>> dependencyRelation() {
-    return getRelationStream(true)
-      .filter(r -> r.getType() == Types.DEPENDENCY)
-      .filter(r -> r.getTarget(this).isPresent())
-      .filter(r -> !this.overlaps(r.getTarget(this).orElse(null)))
-      .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).orElse(null)))
-      .findFirst();
-  }
-
-  @Override
-  public List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
-    return getRelationStream(includeSubAnnotations).filter(r -> r.getType().equals(relationType)).collect(Collectors.toList());
-  }
-
-  /**
-   * Gets the unique id associated with the annotation.
-   *
-   * @return the id of the annotation that is unique with in its document or <code>Annotation.DETACHED_ID</code> if the
-   * annotation is not attached to the document.
-   */
-  public long getId() {
-    return id;
-  }
-
-  /**
-   * Sets id.
-   *
-   * @param id the id
-   */
-  void setId(long id) {
-    this.id = id;
-  }
-
-  private Stream<Relation> getRelationStream(boolean includeSubAnnotations) {
-    Stream<Relation> relationStream = relations.stream();
-    if (this.getType() != Types.TOKEN && includeSubAnnotations) {
-      relationStream = Stream.concat(
-        relationStream,
-        getAllAnnotations().stream().filter(a -> a != this).flatMap(token -> token.allRelations(false).stream())
-      );
-    }
-    return relationStream;
-  }
-
-  /**
-   * <p>
-   * Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type using
-   * the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
-   * Tags must implement the <code>Tag</code> interface. If no tag type is defined, the <code>Attrs.TAG</code>
-   * attribute will be retrieved.
-   * </p>
-   *
-   * @return An optional containing the tag if present
-   */
-  public Optional<Tag> getTag() {
-    if (isInstance(Types.TOKEN)) {
-      return Optional.ofNullable(getPOS());
-    } else if (isInstance(Types.ENTITY)) {
-      return Optional.ofNullable(get(Types.ENTITY_TYPE).as(EntityType.class));
-    }
-    AttributeType tagAttributeType = annotationType.getTagAttributeType();
-    if (tagAttributeType == null) {
-      return Optional.ofNullable(get(Types.TAG).as(Tag.class));
-    }
-    return Optional.ofNullable(get(tagAttributeType).as(Tag.class));
-  }
-
-  /**
-   * Gets the type of the annotation
-   *
-   * @return the annotation type
-   */
-  public final AnnotationType getType() {
-    return annotationType;
-  }
-
-  @Override
-  public boolean isAnnotation() {
-    return true;
-  }
-
-  /**
-   * Is this annotation detached, i.e. not associated with a document?
-   *
-   * @return True if the annotation is detached
-   */
-  public boolean isDetached() {
-    return document() == null || id == DETACHED_ID;
-  }
-
-  @Override
-  public boolean isInstance(AnnotationType type) {
-    return this.annotationType.isInstance(type);
-  }
-
-  /**
-   * Is instance of tag boolean.
-   *
-   * @param tag the tag
-   * @return the boolean
-   */
-  public boolean isInstanceOfTag(String tag) {
-    return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttributeType().getValueType().convert(tag)));
-  }
-
-  /**
-   * Is instance of tag boolean.
-   *
-   * @param tag the tag
-   * @return the boolean
-   */
-  public boolean isInstanceOfTag(Tag tag) {
-    return tag != null && getTag().filter(t -> t.isInstance(tag)).isPresent();
-  }
-
-  /**
-   * Gets the next annotation with the same type as this one
-   *
-   * @return The next annotation with the same type as this one or an empty fragment
-   */
-  public Annotation next() {
-    return next(annotationType);
-  }
-
-  /**
-   * Gets the annotation of a given type that is next in order (of span) to this one
-   *
-   * @param type the type of annotation wanted
-   * @return the next annotation of the given type or null
-   */
-  public Annotation next(@NonNull AnnotationType type) {
-    return document() == null ? Fragments.detachedEmptyAnnotation() : document().getAnnotationSet().next(this, type);
-  }
-
-  /**
-   * Gets the previous annotation with the same type as this one
-   *
-   * @return The previous annotation with the same type as this one or an empty fragment
-   */
-  public Annotation previous() {
-    return previous(annotationType);
-  }
-
-  /**
-   * Gets the annotation of a given type that is previous in order (of span) to this one
-   *
-   * @param type the type of annotation wanted
-   * @return the previous annotation of the given type or null
-   */
-  public Annotation previous(AnnotationType type) {
-    return document() == null ? Fragments.detachedEmptyAnnotation() : document().getAnnotationSet().previous(this, type);
-  }
-
-  @Override
-  public void remove(@NonNull Relation relation) {
-    relations.remove(relation);
-  }
-
-  @Override
-  public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-    Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
-    targets.add(this);
-    return document().getAllAnnotations().stream()
-      .filter(a -> !a.overlaps(this))
-      .filter(a -> a.targets(type, value, false).stream().filter(targets::contains).count() > 0)
-      .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
-    Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
-    targets.add(this);
-    return document().getAllAnnotations().stream()
-      .filter(a -> !a.overlaps(this))
-      .filter(a -> a.targets(type, false).stream().filter(targets::contains).count() > 0)
-      .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
-    return getRelationStream(includeSubAnnotations)
-      .filter(r -> r.getType().equals(type))
-      .filter(r -> r.getTarget(this).isPresent())
-      .map(r -> r.getTarget(this).get())
-      .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-    return getRelationStream(includeSubAnnotations)
-      .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
-      .map(r -> document().getAnnotationSet().get(r.getTarget()))
-      .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<Annotation> tokens() {
-    if (tokens == null) {
-      synchronized (this) {
-        if (tokens == null) {
-          List<Annotation> tokenList = super.tokens();
-          if (!tokenList.isEmpty()) {
-            tokens = tokenList.toArray(new Annotation[tokenList.size()]);
-          }
-        }
+   private Stream<Relation> getRelationStream(boolean includeSubAnnotations) {
+      Stream<Relation> relationStream = relations.stream();
+      if (this.getType() != Types.TOKEN && includeSubAnnotations) {
+         relationStream = Stream.concat(
+               relationStream,
+               getAllAnnotations().stream().filter(a -> a != this).flatMap(token -> token.allRelations(false).stream())
+                                       );
       }
-    }
-    return tokens == null ? Collections.emptyList() : Arrays.asList(tokens);
-  }
+      return relationStream;
+   }
 
-  /**
-   * Write.
-   *
-   * @param writer the writer
-   * @throws IOException the io exception
-   */
-  void write(StructuredWriter writer) throws IOException {
-    writer.beginObject();
-
-    writer.writeKeyValue("type", annotationType.name());
-    writer.writeKeyValue("start", start());
-    writer.writeKeyValue("end", end());
-    writer.writeKeyValue("id", getId());
-
-    if (Config.get("Annotation.writeContent").asBooleanValue(false)) {
-      writer.writeKeyValue("content", toString());
-    }
-
-    if (getAttributeMap().size() > 0) {
-      writer.beginObject("attributes");
-      for (Map.Entry<AttributeType, Val> entry : attributeValues()) {
-        entry.getKey().write(writer, entry.getValue());
+   /**
+    * <p>
+    * Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type using
+    * the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
+    * Tags must implement the <code>Tag</code> interface. If no tag type is defined, the <code>Attrs.TAG</code>
+    * attribute will be retrieved.
+    * </p>
+    *
+    * @return An optional containing the tag if present
+    */
+   public Optional<Tag> getTag() {
+      if (isInstance(Types.TOKEN)) {
+         return Optional.ofNullable(getPOS());
+      } else if (isInstance(Types.ENTITY)) {
+         return Optional.ofNullable(get(Types.ENTITY_TYPE).as(EntityType.class));
       }
+      AttributeType tagAttributeType = annotationType.getTagAttributeType();
+      if (tagAttributeType == null) {
+         return Optional.ofNullable(get(Types.TAG).as(Tag.class));
+      }
+      return Optional.ofNullable(get(tagAttributeType).as(Tag.class));
+   }
+
+   /**
+    * Gets the type of the annotation
+    *
+    * @return the annotation type
+    */
+   public final AnnotationType getType() {
+      return annotationType;
+   }
+
+   @Override
+   public boolean isAnnotation() {
+      return true;
+   }
+
+   /**
+    * Is this annotation detached, i.e. not associated with a document?
+    *
+    * @return True if the annotation is detached
+    */
+   public boolean isDetached() {
+      return document() == null || id == DETACHED_ID;
+   }
+
+   @Override
+   public boolean isInstance(AnnotationType type) {
+      return this.annotationType.isInstance(type);
+   }
+
+   /**
+    * Is instance of tag boolean.
+    *
+    * @param tag the tag
+    * @return the boolean
+    */
+   public boolean isInstanceOfTag(String tag) {
+      return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttributeType()
+                                                                                      .getValueType()
+                                                                                      .convert(tag)));
+   }
+
+   /**
+    * Is instance of tag boolean.
+    *
+    * @param tag the tag
+    * @return the boolean
+    */
+   public boolean isInstanceOfTag(Tag tag) {
+      return tag != null && getTag().filter(t -> t.isInstance(tag)).isPresent();
+   }
+
+   /**
+    * Gets the next annotation with the same type as this one
+    *
+    * @return The next annotation with the same type as this one or an empty fragment
+    */
+   public Annotation next() {
+      return next(annotationType);
+   }
+
+   /**
+    * Gets the annotation of a given type that is next in order (of span) to this one
+    *
+    * @param type the type of annotation wanted
+    * @return the next annotation of the given type or null
+    */
+   public Annotation next(@NonNull AnnotationType type) {
+      return document() == null ? Fragments.detachedEmptyAnnotation() : document().getAnnotationSet().next(this, type);
+   }
+
+   /**
+    * Gets the previous annotation with the same type as this one
+    *
+    * @return The previous annotation with the same type as this one or an empty fragment
+    */
+   public Annotation previous() {
+      return previous(annotationType);
+   }
+
+   /**
+    * Gets the annotation of a given type that is previous in order (of span) to this one
+    *
+    * @param type the type of annotation wanted
+    * @return the previous annotation of the given type or null
+    */
+   public Annotation previous(AnnotationType type) {
+      return document() == null ? Fragments.detachedEmptyAnnotation() : document().getAnnotationSet().previous(this,
+                                                                                                               type);
+   }
+
+   @Override
+   public void remove(@NonNull Relation relation) {
+      relations.remove(relation);
+   }
+
+   @Override
+   public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+      Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
+      targets.add(this);
+      return document().getAllAnnotations().stream()
+                       .filter(a -> !a.overlaps(this))
+                       .filter(a -> a.targets(type, value, false).stream().filter(targets::contains).count() > 0)
+                       .collect(Collectors.toList());
+   }
+
+   @Override
+   public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
+      Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
+      targets.add(this);
+      return document().getAllAnnotations().stream()
+                       .filter(a -> !a.overlaps(this))
+                       .filter(a -> a.targets(type, false).stream().filter(targets::contains).count() > 0)
+                       .collect(Collectors.toList());
+   }
+
+   @Override
+   public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
+      return getRelationStream(includeSubAnnotations)
+            .filter(r -> r.getType().equals(type))
+            .filter(r -> r.getTarget(this).isPresent())
+            .map(r -> r.getTarget(this).get())
+            .collect(Collectors.toList());
+   }
+
+   @Override
+   public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+      return getRelationStream(includeSubAnnotations)
+            .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
+            .map(r -> document().getAnnotationSet().get(r.getTarget()))
+            .collect(Collectors.toList());
+   }
+
+   @Override
+   public List<Annotation> tokens() {
+      if (tokens == null) {
+         synchronized (this) {
+            if (tokens == null) {
+               List<Annotation> tokenList = super.tokens();
+               if (!tokenList.isEmpty()) {
+                  tokens = tokenList.toArray(new Annotation[tokenList.size()]);
+               }
+            }
+         }
+      }
+      return tokens == null ? Collections.emptyList() : Arrays.asList(tokens);
+   }
+
+   /**
+    * Write.
+    *
+    * @param writer the writer
+    * @throws IOException the io exception
+    */
+   void write(StructuredWriter writer) throws IOException {
+      writer.beginObject();
+
+      writer.writeKeyValue("type", annotationType.name());
+      writer.writeKeyValue("start", start());
+      writer.writeKeyValue("end", end());
+      writer.writeKeyValue("id", getId());
+
+      if (Config.get("Annotation.writeContent").asBooleanValue(false)) {
+         writer.writeKeyValue("content", toString());
+      }
+
+      if (getAttributeMap().size() > 0) {
+         writer.beginObject("attributes");
+         for (Map.Entry<AttributeType, Val> entry : attributeValues()) {
+            entry.getKey().write(writer, entry.getValue());
+         }
+         writer.endObject();
+      }
+
+      if (relations.size() > 0) {
+         writer.beginArray("relations");
+         for (Relation relation : relations) {
+            writer.beginObject();
+            writer.writeKeyValue("type", relation.getType());
+            writer.writeKeyValue("value", relation.getValue());
+            writer.writeKeyValue("target", relation.getTarget());
+            writer.endObject();
+         }
+         writer.endArray();
+      }
+
       writer.endObject();
-    }
-
-    if (relations.size() > 0) {
-      writer.beginArray("relations");
-      for (Relation relation : relations) {
-        writer.beginObject();
-        writer.writeKeyValue("type", relation.getType());
-        writer.writeKeyValue("value", relation.getValue());
-        writer.writeKeyValue("target", relation.getTarget());
-        writer.endObject();
-      }
-      writer.endArray();
-    }
-
-    writer.endObject();
-  }
+   }
 
 }//END OF Annotation

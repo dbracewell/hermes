@@ -39,11 +39,7 @@ import lombok.NonNull;
 
 import java.io.PrintStream;
 import java.text.DecimalFormat;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * @author David B. Bracewell
@@ -236,7 +232,7 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
                        incorrect.get(g)
                      ))
     );
-    tableFormatter.content(Arrays.asList(
+    tableFormatter.footer(Arrays.asList(
       "micro",
       pct.format(microPrecision()),
       pct.format(microRecall()),
@@ -245,7 +241,7 @@ public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
       missed.sum(),
       incorrect.sum()
     ));
-    tableFormatter.content(Arrays.asList(
+    tableFormatter.footer(Arrays.asList(
       "macro",
       pct.format(macroPrecision()),
       pct.format(macroRecall()),

@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.ml;
 
+import com.davidbracewell.apollo.ml.TrainTestSet;
 import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.apollo.ml.preprocess.filter.MinCountFilter;
@@ -34,10 +35,12 @@ import com.davidbracewell.hermes.corpus.CorpusType;
 import com.davidbracewell.io.resource.Resource;
 
 import java.util.Collections;
+import java.util.Random;
 import java.util.Set;
 
 /**
  * The type Bio trainer.
+ *
  * @author David B. Bracewell
  */
 public abstract class BIOTrainer extends CommandLineApplication {
@@ -76,16 +79,21 @@ public abstract class BIOTrainer extends CommandLineApplication {
    @Option(description = "Type of corpus", defaultValue = "IN_MEMORY")
    protected CorpusType corpusType;
 
+   @Option(name = "annotation", description = "The annotation type in the corpus to train with")
+   protected AnnotationType trainingAnnotation;
 
    /**
     * Instantiates a new Bio trainer.
     *
-    * @param name the name
+    * @param name           the name
     * @param annotationType the annotation type
     */
    public BIOTrainer(String name, AnnotationType annotationType) {
       super(name);
       this.annotationType = annotationType;
+      if( this.trainingAnnotation == null ){
+         this.trainingAnnotation = annotationType;
+      }
    }
 
    /**
@@ -140,7 +148,7 @@ public abstract class BIOTrainer extends CommandLineApplication {
             .source(corpus)
             .format(corpusFormat)
             .build()
-            .asSequenceDataSet(new BIOLabelMaker(annotationType, validTags()), featurizer);
+            .asSequenceDataSet(new BIOLabelMaker(trainingAnnotation, validTags()), featurizer);
    }
 
    /**
@@ -176,12 +184,38 @@ public abstract class BIOTrainer extends CommandLineApplication {
       tagger.write(model);
    }
 
+   protected void split() throws Exception {
+      final SequenceFeaturizer<Annotation> featurizer = getFeaturizer();
+      Dataset<Sequence> all = getDataset(featurizer);
+      all = all.shuffle(new Random(56789));
+      TrainTestSet<Sequence> trainTest = all.split(0.80);
+      trainTest.forEach(tt -> {
+         PreprocessorList<Sequence> preprocessors = getPreprocessors();
+         if (preprocessors != null && preprocessors.size() > 0) {
+            Dataset<Sequence> train = tt.getTrain().preprocess(preprocessors);
+            SequenceLabelerLearner learner = getLearner();
+            learner.setValidator(getValidator());
+            SequenceLabeler labeler = learner.train(train);
+            BIOTagger tagger = new BIOTagger(featurizer, annotationType, labeler);
+            BIOEvaluation eval = new BIOEvaluation();
+            eval.evaluate(tagger.labeler, tt.getTest());
+            eval.output(System.out);
+         }
+      });
+   }
+
    @Override
    protected void programLogic() throws Exception {
-      if (mode == Mode.TEST) {
-         test();
-      } else {
-         train();
+      switch (mode) {
+         case TEST:
+            test();
+            break;
+         case TRAIN:
+            train();
+            break;
+         case SPLIT:
+            split();
+            break;
       }
    }
 

@@ -32,6 +32,7 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTrainer;
 import com.davidbracewell.hermes.ml.BIOValidator;
+import com.davidbracewell.hermes.ml.feature.AffixFeaturizer;
 import com.davidbracewell.hermes.ml.feature.WordAndClassFeaturizer;
 import com.davidbracewell.hermes.ml.feature.WordClassFeaturizer;
 import com.davidbracewell.hermes.ml.feature.WordFeaturizer;
@@ -43,39 +44,42 @@ public class EntityTrainer extends BIOTrainer {
    private static final long serialVersionUID = 1L;
 
    public EntityTrainer() {
-      super("EntityTrainer", Types.ENTITY);
+      super("EntityTrainer", Types.ML_ENTITY);
    }
 
    @Override
    @SuppressWarnings("unchecked")
    protected SequenceFeaturizer<Annotation> getFeaturizer() {
-      return SequenceFeaturizer.chain(new WindowedSequenceFeaturizer<>(2, 2, WordFeaturizer.INSTANCE),
-                                      new WindowedSequenceFeaturizer<>(2, 2, WordClassFeaturizer.INSTANCE),
-                                      new WindowedSequenceFeaturizer<>(2, 2, WordAndClassFeaturizer.INSTANCE),
-                                      new NGramSequenceFeaturizer<>(1, 1, WordFeaturizer.INSTANCE),
-                                      new NGramSequenceFeaturizer<>(1, 1, WordClassFeaturizer.INSTANCE));
+      return SequenceFeaturizer.chain(
+            new AffixFeaturizer(3,3).asSequenceFeaturizer(),
+            new WindowedSequenceFeaturizer<>(2, 2, WordFeaturizer.INSTANCE),
+            new WindowedSequenceFeaturizer<>(2, 2, WordClassFeaturizer.INSTANCE),
+            new WindowedSequenceFeaturizer<>(2, 2, WordAndClassFeaturizer.INSTANCE),
+            new NGramSequenceFeaturizer<>(2, 2, WordFeaturizer.INSTANCE),
+            new NGramSequenceFeaturizer<>(2, 2, WordClassFeaturizer.INSTANCE));
    }
 
    @Override
    public void setup() throws Exception {
       LibraryLoader.INSTANCE.load();
+      this.trainingAnnotation = Types.ENTITY;
    }
 
 //   @Override
 //   protected Set<String> validTags() {
-//      return ImmutableSet.of("PERSON", "LOCATION", "ORGANIZATION");
+//      return ImmutableSet.of("PERSON", "LOCATION", "ORGANIZATION", "CARDINAL", "ORDINAL");
 //   }
 
    @Override
    protected SequenceLabelerLearner getLearner() {
       SequenceLabelerLearner learner =
 //            new MEMMLearner();
-            //new StructuredPerceptronLearner();
+//            new StructuredPerceptronLearner();
             new CRFTrainer();
       learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
       learner.setValidator(new BIOValidator());
       learner.setParameter("maxIterations", 100);
-      learner.setParameter("verbose", true);
+      learner.setParameter("verbose", false);
       return learner;
    }
 

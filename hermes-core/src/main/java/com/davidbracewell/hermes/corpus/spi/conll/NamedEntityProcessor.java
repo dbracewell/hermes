@@ -47,13 +47,21 @@ public class NamedEntityProcessor extends IOBFieldProcessor {
          case "PER":
             return "PERSON";
          case "ORG":
-            return "ORGANIZATION";
-         case "LOC":
-            return "LOCATION";
          case "NORP":
             return "ORGANIZATION";
+         case "LOC":
          case "GPE":
             return "LOCATION";
+         case "ORDINAL":
+         case "CARDINAL":
+            return "NUMBER";
+         case "LANGUAGE":
+         case "LAW":
+         case "PRODUCT":
+         case "WORK_OF_ART":
+            return "MISC";
+         case "FAC":
+            return null;
       }
       return tag;
    }

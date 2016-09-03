@@ -43,13 +43,14 @@ import com.davidbracewell.reflection.ReflectionException;
 import com.davidbracewell.reflection.ValueType;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Sets;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.io.ObjectStreamException;
 import java.util.*;
+
+import static com.davidbracewell.Validations.validateArgument;
 
 /**
  * <p> An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link
@@ -70,10 +71,9 @@ import java.util.*;
  *
  * @author David B. Bracewell
  */
-public final class AttributeType extends EnumValue implements AnnotatableType {
-
-   private static final DynamicEnum<AttributeType> index = new DynamicEnum<>();
+public final class AttributeType extends EnumValue implements AnnotatableType, Comparable<AttributeType> {
    private static final long serialVersionUID = 1L;
+   private static final Set<AttributeType> values = Sets.newConcurrentHashSet();
    private static final Map<Class<?>, AttributeValueCodec> defaultCodecs = Collections.unmodifiableMap(
          Maps.map(Double.class, CommonCodecs.DOUBLE,
                   Integer.class, CommonCodecs.INTEGER,
@@ -94,53 +94,41 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
    }
 
    /**
-    * Creates a new  attribute with the given name and value type
+    * <p>Creates a new or retrieves an existing instance of AttributeType with the given name.</p>
     *
-    * @param name      the name of the attribute
-    * @param valueType the type of attribute's value
-    * @return the attribute
-    * @throws IllegalArgumentException If the name is invalid or an attribute exists with this name, but a differenty
-    *                                  value type.
+    * @param name the specified name of the AttributeType
+    * @return The instance of AttributeType corresponding th the give name.
     */
-   public static AttributeType create(String name, @NonNull Class<?> valueType) {
-      if (StringUtils.isNullOrBlank(name)) {
-         throw new IllegalArgumentException(name + " is invalid");
-      }
-      name = Types.toName(typeName, name);
-      if (index.isDefined(name)) {
-         AttributeType attributeType = index.valueOf(name);
-         Preconditions.checkArgument(attributeType.getValueType().getType().equals(valueType),
-                                     "Attempting to register an existing attribute with a new value type.");
-         return attributeType;
-      }
-      AttributeType attributeType = index.register(new AttributeType(name));
-      Config.setProperty("Attribute." + attributeType.name() + ".type", valueType.getName());
-      return attributeType;
+   public static AttributeType create(@NonNull String name) {
+      return create(name, null);
    }
 
    /**
-    * Creates an attribute with the given name.
+    * <p>Creates a new or retrieves an existing instance of AttributeType with the given name.</p>
     *
-    * @param name the name of the attribute
-    * @return the attribute
-    * @throws IllegalArgumentException If the name is invalid
+    * @param name      the specified name of the AttributeType
+    * @param valueType the type of value the attribute is
+    * @return The instance of AttributeType corresponding th the give name.
     */
-   public static AttributeType create(String name) {
-      if (StringUtils.isNullOrBlank(name)) {
-         throw new IllegalArgumentException(name + " is invalid");
+   public static AttributeType create(String name, Class<?> valueType) {
+      validateArgument(StringUtils.isNotNullOrBlank(name), name + " is invalid.");
+      AttributeType toReturn = DynamicEnum.register(new AttributeType(name));
+      if (valueType != null && toReturn.valueType == null &&
+            !Config.hasProperty("Attribute" + "." + toReturn.name()) &&
+            !Config.hasProperty("Attribute" + "." + toReturn.name() + ".type")) {
+
+         Config.setProperty(typeName + "." + toReturn.name() + ".type", valueType.getName());
+
+      } else if (valueType != null && !toReturn.getValueType().getType().equals(valueType)) {
+         throw new IllegalArgumentException("Attempting to change value type of " + name + " from " + toReturn.getValueType()
+                                                                                                              .getType() + " to " + valueType
+               .getName());
       }
-      return index.register(new AttributeType(Types.toName(typeName, name)));
+
+      values.add(toReturn);
+      return toReturn;
    }
 
-   /**
-    * Determine if a name is an existing Attribute
-    *
-    * @param name the name
-    * @return True if it exists, otherwise False
-    */
-   public static boolean isDefined(String name) {
-      return index.isDefined(Types.toName(typeName, name));
-   }
 
    static Object readObject(StructuredReader reader, AttributeType attributeType) throws IOException {
       ValueType valueType = attributeType.getValueType();
@@ -223,24 +211,30 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
    }
 
    /**
-    * Gets the attribute associated with a string.
+    * <p>Retrieves all currently known values of AttributeType.</p>
     *
-    * @param name the name as a string
-    * @return the attribute for the string
-    * @throws IllegalArgumentException if the name is not a valid attribute
+    * @return An unmodifiable collection of currently known values for AttributeType.
     */
-   public static AttributeType valueOf(String name) {
-      return index.valueOf(Types.toName(typeName, name));
+   public static Collection<AttributeType> values() {
+      return Collections.unmodifiableSet(values);
    }
 
    /**
-    * The current collection of known attributes
+    * <p>Returns the constant of AttributeType with the specified name.The normalized version of the specified name will
+    * be matched allowing for case and space variations.</p>
     *
-    * @return All known attribute names
+    * @return The constant of AttributeType with the specified name
+    * @throws IllegalArgumentException if the specified name is not a member of AttributeType.
     */
-   public static Collection<AttributeType> values() {
-      return index.values();
+   public static AttributeType valueOf(@NonNull String name) {
+      return DynamicEnum.valueOf(AttributeType.class, name);
    }
+
+   @Override
+   public int compareTo(@NonNull AttributeType o) {
+      return this.canonicalName().compareTo(o.canonicalName());
+   }
+
 
    private AttributeValueCodec getCodec() {
       if (codec == null) {
@@ -294,19 +288,10 @@ public final class AttributeType extends EnumValue implements AnnotatableType {
       return valueType;
    }
 
-
-   private Object readResolve() throws ObjectStreamException {
-      if (isDefined(name())) {
-         return index.valueOf(name());
-      }
-      return index.register(this);
-   }
-
    void write(StructuredWriter writer, Object val) throws IOException {
       AttributeValueCodec encoder = getCodec();
       Val wrapped = val instanceof Val ? Cast.as(val) : Val.of(val);
       ValueType vType = getValueType();
-
 
       //Ignore nulls
       if (!wrapped.isNull()) {

@@ -38,46 +38,49 @@ import lombok.NonNull;
  */
 public interface AnnotatableType {
 
-  /**
-   * Gets the annotator associated with this type for a given language.
-   *
-   * @param language the language for which the annotator is needed.
-   * @return the annotator for this type and the given langauge
-   * @throws IllegalStateException If this type is a gold standard annotation.
-   */
-  default Annotator getAnnotator(@NonNull Language language) {
-    String key = Config.closestKey(type(), language, name(), "annotator");
-    if (StringUtils.isNullOrBlank(key)) {
-      throw new IllegalStateException("No annotator is defined for " + name() + " and " + language);
-    }
-    Annotator annotator = BeanUtils.parameterizeObject(Config.get(key).as(Annotator.class));
-    Preconditions.checkNotNull(annotator, "Could not create the annotator [" + Config.get(key) + "] for " + name());
-    Preconditions.checkArgument(annotator.satisfies().contains(this), "Attempting to register " + annotator.getClass().getName() + " for " + name() + " which it does not provide.");
-    return annotator;
-  }
+   /**
+    * Gets the annotator associated with this type for a given language.
+    *
+    * @param language the language for which the annotator is needed.
+    * @return the annotator for this type and the given langauge
+    * @throws IllegalStateException If this type is a gold standard annotation.
+    */
+   default Annotator getAnnotator(@NonNull Language language) {
+      String key = Config.closestKey(type(), language, name(), "annotator");
+      if (StringUtils.isNullOrBlank(key)) {
+         throw new IllegalStateException("No annotator is defined for " + name() + " and " + language);
+      }
 
-  /**
-   * The type (Annotation, Attribute, Relation)
-   *
-   * @return the type
-   */
-  String type();
+      Annotator annotator = BeanUtils.parameterizeObject(Config.get(key).as(Annotator.class));
+      Preconditions.checkNotNull(annotator, "Could not create the annotator [" + Config.get(key) + "] for " + name());
+      Preconditions.checkArgument(annotator.satisfies().contains(this),
+                                  "Attempting to register " + annotator.getClass()
+                                                                       .getName() + " for " + name() + " which it does not provide.");
+      return annotator;
+   }
 
-  /**
-   * The type name
-   *
-   * @return the type name
-   */
-  String name();
+   /**
+    * The type (Annotation, Attribute, Relation)
+    *
+    * @return the type
+    */
+   String type();
 
-  /**
-   * The canonical name "type.name"
-   *
-   * @return the string
-   */
-  default String canonicalName() {
-    return type() + "." + name();
-  }
+   /**
+    * The type name
+    *
+    * @return the type name
+    */
+   String name();
+
+   /**
+    * The canonical name "type.name"
+    *
+    * @return the string
+    */
+   default String canonicalName() {
+      return type() + "." + name();
+   }
 
 
 }//END OF Annotatable
