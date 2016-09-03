@@ -21,40 +21,20 @@
 
 package com.davidbracewell.hermes.ml.entity;
 
+import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.sequence.ContextualIterator;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.ml.feature.WordShapeFeaturizer;
-import com.davidbracewell.string.StringUtils;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import static com.davidbracewell.apollo.ml.sequence.Sequence.BOS;
-import static com.davidbracewell.apollo.ml.sequence.Sequence.EOS;
 
 /**
  * @author David B. Bracewell
  */
 public class EntityFeaturizer implements SequenceFeaturizer<Annotation> {
    private static final long serialVersionUID = 1L;
-
-   private void affixes(String word, int position, int length, Set<Feature> features) {
-      if (word.length() >= length && !word.equals("!DIGIT") && !word.equals("!YEAR") && !word.equals(BOS) && !word
-            .equals(EOS)) {
-         for (int li = 0; li < length; li++) {
-            features.add(Feature.TRUE("suffix[" + position + "][" + (li + 1) + "]=" +
-                                            word.substring(Math.max(word.length() - li - 1, 0)))
-                        );
-         }
-         for (int li = 0; li < length; li++) {
-            features.add(Feature.TRUE("prefix[" + position + "][" + (li + 1) + "]=" +
-                                            word.substring(0, Math.min(li + 1, word.length())))
-                        );
-         }
-      }
-   }
 
 
    private static Feature p(String name) {
@@ -64,23 +44,10 @@ public class EntityFeaturizer implements SequenceFeaturizer<Annotation> {
    @Override
    public Set<Feature> apply(ContextualIterator<Annotation> itr) {
       Set<Feature> features = new HashSet<>();
-
-      String current = itr.getCurrent().toString();
-      if (current.length() == 2) {
-         features.add(p("2d"));
-      } else if (current.length() == 4) {
-         features.add(p("4d"));
+      Language language = Language.fromString(itr.getCurrent().toString());
+      if (language != Language.UNKNOWN) {
+         features.add(p("IsLanguageName"));
       }
-
-      if (current.length() == 2 && Character.isUpperCase(current.charAt(0)) && current.charAt(1) == '.') {
-         features.add(p("cp"));
-      }
-
-      features.add(p(StringUtils.compactRepeatedChars(current)));
-      features.add(p(WordShapeFeaturizer.INSTANCE.extractPredicate(itr.getCurrent())));
-      features.add(p(StringUtils.compactRepeatedChars(WordShapeFeaturizer.INSTANCE.extractPredicate(itr.getCurrent()))));
-      affixes(current, 0, 4, features);
-
       return features;
    }
 

@@ -42,15 +42,11 @@ public class WordClassFeaturizer extends PredicateFeaturizer<HString> {
 
    @Override
    public String extractPredicate(HString string) {
-      if (string == null || string.isEmpty()) {
-         return "other";
-      }
-
       if (Character.getType(string.charAt(0)) == Character.CURRENCY_SYMBOL) {
          return "CURRENCY";
       }
 
-      if( string.contentEqualIgnoreCase("'s")){
+      if (string.contentEqualIgnoreCase("'s")) {
          return "POSSESSIVE";
       }
 

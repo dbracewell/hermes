@@ -56,9 +56,6 @@ public class WordFeaturizer extends PredicateFeaturizer<HString> {
 
    @Override
    public String extractPredicate(HString s) {
-      if (s == null || s.isEmpty()) {
-         return "--NULL--";
-      }
       return lowerCase ? s.toLowerCase() : s.toString();
    }
 

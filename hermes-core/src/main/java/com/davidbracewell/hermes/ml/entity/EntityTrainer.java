@@ -51,6 +51,7 @@ public class EntityTrainer extends BIOTrainer {
    @SuppressWarnings("unchecked")
    protected SequenceFeaturizer<Annotation> getFeaturizer() {
       return SequenceFeaturizer.chain(
+            new EntityFeaturizer(),
             new AffixFeaturizer(3,3).asSequenceFeaturizer(),
             new WindowedSequenceFeaturizer<>(2, 2, WordFeaturizer.INSTANCE),
             new WindowedSequenceFeaturizer<>(2, 2, WordClassFeaturizer.INSTANCE),

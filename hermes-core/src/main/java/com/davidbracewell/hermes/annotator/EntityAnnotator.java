@@ -37,7 +37,7 @@ public class EntityAnnotator extends SubTypeAnnotator {
     * Instantiates a new Entity annotator.
     */
    public EntityAnnotator() {
-      super(Types.ENTITY, false, Config.get(EntityAnnotator.class, "subTypes").asSet(AnnotationType.class));
+      super(Types.ENTITY, true, Config.get(EntityAnnotator.class, "subTypes").asSet(AnnotationType.class));
    }
 
 }//END OF EntityAnnotator

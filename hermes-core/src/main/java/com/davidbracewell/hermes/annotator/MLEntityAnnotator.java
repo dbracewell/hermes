@@ -29,6 +29,7 @@ import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTagger;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.logging.Loggable;
 import com.google.common.base.Throwables;
 
 import java.io.Serializable;
@@ -40,7 +41,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * @author David B. Bracewell
  */
-public class MLEntityAnnotator extends SentenceLevelAnnotator implements Serializable {
+public class MLEntityAnnotator extends SentenceLevelAnnotator implements Serializable, Loggable {
    private static final long serialVersionUID = 1L;
    private volatile ConcurrentMap<Language, BIOTagger> taggers = new ConcurrentHashMap<>();
 
@@ -54,8 +55,12 @@ public class MLEntityAnnotator extends SentenceLevelAnnotator implements Seriali
                   if (classPath.exists()) {
                      taggers.put(language, BIOTagger.read(classPath));
                   } else {
-                     taggers.put(language,
-                                 BIOTagger.read(Config.get("Annotation.ML_ENTITY", language, "model").asResource()));
+                     Resource modelLocation = Config.get("Annotation.ML_ENTITY", language, "model").asResource();
+                     if (modelLocation != null && modelLocation.exists()) {
+                        taggers.put(language, modelLocation.readObject());
+                     } else {
+                        logFine("{0} does not have ML Entity models.", language);
+                     }
                   }
                } catch (Exception e) {
                   throw Throwables.propagate(e);
@@ -68,7 +73,10 @@ public class MLEntityAnnotator extends SentenceLevelAnnotator implements Seriali
 
    @Override
    public void annotate(Annotation sentence) {
-      loadModel(sentence.getLanguage()).tag(sentence);
+      BIOTagger tagger = loadModel(sentence.getLanguage());
+      if (tagger != null) {
+         tagger.tag(sentence);
+      }
    }
 
 

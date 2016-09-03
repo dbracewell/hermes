@@ -86,11 +86,12 @@ public class SubTypeAnnotator implements Annotator, Serializable {
          return a1;
       }
 
-      double a1S = a1.tokenLength() * a1.get(Types.CONFIDENCE).asDoubleValue(1.0);
-      double a2S = a2.tokenLength() * a2.get(Types.CONFIDENCE).asDoubleValue(1.0);
-      if (a1S > a2S) {
+      double a1Confidence = a1.get(Types.CONFIDENCE).asDoubleValue(1.0);
+      double a2Confidence = a2.get(Types.CONFIDENCE).asDoubleValue(1.0);
+
+      if (a1Confidence > a2Confidence) {
          return a1;
-      } else if (a2S > a1S) {
+      } else if (a2Confidence > a1Confidence) {
          return a2;
       } else if (a1.tokenLength() > a2.tokenLength()) {
          return a1;
@@ -107,14 +108,24 @@ public class SubTypeAnnotator implements Annotator, Serializable {
       if (nonOverlapping) {
          List<Annotation> annotations = getAnnotations(document);
          for (Annotation a : annotations) {
-            if (document.getAnnotationSet().contains(a)) {
-               for (Annotation a2 : getAnnotations(a)) {
-                  if (a.equals(compare(a, a2))) {
-                     document.getAnnotationSet().remove(a2);
-                  } else {
-                     document.getAnnotationSet().remove(a);
-                     break;
-                  }
+            //Make sure the annotation is still on the document
+            if (!document.getAnnotationSet().contains(a)) {
+               continue;
+            }
+
+            //Go through all overlapping annotations
+            for (Annotation a2 : getAnnotations(a)) {
+               //Ignore itself
+               if (a == a2) {
+                  continue;
+               }
+               //Remove one
+               if (a.equals(compare(a, a2))) {
+                  document.remove(a2);
+               } else {
+                  //Removed itself so stop processing it
+                  document.remove(a);
+                  break;
                }
             }
          }
