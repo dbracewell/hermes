@@ -30,10 +30,11 @@ import com.davidbracewell.string.StringUtils;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.davidbracewell.Validations.validateArgument;
 
 /**
  * <p> An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The
@@ -50,7 +51,7 @@ import static com.davidbracewell.Validations.validateArgument;
  * Annotation{ ENTITY { attributes = ENTITY_TYPE, CONFIDENCE tag = ENTITY_TYPE } REGEX_ENTITY { parent = ENTITY
  * annotator = @{DEFAULT_ENTITY_REGEX} annotator { ENGLISH = @{ENGLISH_ENTITY_REGEX} JAPANESE = }}}}</pre>
  */
-public final class AnnotationType extends HierarchicalEnumValue implements Comparable<AnnotationType>, AnnotatableType {
+public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> implements Comparable<AnnotationType>, AnnotatableType {
    private static final long serialVersionUID = 1L;
    private static final String typeName = "Annotation";
    private volatile transient AttributeType tagAttributeType = null;
@@ -68,6 +69,11 @@ public final class AnnotationType extends HierarchicalEnumValue implements Compa
    }
 
 
+   @Override
+   protected AnnotationType getSingleRoot() {
+      return ROOT;
+   }
+
    /**
     * Creates a new Annotation Type or retrieves an already existing one for a given name
     *
@@ -77,14 +83,9 @@ public final class AnnotationType extends HierarchicalEnumValue implements Compa
     * @throws IllegalArgumentException name is invalid, or annotation type already exists with different parent
     */
    public static AnnotationType create(String name, AnnotationType parent) {
-      validateArgument(StringUtils.isNotNullOrBlank(name), name + " is invalid.");
       AnnotationType toReturn = DynamicEnum.register(new AnnotationType(name, parent));
-      AnnotationType cp = toReturn.getParent().orElse(null);
-      if (parent != null && cp == null && toReturn != ROOT ) {
-         toReturn.parent = parent;
+      if (toReturn.setParentIfAbsent(parent)) {
          Config.setProperty(typeName + "." + toReturn.name() + ".parent", parent.name());
-      } else if( parent != null && cp != null && cp != parent ){
-         throw new IllegalArgumentException("Attempting to reassign " + name + "'s parent from " + cp + " to " + parent);
       }
       values.add(toReturn);
       return toReturn;
@@ -110,8 +111,8 @@ public final class AnnotationType extends HierarchicalEnumValue implements Compa
    }
 
    /**
-    * <p>Returns the constant of AnnotationType with the specified name.The normalized version of the specified name will
-    * be matched allowing for case and space variations.</p>
+    * <p>Returns the constant of AnnotationType with the specified name.The normalized version of the specified name
+    * will be matched allowing for case and space variations.</p>
     *
     * @return The constant of AnnotationType with the specified name
     * @throws IllegalArgumentException if the specified name is not a member of AnnotationType.
@@ -123,8 +124,7 @@ public final class AnnotationType extends HierarchicalEnumValue implements Compa
    @Override
    @SuppressWarnings("unchecked")
    public List<AnnotationType> getChildren() {
-      return values().stream().filter(v -> this != v && v.getParent().filter(p -> p == this).isPresent()).collect(
-            Collectors.toList());
+      return values().stream().filter(v -> this != v && v.getParent() == this).collect(Collectors.toList());
    }
 
    @Override
@@ -132,23 +132,12 @@ public final class AnnotationType extends HierarchicalEnumValue implements Compa
       return canonicalName().compareTo(o.canonicalName());
    }
 
-   @Override
-   @SuppressWarnings("unchecked")
-   public Optional<AnnotationType> getParent() {
-      return super.getParent();
-   }
 
    @Override
-   @SuppressWarnings("unchecked")
    protected AnnotationType getParentFromConfig() {
       return Cast.as(Config.get(typeName, name(), "parent").as(getClass(), null));
    }
 
-   @Override
-   @SuppressWarnings("unchecked")
-   public List<AnnotationType> getAncestors() {
-      return super.getAncestors();
-   }
 
    /**
     * <p>Checks if this type is an instance of another type. Type B is an instance of Type A if A == B, B is the gold
@@ -165,12 +154,12 @@ public final class AnnotationType extends HierarchicalEnumValue implements Compa
       } else if (type == ROOT) {
          return true;
       }
-      AnnotationType parent = getParent().orElse(ROOT);
+      AnnotationType parent = getParent();
       while (!parent.equals(ROOT)) {
          if (parent.equals(type)) {
             return true;
          }
-         parent = parent.getParent().orElse(ROOT);
+         parent = parent.getParent();
       }
       return false;
    }
@@ -186,7 +175,7 @@ public final class AnnotationType extends HierarchicalEnumValue implements Compa
             if (tagAttributeType == null) {
                String attribute = Config.get(typeName, name(), "tag").asString();
                if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {
-                  tagAttributeType = getParent().map(AnnotationType::getTagAttributeType).orElse(null);
+                  tagAttributeType = getParent().getTagAttributeType();
                } else if (StringUtils.isNullOrBlank(attribute)) {
                   tagAttributeType = Types.TAG;
                } else {

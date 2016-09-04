@@ -26,19 +26,27 @@ import com.davidbracewell.config.Config;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Auto generated using enumGen.py
  * The type EntityType.
  */
-public final class EntityType extends HierarchicalEnumValue implements Comparable<EntityType> {
+public final class EntityType extends HierarchicalEnumValue<EntityType> implements Comparable<EntityType> {
    private static final long serialVersionUID = 1L;
    private static final Set<EntityType> values = Sets.newConcurrentHashSet();
 
 
    public static final EntityType ROOT = EntityType.create("ROOT");
+
+   @Override
+   protected EntityType getSingleRoot() {
+      return ROOT;
+   }
 
    private EntityType(String name, EntityType parent) {
       super(name, parent);
@@ -63,12 +71,8 @@ public final class EntityType extends HierarchicalEnumValue implements Comparabl
     */
    public static EntityType create(@NonNull String name, EntityType parent) {
       EntityType toReturn = DynamicEnum.register(new EntityType(name, parent));
-      EntityType cp = toReturn.getParent().orElse(null);
-      if (parent != null && cp == null && toReturn != ROOT) {
-         toReturn.parent = parent;
+      if (toReturn.setParentIfAbsent(parent)) {
          Config.setProperty(toReturn.canonicalName() + ".parent", parent.canonicalName());
-      } else if (parent != null && cp != null && cp != parent) {
-         throw new IllegalArgumentException("Attempting to reassign " + name + "'s parent from " + cp + " to " + parent);
       }
       values.add(toReturn);
       return toReturn;
@@ -97,8 +101,7 @@ public final class EntityType extends HierarchicalEnumValue implements Comparabl
    @Override
    @SuppressWarnings("unchecked")
    public List<EntityType> getChildren() {
-      return values().stream().filter(v -> this != v && v.getParent().filter(p -> p == this).isPresent()).collect(
-            Collectors.toList());
+      return values().stream().filter(v -> this != v && v.getParent() == this).collect(Collectors.toList());
    }
 
    @Override
@@ -106,23 +109,6 @@ public final class EntityType extends HierarchicalEnumValue implements Comparabl
       return canonicalName().compareTo(o.canonicalName());
    }
 
-   @Override
-   @SuppressWarnings("unchecked")
-   public Optional<EntityType> getParent() {
-      return super.getParent();
-   }
-
-   @Override
-   @SuppressWarnings("unchecked")
-   protected EntityType getParentFromConfig() {
-      return super.getParentFromConfig();
-   }
-
-   @Override
-   @SuppressWarnings("unchecked")
-   public List<EntityType> getAncestors() {
-      return super.getAncestors();
-   }
 
 }// END OF EntityType
 

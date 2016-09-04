@@ -41,7 +41,6 @@ import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.reflection.Reflect;
 import com.davidbracewell.reflection.ReflectionException;
 import com.davidbracewell.reflection.ValueType;
-import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
@@ -49,8 +48,6 @@ import lombok.NonNull;
 
 import java.io.IOException;
 import java.util.*;
-
-import static com.davidbracewell.Validations.validateArgument;
 
 /**
  * <p> An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link
@@ -111,7 +108,6 @@ public final class AttributeType extends EnumValue implements AnnotatableType, C
     * @return The instance of AttributeType corresponding th the give name.
     */
    public static AttributeType create(String name, Class<?> valueType) {
-      validateArgument(StringUtils.isNotNullOrBlank(name), name + " is invalid.");
       AttributeType toReturn = DynamicEnum.register(new AttributeType(name));
       if (valueType != null && toReturn.valueType == null &&
             !Config.hasProperty("Attribute" + "." + toReturn.name()) &&
