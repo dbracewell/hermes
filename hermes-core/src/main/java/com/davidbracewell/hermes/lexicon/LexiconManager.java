@@ -38,93 +38,118 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
+ * The type Lexicon manager.
+ *
  * @author David B. Bracewell
  */
 public final class LexiconManager implements Serializable {
-  private static final long serialVersionUID = 1L;
-  private static final Logger log = Logger.getLogger(LexiconManager.class);
-  private static final Cache<String, Lexicon> lexiconCache = CacheManager.getInstance().register(
-    CacheSpec.<String, Lexicon>create()
-      .engine("Guava")
-      .maxSize(500)
-      .loadingFunction(name -> createLexicon(name.toLowerCase()))
-  );
+   private static final long serialVersionUID = 1L;
+   private static final Logger log = Logger.getLogger(LexiconManager.class);
+   private static final Cache<String, Lexicon> lexiconCache = CacheManager.register(
+      CacheSpec.<String, Lexicon>create()
+         .engine("Guava")
+         .maxSize(500)
+         .loadingFunction(name -> createLexicon(name.toLowerCase()))
+                                                                                   );
 
 
-  public static void clear() {
-    lexiconCache.clear();
-  }
+   /**
+    * Clear.
+    */
+   public static void clear() {
+      lexiconCache.invalidateAll();
+   }
 
-  public static void remove(String name) {
-    lexiconCache.invalidate(name);
-  }
+   /**
+    * Remove.
+    *
+    * @param name the name
+    */
+   public static void remove(String name) {
+      lexiconCache.invalidate(name);
+   }
 
-  private LexiconManager() {
-    throw new IllegalAccessError();
-  }
+   private LexiconManager() {
+      throw new IllegalAccessError();
+   }
 
-  public static Lexicon getLexicon(@NonNull String name) {
-    return lexiconCache.get(name);
-  }
+   /**
+    * Gets lexicon.
+    *
+    * @param name the name
+    * @return the lexicon
+    */
+   public static Lexicon getLexicon(@NonNull String name) {
+      return lexiconCache.get(name);
+   }
 
-  private static Lexicon createLexicon(String name) {
-    if (Config.getPropertiesMatching(StringPredicates.STARTS_WITH(name, true)).isEmpty()) {
-      log.warn("'{0}' does not exists returning an empty lexicon.", name);
-      return EmptyLexicon.INSTANCE;
-    } else try {
-      return BeanUtils.getNamedBean(name, LexiconSpec.class).create();
-    } catch (Exception e) {
-      log.severe(e);
-      log.warn("'{0}' does not exists returning an empty lexicon.", name);
-      return EmptyLexicon.INSTANCE;
-    }
-  }
+   private static Lexicon createLexicon(String name) {
+      if (Config.getPropertiesMatching(StringPredicates.STARTS_WITH(name, true)).isEmpty()) {
+         log.warn("'{0}' does not exists returning an empty lexicon.", name);
+         return EmptyLexicon.INSTANCE;
+      } else try {
+         return BeanUtils.getNamedBean(name, LexiconSpec.class).create();
+      } catch (Exception e) {
+         log.severe(e);
+         log.warn("'{0}' does not exists returning an empty lexicon.", name);
+         return EmptyLexicon.INSTANCE;
+      }
+   }
 
-  public static void register(@NonNull String name, @NonNull Lexicon lexicon) {
-    lexiconCache.put(name.toLowerCase(), lexicon);
-  }
+   /**
+    * Register.
+    *
+    * @param name    the name
+    * @param lexicon the lexicon
+    */
+   public static void register(@NonNull String name, @NonNull Lexicon lexicon) {
+      lexiconCache.put(name.toLowerCase(), lexicon);
+   }
 
-  private enum EmptyLexicon implements Lexicon {
-    INSTANCE;
+   private enum EmptyLexicon implements Lexicon {
+      /**
+       * Instance empty lexicon.
+       */
+      INSTANCE;
 
-    @Override
-    public List<HString> match(HString source) {
-      return Collections.emptyList();
-    }
+      @Override
+      public List<HString> match(HString source) {
+         return Collections.emptyList();
+      }
 
-    @Override
-    public List<LexiconEntry> getEntries(HString hString) {
-      return Collections.emptyList();
-    }
+      @Override
+      public List<LexiconEntry> getEntries(HString hString) {
+         return Collections.emptyList();
+      }
 
-    @Override
-    public void add(LexiconEntry entry) {
-      throw new UnsupportedOperationException();
-    }
+      @Override
+      public void add(LexiconEntry entry) {
+         throw new UnsupportedOperationException();
+      }
 
-    @Override
-    public Iterator<String> iterator() {
-      return Collections.emptyIterator();
-    }
+      @Override
+      public Iterator<String> iterator() {
+         return Collections.emptyIterator();
+      }
 
-    @Override
-    public int size() {
-      return 0;
-    }
+      @Override
+      public int size() {
+         return 0;
+      }
 
-    public AttributeType getTagAttributeType() {
-      return null;
-    }
+      public AttributeType getTagAttributeType() {
+         return null;
+      }
 
-    @Override
-    public int getMaxTokenLength() {
-      return 0;
-    }
+      @Override
+      public int getMaxTokenLength() {
+         return 0;
+      }
 
-    @Override
-    public boolean isCaseSensitive() {
-      return false;
-    }
-  }
+      @Override
+      public boolean isCaseSensitive() {
+         return false;
+      }
+   }
 
 }//END OF LexiconManager

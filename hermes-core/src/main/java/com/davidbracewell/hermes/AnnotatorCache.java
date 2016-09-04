@@ -43,7 +43,7 @@ public class AnnotatorCache {
   private final Cache<String, Annotator> cache;
 
   private AnnotatorCache() {
-    cache = CacheManager.getInstance().get("hermes.AnnotatorCache");
+    cache = CacheManager.get("hermes.AnnotatorCache");
   }
 
   /**
@@ -101,7 +101,7 @@ public class AnnotatorCache {
    * Invalidates the cache
    */
   public void clear() {
-    cache.clear();
+    cache.invalidateAll();
   }
 
 
