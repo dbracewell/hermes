@@ -26,7 +26,7 @@ import com.davidbracewell.string.StringUtils;
 import java.util.Collections;
 import java.util.Set;
 
-import static com.davidbracewell.collection.set.Sets.set;
+import static com.davidbracewell.collection.Sets.set;
 
 /**
  * The interface String analyzer.

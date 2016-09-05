@@ -303,7 +303,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
   @Override
   public boolean retainAll(Collection<?> c) {
     if (c != null) {
-      Collection<Annotation> toRemove = Collect.difference(ArrayList::new, toList(), Cast.cast(c));
+      Collection<Annotation> toRemove = com.davidbracewell.collection.list.Lists.difference(toList(), Cast.cast(c));
       toRemove.forEach(this::remove);
       return containsAll(c);
     }
