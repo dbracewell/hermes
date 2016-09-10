@@ -33,7 +33,7 @@ import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.collection.counter.Counter;
-import com.davidbracewell.collection.counter.HashMapCounter;
+import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
@@ -450,13 +450,13 @@ public interface Corpus extends Iterable<Document> {
    * @return A counter containing document frequencies of the given annotation type
    */
   default Counter<String> documentFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
-    return new HashMapCounter<>(
+    return Counters.newCounter(
       Cast.cast(
         stream()
           .flatMap(document -> document.get(type).stream().map(toString).distinct().collect(Collectors.toList()))
           .countByValue()
       )
-    );
+                              );
   }
 
   /**
@@ -572,7 +572,7 @@ public interface Corpus extends Iterable<Document> {
    * @return the counter
    */
   default Counter<Tuple> ngrams(@NonNull NGramSpec nGramSpec) {
-    return nGramSpec.getValueCalculator().adjust(new HashMapCounter<>(
+    return nGramSpec.getValueCalculator().adjust(Counters.newCounter(
       stream().flatMap(doc ->
                          doc.ngrams(nGramSpec.getAnnotationType(), nGramSpec.getMin(), nGramSpec.getMax())
                             .stream()
@@ -586,7 +586,7 @@ public interface Corpus extends Iterable<Document> {
                               )
                             ).collect(Collectors.toList())
       ).countByValue()
-    ));
+                                                                    ));
   }
 
   /**
@@ -606,13 +606,13 @@ public interface Corpus extends Iterable<Document> {
    */
   default Counter<String> terms(@NonNull TermSpec termSpec) {
     return termSpec.getValueCalculator().adjust(
-      new HashMapCounter<>(
+      Counters.newCounter(
         stream().flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
                                    .filter(termSpec.getFilter())
                                    .map(termSpec.getToStringFunction())
                                    .collect(Collectors.toList())
         ).countByValue()
-      )
+                         )
     );
   }
 
@@ -652,7 +652,7 @@ public interface Corpus extends Iterable<Document> {
                                                .getInstance(hString.getLanguage())
                                                .hasStopWord(hString))
                                              .order(2)).filterByValue(v -> v >= minCount);
-    Counter<Tuple> filtered = new HashMapCounter<>();
+    Counter<Tuple> filtered = Counters.newCounter();
     bigrams.items().forEach(bigram -> {
       double score = calculator.calculate(
         ContingencyTable.create2X2(bigrams.get(bigram),

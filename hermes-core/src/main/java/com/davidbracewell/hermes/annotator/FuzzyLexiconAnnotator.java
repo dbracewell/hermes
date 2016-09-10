@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.collection.counter.Counter;
-import com.davidbracewell.collection.counter.HashMapCounter;
+import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconEntry;
@@ -105,7 +105,7 @@ public class FuzzyLexiconAnnotator extends ViterbiAnnotator {
 
   private double distance(List<Annotation> span, String[] candidate) {
     //Make sure the span contains at least all of the words in the candidate
-    Counter<String> cCtr = new HashMapCounter<>(Arrays.asList(candidate));
+    Counter<String> cCtr = Counters.newCounter(Arrays.asList(candidate));
     for (Annotation a : span) {
       if (cCtr.contains(a.toString())) {
         cCtr.decrement(a.toString());

@@ -27,7 +27,7 @@ import com.davidbracewell.apollo.ml.sequence.Labeling;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
 import com.davidbracewell.collection.counter.Counter;
-import com.davidbracewell.collection.counter.HashMapCounter;
+import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.string.TableFormatter;
@@ -46,9 +46,9 @@ import java.util.*;
  */
 public class BIOEvaluation implements Evaluation<Sequence, SequenceLabeler> {
 
-  private final Counter<String> incorrect = new HashMapCounter<>();
-  private final Counter<String> correct = new HashMapCounter<>();
-  private final Counter<String> missed = new HashMapCounter<>();
+  private final Counter<String> incorrect = Counters.newCounter();
+  private final Counter<String> correct = Counters.newCounter();
+  private final Counter<String> missed = Counters.newCounter();
   private final Set<String> tags = new HashSet<>();
   private double totalPhrasesGold = 0;
   private double totalPhrasesFound = 0;

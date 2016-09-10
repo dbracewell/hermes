@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.ml.feature;
 import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.cache.Cached;
-import com.davidbracewell.collection.counter.HashMapCounter;
+import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.stream.StreamingContext;
 
@@ -34,38 +34,38 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class NGramFeature implements Featurizer<HString> {
-  private static final long serialVersionUID = 1L;
-  final Builder spec;
+   private static final long serialVersionUID = 1L;
+   final Builder spec;
 
-  protected NGramFeature(Builder spec) {
-    this.spec = spec;
-  }
+   protected NGramFeature(Builder spec) {
+      this.spec = spec;
+   }
 
-  @Override
-  @Cached(keyMaker = HStringKeyMaker.class)
-  public Set<Feature> apply(HString hString) {
-    return spec.getValueCalculator().apply(
-      new HashMapCounter<>(
-        StreamingContext.local().stream(hString.ngrams(spec.getAnnotationType(), spec.getMin(), spec.getMax()))
-          .filter(spec.getFilter())
-          .map(spec.getToStringFunction())
-          .countByValue()
-      )
-    );
-  }
+   @Override
+   @Cached(keyMaker = HStringKeyMaker.class)
+   public Set<Feature> apply(HString hString) {
+      return spec.getValueCalculator().apply(
+         Counters.newCounter(
+            StreamingContext.local().stream(hString.ngrams(spec.getAnnotationType(), spec.getMin(), spec.getMax()))
+                            .filter(spec.getFilter())
+                            .map(spec.getToStringFunction())
+                            .countByValue()
+                            )
+                                            );
+   }
 
 
-  public static Builder builder() {
-    return new Builder();
-  }
+   public static Builder builder() {
+      return new Builder();
+   }
 
-  public static class Builder extends AbstractNGramFeatureSpec<Builder> {
-    private static final long serialVersionUID = 1L;
+   public static class Builder extends AbstractNGramFeatureSpec<Builder> {
+      private static final long serialVersionUID = 1L;
 
-    public NGramFeature build() {
-      return new NGramFeature(this);
-    }
+      public NGramFeature build() {
+         return new NGramFeature(this);
+      }
 
-  }
+   }
 
 }//END OF NGramFeature

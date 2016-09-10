@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.ml.feature;
 import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.cache.Cached;
-import com.davidbracewell.collection.counter.HashMapCounter;
+import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.StreamingContext;
@@ -61,7 +61,7 @@ public class BagOfAnnotations implements Featurizer<HString> {
         .filter(featureSpec.getFilter())
         .map(featureSpec.getToStringFunction())
     );
-    return featureSpec.getValueCalculator().apply(new HashMapCounter<>(stream.countByValue()));
+    return featureSpec.getValueCalculator().apply(Counters.newCounter(stream.countByValue()));
   }
 
 

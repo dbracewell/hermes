@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.collection.counter.Counter;
-import com.davidbracewell.collection.counter.HashMapCounter;
+import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
@@ -56,7 +56,7 @@ public class SparkSVOExample implements Serializable {
       .repartition(100)
       .annotate(Types.DEPENDENCY);
 
-    Counter<String> svoCounts = new HashMapCounter<>(
+    Counter<String> svoCounts = Counters.newCounter(
       corpus.stream().flatMap(Document::sentences)
         .flatMap(sentence -> {
           List<String> svo = new LinkedList<>();
@@ -75,7 +75,7 @@ public class SparkSVOExample implements Serializable {
           return svo;
         })
         .countByValue()
-    );
+                                                   );
 
     //Calculate term frequencies for the corpus. Note we are saying we want lemmatized versions, but have not
     //run the lemma annotator, instead it will just return the lowercase version of the content.
