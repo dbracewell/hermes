@@ -35,7 +35,6 @@ public class PhraseChunkProcessor extends IOBFieldProcessor {
     super(Types.PHRASE_CHUNK, Types.PART_OF_SPEECH);
   }
 
-
   @Override
   public String getFieldName() {
     return "CHUNK";

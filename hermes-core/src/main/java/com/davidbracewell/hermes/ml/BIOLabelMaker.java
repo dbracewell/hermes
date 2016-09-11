@@ -21,11 +21,11 @@
 
 package com.davidbracewell.hermes.ml;
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.EntityType;
+import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 import java.util.Collections;
@@ -54,14 +54,17 @@ public class BIOLabelMaker implements SerializableFunction<Annotation, String> {
    public String apply(Annotation annotation) {
       Optional<Annotation> target = annotation.get(annotationType).stream().findFirst();
       return target.map(a -> {
-         EntityType type = a.get(Types.ENTITY_TYPE).as(EntityType.class);
-         if (type != null && (validTags.isEmpty() || validTags.contains(type.name()))) {
+         String tag = a.getTag().map(Tag::name).orElse(StringUtils.EMPTY);
+         if (StringUtils.isNotNullOrBlank(tag) && (validTags.isEmpty() || validTags.contains(tag))) {
             if (a.start() == annotation.start()) {
-               return "B-" + type.name();
+               return "B-" + a.getTag().map(Tag::name).orElse(StringUtils.EMPTY);
+            } else {
+               return "I-" + a.getTag().map(Tag::name).orElse(StringUtils.EMPTY);
             }
-            return "I-" + type.name();
+         } else {
+            return "O";
          }
-         return "O";
       }).orElse("O");
    }
+
 }//END OF BIOLabelMaker

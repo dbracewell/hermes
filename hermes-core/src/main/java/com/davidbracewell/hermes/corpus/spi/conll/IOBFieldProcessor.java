@@ -79,8 +79,8 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
                   document.createAnnotation(annotationType,
                                             start,
                                             end,
-                                            map(attributeType, attributeType.getValueType().convert(normalizeTag(tag)))
-                                           );
+                                            map(attributeType,
+                                                attributeType.getValueType().convert(normalizeTag(tag))));
                }
             }
          }

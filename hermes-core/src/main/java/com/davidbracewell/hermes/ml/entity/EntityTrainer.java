@@ -63,7 +63,6 @@ public class EntityTrainer extends BIOTrainer {
    @Override
    public void setup() throws Exception {
       LibraryLoader.INSTANCE.load();
-      this.trainingAnnotation = Types.ENTITY;
    }
 
 //   @Override

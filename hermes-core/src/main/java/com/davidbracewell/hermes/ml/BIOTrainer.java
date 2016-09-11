@@ -79,7 +79,7 @@ public abstract class BIOTrainer extends CommandLineApplication {
    @Option(description = "Type of corpus", defaultValue = "IN_MEMORY")
    protected CorpusType corpusType;
 
-   @Option(name = "annotation", description = "The annotation type in the corpus to train with")
+   @Option(name = "annotation", description = "The annotation type in the corpus to train with", aliases = "a")
    protected AnnotationType trainingAnnotation;
 
    /**
@@ -91,7 +91,7 @@ public abstract class BIOTrainer extends CommandLineApplication {
    public BIOTrainer(String name, AnnotationType annotationType) {
       super(name);
       this.annotationType = annotationType;
-      if( this.trainingAnnotation == null ){
+      if (this.trainingAnnotation == null) {
          this.trainingAnnotation = annotationType;
       }
    }
@@ -143,12 +143,12 @@ public abstract class BIOTrainer extends CommandLineApplication {
     */
    protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
       return Corpus
-            .builder()
-            .corpusType(corpusType)
-            .source(corpus)
-            .format(corpusFormat)
-            .build()
-            .asSequenceDataSet(new BIOLabelMaker(trainingAnnotation, validTags()), featurizer);
+                .builder()
+                .corpusType(corpusType)
+                .source(corpus)
+                .format(corpusFormat)
+                .build()
+                .asSequenceDataSet(new BIOLabelMaker(trainingAnnotation, validTags()), featurizer);
    }
 
    /**
