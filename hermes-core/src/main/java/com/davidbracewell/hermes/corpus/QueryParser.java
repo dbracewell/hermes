@@ -28,7 +28,7 @@ import com.davidbracewell.hermes.HString;
 import com.davidbracewell.parsing.*;
 import com.davidbracewell.parsing.expressions.BinaryOperatorExpression;
 import com.davidbracewell.parsing.expressions.Expression;
-import com.davidbracewell.parsing.expressions.PrefixExpression;
+import com.davidbracewell.parsing.expressions.PrefixOperatorExpression;
 import com.davidbracewell.parsing.expressions.ValueExpression;
 import com.davidbracewell.parsing.handlers.BinaryOperatorHandler;
 import com.davidbracewell.parsing.handlers.GroupHandler;
@@ -165,8 +165,8 @@ public class QueryParser {
    private SerializablePredicate<HString> generate(Expression e) {
       if (e.isInstance(ValueExpression.class)) {
          return s -> s.contains(e.as(ValueExpression.class).value);
-      } else if (e.isInstance(PrefixExpression.class)) {
-         PrefixExpression pe = e.as(PrefixExpression.class);
+      } else if (e.isInstance(PrefixOperatorExpression.class)) {
+         PrefixOperatorExpression pe = e.as(PrefixOperatorExpression.class);
          if (pe.operator.getType().isInstance(Types.NOT)) {
             return negate(generate(pe.right));
          } else if (pe.operator.getType().isInstance(Types.FIELD)) {

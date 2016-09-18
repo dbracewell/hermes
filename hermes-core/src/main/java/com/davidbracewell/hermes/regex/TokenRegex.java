@@ -152,7 +152,7 @@ public final class TokenRegex implements Serializable {
       throw new ParseException("Error in regular expression");
    }
 
-   private static TransitionFunction handlePrefix(PrefixExpression exp) throws ParseException {
+   private static TransitionFunction handlePrefix(PrefixOperatorExpression exp) throws ParseException {
       if (exp.match(RegexTokenTypes.PARENT)) {
          return new TransitionFunction.ParentMatcher(consumerize(exp.right));
       }
@@ -178,8 +178,8 @@ public final class TokenRegex implements Serializable {
       }
 
       //Handle Parent, Annotation, Not
-      if (exp.isInstance(PrefixExpression.class)) {
-         return handlePrefix(exp.as(PrefixExpression.class));
+      if (exp.isInstance(PrefixOperatorExpression.class)) {
+         return handlePrefix(exp.as(PrefixOperatorExpression.class));
       }
 
       if (exp.match(CommonTypes.PIPE)) {

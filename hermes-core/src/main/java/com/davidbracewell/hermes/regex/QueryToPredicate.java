@@ -138,8 +138,8 @@ public final class QueryToPredicate {
    protected static SerializablePredicate<HString> parse(Expression exp) throws ParseException {
       if (exp.isInstance(ValueExpression.class)) {
          return valueExpressionToPredicate(exp);
-      } else if (exp.isInstance(PrefixExpression.class)) {
-         PrefixExpression pe = Cast.as(exp);
+      } else if (exp.isInstance(PrefixOperatorExpression.class)) {
+         PrefixOperatorExpression pe = Cast.as(exp);
          SerializablePredicate<HString> child = parse(pe.right);
 
          if (exp.match(RegexTokenTypes.PARENT)) {
