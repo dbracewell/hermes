@@ -21,8 +21,8 @@
 
 package com.davidbracewell.hermes.regex;
 
+import com.davidbracewell.parsing.ExpressionIterator;
 import com.davidbracewell.parsing.ParseException;
-import com.davidbracewell.parsing.Parser;
 import com.davidbracewell.parsing.ParserToken;
 import com.davidbracewell.parsing.ParserTokenType;
 import com.davidbracewell.parsing.expressions.Expression;
@@ -37,30 +37,29 @@ import java.util.List;
  */
 class SequenceGroupHandler extends PrefixHandler {
 
-  private final ParserTokenType closeGroupType;
+   private final ParserTokenType closeGroupType;
 
-  /**
-   * Default Constructor
-   *
-   * @param closeGroupType The token type that indicates the end of the group
-   */
-  public SequenceGroupHandler(ParserTokenType closeGroupType) {
-    super(100);
-    this.closeGroupType = closeGroupType;
-  }
+   /**
+    * Default Constructor
+    *
+    * @param closeGroupType The token type that indicates the end of the group
+    */
+   public SequenceGroupHandler(ParserTokenType closeGroupType) {
+      this.closeGroupType = closeGroupType;
+   }
 
-  @Override
-  public Expression parse(Parser parser, ParserToken token) throws ParseException {
-    List<Expression> results = new ArrayList<>();
-    while (!parser.tokenStream().nonConsumingMatch(closeGroupType)) {
-      Expression expression = parser.next();
-      if( expression == null ){
-        throw new ParseException("Premature end of expression trying to match closing parenthesis");
+   @Override
+   public Expression parse(ExpressionIterator expressionIterator, ParserToken token) throws ParseException {
+      List<Expression> results = new ArrayList<>();
+      while (!expressionIterator.tokenStream().nonConsumingMatch(closeGroupType)) {
+         Expression expression = expressionIterator.next();
+         if (expression == null) {
+            throw new ParseException("Premature end of expression trying to match closing parenthesis");
+         }
+         results.add(expression);
       }
-      results.add(expression);
-    }
-    parser.tokenStream().consume(closeGroupType);
-    return new MultivalueExpression(results, token.type);
-  }
+      expressionIterator.tokenStream().consume(closeGroupType);
+      return new MultivalueExpression(results, token.type);
+   }
 
 }

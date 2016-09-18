@@ -27,8 +27,7 @@ import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.Learner;
 import com.davidbracewell.apollo.ml.classification.ClassifierEvaluation;
 import com.davidbracewell.apollo.ml.classification.ClassifierLearner;
-import com.davidbracewell.apollo.ml.classification.NaiveBayes;
-import com.davidbracewell.apollo.ml.classification.NaiveBayesLearner;
+import com.davidbracewell.apollo.ml.classification.LibLinearLearner;
 import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
@@ -181,19 +180,19 @@ public class MLExample {
       //Simple binary featurizer that converts tokens to lower case and removes stop words
       Featurizer<HString> featurizer = Featurizer.chain(
          BagOfAnnotations.builder()
-                         .valueCalculator(ValueCalculator.Binary)
+                         .valueCalculator(ValueCalculator.Frequency)
                          .lowerCase()
                          .ignoreStopWords()
                          .build()
                                                        );
 
       //Build an in-memory dataset from a corpus constructed using the raw labels and documents in the String[][] above
-      Dataset<Instance> dataset = Corpus.of(StreamingContext.local().stream(training)
-                                                            .map(example ->
-                                                                    Document.create(example[1],
-                                                                                    Language.ENGLISH,
-                                                                                    map(label, example[0])
-                                                                                   )
+      Dataset<Instance> dataset = Corpus.of(StreamingContext.local()
+                                                            .stream(training)
+                                                            .map(example -> Document.create(example[1],
+                                                                                            Language.ENGLISH,
+                                                                                            map(label, example[0])
+                                                                                           )
                                                                 )
                                            )
                                         .annotate(Types.TOKEN)
@@ -202,8 +201,7 @@ public class MLExample {
 
       //Setup a supplier for a classification learner to use in cross validation
       Supplier<ClassifierLearner> supplier = Learner.classification()
-                                                    .learnerClass(NaiveBayesLearner.class)
-                                                    .parameter("modelType", NaiveBayes.ModelType.Bernoulli)
+                                                    .learnerClass(LibLinearLearner.class)
                                                     .supplier();
 
       //Perform 10-fold cross-validation and output the results to System.out

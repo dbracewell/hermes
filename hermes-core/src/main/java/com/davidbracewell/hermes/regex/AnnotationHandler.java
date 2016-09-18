@@ -23,8 +23,8 @@ package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.parsing.CommonTypes;
+import com.davidbracewell.parsing.ExpressionIterator;
 import com.davidbracewell.parsing.ParseException;
-import com.davidbracewell.parsing.Parser;
 import com.davidbracewell.parsing.ParserToken;
 import com.davidbracewell.parsing.expressions.Expression;
 import com.davidbracewell.parsing.expressions.ValueExpression;
@@ -39,30 +39,21 @@ import java.util.List;
  */
 class AnnotationHandler extends PrefixHandler {
 
-  /**
-   * Default constructor
-   *
-   * @param precedence The precedence of the handler
-   */
-  public AnnotationHandler(int precedence) {
-    super(precedence);
-  }
-
-  @Override
-  public Expression parse(Parser parser, ParserToken token) throws ParseException {
-    List<Expression> results = new ArrayList<>();
-    while (!parser.tokenStream().nonConsumingMatch(CommonTypes.CLOSEBRACE)) {
-      Expression next = parser.next();
-      if (next == null) {
-        throw new ParseException("Premature end of expression: " + token.getText());
+   @Override
+   public Expression parse(ExpressionIterator expressionIterator, ParserToken token) throws ParseException {
+      List<Expression> results = new ArrayList<>();
+      while (!expressionIterator.tokenStream().nonConsumingMatch(CommonTypes.CLOSEBRACE)) {
+         Expression next = expressionIterator.next();
+         if (next == null) {
+            throw new ParseException("Premature end of expression: " + token.getText());
+         }
+         results.add(next);
       }
-      results.add(next);
-    }
-    if (results.size() == 0) {
-      results.add(new ValueExpression("~", RegexTokenTypes.ANY));
-    }
-    parser.tokenStream().consume(CommonTypes.CLOSEBRACE);
-    AnnotationType type = AnnotationType.create(StringUtils.unescape(token.getText().substring(1), '\\'));
-    return new AnnotationExpression(results, token.type, type);
-  }
+      if (results.size() == 0) {
+         results.add(new ValueExpression("~", RegexTokenTypes.ANY));
+      }
+      expressionIterator.tokenStream().consume(CommonTypes.CLOSEBRACE);
+      AnnotationType type = AnnotationType.create(StringUtils.unescape(token.getText().substring(1), '\\'));
+      return new AnnotationExpression(results, token.type, type);
+   }
 }

@@ -23,8 +23,8 @@ package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.hermes.RelationType;
 import com.davidbracewell.parsing.CommonTypes;
+import com.davidbracewell.parsing.ExpressionIterator;
 import com.davidbracewell.parsing.ParseException;
-import com.davidbracewell.parsing.Parser;
 import com.davidbracewell.parsing.ParserToken;
 import com.davidbracewell.parsing.expressions.Expression;
 import com.davidbracewell.parsing.handlers.PrefixHandler;
@@ -38,22 +38,14 @@ import java.util.List;
  */
 class RelationGroupHandler extends PrefixHandler {
 
-  /**
-   * Default constructor
-   *
-   * @param precedence The precedence of the handler
-   */
-  public RelationGroupHandler(int precedence) {
-    super(precedence);
-  }
 
-  @Override
-  public Expression parse(Parser parser, ParserToken token) throws ParseException {
-    Expression exp = parser.next();
-    parser.tokenStream().consume(CommonTypes.CLOSEBRACE);
-    List<String> parts = StringUtils.split(token.getText().substring(2), ':');
-    RelationType relation = RelationType.create(StringUtils.unescape(parts.get(0), '\\'));
-    String value = parts.size() > 1 ? StringUtils.unescape(parts.get(1), '\\') : null;
-    return new RelationGroupExpression(Collections.singletonList(exp), token.type, relation, value);
-  }
+   @Override
+   public Expression parse(ExpressionIterator expressionIterator, ParserToken token) throws ParseException {
+      Expression exp = expressionIterator.next();
+      expressionIterator.tokenStream().consume(CommonTypes.CLOSEBRACE);
+      List<String> parts = StringUtils.split(token.getText().substring(2), ':');
+      RelationType relation = RelationType.create(StringUtils.unescape(parts.get(0), '\\'));
+      String value = parts.size() > 1 ? StringUtils.unescape(parts.get(1), '\\') : null;
+      return new RelationGroupExpression(Collections.singletonList(exp), token.type, relation, value);
+   }
 }

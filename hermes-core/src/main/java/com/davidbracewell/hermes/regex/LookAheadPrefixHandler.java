@@ -22,8 +22,8 @@
 package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.parsing.CommonTypes;
+import com.davidbracewell.parsing.ExpressionIterator;
 import com.davidbracewell.parsing.ParseException;
-import com.davidbracewell.parsing.Parser;
 import com.davidbracewell.parsing.ParserToken;
 import com.davidbracewell.parsing.expressions.BinaryOperatorExpression;
 import com.davidbracewell.parsing.expressions.Expression;
@@ -38,24 +38,17 @@ import java.util.List;
  * @author David B. Bracewell
  */
 public class LookAheadPrefixHandler extends PrefixHandler {
-  /**
-   * Default constructor
-   *
-   * @param precedence The precedence of the handler
-   */
-  public LookAheadPrefixHandler(int precedence) {
-    super(precedence);
-  }
 
-  @Override
-  public Expression parse(Parser parser, ParserToken token) throws ParseException {
-    List<Expression> results = new ArrayList<>();
-    while (!parser.tokenStream().nonConsumingMatch(CommonTypes.CLOSEPARENS)) {
-      results.add(parser.next());
-    }
-    parser.tokenStream().consume(CommonTypes.CLOSEPARENS);
-    return new BinaryOperatorExpression(new ValueExpression("~", RegexTokenTypes.ANY), token, new MultivalueExpression(results, CommonTypes.OPENPARENS));
-  }
+   @Override
+   public Expression parse(ExpressionIterator expressionIterator, ParserToken token) throws ParseException {
+      List<Expression> results = new ArrayList<>();
+      while (!expressionIterator.tokenStream().nonConsumingMatch(CommonTypes.CLOSEPARENS)) {
+         results.add(expressionIterator.next());
+      }
+      expressionIterator.tokenStream().consume(CommonTypes.CLOSEPARENS);
+      return new BinaryOperatorExpression(new ValueExpression("~", RegexTokenTypes.ANY), token,
+                                          new MultivalueExpression(results, CommonTypes.OPENPARENS));
+   }
 
 
 }//END OF LookAheadHandler
