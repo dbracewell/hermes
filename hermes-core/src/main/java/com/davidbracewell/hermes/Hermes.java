@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.config.Configurator;
 import com.davidbracewell.string.StringUtils;
 
 import java.util.Locale;

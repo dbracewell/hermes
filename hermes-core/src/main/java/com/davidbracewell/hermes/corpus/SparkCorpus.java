@@ -15,6 +15,7 @@ import com.davidbracewell.stream.SparkStreamingContext;
 import com.davidbracewell.stream.StreamingContext;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
 
 import java.io.IOException;
@@ -38,38 +39,34 @@ public class SparkCorpus implements Corpus, Serializable {
     */
    @SuppressWarnings("unchecked")
    public SparkCorpus(@NonNull String corpusLocation, @NonNull CorpusFormat corpusFormat, @NonNull DocumentFactory documentFactory) {
+
       if (corpusFormat.isOnePerLine() && corpusFormat.extension().toUpperCase().startsWith("JSON")) {
-         this.stream = new SparkDocumentStream(
-               StreamingContext.distributed().textFile(corpusLocation)
-         );
+         this.stream = new SparkDocumentStream(StreamingContext.distributed().textFile(corpusLocation));
       } else if (corpusFormat.isOnePerLine()) {
          Broadcast<Config> configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
          this.stream = new SparkDocumentStream(StreamingContext.distributed().textFile(corpusLocation).flatMap(
-               line -> {
-                  Hermes.initializeWorker(configBroadcast.getValue());
-                  return corpusFormat.create(Resources.fromString(line), documentFactory)
-                                     .stream()
-                                     .map(Document::toJson)
-                                     .collect();
-               }
-                                                                                                              ));
+            line -> {
+               Hermes.initializeWorker(configBroadcast.getValue());
+               return corpusFormat.create(Resources.fromString(line), documentFactory)
+                                  .stream()
+                                  .map(Document::toJson)
+                                  .javaStream();
+
+            })
+         );
       } else {
          Broadcast<Config> configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
-         this.stream = new SparkDocumentStream(
-               new SparkStream<>(
-                     SparkStreamingContext.INSTANCE.sparkContext()
-                                                   .wholeTextFiles(corpusLocation)
-                                                   .values()
-                                                   .flatMap(str -> {
-                                                      Hermes.initializeWorker(configBroadcast.getValue());
-                                                      return corpusFormat.create(Resources.fromString(str),
-                                                                                 documentFactory)
-                                                                         .stream()
-                                                                         .map(Document::toJson)
-                                                                         .collect().iterator();
-                                                   })
-               )
-         );
+         JavaRDD<String> rdd = StreamingContext.distributed().sparkContext()
+                                               .wholeTextFiles(corpusLocation)
+                                               .values()
+                                               .flatMap(str -> {
+                                                  Hermes.initializeWorker(configBroadcast.getValue());
+                                                  return corpusFormat.create(Resources.fromString(str), documentFactory)
+                                                                     .stream()
+                                                                     .map(Document::toJson)
+                                                                     .iterator();
+                                               });
+         this.stream = new SparkDocumentStream(new SparkStream<>(rdd));
       }
    }
 
@@ -96,7 +93,7 @@ public class SparkCorpus implements Corpus, Serializable {
     */
    public SparkCorpus(@NonNull Collection<Document> documents) {
       this.stream = new SparkDocumentStream(StreamingContext.distributed().stream(
-            documents.stream().map(Document::toJson)
+         documents.stream().map(Document::toJson)
                                                                                  ));
    }
 
@@ -164,11 +161,6 @@ public class SparkCorpus implements Corpus, Serializable {
       return this;
    }
 
-   @Override
-   public Corpus updateConfig() {
-      stream.updateConfig();
-      return this;
-   }
 
    @Override
    public boolean isDistributed() {
