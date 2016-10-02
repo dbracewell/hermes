@@ -51,13 +51,13 @@ public class EntityTrainer extends BIOTrainer {
    @SuppressWarnings("unchecked")
    protected SequenceFeaturizer<Annotation> getFeaturizer() {
       return SequenceFeaturizer.chain(
-            new EntityFeaturizer(),
-            new AffixFeaturizer(3,3).asSequenceFeaturizer(),
-            new WindowedSequenceFeaturizer<>(2, 2, WordFeaturizer.INSTANCE),
-            new WindowedSequenceFeaturizer<>(2, 2, WordClassFeaturizer.INSTANCE),
-            new WindowedSequenceFeaturizer<>(2, 2, WordAndClassFeaturizer.INSTANCE),
-            new NGramSequenceFeaturizer<>(2, 2, WordFeaturizer.INSTANCE),
-            new NGramSequenceFeaturizer<>(2, 2, WordClassFeaturizer.INSTANCE));
+         new EntityFeaturizer(),
+         new AffixFeaturizer(3, 3).asSequenceFeaturizer(),
+         new WindowedSequenceFeaturizer<>(2, 2, WordFeaturizer.INSTANCE),
+         new WindowedSequenceFeaturizer<>(2, 2, WordClassFeaturizer.INSTANCE),
+         new WindowedSequenceFeaturizer<>(2, 2, WordAndClassFeaturizer.INSTANCE),
+         new NGramSequenceFeaturizer<>(2, 2, WordFeaturizer.INSTANCE),
+         new NGramSequenceFeaturizer<>(2, 2, WordClassFeaturizer.INSTANCE));
    }
 
    @Override
@@ -72,10 +72,7 @@ public class EntityTrainer extends BIOTrainer {
 
    @Override
    protected SequenceLabelerLearner getLearner() {
-      SequenceLabelerLearner learner =
-//            new MEMMLearner();
-//            new StructuredPerceptronLearner();
-            new CRFTrainer();
+      SequenceLabelerLearner learner = new CRFTrainer();
       learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
       learner.setValidator(new BIOValidator());
       learner.setParameter("maxIterations", 100);
