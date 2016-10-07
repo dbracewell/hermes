@@ -30,44 +30,10 @@ import static com.davidbracewell.collection.Sets.set;
 
 /**
  * The interface String analyzer.
+ *
  * @author David B. Bracewell
  */
 public interface StringAnalyzer {
-
-   static Set<String> wordClasses(String string) {
-      if (StringUtils.isNullOrBlank(string)) {
-         return Collections.emptySet();
-      }
-      Set<String> classes = set(
-            "AllCaps",
-            "InitialCap",
-            "AllLower"
-                               );
-
-      Character last = null;
-      for (char c : string.toCharArray()) {
-
-         if (Character.isLowerCase(c)) {
-
-            classes.remove("AllCaps");
-            if (last == null) {
-               classes.remove("InitialCap");
-            }
-
-
-         } else if (Character.isUpperCase(c)) {
-            classes.remove("AllLower");
-
-         }
-
-
-         last = c;
-      }
-
-
-      return classes;
-   }
-
 
    /**
     * Shape string.
@@ -85,21 +51,29 @@ public interface StringAnalyzer {
          char c = strForm.charAt(ci);
          if (Character.isUpperCase(c)) {
             builder.append("U");
-         } else if (Character.isLowerCase(c)) {
+         }
+         else if (Character.isLowerCase(c)) {
             builder.append("L");
-         } else if (Character.isDigit(c)) {
+         }
+         else if (Character.isDigit(c)) {
             builder.append("D");
-         } else if (c == '.' || c == ',') {
+         }
+         else if (c == '.' || c == ',') {
             builder.append(".");
-         } else if (c == ';' || c == ':' || c == '?' || c == '!') {
+         }
+         else if (c == ';' || c == ':' || c == '?' || c == '!') {
             builder.append(";");
-         } else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '|' || c == '_') {
+         }
+         else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '|' || c == '_') {
             builder.append("-");
-         } else if (c == '(' || c == '{' || c == '[' || c == '<') {
+         }
+         else if (c == '(' || c == '{' || c == '[' || c == '<') {
             builder.append("(");
-         } else if (c == ')' || c == '}' || c == ']' || c == '>') {
+         }
+         else if (c == ')' || c == '}' || c == ']' || c == '>') {
             builder.append(")");
-         } else {
+         }
+         else {
             builder.append(c);
          }
       }
@@ -117,6 +91,41 @@ public interface StringAnalyzer {
          return StringUtils.EMPTY;
       }
       return shape(string.toString());
+   }
+
+   static Set<String> wordClasses(String string) {
+      if (StringUtils.isNullOrBlank(string)) {
+         return Collections.emptySet();
+      }
+      Set<String> classes = set(
+         "AllCaps",
+         "InitialCap",
+         "AllLower"
+      );
+
+      Character last = null;
+      for (char c : string.toCharArray()) {
+
+         if (Character.isLowerCase(c)) {
+
+            classes.remove("AllCaps");
+            if (last == null) {
+               classes.remove("InitialCap");
+            }
+
+
+         }
+         else if (Character.isUpperCase(c)) {
+            classes.remove("AllLower");
+
+         }
+
+
+         last = c;
+      }
+
+
+      return classes;
    }
 
 }//END OF StringAnalyzer
