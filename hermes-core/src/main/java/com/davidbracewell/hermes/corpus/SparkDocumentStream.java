@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.*;
 import com.davidbracewell.hermes.AnnotatableType;
@@ -32,6 +33,7 @@ import com.davidbracewell.stream.*;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import lombok.NonNull;
+import org.apache.spark.broadcast.Broadcast;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -48,6 +50,7 @@ import java.util.stream.Stream;
 class SparkDocumentStream implements MStream<Document>, Serializable {
    private static final long serialVersionUID = 1L;
    private volatile MStream<String> source;
+   private volatile Broadcast<Config> configBroadcast;
 
    /**
     * Instantiates a new Spark document stream.
@@ -92,7 +95,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    public SparkDocumentStream annotate(@NonNull AnnotatableType... types) {
       return new SparkDocumentStream(source.map(json -> {
          Hermes.initializeWorker(
-            SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+            configBroadcast.value());
          Document document = Document.fromJson(json);
          Pipeline.process(document, types);
          return document.toJson();
@@ -112,7 +115,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public MStream<Document> filter(@NonNull SerializablePredicate<? super Document> predicate) {
       return of(source.filter(json -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          return predicate.test(Document.fromJson(json));
       }));
    }
@@ -120,7 +123,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public <R> MStream<R> map(@NonNull SerializableFunction<? super Document, ? extends R> function) {
       return source.map(json -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          return function.apply(Document.fromJson(json));
       });
    }
@@ -128,7 +131,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public <R> MStream<R> flatMap(@NonNull SerializableFunction<? super Document, Stream<? extends R>> mapper) {
       return source.flatMap(json -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          return mapper.apply(Document.fromJson(json));
       });
    }
@@ -136,7 +139,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public <R, U> MPairStream<R, U> flatMapToPair(@NonNull SerializableFunction<? super Document, Stream<? extends Map.Entry<? extends R, ? extends U>>> function) {
       return source.flatMapToPair(json -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          return function.apply(Document.fromJson(json));
       });
    }
@@ -144,7 +147,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public <R, U> MPairStream<R, U> mapToPair(@NonNull SerializableFunction<? super Document, ? extends Map.Entry<? extends R, ? extends U>> function) {
       return source.mapToPair(json -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          return function.apply(Document.fromJson(json));
       });
    }
@@ -152,7 +155,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public <U> MPairStream<U, Iterable<Document>> groupBy(@NonNull SerializableFunction<? super Document, ? extends U> function) {
       return source.map(json -> Document.fromJson(json)).groupBy(document -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          return function.apply(document);
       });
    }
@@ -180,7 +183,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public void forEach(SerializableConsumer<? super Document> consumer) {
       source.forEach(json -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          consumer.accept(Document.fromJson(json));
       });
    }
@@ -188,7 +191,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public void forEachLocal(SerializableConsumer<? super Document> consumer) {
       source.forEachLocal(json -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          consumer.accept(Document.fromJson(json));
       });
    }
@@ -256,7 +259,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public <R extends Comparable<R>> MStream<Document> sorted(boolean ascending, @NonNull SerializableFunction<? super Document, ? extends R> keyFunction) {
       return of(source.sorted(ascending, k -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          return keyFunction.apply(Document.fromJson(k));
       }));
    }
@@ -284,7 +287,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public MDoubleStream mapToDouble(@NonNull SerializableToDoubleFunction<? super Document> function) {
       return source.mapToDouble(json -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          return function.applyAsDouble(Document.fromJson(json));
       });
    }
@@ -325,7 +328,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public MStream<Iterable<Document>> split(int n) {
       return source.split(n).map(jsonIterable -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          return Iterables.transform(jsonIterable, Document::fromJson);
       });
    }
@@ -333,8 +336,16 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    @Override
    public MStream<Iterable<Document>> partition(long partitionSize) {
       return source.partition(partitionSize).map(jsonIterable -> {
-         Hermes.initializeWorker(SparkStreamingContext.INSTANCE.getConfigBroadcast().value());
+         Hermes.initializeWorker(configBroadcast.value());
          return Iterables.transform(jsonIterable, Document::fromJson);
       });
    }
+
+
+   @Override
+   public void updateConfig() {
+      SparkStreamingContext.INSTANCE.updateConfig();
+      this.configBroadcast = SparkStreamingContext.INSTANCE.getConfigBroadcast();
+   }
+
 }//END OF SparkDocumentStream
