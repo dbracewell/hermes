@@ -21,8 +21,8 @@
 
 package com.davidbracewell.hermes.corpus;
 
-import com.davidbracewell.apollo.ContingencyTable;
-import com.davidbracewell.apollo.ContingencyTableCalculator;
+import com.davidbracewell.apollo.affinity.ContingencyTable;
+import com.davidbracewell.apollo.affinity.ContingencyTableCalculator;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.LabeledDatum;
