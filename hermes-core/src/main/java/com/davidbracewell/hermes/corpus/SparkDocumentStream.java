@@ -49,7 +49,7 @@ import java.util.stream.Stream;
  */
 class SparkDocumentStream implements MStream<Document>, Serializable {
    private static final long serialVersionUID = 1L;
-   private volatile MStream<String> source;
+   private volatile SparkStream<String> source;
    private volatile Broadcast<Config> configBroadcast;
 
    /**
@@ -59,6 +59,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
     */
    public SparkDocumentStream(@NonNull MStream<String> source) {
       this.source = new SparkStream<>(source);
+      this.configBroadcast = SparkStreamingContext.INSTANCE.getConfigBroadcast();
    }
 
 
@@ -94,8 +95,7 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
     */
    public SparkDocumentStream annotate(@NonNull AnnotatableType... types) {
       return new SparkDocumentStream(source.map(json -> {
-         Hermes.initializeWorker(
-            configBroadcast.value());
+         Hermes.initializeWorker(configBroadcast.value());
          Document document = Document.fromJson(json);
          Pipeline.process(document, types);
          return document.toJson();

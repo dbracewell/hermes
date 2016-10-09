@@ -176,22 +176,21 @@ public interface Corpus extends Iterable<Document> {
     * @return the dataset
     */
    default Dataset<Sequence> asEmbeddingDataset(AnnotationType type1, AnnotationType... types) {
-      return Dataset.embedding(
-         getDataSetType(),
-         stream().flatMap(document -> {
-            List<List<String>> sentences = new ArrayList<>();
-            document.sentences()
-                    .forEach(sentence ->
-                                sentences.add(
-                                   sentence.interleaved(type1, types)
-                                           .stream()
-                                           .filter(StopWords.isNotStopWord())
-                                           .map(HString::getLemma)
-                                           .collect(Collectors.toList()))
-                            );
-            return sentences.stream();
-         }),
-         Collection::stream);
+      return Dataset.embedding(getDataSetType(),
+                               stream().flatMap(document -> {
+                                  List<List<String>> sentences = new ArrayList<>();
+                                  document.sentences()
+                                          .forEach(sentence ->
+                                                      sentences.add(
+                                                         sentence.interleaved(type1, types)
+                                                                 .stream()
+                                                                 .filter(StopWords.isNotStopWord())
+                                                                 .map(HString::getLemma)
+                                                                 .collect(Collectors.toList()))
+                                                  );
+                                  return sentences.stream();
+                               }),
+                               Collection::stream);
    }
 
 

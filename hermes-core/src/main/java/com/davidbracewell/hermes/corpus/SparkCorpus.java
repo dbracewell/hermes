@@ -39,20 +39,15 @@ public class SparkCorpus implements Corpus, Serializable {
     */
    @SuppressWarnings("unchecked")
    public SparkCorpus(@NonNull String corpusLocation, @NonNull CorpusFormat corpusFormat, @NonNull DocumentFactory documentFactory) {
-
       if (corpusFormat.isOnePerLine() && corpusFormat.extension().toUpperCase().startsWith("JSON")) {
          this.stream = new SparkDocumentStream(StreamingContext.distributed().textFile(corpusLocation));
       } else if (corpusFormat.isOnePerLine()) {
-         Broadcast<Config> configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
          this.stream = new SparkDocumentStream(StreamingContext.distributed().textFile(corpusLocation).flatMap(
-            line -> {
-               Hermes.initializeWorker(configBroadcast.getValue());
-               return corpusFormat.create(Resources.fromString(line), documentFactory)
-                                  .stream()
-                                  .map(Document::toJson)
-                                  .javaStream();
-
-            })
+            line -> corpusFormat.create(Resources.fromString(line), documentFactory)
+                                .stream()
+                                .map(Document::toJson)
+                                .javaStream()
+                                                                                                              )
          );
       } else {
          Broadcast<Config> configBroadcast = SparkStreamingContext.INSTANCE.broadcast(Config.getInstance());
@@ -178,3 +173,4 @@ public class SparkCorpus implements Corpus, Serializable {
    }
 
 }//END OF SparkCorpus
+

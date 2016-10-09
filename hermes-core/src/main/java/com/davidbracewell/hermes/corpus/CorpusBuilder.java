@@ -153,7 +153,7 @@ public class CorpusBuilder {
       if (isDistributed) {
          Corpus corpus = null;
          if (resource != null) {
-            corpus = new SparkCorpus(resource.descriptor(), corpusFormat, documentFactory);
+            corpus = new SparkCorpus(resource.path(), corpusFormat, documentFactory);
             if (partitions > 0) {
                Cast.<SparkCorpus>as(corpus).repartition(partitions);
             }
