@@ -66,6 +66,11 @@ public class SparkCorpus implements Corpus, Serializable {
    }
 
    @Override
+   public void close() throws Exception {
+      stream.close();
+   }
+
+   @Override
    public CorpusType getCorpusType() {
       return CorpusType.DISTRIBUTED;
    }

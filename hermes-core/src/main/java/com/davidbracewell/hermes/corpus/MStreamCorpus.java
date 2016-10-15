@@ -48,6 +48,11 @@ public class MStreamCorpus implements Corpus, Serializable {
   }
 
   @Override
+  public void close() throws Exception {
+    stream.close();
+  }
+
+  @Override
   public MStream<Document> stream() {
     return stream;
   }

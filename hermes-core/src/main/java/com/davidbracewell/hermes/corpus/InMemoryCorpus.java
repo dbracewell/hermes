@@ -58,6 +58,11 @@ public class InMemoryCorpus implements Corpus, Serializable {
    }
 
    @Override
+   public void close() throws Exception {
+      documents.clear();
+   }
+
+   @Override
    public CorpusType getCorpusType() {
       return CorpusType.IN_MEMORY;
    }

@@ -52,6 +52,11 @@ class UnionCorpus implements Corpus, Serializable {
    }
 
    @Override
+   public void close() throws Exception {
+
+   }
+
+   @Override
    public DocumentFactory getDocumentFactory() {
       return c1.getDocumentFactory();
    }

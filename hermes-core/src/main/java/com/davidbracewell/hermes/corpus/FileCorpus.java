@@ -70,6 +70,11 @@ public class FileCorpus implements Corpus, Serializable {
    }
 
    @Override
+   public void close() throws Exception {
+
+   }
+
+   @Override
    public CorpusType getCorpusType() {
       return CorpusType.OFF_HEAP;
    }
@@ -101,6 +106,8 @@ public class FileCorpus implements Corpus, Serializable {
                      writer.flush();
                   }
                }
+            } catch (Exception e) {
+               throw new IOException(e);
             }
          }
          return Corpus.builder().format(format).source(resource).build();

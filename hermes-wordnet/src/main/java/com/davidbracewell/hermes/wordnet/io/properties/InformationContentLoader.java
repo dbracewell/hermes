@@ -37,8 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 
-import java.io.IOException;
-
 /**
  * @author David B. Bracewell
  */
@@ -70,7 +68,7 @@ public class InformationContentLoader extends WordNetPropertyLoader {
           }
         }
       });
-    } catch (IOException ioe) {
+    } catch (Exception ioe) {
       throw Throwables.propagate(ioe);
     }
     for (String key : ic.items()) {

@@ -71,7 +71,7 @@ import static com.davidbracewell.tuple.Tuples.$;
  *
  * @author David B. Bracewell
  */
-public interface Corpus extends Iterable<Document> {
+public interface Corpus extends Iterable<Document>, AutoCloseable {
 
 
    /**
