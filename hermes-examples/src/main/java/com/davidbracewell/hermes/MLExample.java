@@ -32,6 +32,7 @@ import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotations;
+import com.davidbracewell.hermes.ml.feature.NGramFeature;
 import com.davidbracewell.hermes.ml.feature.ValueCalculator;
 import com.davidbracewell.stream.StreamingContext;
 
@@ -178,17 +179,18 @@ public class MLExample {
       AttributeType label = Types.attribute("LABEL");
 
       //Simple binary featurizer that converts tokens to lower case and removes stop words
-      Featurizer<HString> featurizer = Featurizer.chain(
-         BagOfAnnotations.builder()
-                         .valueCalculator(ValueCalculator.Frequency)
-                         .lowerCase()
-                         .ignoreStopWords()
-                         .build()
+      Featurizer<HString> featurizer = Featurizer.chain(BagOfAnnotations.builder()
+                                                                        .valueCalculator(ValueCalculator.Binary)
+                                                                        .lowerCase()
+                                                                        .build(),
+                                                        NGramFeature.builder()
+                                                                    .valueCalculator(ValueCalculator.Binary)
+                                                                    .lowerCase()
+                                                                    .build()
                                                        );
 
       //Build an in-memory dataset from a corpus constructed using the raw labels and documents in the String[][] above
-      Dataset<Instance> dataset = Corpus.of(StreamingContext.local()
-                                                            .stream(training)
+      Dataset<Instance> dataset = Corpus.of(StreamingContext.local().stream(training)
                                                             .map(example -> Document.create(example[1],
                                                                                             Language.ENGLISH,
                                                                                             map(label, example[0])
@@ -205,9 +207,9 @@ public class MLExample {
                                                     .supplier();
 
       //Perform 10-fold cross-validation and output the results to System.out
-      new ClassifierEvaluation()
-         .crossValidation(dataset, supplier, 10)
-         .output(System.out, true);
+      //Don't expect great results with this size data and feature set
+      ClassifierEvaluation.crossValidation(dataset, supplier, 10)
+                          .output(System.out, true);
 
    }
 
