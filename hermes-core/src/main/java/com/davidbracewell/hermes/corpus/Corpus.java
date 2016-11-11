@@ -261,7 +261,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     * @return the dataset
     */
    default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer) {
-      return Dataset.classification().type(getDataSetType()).source(stream().map(featurizer::extract)).build();
+      return Dataset.classification().type(getDataSetType()).source(stream().map(featurizer::extractInstance)).build();
    }
 
    /**
@@ -332,7 +332,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     * @return the dataset
     */
    default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer) {
-      return Dataset.regression().type(getDataSetType()).source(stream().map(featurizer::extract)).build();
+      return Dataset.regression().type(getDataSetType()).source(stream().map(featurizer::extractInstance)).build();
    }
 
    /**
@@ -346,7 +346,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
       return Dataset
                 .classification()
                 .type(getDataSetType())
-                .source(asLabeledStream(labelAttributeType).map(featurizer::extractLabeled))
+                .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
                 .build();
    }
 
@@ -361,7 +361,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
       return Dataset
                 .regression()
                 .type(getDataSetType())
-                .source(asLabeledStream(labelAttributeType).map(featurizer::extractLabeled))
+                .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
                 .build();
    }
 
@@ -376,7 +376,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
       return Dataset
                 .classification()
                 .type(getDataSetType())
-                .source(asLabeledStream(labelFunction).map(featurizer::extractLabeled))
+                .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
                 .build();
    }
 
@@ -391,7 +391,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
       return Dataset
                 .regression()
                 .type(getDataSetType())
-                .source(asLabeledStream(labelFunction).map(featurizer::extractLabeled))
+                .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
                 .build();
    }
 
