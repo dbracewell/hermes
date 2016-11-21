@@ -85,7 +85,7 @@ public class POSTrainer extends CommandLineApplication {
                                 return featurizer.extractSequence(input.iterator());
                              })
                              .filter(Objects::nonNull)
-                           ).build();
+                           );
    }
 
    private SequenceLabelerLearner getLearner() {

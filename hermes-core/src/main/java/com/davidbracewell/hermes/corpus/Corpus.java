@@ -261,7 +261,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     * @return the dataset
     */
    default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer) {
-      return Dataset.classification().type(getDataSetType()).source(stream().map(featurizer::extractInstance)).build();
+      return Dataset.classification().type(getDataSetType()).source(stream().map(featurizer::extractInstance));
    }
 
    /**
@@ -275,7 +275,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .sequence()
                 .type(DatasetType.InMemory)
                 .source(asSequenceStream().map(seq -> featurizer.extractSequence(seq.iterator())))
-                .build();
+                ;
    }
 
    /**
@@ -290,7 +290,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .sequence()
                 .type(getDataSetType())
                 .source(asSequenceStream(sequenceType).map(seq -> featurizer.extractSequence(seq.iterator())))
-                .build();
+                ;
    }
 
    /**
@@ -305,7 +305,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .sequence()
                 .type(getDataSetType())
                 .source(asSequenceStream(labelFunction).map(seq -> featurizer.extractSequence(seq.iterator())))
-                .build();
+                ;
    }
 
    /**
@@ -322,7 +322,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .type(getDataSetType())
                 .source(
                    asSequenceStream(sequenceType, labelFunction).map(seq -> featurizer.extractSequence(seq.iterator())))
-                .build();
+                ;
    }
 
    /**
@@ -332,7 +332,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     * @return the dataset
     */
    default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer) {
-      return Dataset.regression().type(getDataSetType()).source(stream().map(featurizer::extractInstance)).build();
+      return Dataset.regression().type(getDataSetType()).source(stream().map(featurizer::extractInstance));
    }
 
    /**
@@ -347,7 +347,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .classification()
                 .type(getDataSetType())
                 .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
-                .build();
+                ;
    }
 
    /**
@@ -362,7 +362,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .regression()
                 .type(getDataSetType())
                 .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
-                .build();
+                ;
    }
 
    /**
@@ -377,7 +377,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .classification()
                 .type(getDataSetType())
                 .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
-                .build();
+                ;
    }
 
    /**
@@ -392,7 +392,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .regression()
                 .type(getDataSetType())
                 .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
-                .build();
+                ;
    }
 
 
