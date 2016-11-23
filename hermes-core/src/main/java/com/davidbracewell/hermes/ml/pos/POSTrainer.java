@@ -62,6 +62,11 @@ public class POSTrainer extends CommandLineApplication {
       }
    }
 
+   @Override
+   public void setup() throws Exception {
+      LibraryLoader.INSTANCE.load();
+   }
+
    protected Dataset<Sequence> loadDataset() throws Exception {
       return Dataset.sequence()
                     .type(DatasetType.InMemory)

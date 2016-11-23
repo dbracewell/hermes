@@ -1,7 +1,7 @@
 package com.davidbracewell.hermes.ml.pos;
 
 import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.sequence.ContextualIterator;
+import com.davidbracewell.apollo.ml.sequence.Context;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.cache.Cached;
@@ -42,7 +42,7 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
 
    @Override
    @Cached
-   public Set<Feature> apply(ContextualIterator<Annotation> iterator) {
+   public Set<Feature> apply(Context<Annotation> iterator) {
       String word = iterator.getCurrent().toString();
       Set<Feature> features = new HashSet<>();
 

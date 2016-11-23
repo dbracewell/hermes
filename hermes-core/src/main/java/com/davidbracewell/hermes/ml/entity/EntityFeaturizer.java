@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.ml.entity;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.sequence.ContextualIterator;
+import com.davidbracewell.apollo.ml.sequence.Context;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.hermes.Annotation;
 
@@ -42,7 +42,7 @@ public class EntityFeaturizer implements SequenceFeaturizer<Annotation> {
    }
 
    @Override
-   public Set<Feature> apply(ContextualIterator<Annotation> itr) {
+   public Set<Feature> apply(Context<Annotation> itr) {
       Set<Feature> features = new HashSet<>();
       Language language = Language.fromString(itr.getCurrent().toString());
       if (language != Language.UNKNOWN) {

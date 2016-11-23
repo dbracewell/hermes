@@ -22,12 +22,7 @@
 package com.davidbracewell.hermes.ml.chunker;
 
 import com.davidbracewell.apollo.ml.data.Dataset;
-import com.davidbracewell.apollo.ml.sequence.Sequence;
-import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
-import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
-import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
-import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
-import com.davidbracewell.apollo.ml.sequence.linear.LibraryLoader;
+import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
