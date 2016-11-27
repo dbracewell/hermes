@@ -48,6 +48,7 @@ private Tokenizer.Token attachToken(TokenType type){
 }
 
 
+
 %}
 
 //===================================================================================================================
@@ -89,7 +90,9 @@ HASHTAG="#" ({ALPHA}|[:digit:])*
 
 REPLY = "@" [^ \t\n]+
 
-TIME = [:digit:]+ ":" [:digit:]+ ([AaPp][mM])?
+TIME = [:digit:]+ ":" [:digit:]+ {AMPM}?
+
+AMPM = ([AaPp]"."?[mM]"."?)
 
 //===================================================================================================================
 // Internet Related
@@ -117,23 +120,24 @@ SUBDELIMS=("!"|"$"|"&"|"'"|"("|")"|"*"|"+"|","|";"|"=")
 PCT_ENCODED="%"{HEXDIG}{HEXDIG}
 HEXDIG=([:digit:]|"A"|"B"|"C"|"D"|"E"|"F"|"a"|"b"|"c"|"d"|"e"|"f")
 
-//#SGML = "<" [A-Za-z][^>]+ ">"
-
-
 //===================================================================================================================
 // Misc
 //===================================================================================================================
 
 CURRENCY = [$\u00A2\u00A3\u00A5\u20A0-\u20CF]
 
-WHITESPACE = [\p{Z}\t\f\r\n\p{C}]
+WHITESPACE = [\p{Z}\t\f\r\n]
+
+EMOTICON = [\uD83C\uDC3E\uDC4D\uDC4F\uDC53\uDC66\uDC6C\uDC83\uDC8B\uDC8C\uDC8D\uDC95\uDC96\uDC98\uDC99\uDC9B\uDC9D\uDCAA\uDD10\uDD25\uDDF8\uDDFA\uDE00\uDE0A\uDE0D\uDE0E\uDE18\uDE22\uDE2E\uDE30\uDE4B\uDEBC\uDF7C\uDFB6\uDFFB\uDFFC\ud83d\ude03\p{C}\u1F567-\u1F900\u0023\u002A\u0030-\u0039\u00A9\u00AE\u1F004\u1F0CF\u1F170-\u1F171\u1F17E-\u1F17F\u1F18E\u1F191-\u1F19A\u1F1E6-\u1F202\u1F21A\u1F22F\u1F232-\u1F23A\u1F250-\u1F251\u1F300-\u1F6F6\u1F910-\u1F95E\u1F980-\u1F991\u1F9C0\u200D\u203C\u2049\u20E3\u2122\u2139\u2194-\u21AA\u231A-\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA-\u25AB\u25B6\u25C0\u25FB\u25FC\u25FD\u25FE\u2600\u2601\u2602\u2603\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638\u2639\u263A\u2640\u2642\u2648\u2649\u264A\u264B\u264C\u264D\u264E\u264F\u2650\u2651\u2652\u2653\u2660\u2663\u2665\u2666\u2668\u267B\u267F\u2692\u2693\u2694\u2695\u2696\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0\u26F1\u26F2\u26F3\u26F4\u26F5\u26F7\u26F8\u26F9-\u27BF\u2764\u2934-\u2935\u2B05-\u2B07\u2B1B-\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299\uFE0F]+
 
 
 %%
 <YYINITIAL>{
+ {EMOTICON}              {return attachToken(TokenType.EMOTICON);}
  {HASHTAG}              {return attachToken(TokenType.HASH_TAG);}
  {REPLY}                {return attachToken(TokenType.REPLY);}
  {TIME}                {return attachToken(TokenType.TIME);}
+ {AMPM}                {return attachToken(TokenType.TIME);}
  {NUMBER}               {return attachToken(TokenType.NUMBER);}
  {ALPHANUM}({HYPHEN}{ALPHANUM})+ {return attachToken(TokenType.ALPHA_NUMERIC);}
  {HYPHEN}               {return attachToken(TokenType.HYPHEN);}
@@ -150,11 +154,10 @@ WHITESPACE = [\p{Z}\t\f\r\n\p{C}]
  {ALPHANUM}/{PUNCTUATION}{PERSON_TITLE} {return attachToken(TokenType.ALPHA_NUMERIC);}
  {URI}/{WHITESPACE}|{PUNCTUATION}  {return attachToken(TokenType.URL);}
  {ACRONYM}              {return attachToken(TokenType.ACRONYM);}
-// {SGML}                 {return attachToken(TokenType.SGML);}
  {COMPANY}              {return attachToken(TokenType.COMPANY);}
  {UNDERSCORE}           {return attachToken(TokenType.ALPHA_NUMERIC);}
  {URI}                  {return attachToken(TokenType.URL);}
  {WHITESPACE}           {}
 }
 
-  [^]                   {return attachToken(TokenType.UNKNOWN);}
+[^]                   {return attachToken(TokenType.UNKNOWN);}

@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.tokenization;
 
 import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.Trie;
-import com.davidbracewell.io.Resources;
+import com.davidbracewell.hermes.lexicon.GlobalLexica;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -36,7 +36,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * The type English tokenizer.
@@ -53,23 +52,9 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
     * Instantiates a new English tokenizer.
     */
    public EnglishTokenizer() {
-      try {
-         this.abbreviations = Resources.fromClasspath("com/davidbracewell/hermes/tokenization/abbreviations.txt")
-                                       .readLines().stream()
-                                       .map(line -> line.trim().toLowerCase())
-                                       .collect(Collectors.toSet());
-         this.tlds = Resources.fromClasspath("com/davidbracewell/hermes/tokenization/tlds.txt")
-                              .readLines().stream()
-                              .map(line -> line.trim().toLowerCase())
-                              .collect(Collectors.toSet());
-         this.emoticons = new Trie<>();
-         Resources.fromClasspath("com/davidbracewell/hermes/tokenization/emoticons.txt").forEach(
-            line -> emoticons.put(line.trim().toLowerCase(), line)
-                                                                                                );
-      } catch (IOException e) {
-         e.printStackTrace();
-         throw Throwables.propagate(e);
-      }
+      this.abbreviations = GlobalLexica.getAbbreviations();
+      this.tlds = GlobalLexica.getTopLevelDomains();
+      this.emoticons = GlobalLexica.getEmoticons();
    }
 
    @Override

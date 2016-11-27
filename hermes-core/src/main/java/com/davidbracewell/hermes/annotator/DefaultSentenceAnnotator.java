@@ -25,11 +25,10 @@ import com.davidbracewell.collection.map.Maps;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
-import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.Serializable;
-import java.text.BreakIterator;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
@@ -39,183 +38,318 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class DefaultSentenceAnnotator implements Annotator, Serializable {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  private static CharMatcher BAD_EOS = CharMatcher.INVISIBLE.and(CharMatcher.WHITESPACE)
-                                                            .and(CharMatcher.BREAKING_WHITESPACE);
-  private final Set<String> noSentenceBreak = ImmutableSet.<String>builder()
-    .add("mr.")
-    .add("mrs.")
-    .add("dr.")
-    .add("gen.")
-    .add("dr.")
-    .add("mr.")
-    .add("mrs.")
-    .add("ms.")
-    .add("col.")
-    .add("lt.")
-    .add("cmdr.")
-    .add("admr.")
-    .add("sgt.")
-    .add("cpl.")
-    .add("gen.")
-    .add("maj.")
-    .add("pvt.")
-    .add("jr.")
-    .add("sr.")
-    .add("prof.")
-    .add("sens.")
-    .add("reps.")
-    .add("sen.")
-    .add("rep.")
-    .add("gov.")
-    .add("atty.")
-    .add("attys.")
-    .add("supt.")
-    .add("det.")
-    .add("rev.")
-    .add("inc.")
-    .add("ltd.")
-    .add("co.")
-    .add("corp.")
-    .add("vs.")
-    .add("etc.")
-    .add("esp.")
-    .add("arc.")
-    .add("al.")
-    .add("ave.")
-    .add("blvd.")
-    .add("bld.")
-    .add("cl.")
-    .add("ct.")
-    .add("cres.")
-    .add("dr.")
-    .add("expy.")
-    .add("exp.")
-    .add("dist.")
-    .add("mt.")
-    .add("ft.")
-    .add("fw?y.")
-    .add("fy.")
-    .add("hway.")
-    .add("hwy.")
-    .add("la.")
-    .add("pde?.")
-    .add("pd.")
-    .add("pl.")
-    .add("plz.")
-    .add("rd.")
-    .add("st.")
-    .add("tce.")
-    .add("ala.")
-    .add("ariz.")
-    .add("ark.")
-    .add("cal.")
-    .add("calif.")
-    .add("col.")
-    .add("colo.")
-    .add("conn.")
-    .add("del.")
-    .add("fed.")
-    .add("fla.")
-    .add("ga.")
-    .add("ida.")
-    .add("id.")
-    .add("ill.")
-    .add("ind.")
-    .add("ia.")
-    .add("kan.")
-    .add("kans.")
-    .add("ken.")
-    .add("ky.")
-    .add("la.")
-    .add("me.")
-    .add("md.")
-    .add("is.")
-    .add("mass.")
-    .add("mich.")
-    .add("minn.")
-    .add("miss.")
-    .add("mo.")
-    .add("mont.")
-    .add("neb.")
-    .add("nebr.")
-    .add("nev.")
-    .add("mex.")
-    .add("okla.")
-    .add("ok.")
-    .add("ore.")
-    .add("penna.")
-    .add("penn.")
-    .add("pa.")
-    .add("dak.")
-    .add("tenn.")
-    .add("tex.")
-    .add("tx.")
-    .add("ut.")
-    .add("vt.")
-    .add("va.")
-    .add("wash.")
-    .add("wis.")
-    .add("wisc.")
-    .add("wy.")
-    .add("wyo.")
-    .add("usafa.")
-    .add("usa.")
-    .add("u.s.a.")
-    .add("u.s.")
-    .add("us.")
-    .add("alta.")
-    .add("man.")
-    .add("ont.")
-    .add("qué.")
-    .add("sask.")
-    .add("yuk.")
-    .build();
+   private final char[] endOfSentence = new char[]{
+      '\u0021',
+      '\u002E',
+      '\u002E',
+      '\u003F',
+      '\u0589',
+      '\u061F',
+      '\u06D4',
+      '\u0700',
+      '\u0701',
+      '\u0702',
+      '\u0964',
+      '\u104A',
+      '\u104B',
+      '\u1362',
+      '\u1367',
+      '\u1368',
+      '\u166E',
+      '\u1803',
+      '\u1809',
+      '\u2024',
+      '\u203C',
+      '\u203D',
+      '\u2047',
+      '\u2048',
+      '\u2049',
+      '\u3002',
+      '\uFE52',
+      '\uFE52',
+      '\uFE57',
+      '\uFF01',
+      '\uFF0E',
+      '\uFF0E',
+      '\uFF1F',
+      '\uFF61',
 
-  @Override
-  public void annotate(Document doc) {
-    int index = 0;
-    BreakIterator iterator = BreakIterator.getSentenceInstance(doc.getLanguage().asLocale());
-    iterator.setText(doc.toString());
-    for (int end = iterator.next(), start = 0; end != BreakIterator.DONE; end = iterator.next()) {
-      //Trim whitespace the front and end of the entence
-      while (start < doc.length() && BAD_EOS.matches(doc.charAt(start))) {
-        start++;
+   };
+
+   private final char[] sContinue = new char[]{
+      '\u002C',
+      '\u002D',
+      '\u003A',
+      '\u055D',
+      '\u060C',
+      '\u060D',
+      '\u07F8',
+      '\u1802',
+      '\u1808',
+      '\u2013',
+      '\u2014',
+      '\u3001',
+      '\uFE10',
+      '\uFE11',
+      '\uFE13',
+      '\uFE31',
+      '\uFE32',
+      '\uFE50',
+      '\uFE51',
+      '\uFE55',
+      '\uFE58',
+      '\uFE63',
+      '\uFF0C',
+      '\uFF0D',
+      '\uFF1A',
+      '\uFF64'
+   };
+
+   private final Set<String> noSentenceBreak = ImmutableSet.<String>builder()
+                                                  .add("admr.")
+                                                  .add("al.")
+                                                  .add("ala.")
+                                                  .add("jan")
+                                                  .add("feb")
+                                                  .add("mar")
+                                                  .add("apr")
+                                                  .add("jun")
+                                                  .add("jul")
+                                                  .add("aug")
+                                                  .add("sep")
+                                                  .add("sept")
+                                                  .add("oct")
+                                                  .add("nov")
+                                                  .add("dec")
+                                                  .add("alta.")
+                                                  .add("arc.")
+                                                  .add("ariz.")
+                                                  .add("ark.")
+                                                  .add("atty.")
+                                                  .add("attys.")
+                                                  .add("ave.")
+                                                  .add("bld.")
+                                                  .add("blvd.")
+                                                  .add("cal.")
+                                                  .add("calif.")
+                                                  .add("cl.")
+                                                  .add("cmdr.")
+                                                  .add("co.")
+                                                  .add("col.")
+                                                  .add("col.")
+                                                  .add("colo.")
+                                                  .add("conn.")
+                                                  .add("corp.")
+                                                  .add("cpl.")
+                                                  .add("cres.")
+                                                  .add("ct.")
+                                                  .add("dak.")
+                                                  .add("del.")
+                                                  .add("det.")
+                                                  .add("dist.")
+                                                  .add("dr.")
+                                                  .add("dr.")
+                                                  .add("dr.")
+                                                  .add("esp.")
+                                                  .add("etc.")
+                                                  .add("exp.")
+                                                  .add("expy.")
+                                                  .add("fed.")
+                                                  .add("fla.")
+                                                  .add("ft.")
+                                                  .add("fw?y.")
+                                                  .add("fy.")
+                                                  .add("ga.")
+                                                  .add("gen.")
+                                                  .add("gen.")
+                                                  .add("gov.")
+                                                  .add("hway.")
+                                                  .add("hwy.")
+                                                  .add("ia.")
+                                                  .add("id.")
+                                                  .add("ida.")
+                                                  .add("ill.")
+                                                  .add("inc.")
+                                                  .add("ind.")
+                                                  .add("is.")
+                                                  .add("jr.")
+                                                  .add("kan.")
+                                                  .add("kans.")
+                                                  .add("ken.")
+                                                  .add("ky.")
+                                                  .add("la.")
+                                                  .add("la.")
+                                                  .add("lt.")
+                                                  .add("ltd.")
+                                                  .add("maj.")
+                                                  .add("man.")
+                                                  .add("mass.")
+                                                  .add("md.")
+                                                  .add("me.")
+                                                  .add("mex.")
+                                                  .add("mich.")
+                                                  .add("minn.")
+                                                  .add("miss.")
+                                                  .add("mo.")
+                                                  .add("mont.")
+                                                  .add("mr.")
+                                                  .add("mr.")
+                                                  .add("mrs.")
+                                                  .add("mrs.")
+                                                  .add("ms.")
+                                                  .add("mt.")
+                                                  .add("neb.")
+                                                  .add("nebr.")
+                                                  .add("nev.")
+                                                  .add("ok.")
+                                                  .add("okla.")
+                                                  .add("ont.")
+                                                  .add("ore.")
+                                                  .add("p.m.")
+                                                  .add("pa.")
+                                                  .add("pd.")
+                                                  .add("pde?.")
+                                                  .add("penn.")
+                                                  .add("penna.")
+                                                  .add("pl.")
+                                                  .add("plz.")
+                                                  .add("prof.")
+                                                  .add("pvt.")
+                                                  .add("qué.")
+                                                  .add("rd.")
+                                                  .add("rep.")
+                                                  .add("reps.")
+                                                  .add("rev.")
+                                                  .add("sask.")
+                                                  .add("sen.")
+                                                  .add("sens.")
+                                                  .add("sgt.")
+                                                  .add("sr.")
+                                                  .add("st.")
+                                                  .add("supt.")
+                                                  .add("tce.")
+                                                  .add("tenn.")
+                                                  .add("tex.")
+                                                  .add("tx.")
+                                                  .add("u.s.")
+                                                  .add("u.s.a.")
+                                                  .add("us.")
+                                                  .add("usa.")
+                                                  .add("usafa.")
+                                                  .add("ut.")
+                                                  .add("va.")
+                                                  .add("vs.")
+                                                  .add("vt.")
+                                                  .add("wash.")
+                                                  .add("wis.")
+                                                  .add("wisc.")
+                                                  .add("wy.")
+                                                  .add("wyo.")
+                                                  .add("yuk.")
+
+                                                  .build();
+
+   private boolean isEndOfSentenceMark(char c) {
+      return Arrays.binarySearch(endOfSentence, c) >= 0;
+   }
+
+   private boolean isContinue(char c) {
+      return Arrays.binarySearch(sContinue, c) >= 0;
+   }
+
+   private void addSentence(Document doc, int start, int end, int index) {
+      while (start < doc.length() && Character.isWhitespace(doc.charAt(start))) {
+         start++;
       }
-      while (end > 0 && BAD_EOS.matches(doc.charAt(end - 1))) {
-        end--;
+      if (start <= end) {
+         doc.createAnnotation(Types.SENTENCE,
+                              start,
+                              end,
+                              Maps.map(Types.INDEX, index)
+                             );
+      }
+   }
+
+   @Override
+   public void annotate(Document doc) {
+      int index = 0;
+      int start = 0;
+      int lastWhitespace = 0;
+      int end = 0;
+      String content = doc.toString();
+      for (; end < content.length(); end++) {
+         char c = content.charAt(end);
+         char p = (end - 1 > 0) ? content.charAt(end - 1) : 0;
+         char n = (end + 1 < content.length()) ? content.charAt(end + 1) : 0;
+
+         if (isEndOfSentenceMark(c)) { //Possible end of sentence
+
+            //Capture continuous end of sentence marks
+            while (end + 1 < content.length() && isEndOfSentenceMark(doc.charAt(end + 1))) {
+               end++;
+            }
+            n = (end + 1 < content.length()) ? content.charAt(end + 1) : 0;
+
+
+            //If the next character is something signifying a continuation of the sentence
+            //the continue on
+            if (isContinue(n)) {
+               end++;
+               continue;
+            }
+
+            if (c == '.' && Character.isUpperCase(doc.charAt(lastWhitespace + 1))) {
+               String possibleAbbreviation = doc.substring(lastWhitespace + 1, end + 1).toLowerCase();
+               if (noSentenceBreak.contains(possibleAbbreviation)) {
+                  continue;
+               }
+            }
+
+            if (Character.isLetterOrDigit(n)) { //Abbreviations not caught in the list e.g. p.m.
+               continue;
+            }
+
+            int nextCharacterType = Character.getType(n);
+            if (n == '"' || nextCharacterType == Character.FINAL_QUOTE_PUNCTUATION || nextCharacterType == Character.END_PUNCTUATION) {
+               end++;
+            }
+
+            addSentence(doc, start, end + 1, index);
+            start = end + 1;
+            index++;
+         } else if (c == '\r') {
+            if (n == '\n') {
+               end++;
+            }
+            addSentence(doc, start, end + 1, index);
+            start = end + 1;
+            index++;
+         } else if (c == '\n') {
+            if (p != '\r') {
+               addSentence(doc, start, end + 1, index);
+               start = end + 1;
+               index++;
+            } else {
+               lastWhitespace = end;
+            }
+         } else if (Character.isWhitespace(c)) {
+            lastWhitespace = end;
+         }
+
       }
 
-      //Make sure it is still a valid sentence
-      if (end <= start || start >= doc.length()) {
-        start = end;
-        continue;
+
+      if (start != end) {
+         addSentence(doc, start, end, index);
       }
+   }
 
-      String sentence = doc.subSequence(start, end).toString();
-      int idx = sentence.lastIndexOf(' ');
-      if (idx != -1) {
-        sentence = sentence.substring(idx + 1).toLowerCase();
-      }
-      if (!noSentenceBreak.contains(sentence)) {
-        doc.createAnnotation(Types.SENTENCE,
-                             start,
-                             end,
-                             Maps.map(Types.INDEX, index)
-        );
-        index++;
-        start = end;
-      }
-
-    }
-
-  }
-
-  @Override
-  public Set<AnnotatableType> satisfies() {
-    return Collections.singleton(Types.SENTENCE);
-  }
+   @Override
+   public Set<AnnotatableType> satisfies() {
+      return Collections.singleton(Types.SENTENCE);
+   }
 
 
 }//END OF DefaultSentenceAnnotator

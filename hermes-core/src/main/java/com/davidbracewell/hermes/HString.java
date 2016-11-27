@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.Tag;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Streams;
@@ -68,6 +69,26 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    HString(int start, int end) {
       super(start, end);
+   }
+
+
+   public String taggedText(@NonNull AnnotationType type) {
+      StringBuilder builder = new StringBuilder();
+      interleaved(type, Types.TOKEN).forEach(annotation -> {
+         if (annotation.getType().equals(type)) {
+            builder.append("<")
+                   .append(annotation.getTag().map(Tag::name).orElse("?"))
+                   .append(">")
+                   .append(annotation)
+                   .append("</")
+                   .append(annotation.getTag().map(Tag::name).orElse("?"))
+                   .append(">")
+                   .append(" ");
+         } else {
+            builder.append(annotation).append(" ");
+         }
+      });
+      return builder.toString();
    }
 
 

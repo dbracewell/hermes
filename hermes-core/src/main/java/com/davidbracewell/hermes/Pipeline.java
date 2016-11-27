@@ -76,8 +76,8 @@ public final class Pipeline implements Serializable {
       Preconditions.checkArgument(queueSize > 0, "Queue size must be > 0");
       this.queueSize = queueSize;
       this.annotationTypes = Preconditions
-            .checkNotNull(annotationTypes)
-            .toArray(new AnnotatableType[annotationTypes.size()]);
+                                .checkNotNull(annotationTypes)
+                                .toArray(new AnnotatableType[annotationTypes.size()]);
       this.numberOfThreads = numberOfThreads;
       this.onComplete = Preconditions.checkNotNull(onComplete);
    }
@@ -106,8 +106,8 @@ public final class Pipeline implements Serializable {
          annotator.annotate(document);
          for (AnnotatableType type : annotator.satisfies()) {
             document
-                  .getAnnotationSet()
-                  .setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
+               .getAnnotationSet()
+               .setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
          }
       }
    }
@@ -154,8 +154,8 @@ public final class Pipeline implements Serializable {
          annotator.annotate(textDocument);
          for (AnnotatableType type : annotator.satisfies()) {
             textDocument
-                  .getAnnotationSet()
-                  .setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
+               .getAnnotationSet()
+               .setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
          }
 
       }
@@ -192,8 +192,8 @@ public final class Pipeline implements Serializable {
       timer.start();
 
       Broker.Builder<Document> builder = Broker.<Document>builder()
-            .addProducer(new IterableProducer<>(documents))
-            .bufferSize(queueSize);
+                                            .addProducer(new IterableProducer<>(documents))
+                                            .bufferSize(queueSize);
 
       Corpus corpus = documents;
       if (returnCorpus && corpus.getDataSetType() == DatasetType.OffHeap) {

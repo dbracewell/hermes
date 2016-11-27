@@ -90,34 +90,94 @@ public class Document extends HString {
       this.annotationSet = new DefaultAnnotationSet();
    }
 
+   /**
+    * Convenience method for creating a document using the default document factory.
+    *
+    * @param text the text content making up the document
+    * @return the document
+    */
    public static Document create(@NonNull String text) {
       return DocumentFactory.getInstance().create(text);
    }
 
+   /**
+    * Convenience method for creating a document using the default document factory.
+    *
+    * @param text     the text content making up the document
+    * @param language the language of the content
+    * @return the document
+    */
    public static Document create(@NonNull String text, @NonNull Language language) {
       return DocumentFactory.getInstance().create(text, language);
    }
 
+   /**
+    * Convenience method for creating a document using the default document factory.
+    *
+    * @param text       the text content making up the document
+    * @param language   the language of the content
+    * @param attributes the attributes, i.e. metadata, associated with the document
+    * @return the document
+    */
    public static Document create(@NonNull String text, @NonNull Language language, @NonNull Map<AttributeType, ?> attributes) {
       return DocumentFactory.getInstance().create(text, language, attributes);
    }
 
+   /**
+    * Convenience method for creating a document using the default document factory.
+    *
+    * @param text       the text content making up the document
+    * @param attributes the attributes, i.e. metadata, associated with the document
+    * @return the document
+    */
    public static Document create(@NonNull String text, @NonNull Map<AttributeType, ?> attributes) {
       return DocumentFactory.getInstance().create(text, Hermes.defaultLanguage(), attributes);
    }
 
+   /**
+    * Convenience method for creating a document using the default document factory.
+    *
+    * @param id   the document id
+    * @param text the text content making up the document
+    * @return the document
+    */
    public static Document create(@NonNull String id, @NonNull String text) {
       return DocumentFactory.getInstance().create(id, text);
    }
 
+   /**
+    * Convenience method for creating a document using the default document factory.
+    *
+    * @param id       the document id
+    * @param text     the text content making up the document
+    * @param language the language of the content
+    * @return the document
+    */
    public static Document create(@NonNull String id, @NonNull String text, @NonNull Language language) {
       return DocumentFactory.getInstance().create(id, text, language);
    }
 
+   /**
+    * Convenience method for creating a document using the default document factory.
+    *
+    * @param id         the document id
+    * @param text       the text content making up the document
+    * @param language   the language of the content
+    * @param attributes the attributes, i.e. metadata, associated with the document
+    * @return the document
+    */
    public static Document create(@NonNull String id, @NonNull String text, @NonNull Language language, @NonNull Map<AttributeType, ?> attributes) {
       return DocumentFactory.getInstance().create(id, text, language, attributes);
    }
 
+   /**
+    * Convenience method for creating a document using the default document factory.
+    *
+    * @param id         the document id
+    * @param text       the text content making up the document
+    * @param attributes the attributes, i.e. metadata, associated with the document
+    * @return the document
+    */
    public static Document create(@NonNull String id, @NonNull String text, @NonNull Map<AttributeType, ?> attributes) {
       return DocumentFactory.getInstance().create(id, text, Hermes.defaultLanguage(), attributes);
    }
@@ -201,8 +261,8 @@ public class Document extends HString {
          }
 
          Document document = new Document(
-               docProperties.containsKey("id") ? docProperties.get("id").asString() : null,
-               docProperties.get("content").asString()
+                                            docProperties.containsKey("id") ? docProperties.get("id").asString() : null,
+                                            docProperties.get("content").asString()
          );
 
          document.putAll(attributeValMap);
@@ -247,18 +307,29 @@ public class Document extends HString {
       return tokens;
    }
 
+   /**
+    * Checks is if a given {@link AnnotatableType} is completed, i.e. been added by an annotator.
+    *
+    * @param type the type to check
+    * @return True if the type is complete, False if not
+    */
    public boolean isCompleted(@NonNull AnnotatableType type) {
       return annotationSet.isCompleted(type);
    }
 
+   /**
+    * Convenience method for annotating the document with the given annotatable types.
+    *
+    * @param types the types to annotate
+    */
    public void annotate(@NonNull AnnotatableType... types) {
       Pipeline.process(this, types);
    }
 
    /**
-    * Completed annotations.
+    * Gets the set of completed annotations.
     *
-    * @return the set
+    * @return the set of completed
     */
    public Set<AnnotatableType> completedAnnotations() {
       return annotationSet.getCompleted();
@@ -389,10 +460,21 @@ public class Document extends HString {
       return annotationSet.select(a -> a.isInstance(type));
    }
 
+   /**
+    * Removes the given annotation from the document
+    *
+    * @param annotation the annotation to remove
+    * @return True if the annotation was successfully removed, False otherwise
+    */
    public boolean remove(Annotation annotation) {
       return annotationSet.remove(annotation);
    }
 
+   /**
+    * Removes all annotations of a given type.
+    *
+    * @param type the type of to remove
+    */
    public void removeAnnotationType(AnnotationType type) {
       annotationSet.removeAll(type);
    }
@@ -420,9 +502,9 @@ public class Document extends HString {
    }
 
    /**
-    * Gets annotation.
+    * Gets an annotation on the document by its ID.
     *
-    * @param id the id
+    * @param id the id of the annotation to retrieve
     * @return the annotation
     */
    public Optional<Annotation> getAnnotation(long id) {

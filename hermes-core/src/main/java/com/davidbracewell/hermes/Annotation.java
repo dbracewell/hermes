@@ -45,8 +45,7 @@ import java.util.stream.Stream;
  * <p>
  * Associates a type, e.g. token, sentence, named entity, and a set of attributes, e.g. part of speech and entity type,
  * to  a specific  span of a document, which may include the entire document. Annotation type information is defined
- * via
- * the {@link AnnotationType} class.
+ * via the {@link AnnotationType} class.
  * </p>
  * <p>
  * Commonly, annotations have an associated <code>Tag</code> attribute which acts as label. Examples of tags include
@@ -154,10 +153,9 @@ public final class Annotation extends Fragment implements Serializable {
       }
 
       Annotation annotation = Fragments.detachedAnnotation(
-            AnnotationType.create(annotationProperties.get("type").asString()),
-            annotationProperties.get("start").asIntegerValue(),
-            annotationProperties.get("end").asIntegerValue()
-                                                          );
+         AnnotationType.create(annotationProperties.get("type").asString()),
+         annotationProperties.get("start").asIntegerValue(),
+         annotationProperties.get("end").asIntegerValue());
       annotation.relations.addAll(relations);
       annotation.setId(annotationProperties.get("id").asLongValue());
       annotation.putAll(attributeValMap);
@@ -202,11 +200,11 @@ public final class Annotation extends Fragment implements Serializable {
    @Override
    public Optional<Tuple2<String, Annotation>> dependencyRelation() {
       return getRelationStream(true)
-            .filter(r -> r.getType() == Types.DEPENDENCY)
-            .filter(r -> r.getTarget(this).isPresent())
-            .filter(r -> !this.overlaps(r.getTarget(this).orElse(null)))
-            .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).orElse(null)))
-            .findFirst();
+                .filter(r -> r.getType() == Types.DEPENDENCY)
+                .filter(r -> r.getTarget(this).isPresent())
+                .filter(r -> !this.overlaps(r.getTarget(this).orElse(null)))
+                .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).orElse(null)))
+                .findFirst();
    }
 
    @Override
@@ -226,7 +224,7 @@ public final class Annotation extends Fragment implements Serializable {
    }
 
    /**
-    * Sets id.
+    * Sets the unique id of the annotation.
     *
     * @param id the id
     */
@@ -238,20 +236,18 @@ public final class Annotation extends Fragment implements Serializable {
       Stream<Relation> relationStream = relations.stream();
       if (this.getType() != Types.TOKEN && includeSubAnnotations) {
          relationStream = Stream.concat(
-               relationStream,
-               getAllAnnotations().stream().filter(a -> a != this).flatMap(token -> token.allRelations(false).stream())
+            relationStream,
+            getAllAnnotations().stream().filter(a -> a != this).flatMap(token -> token.allRelations(false).stream())
                                        );
       }
       return relationStream;
    }
 
    /**
-    * <p>
-    * Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type using
-    * the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
+    * <p> Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type
+    * using the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
     * Tags must implement the <code>Tag</code> interface. If no tag type is defined, the <code>Attrs.TAG</code>
-    * attribute will be retrieved.
-    * </p>
+    * attribute will be retrieved. </p>
     *
     * @return An optional containing the tag if present
     */
@@ -385,18 +381,18 @@ public final class Annotation extends Fragment implements Serializable {
    @Override
    public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
       return getRelationStream(includeSubAnnotations)
-            .filter(r -> r.getType().equals(type))
-            .filter(r -> r.getTarget(this).isPresent())
-            .map(r -> r.getTarget(this).get())
-            .collect(Collectors.toList());
+                .filter(r -> r.getType().equals(type))
+                .filter(r -> r.getTarget(this).isPresent())
+                .map(r -> r.getTarget(this).get())
+                .collect(Collectors.toList());
    }
 
    @Override
    public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
       return getRelationStream(includeSubAnnotations)
-            .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
-            .map(r -> document().getAnnotationSet().get(r.getTarget()))
-            .collect(Collectors.toList());
+                .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
+                .map(r -> document().getAnnotationSet().get(r.getTarget()))
+                .collect(Collectors.toList());
    }
 
    @Override

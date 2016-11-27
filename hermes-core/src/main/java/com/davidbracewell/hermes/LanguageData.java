@@ -19,24 +19,39 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.preprocessing;
+package com.davidbracewell.hermes;
 
-import com.davidbracewell.Language;
-import com.davidbracewell.string.StringUtils;
+import com.google.common.collect.ImmutableMap;
+
+import java.io.Serializable;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author David B. Bracewell
  */
-public class WhitespaceNormalizer extends TextNormalizer {
+public final class LanguageData implements Serializable {
    private static final long serialVersionUID = 1L;
+   private final Map<String, Entry> data;
 
-   @Override
-   public String performNormalization(String input, Language inputLanguage) {
-      String normSpaces = input.replaceAll("\\p{Zs}+", " ");
-      normSpaces = normSpaces.replaceAll("\r(?!\n)", "\n");
-      normSpaces = normSpaces.replaceAll("(?<!(\\p{P}\\p{Z}?))\n", " ");
-      normSpaces = normSpaces.replaceAll("\r?\n(" + StringUtils.MULTIPLE_WHITESPACE + "\r?\n)+", "\n");
-      return StringUtils.trim(normSpaces);
+   public LanguageData(Map<String, Entry> data) {
+      this.data = ImmutableMap.copyOf(data);
    }
 
-}//END OF WhitespacePreprocessor
+   public Optional<Entry> lookup(String word) {
+      return Optional.ofNullable(data.get(word));
+   }
+
+
+   public static class Entry implements Serializable {
+      private static final long serialVersionUID = 1L;
+      public final String word;
+      public final Map<String, String> properties;
+
+      public Entry(String word, Map<String, String> properties) {
+         this.word = word;
+         this.properties = ImmutableMap.copyOf(properties);
+      }
+   }
+
+}//END OF LanguageData

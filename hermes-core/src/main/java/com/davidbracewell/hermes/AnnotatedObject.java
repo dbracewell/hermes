@@ -66,10 +66,10 @@ public interface AnnotatedObject {
    }
 
    /**
-    * For each.
+    * Convenience method for processing annotations of a given type.
     *
-    * @param type     the type
-    * @param consumer the consumer
+    * @param type     the annotation type
+    * @param consumer the consumer to use for processing annotations
     */
    default void forEach(@NonNull AnnotationType type, @NonNull Consumer<? super Annotation> consumer) {
       get(type).forEach(consumer);
@@ -145,7 +145,7 @@ public interface AnnotatedObject {
     *
     * @return the stream
     */
-   default Stream<Annotation> sentenceStream(){
+   default Stream<Annotation> sentenceStream() {
       return stream(Types.SENTENCE);
    }
 
@@ -154,7 +154,7 @@ public interface AnnotatedObject {
     *
     * @return the stream
     */
-   default Stream<Annotation> tokenStream(){
+   default Stream<Annotation> tokenStream() {
       return stream(Types.TOKEN);
    }
 

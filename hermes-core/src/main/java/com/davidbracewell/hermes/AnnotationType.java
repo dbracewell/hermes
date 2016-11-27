@@ -37,19 +37,30 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * <p> An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The
- * definition
+ * <p> An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The definition
  * provided by the type facilitates the portability of the annotation between different modules. An annotation type
  * defines the type name, parent type, and optionally a set of attributes that are expected to be associated with an
- * annotation of this type. </p> <p> Annotation types are hierarchical and all types have a parent defined. If no
- * parent
- * is explicitly declared, its parent is resolved to the <code>ROOT</code> type. Annotation types inherit their
- * parent's
+ * annotation of this type. </p>
+ * <p> Annotation types are hierarchical and all types have a parent defined. If no parent
+ * is explicitly declared, its parent is resolved to the <code>ROOT</code> type. Annotation types inherit their parent's
  * attributes. Attribute information on the type serves as documentation and is not type checked. Additionally, a "tag"
  * can be defined for a type using the <code>tag</code> property, which defines the attribute to return on calls to
- * <code>getTag()</code>. </p> <p>Type information is defined via configuration. An Example is as follows:</pre> {@code
- * Annotation{ ENTITY { attributes = ENTITY_TYPE, CONFIDENCE tag = ENTITY_TYPE } REGEX_ENTITY { parent = ENTITY
- * annotator = @{DEFAULT_ENTITY_REGEX} annotator { ENGLISH = @{ENGLISH_ENTITY_REGEX} JAPANESE = }}}}</pre>
+ * <code>getTag()</code>. </p>
+ * <p>Type information is defined via configuration. An Example is as follows:
+ * </pre> {@code
+ *    Annotation {
+ *          ENTITY {
+ *             attributes = ENTITY_TYPE, CONFIDENCE
+ *             tag = ENTITY_TYPE
+ *          }
+ *          REGEX_ENTITY {
+ *             parent = ENTITY
+ *             annotator = @{DEFAULT_ENTITY_REGEX}
+ *         }
+ *    }
+ *  }
+ *  </pre>
+ * </p>
  */
 public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> implements Comparable<AnnotationType>, AnnotatableType {
    private static final long serialVersionUID = 1L;

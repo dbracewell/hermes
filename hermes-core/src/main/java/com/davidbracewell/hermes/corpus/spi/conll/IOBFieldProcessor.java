@@ -36,6 +36,8 @@ import java.util.Map;
 import static com.davidbracewell.collection.map.Maps.map;
 
 /**
+ * The type Iob field processor.
+ *
  * @author David B. Bracewell
  */
 public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
@@ -43,6 +45,12 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
    private final AnnotationType annotationType;
    private final AttributeType attributeType;
 
+   /**
+    * Instantiates a new Iob field processor.
+    *
+    * @param annotationType the annotation type
+    * @param attributeType  the attribute type
+    */
    public IOBFieldProcessor(AnnotationType annotationType, AttributeType attributeType) {
       this.annotationType = annotationType;
       this.attributeType = attributeType;
@@ -55,6 +63,12 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
       return value.startsWith("I-") && value.substring(2).toUpperCase().equals(target);
    }
 
+   /**
+    * Normalize tag string.
+    *
+    * @param tag the tag
+    * @return the string
+    */
    protected String normalizeTag(String tag) {
       return tag;
    }

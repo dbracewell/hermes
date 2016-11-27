@@ -33,59 +33,68 @@ import java.util.Locale;
  *
  * @author David B. Bracewell
  */
-public interface Hermes {
+public final class Hermes {
 
-  /**
-   * Get the default language. The default language is specified using <code>hermes.DefaultLanguage</code>. If the
-   * configuration option is not set, it will default to the language matching the system locale.
-   *
-   * @return the default language
-   */
-  static Language defaultLanguage() {
-    return Config.get("hermes.DefaultLanguage").as(Language.class, Language.fromLocale(Locale.getDefault()));
-  }
 
-  /**
-   * Initialize application string [ ].
-   *
-   * @param programName the program name
-   * @param args        the args
-   * @return the string [ ]
-   */
-  static String[] initializeApplication(String programName, String[] args) {
-    String[] leftOver = Config.initialize(programName, args);
-    //Ensure that the core hermes config is loaded
-    Config.loadPackageConfig("com.davidbracewell.hermes");
-    return leftOver;
-  }
+   private Hermes() {
+      throw new IllegalAccessError();
+   }
 
-  /**
-   * Initialize application string [ ].
-   *
-   * @param args the args
-   * @return the string [ ]
-   */
-  static String[] initializeApplication(String[] args) {
-    StackTraceElement[] elements = Thread.currentThread().getStackTrace();
-    String programName = "";
-    for (int i = 0; i < elements.length && StringUtils.isNullOrBlank(programName); i++) {
-      String className = elements[i].getClassName();
-      if (!className.equals(Hermes.class.getName()) && !className.contains("java")) {
-        int idx = className.lastIndexOf('.');
-        programName = className.substring(idx + 1);
+
+
+
+
+   /**
+    * Get the default language. The default language is specified using <code>hermes.DefaultLanguage</code>. If the
+    * configuration option is not set, it will default to the language matching the system locale.
+    *
+    * @return the default language
+    */
+   public static Language defaultLanguage() {
+      return Config.get("hermes.DefaultLanguage").as(Language.class, Language.fromLocale(Locale.getDefault()));
+   }
+
+   /**
+    * Initialize application string [ ].
+    *
+    * @param programName the program name
+    * @param args        the args
+    * @return the string [ ]
+    */
+   public static String[] initializeApplication(String programName, String[] args) {
+      String[] leftOver = Config.initialize(programName, args);
+      //Ensure that the core hermes config is loaded
+      Config.loadPackageConfig("com.davidbracewell.hermes");
+      return leftOver;
+   }
+
+   /**
+    * Initialize application string [ ].
+    *
+    * @param args the args
+    * @return the string [ ]
+    */
+   public static String[] initializeApplication(String[] args) {
+      StackTraceElement[] elements = Thread.currentThread().getStackTrace();
+      String programName = "";
+      for (int i = 0; i < elements.length && StringUtils.isNullOrBlank(programName); i++) {
+         String className = elements[i].getClassName();
+         if (!className.equals(Hermes.class.getName()) && !className.contains("java")) {
+            int idx = className.lastIndexOf('.');
+            programName = className.substring(idx + 1);
+         }
       }
-    }
-    return initializeApplication(programName, args);
-  }
+      return initializeApplication(programName, args);
+   }
 
-  /**
-   * Initialize worker.
-   *
-   * @param config the config
-   */
-  static void initializeWorker(Config config) {
-    Configurator.INSTANCE.configure(config);
-  }
+   /**
+    * Initialize worker.
+    *
+    * @param config the config
+    */
+   public static void initializeWorker(Config config) {
+      Configurator.INSTANCE.configure(config);
+   }
 
 
 }//END OF Hermes
