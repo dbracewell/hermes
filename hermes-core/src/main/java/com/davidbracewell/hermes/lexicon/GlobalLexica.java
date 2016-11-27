@@ -21,24 +21,24 @@
 
 package com.davidbracewell.hermes.lexicon;
 
-import com.davidbracewell.collection.Trie;
+import com.davidbracewell.Lazy;
+import com.davidbracewell.function.Unchecked;
 import com.davidbracewell.io.Resources;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableSet;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author David B. Bracewell
  */
 public final class GlobalLexica implements Serializable {
    private static final long serialVersionUID = 1L;
-   private static volatile Set<String> tlds = null;
-   private static volatile Set<String> abbreviations = null;
-   private static volatile Trie<String> emoticons = null;
+
+   private static volatile Lazy<WordList> tlds = new Lazy<>(Unchecked.supplier(() -> SimpleWordList.read(
+      Resources.fromClasspath("com/davidbracewell/hermes/lexicon/tlds.txt"))));
+   private static volatile Lazy<WordList> abbreviations = new Lazy<>(Unchecked.supplier(() -> SimpleWordList.read(
+      Resources.fromClasspath("com/davidbracewell/hermes/lexicon/abbreviations.txt"))));
+   private static volatile Lazy<TrieWordList> emoticons = new Lazy<>(Unchecked.supplier(() -> TrieWordList.read(
+      Resources.fromClasspath("com/davidbracewell/hermes/lexicon/emoticons.txt"))));
 
    private GlobalLexica() {
       throw new IllegalAccessError();
@@ -46,69 +46,24 @@ public final class GlobalLexica implements Serializable {
 
 
    /**
-    * Gets a lexicon (as a set) of the top level internet domain names.
+    * Gets a lexicon (as a WordList) of the top level internet domain names.
     */
-   public static Set<String> getTopLevelDomains() {
-      if (tlds == null) {
-         synchronized (GlobalLexica.class) {
-            if (tlds == null) {
-               try {
-                  tlds = ImmutableSet.copyOf(Resources.fromClasspath("com/davidbracewell/hermes/lexicon/tlds.txt")
-                                                      .readLines().stream()
-                                                      .map(line -> line.trim().toLowerCase())
-                                                      .collect(Collectors.toSet()));
-               } catch (IOException e) {
-                  throw Throwables.propagate(e);
-               }
-            }
-         }
-      }
-      return tlds;
+   public static WordList getTopLevelDomains() {
+      return tlds.get();
    }
 
    /**
-    * Gets a lexicon (as a set) of the top level internet domain names.
+    * Gets a lexicon (as a WordList) of the top level internet domain names.
     */
-   public static Set<String> getAbbreviations() {
-      if (abbreviations == null) {
-         synchronized (GlobalLexica.class) {
-            if (abbreviations == null) {
-               try {
-                  abbreviations = ImmutableSet.copyOf(Resources.fromClasspath(
-                     "com/davidbracewell/hermes/lexicon/abbreviations.txt")
-                                                               .readLines().stream()
-                                                               .map(line -> line.trim().toLowerCase())
-                                                               .collect(Collectors.toSet()));
-               } catch (IOException e) {
-                  throw Throwables.propagate(e);
-               }
-            }
-         }
-      }
-      return abbreviations;
+   public static WordList getAbbreviations() {
+      return abbreviations.get();
    }
 
    /**
-    * Gets a lexicon (as a Trie) of emoticons.
+    * Gets a lexicon (as a TrieWordList) of emoticons.
     */
-   public static Trie<String> getEmoticons() {
-      if (emoticons == null) {
-         synchronized (GlobalLexica.class) {
-            if (emoticons == null) {
-               try {
-                  emoticons = new Trie<>();
-                  Resources.fromClasspath(
-                     "com/davidbracewell/hermes/lexicon/emoticons.txt")
-                           .readLines().stream()
-                           .map(line -> line.trim().toLowerCase())
-                           .forEach(emo -> emoticons.put(emo.toLowerCase(), emo));
-               } catch (IOException e) {
-                  throw Throwables.propagate(e);
-               }
-            }
-         }
-      }
-      return emoticons;
+   public static TrieWordList getEmoticons() {
+      return emoticons.get();
    }
 
 

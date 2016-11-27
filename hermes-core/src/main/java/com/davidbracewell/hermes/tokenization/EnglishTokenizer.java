@@ -22,8 +22,9 @@
 package com.davidbracewell.hermes.tokenization;
 
 import com.davidbracewell.collection.Collect;
-import com.davidbracewell.collection.Trie;
 import com.davidbracewell.hermes.lexicon.GlobalLexica;
+import com.davidbracewell.hermes.lexicon.TrieWordList;
+import com.davidbracewell.hermes.lexicon.WordList;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -35,7 +36,6 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 /**
  * The type English tokenizer.
@@ -44,9 +44,9 @@ import java.util.Set;
  */
 public class EnglishTokenizer implements Tokenizer, Serializable {
    private static final long serialVersionUID = 1L;
-   private final Set<String> abbreviations;
-   private final Set<String> tlds;
-   private final Trie<String> emoticons;
+   private final WordList abbreviations;
+   private final WordList tlds;
+   private final TrieWordList emoticons;
 
    /**
     * Instantiates a new English tokenizer.
@@ -231,7 +231,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
       private Token handleEmoticon(Token n) {
          String emo = n.text;
          String emoLower = n.text.toLowerCase();
-         if (emoticons.prefix(emoLower).isEmpty()) {
+         if (!emoticons.isPrefixMatch(emoLower)) {
             return n;
          }
          Token nn;
@@ -239,17 +239,18 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
          int peek = 0;
          while ((nn = peek(peek)) != null) {
             String tempLower = emoLower + nn.text.toLowerCase();
-            if ((emoticons.containsKey(tempLower) && emoticons.prefix(tempLower).size() > 1) ||
-                   (!emoticons.containsKey(tempLower) && emoticons.prefix(tempLower).size() > 0)) {
+            if ((emoticons.contains(tempLower) && emoticons.isPrefixMatch(tempLower))
+//                   || (!emoticons.contains(tempLower) && emoticons.isPrefixMatch(tempLower).size() > 0)
+               ) {
                end = nn.charEndIndex;
                emo = emo + nn.text;
                emoLower = tempLower;
                peek++;
-            } else if (emoticons.containsKey(tempLower)) {
+            } else if (emoticons.contains(tempLower)) {
                consume(peek);
                lastIndex = n.index;
                return new Token(emo, TokenType.EMOTICON, n.charStartIndex, end + 1, n.index);
-            } else if (emoLower.length() > 1 && emoticons.containsKey(emoLower.substring(0, emoLower.length() - 1))) {
+            } else if (emoLower.length() > 1 && emoticons.contains(emoLower.substring(0, emoLower.length() - 1))) {
                Token last = consume(peek - 1);
                lastIndex = n.index;
                return new Token(emo, TokenType.EMOTICON, n.charStartIndex, last.charEndIndex, n.index);

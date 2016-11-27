@@ -37,7 +37,7 @@ import java.util.function.Predicate;
  *
  * @author David B. Bracewell
  */
-public interface Lexicon extends Predicate<HString>, Iterable<String> {
+public interface Lexicon extends Predicate<HString>, WordList {
 
    /**
     * The number of lexical items in the lexicon

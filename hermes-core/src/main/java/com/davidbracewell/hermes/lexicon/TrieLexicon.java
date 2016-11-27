@@ -38,66 +38,79 @@ import java.util.stream.Collectors;
  * @author David B. Bracewell
  */
 public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
-  private static final long serialVersionUID = 1L;
-  private final Trie<List<LexiconEntry>> trie;
+   private static final long serialVersionUID = 1L;
+   private final Trie<List<LexiconEntry>> trie;
 
-  /**
-   * Instantiates a new Trie lexicon.
-   *
-   * @param isCaseSensitive the is case sensitive
-   * @param isProbabilistic the is probabilistic
-   * @param tagAttributeType    the tag attribute
-   */
-  public TrieLexicon(boolean isCaseSensitive, boolean isProbabilistic, AttributeType tagAttributeType) {
-    super(isCaseSensitive, isProbabilistic, tagAttributeType);
-    this.trie = new Trie<>();
-    //new PatriciaTrie<>();
-  }
+   /**
+    * Instantiates a new Trie lexicon.
+    *
+    * @param isCaseSensitive  the is case sensitive
+    * @param isProbabilistic  the is probabilistic
+    * @param tagAttributeType the tag attribute
+    */
+   public TrieLexicon(boolean isCaseSensitive, boolean isProbabilistic, AttributeType tagAttributeType) {
+      super(isCaseSensitive, isProbabilistic, tagAttributeType);
+      this.trie = new Trie<>();
+   }
 
-  @Override
-  public Iterator<String> iterator() {
-    return trie.keySet().iterator();
-  }
+   @Override
+   public Iterator<String> iterator() {
+      return trie.keySet().iterator();
+   }
 
-  @Override
-  public int size() {
-    return trie.size();
-  }
+   @Override
+   public boolean contains(@NonNull String string) {
+      if (isCaseSensitive()) {
+         return trie.containsKey(string);
+      }
+      return trie.containsKey(string.toLowerCase());
+   }
 
-  @Override
-  public List<LexiconEntry> getEntries(@NonNull HString hString) {
-    String str = normalize(hString);
-    if (trie.containsKey(str)) {
-      return trie.get(str).stream()
-                 .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
-                 .sorted()
-                 .collect(Collectors.toList());
-    }
-    str = normalize(hString.getLemma());
-    if (trie.containsKey(str)) {
-      return trie.get(str).stream()
-                 .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
-                 .sorted()
-                 .collect(Collectors.toList());
-    }
-    return Collections.emptyList();
-  }
+   @Override
+   public int size() {
+      return trie.size();
+   }
 
-  @Override
-  public void add(@NonNull LexiconEntry entry) {
-    if (!trie.containsKey(entry.getLemma())) {
-      trie.put(entry.getLemma(), new LinkedList<>());
-    }
-    ensureLongestLemma(entry.getLemma());
-    trie.get(entry.getLemma()).add(entry);
-  }
+   @Override
+   public List<LexiconEntry> getEntries(@NonNull HString hString) {
+      String str = normalize(hString);
+      if (trie.containsKey(str)) {
+         return trie.get(str).stream()
+                    .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
+                    .sorted()
+                    .collect(Collectors.toList());
+      }
+      str = normalize(hString.getLemma());
+      if (trie.containsKey(str)) {
+         return trie.get(str).stream()
+                    .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
+                    .sorted()
+                    .collect(Collectors.toList());
+      }
+      return Collections.emptyList();
+   }
 
-  @Override
-  public boolean isPrefixMatch(@NonNull HString hString) {
-    return trie.prefix(normalize(hString)).size() > 0 || trie.prefix(normalize(hString.getLemma())).size() > 0;
-    //return trie.prefixMap(normalize(hString) + " ").size() > 0 || trie.prefixMap(normalize(hString.getLemma()) + " ").size() > 0;
-  }
+   @Override
+   public void add(@NonNull LexiconEntry entry) {
+      if (!trie.containsKey(entry.getLemma())) {
+         trie.put(entry.getLemma(), new LinkedList<>());
+      }
+      ensureLongestLemma(entry.getLemma());
+      trie.get(entry.getLemma()).add(entry);
+   }
 
+   @Override
+   public boolean isPrefixMatch(@NonNull HString hString) {
+      return trie.prefix(normalize(hString)).size() > 0 || trie.prefix(normalize(hString.getLemma())).size() > 0;
+   }
+
+   @Override
+   public boolean isPrefixMatch(String string) {
+      if (isCaseSensitive()) {
+         return trie.prefix(string).size() > 0;
+      }
+      return trie.prefix(string.toLowerCase()).size() > 0;
+   }
 
 }//END OF BaseTrieLexicon
 

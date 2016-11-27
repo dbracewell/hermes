@@ -22,23 +22,39 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.hermes.HString;
+import lombok.NonNull;
 
 /**
- * The interface Prefix searchable.
+ * The interface L.
  *
  * @author David B. Bracewell
  */
-public interface PrefixSearchable {
+public interface WordList extends Iterable<String> {
 
    /**
-    * Is prefix match boolean.
+    * Contains boolean.
     *
-    * @param hString the h string
+    * @param string the string
     * @return the boolean
     */
-   boolean isPrefixMatch(HString hString);
+   boolean contains(String string);
+
+   /**
+    * Contains boolean.
+    *
+    * @param string the string
+    * @return the boolean
+    */
+   default boolean contains(@NonNull HString string) {
+      return contains(string.toString());
+   }
+
+   /**
+    * Size int.
+    *
+    * @return the int
+    */
+   int size();
 
 
-   boolean isPrefixMatch(String hString);
-
-}//END OF PrefixSearchable
+}//END OF WordList

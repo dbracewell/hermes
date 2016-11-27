@@ -112,6 +112,8 @@ public final class LexiconManager implements Serializable {
        */
       INSTANCE;
 
+
+
       @Override
       public List<HString> match(HString source) {
          return Collections.emptyList();
@@ -130,6 +132,11 @@ public final class LexiconManager implements Serializable {
       @Override
       public Iterator<String> iterator() {
          return Collections.emptyIterator();
+      }
+
+      @Override
+      public boolean contains(String string) {
+         return false;
       }
 
       @Override
