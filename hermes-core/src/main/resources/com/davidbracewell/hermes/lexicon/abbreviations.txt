@@ -1,7 +1,6 @@
 a.b
 a.d
 a.m
-a.m
 a.m.
 abbr
 acad
@@ -38,8 +37,6 @@ cfo
 cm
 cmo
 co
-co
-col
 col
 comdr
 corp

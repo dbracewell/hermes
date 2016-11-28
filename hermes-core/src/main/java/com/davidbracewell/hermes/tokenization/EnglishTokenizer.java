@@ -239,9 +239,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
          int peek = 0;
          while ((nn = peek(peek)) != null) {
             String tempLower = emoLower + nn.text.toLowerCase();
-            if ((emoticons.contains(tempLower) && emoticons.isPrefixMatch(tempLower))
-//                   || (!emoticons.contains(tempLower) && emoticons.isPrefixMatch(tempLower).size() > 0)
-               ) {
+            if (emoticons.contains(tempLower) && emoticons.isPrefixMatch(tempLower)) {
                end = nn.charEndIndex;
                emo = emo + nn.text;
                emoLower = tempLower;
