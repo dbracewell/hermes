@@ -23,11 +23,11 @@ package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.guava.common.collect.Iterators;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.stream.MStream;
-import com.google.common.collect.Iterators;
 import lombok.NonNull;
 
 import java.io.Serializable;

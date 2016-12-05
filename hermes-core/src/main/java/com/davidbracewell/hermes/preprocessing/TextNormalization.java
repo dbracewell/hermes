@@ -23,9 +23,9 @@ package com.davidbracewell.hermes.preprocessing;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.collect.Lists;
 import com.davidbracewell.logging.Logger;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 import java.io.Serializable;
 import java.util.Collection;

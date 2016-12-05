@@ -35,8 +35,11 @@ import com.davidbracewell.collection.Streams;
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.function.SerializableConsumer;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.guava.common.collect.ArrayListMultimap;
+import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.lexicon.Lexicon;
@@ -46,8 +49,6 @@ import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.StreamingContext;
 import com.davidbracewell.tuple.Tuple;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -96,6 +97,10 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     */
    static Corpus of(@NonNull Stream<Document> documentStream) {
       return new InMemoryCorpus(documentStream.collect(Collectors.toList()));
+   }
+
+   default void forEachParallel(@NonNull SerializableConsumer<? super Document> consumer) {
+      stream().parallel().forEach(consumer);
    }
 
    /**
@@ -275,7 +280,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .sequence()
                 .type(DatasetType.InMemory)
                 .source(asSequenceStream().map(seq -> featurizer.extractSequence(seq.iterator())))
-                ;
+         ;
    }
 
    /**
@@ -290,7 +295,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .sequence()
                 .type(getDataSetType())
                 .source(asSequenceStream(sequenceType).map(seq -> featurizer.extractSequence(seq.iterator())))
-                ;
+         ;
    }
 
    /**
@@ -305,7 +310,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .sequence()
                 .type(getDataSetType())
                 .source(asSequenceStream(labelFunction).map(seq -> featurizer.extractSequence(seq.iterator())))
-                ;
+         ;
    }
 
    /**
@@ -322,7 +327,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .type(getDataSetType())
                 .source(
                    asSequenceStream(sequenceType, labelFunction).map(seq -> featurizer.extractSequence(seq.iterator())))
-                ;
+         ;
    }
 
    /**
@@ -347,7 +352,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .classification()
                 .type(getDataSetType())
                 .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
-                ;
+         ;
    }
 
    /**
@@ -362,7 +367,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .regression()
                 .type(getDataSetType())
                 .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
-                ;
+         ;
    }
 
    /**
@@ -377,7 +382,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .classification()
                 .type(getDataSetType())
                 .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
-                ;
+         ;
    }
 
    /**
@@ -392,7 +397,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
                 .regression()
                 .type(getDataSetType())
                 .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
-                ;
+         ;
    }
 
 
@@ -601,11 +606,10 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     */
    default Counter<String> terms(@NonNull TermSpec termSpec) {
       return termSpec.getValueCalculator().adjust(
-         Counters.newCounter(
-            stream().flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
-                                       .filter(termSpec.getFilter())
-                                       .map(termSpec.getToStringFunction())
-                            ).countByValue()
+         Counters.newCounter(stream().parallel().flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
+                                                        .filter(termSpec.getFilter())
+                                                        .map(termSpec.getToStringFunction()))
+                                     .countByValue()
                             ));
    }
 

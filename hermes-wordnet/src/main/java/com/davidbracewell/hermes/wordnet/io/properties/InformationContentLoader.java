@@ -23,6 +23,9 @@ package com.davidbracewell.hermes.wordnet.io.properties;
 
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.base.Strings;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.wordnet.Synset;
 import com.davidbracewell.hermes.wordnet.WordNetPOS;
@@ -33,9 +36,6 @@ import com.davidbracewell.hermes.wordnet.properties.PropertyName;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 
 /**
  * @author David B. Bracewell

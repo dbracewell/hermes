@@ -23,13 +23,13 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.reflection.BeanUtils;
 import com.davidbracewell.reflection.Reflect;
 import com.davidbracewell.reflection.ReflectionException;
 import com.davidbracewell.reflection.ReflectionUtils;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
 /**

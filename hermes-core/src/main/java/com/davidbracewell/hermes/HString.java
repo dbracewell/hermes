@@ -30,11 +30,11 @@ import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
+import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple;
-import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
 import java.util.*;

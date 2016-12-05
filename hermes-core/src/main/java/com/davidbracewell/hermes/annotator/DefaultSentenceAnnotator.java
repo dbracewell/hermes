@@ -22,10 +22,10 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.collection.map.Maps;
+import com.davidbracewell.guava.common.collect.ImmutableSet;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -339,7 +339,8 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
 
          boolean isAbbreviation = isAbbreviation(cToken);
          if ((isAbbreviation && expectsCapital(cToken) && !isCapitalized(nToken))
-                || (!isAbbreviation && isEndOfSentenceMark(cToken))
+                || (!isAbbreviation && !cToken.get(Types.TOKEN_TYPE).equals(
+            TokenType.PERSON_TITLE) && isEndOfSentenceMark(cToken))
             ) {
 
             while (isEndOfSentenceMark(nToken)) {

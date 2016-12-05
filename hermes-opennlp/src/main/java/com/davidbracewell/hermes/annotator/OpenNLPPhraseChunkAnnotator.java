@@ -23,13 +23,13 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Throwables;
+import com.davidbracewell.guava.common.collect.Maps;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.attribute.POS;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Maps;
 import opennlp.tools.chunker.ChunkerME;
 import opennlp.tools.chunker.ChunkerModel;
 import opennlp.tools.util.Span;

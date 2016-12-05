@@ -21,8 +21,8 @@
 
 package com.davidbracewell.hermes.lexicon;
 
+import com.davidbracewell.guava.common.collect.ImmutableSet;
 import com.davidbracewell.io.resource.Resource;
-import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 
 import java.io.IOException;

@@ -22,10 +22,10 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.collection.Trie;
+import com.davidbracewell.guava.common.collect.Iterators;
+import com.davidbracewell.guava.common.collect.Maps;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.io.resource.Resource;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
 import lombok.NonNull;
 
 import java.io.IOException;

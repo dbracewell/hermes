@@ -23,6 +23,8 @@ package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Throwables;
+import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Types;
@@ -30,8 +32,6 @@ import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.tuple.*;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Multimap;
 import org.junit.Test;
 
 import java.io.IOException;

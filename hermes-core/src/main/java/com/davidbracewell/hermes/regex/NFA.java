@@ -22,11 +22,11 @@
 package com.davidbracewell.hermes.regex;
 
 
+import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.tuple.Tuple2;
 import com.davidbracewell.tuple.Tuples;
-import com.google.common.collect.ArrayListMultimap;
 
 import java.io.Serializable;
 import java.util.*;

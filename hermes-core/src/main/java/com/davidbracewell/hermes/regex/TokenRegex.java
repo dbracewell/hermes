@@ -23,12 +23,12 @@ package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.parsing.CommonTypes;
 import com.davidbracewell.parsing.ExpressionIterator;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.parsing.expressions.*;
-import com.google.common.base.Preconditions;
 
 import java.io.Serializable;
 import java.util.Collection;

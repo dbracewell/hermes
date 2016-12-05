@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.attribute;
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.HierarchicalEnumValue;
 import com.davidbracewell.config.Config;
-import com.google.common.collect.Sets;
+import com.davidbracewell.guava.common.collect.Sets;
 import lombok.NonNull;
 
 import java.util.Collection;
@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
  */
 public final class EntityType extends HierarchicalEnumValue<EntityType> implements Comparable<EntityType> {
    private static final long serialVersionUID = 1L;
+   public static final String CANONICAL_NAME = EntityType.class.getCanonicalName();
    private static final Set<EntityType> values = Sets.newConcurrentHashSet();
 
 
@@ -49,7 +50,7 @@ public final class EntityType extends HierarchicalEnumValue<EntityType> implemen
    }
 
    private EntityType(String name, EntityType parent) {
-      super(name, parent);
+      super(CANONICAL_NAME, name, parent);
    }
 
    /**

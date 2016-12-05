@@ -21,13 +21,13 @@
 
 package com.davidbracewell.hermes.annotator;
 
+import com.davidbracewell.guava.common.collect.ImmutableMap;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.attribute.Entities;
 import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.hermes.tokenization.TokenType;
-import com.google.common.collect.ImmutableMap;
 
 import java.util.Collections;
 import java.util.Map;

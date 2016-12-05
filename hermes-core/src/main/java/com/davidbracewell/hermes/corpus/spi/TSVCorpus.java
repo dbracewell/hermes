@@ -1,8 +1,8 @@
 package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Joiner;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
-import com.google.common.base.Joiner;
 import lombok.NonNull;
 import org.kohsuke.MetaInfServices;
 

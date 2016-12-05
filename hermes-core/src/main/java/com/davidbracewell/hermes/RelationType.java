@@ -23,7 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
-import com.google.common.collect.Sets;
+import com.davidbracewell.guava.common.collect.Sets;
 import lombok.NonNull;
 
 import java.util.Collection;
@@ -34,13 +34,13 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public final class RelationType extends EnumValue implements AnnotatableType, Comparable<RelationType> {
-
+   public static final String CANONICAL_NAME = RelationType.class.getCanonicalName();
    private static final long serialVersionUID = 1L;
    private static final String typeName = "Relation";
-   private static final Set<RelationType> values = Sets.newConcurrentHashSet();
+   private static final Set<RelationType> values =  Sets.newConcurrentHashSet();
 
    private RelationType(String name) {
-      super(name);
+      super(CANONICAL_NAME,name);
    }
 
    /**

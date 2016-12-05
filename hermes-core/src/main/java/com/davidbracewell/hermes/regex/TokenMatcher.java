@@ -22,9 +22,9 @@
 package com.davidbracewell.hermes.regex;
 
 
+import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
-import com.google.common.base.Preconditions;
 
 import java.util.Collections;
 import java.util.List;

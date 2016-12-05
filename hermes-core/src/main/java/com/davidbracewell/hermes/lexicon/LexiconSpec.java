@@ -23,6 +23,8 @@ package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.Tag;
 import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.primitives.Doubles;
 import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.regex.QueryToPredicate;
@@ -31,8 +33,6 @@ import com.davidbracewell.io.CSVReader;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.parsing.ParseException;
-import com.google.common.base.Preconditions;
-import com.google.common.primitives.Doubles;
 import lombok.Builder;
 import lombok.Data;
 

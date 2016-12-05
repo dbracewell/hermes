@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.collection.Collect;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
@@ -30,7 +31,6 @@ import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.io.resource.StringResource;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Throwables;
 import lombok.NonNull;
 
 import java.io.BufferedReader;

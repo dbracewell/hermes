@@ -26,8 +26,8 @@ import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.HierarchicalEnumValue;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.guava.common.collect.Sets;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.collect.Sets;
 import lombok.NonNull;
 
 import java.util.Collection;
@@ -64,6 +64,7 @@ import java.util.stream.Collectors;
  */
 public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> implements Comparable<AnnotationType>, AnnotatableType {
    private static final long serialVersionUID = 1L;
+   public static final String CANONICAL_NAME = AnnotationType.class.getCanonicalName();
    private static final String typeName = "Annotation";
    private volatile transient AttributeType tagAttributeType = null;
    private volatile transient Set<AttributeType> definedAttributeTypes = null;
@@ -76,7 +77,7 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
 
 
    private AnnotationType(String name, AnnotationType parent) {
-      super(name, parent);
+      super(CANONICAL_NAME,name, parent);
    }
 
 

@@ -22,16 +22,12 @@
 package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.RelationType;
-import com.davidbracewell.hermes.Types;
+import com.davidbracewell.guava.common.collect.Multimap;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.regex.QueryToPredicate;
 import com.davidbracewell.hermes.regex.TokenMatcher;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.collect.Multimap;
 import lombok.Builder;
 import lombok.Value;
 

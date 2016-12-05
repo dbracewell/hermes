@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes;
 
-import com.google.common.collect.ImmutableMap;
+import com.davidbracewell.guava.common.collect.ImmutableMap;
 
 import java.io.Serializable;
 import java.util.Map;

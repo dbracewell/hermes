@@ -29,12 +29,12 @@ import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.collect.Sets;
+import com.davidbracewell.guava.common.util.concurrent.AtomicDouble;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.string.TableFormatter;
 import com.davidbracewell.tuple.Tuple3;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.AtomicDouble;
 import lombok.NonNull;
 
 import java.io.PrintStream;

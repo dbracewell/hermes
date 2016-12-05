@@ -23,6 +23,8 @@ package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
+import com.davidbracewell.guava.common.collect.ArrayListMultimap;
+import com.davidbracewell.guava.common.collect.HashMultimap;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.regex.TokenMatcher;
 import com.davidbracewell.hermes.regex.TokenRegex;
@@ -30,8 +32,6 @@ import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
 import lombok.NonNull;
 import org.yaml.snakeyaml.Yaml;
 

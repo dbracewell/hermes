@@ -26,13 +26,13 @@ import com.davidbracewell.collection.map.Maps;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
+import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
-import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
 import java.io.IOException;

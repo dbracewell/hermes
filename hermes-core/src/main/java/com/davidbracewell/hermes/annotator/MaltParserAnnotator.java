@@ -23,6 +23,8 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Throwables;
+import com.davidbracewell.guava.common.collect.ImmutableSet;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Relation;
@@ -30,8 +32,6 @@ import com.davidbracewell.hermes.Types;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Loggable;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableSet;
 import org.maltparser.concurrent.ConcurrentMaltParserModel;
 import org.maltparser.concurrent.ConcurrentMaltParserService;
 import org.maltparser.concurrent.graph.ConcurrentDependencyEdge;

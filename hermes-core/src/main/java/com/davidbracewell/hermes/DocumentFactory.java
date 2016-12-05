@@ -22,10 +22,10 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.guava.common.base.Joiner;
+import com.davidbracewell.guava.common.collect.Sets;
 import com.davidbracewell.hermes.preprocessing.TextNormalization;
 import com.davidbracewell.hermes.preprocessing.TextNormalizer;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Sets;
 import lombok.NonNull;
 
 import java.io.Serializable;

@@ -21,11 +21,11 @@
 
 package com.davidbracewell.hermes.annotator;
 
+import com.davidbracewell.guava.common.collect.Sets;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.morphology.Stemmers;
-import com.google.common.collect.Sets;
 
 import java.io.Serializable;
 import java.util.Collections;

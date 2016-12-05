@@ -86,9 +86,9 @@ COMPANY = {ALPHANUM} ("&"|"@") {ALPHANUM}
 
 NUMBER=[:digit:]+([\.,][:digit:]+)*("st"|"th"|"rd")?
 
-HASHTAG="#" ({ALPHA}|[:digit:])*
+HASHTAG="#" {ALPHA}({ALPHA}|[:digit:])*
 
-REPLY = "@" [^ \t\n]+
+REPLY = "@" [a-zA-Z0-9_]{1,15}
 
 TIME = [:digit:]+ ":" [:digit:]+ {AMPM}?
 

@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.conversion.Cast;
-import com.google.common.base.Preconditions;
+import com.davidbracewell.guava.common.base.Preconditions;
 
 import java.io.Serializable;
 import java.util.Objects;

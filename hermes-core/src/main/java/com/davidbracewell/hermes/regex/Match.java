@@ -21,8 +21,8 @@
 
 package com.davidbracewell.hermes.regex;
 
+import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.hermes.HString;
-import com.google.common.collect.ArrayListMultimap;
 import lombok.Value;
 
 import java.io.Serializable;

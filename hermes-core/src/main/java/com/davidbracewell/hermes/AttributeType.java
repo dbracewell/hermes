@@ -30,6 +30,8 @@ import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.Val;
+import com.davidbracewell.guava.common.base.Throwables;
+import com.davidbracewell.guava.common.collect.Sets;
 import com.davidbracewell.hermes.attribute.AttributeValueCodec;
 import com.davidbracewell.hermes.attribute.CommonCodecs;
 import com.davidbracewell.hermes.attribute.EntityType;
@@ -42,8 +44,6 @@ import com.davidbracewell.reflection.Reflect;
 import com.davidbracewell.reflection.ReflectionException;
 import com.davidbracewell.reflection.ValueType;
 import com.davidbracewell.tuple.Tuple2;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Sets;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -69,25 +69,26 @@ import java.util.*;
  * @author David B. Bracewell
  */
 public final class AttributeType extends EnumValue implements AnnotatableType, Comparable<AttributeType> {
+   public static final String CANONICAL_NAME = AttributeType.class.getCanonicalName();
    private static final long serialVersionUID = 1L;
    private static final Set<AttributeType> values = Sets.newConcurrentHashSet();
    private static final Map<Class<?>, AttributeValueCodec> defaultCodecs = Collections.unmodifiableMap(
-         Maps.map(Double.class, CommonCodecs.DOUBLE,
-                  Integer.class, CommonCodecs.INTEGER,
-                  String.class, CommonCodecs.STRING,
-                  Long.class, CommonCodecs.LONG,
-                  Boolean.class, CommonCodecs.BOOLEAN,
-                  POS.class, CommonCodecs.PART_OF_SPEECH,
-                  EntityType.class, CommonCodecs.ENTITY_TYPE,
-                  Tag.class, CommonCodecs.TAG,
-                  Date.class, CommonCodecs.DATE,
-                  Language.class, CommonCodecs.LANGUAGE));
+      Maps.map(Double.class, CommonCodecs.DOUBLE,
+               Integer.class, CommonCodecs.INTEGER,
+               String.class, CommonCodecs.STRING,
+               Long.class, CommonCodecs.LONG,
+               Boolean.class, CommonCodecs.BOOLEAN,
+               POS.class, CommonCodecs.PART_OF_SPEECH,
+               EntityType.class, CommonCodecs.ENTITY_TYPE,
+               Tag.class, CommonCodecs.TAG,
+               Date.class, CommonCodecs.DATE,
+               Language.class, CommonCodecs.LANGUAGE));
    private static final String typeName = "Attribute";
    private volatile ValueType valueType;
    private volatile transient AttributeValueCodec codec;
 
    private AttributeType(String name) {
-      super(name);
+      super(CANONICAL_NAME, name);
    }
 
    /**
@@ -110,15 +111,15 @@ public final class AttributeType extends EnumValue implements AnnotatableType, C
    public static AttributeType create(String name, Class<?> valueType) {
       AttributeType toReturn = DynamicEnum.register(new AttributeType(name));
       if (valueType != null && toReturn.valueType == null &&
-            !Config.hasProperty("Attribute" + "." + toReturn.name()) &&
-            !Config.hasProperty("Attribute" + "." + toReturn.name() + ".type")) {
+             !Config.hasProperty("Attribute" + "." + toReturn.name()) &&
+             !Config.hasProperty("Attribute" + "." + toReturn.name() + ".type")) {
 
          Config.setProperty(typeName + "." + toReturn.name() + ".type", valueType.getName());
 
       } else if (valueType != null && !toReturn.getValueType().getType().equals(valueType)) {
          throw new IllegalArgumentException("Attempting to change value type of " + name + " from " + toReturn.getValueType()
                                                                                                               .getType() + " to " + valueType
-               .getName());
+                                                                                                                                       .getName());
       }
 
       values.add(toReturn);
@@ -172,8 +173,8 @@ public final class AttributeType extends EnumValue implements AnnotatableType, C
             Tuple2<String, Val> keyValue = reader.nextKeyValue();
             attributeType = AttributeType.create(keyValue.getKey());
             if (attributeType.getCodec() == null && StructuredSerializable.class.isAssignableFrom(attributeType
-                                                                                                        .getValueType()
-                                                                                                        .getType())) {
+                                                                                                     .getValueType()
+                                                                                                     .getType())) {
                try {
                   value = Reflect.onClass(attributeType.getValueType().getType()).create();
                   Cast.<StructuredSerializable>as(value).read(reader);
@@ -237,8 +238,8 @@ public final class AttributeType extends EnumValue implements AnnotatableType, C
          synchronized (this) {
             if (codec == null) {
                codec = Config
-                     .get("Attribute", name(), "codec")
-                     .as(AttributeValueCodec.class, defaultCodecs.get(getValueType().getType()));
+                          .get("Attribute", name(), "codec")
+                          .as(AttributeValueCodec.class, defaultCodecs.get(getValueType().getType()));
             }
          }
       }
@@ -256,8 +257,9 @@ public final class AttributeType extends EnumValue implements AnnotatableType, C
             return false;
          }
          throw new IllegalArgumentException(
-               value + " [" + value.getWrappedClass().getName() + "] is of wrong type. " +
-                     name() + "'s defined type is " + valueType.getType().getName());
+                                              value + " [" + value.getWrappedClass()
+                                                                  .getName() + "] is of wrong type. " +
+                                                 name() + "'s defined type is " + valueType.getType().getName());
       }
       return true;
    }

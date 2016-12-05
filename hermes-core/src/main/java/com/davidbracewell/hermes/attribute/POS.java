@@ -22,12 +22,12 @@
 package com.davidbracewell.hermes.attribute;
 
 import com.davidbracewell.Tag;
+import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.string.StringPredicates;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
 import java.util.HashMap;

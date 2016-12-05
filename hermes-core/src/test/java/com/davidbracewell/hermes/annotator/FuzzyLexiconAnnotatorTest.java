@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Pipeline;
@@ -30,7 +31,6 @@ import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.lexicon.LexiconSpec;
 import com.davidbracewell.io.Resources;
-import com.google.common.base.Throwables;
 import org.junit.Test;
 
 import java.util.List;

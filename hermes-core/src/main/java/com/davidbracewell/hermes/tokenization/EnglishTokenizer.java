@@ -22,12 +22,12 @@
 package com.davidbracewell.hermes.tokenization;
 
 import com.davidbracewell.collection.Collect;
+import com.davidbracewell.guava.common.base.Throwables;
+import com.davidbracewell.guava.common.collect.Lists;
 import com.davidbracewell.hermes.lexicon.GlobalLexica;
 import com.davidbracewell.hermes.lexicon.TrieWordList;
 import com.davidbracewell.hermes.lexicon.WordList;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
 import lombok.NonNull;
 
 import java.io.IOException;

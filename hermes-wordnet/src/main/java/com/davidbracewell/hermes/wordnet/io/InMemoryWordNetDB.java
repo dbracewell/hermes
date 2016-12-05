@@ -21,14 +21,14 @@
 
 package com.davidbracewell.hermes.wordnet.io;
 
+import com.davidbracewell.guava.common.collect.HashBasedTable;
+import com.davidbracewell.guava.common.collect.Table;
+import com.davidbracewell.guava.common.collect.TreeMultimap;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.wordnet.Sense;
 import com.davidbracewell.hermes.wordnet.Synset;
 import com.davidbracewell.hermes.wordnet.WordNetPOS;
 import com.davidbracewell.hermes.wordnet.WordNetRelation;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
-import com.google.common.collect.TreeMultimap;
 
 import java.io.Serializable;
 import java.util.HashMap;
