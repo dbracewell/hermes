@@ -169,7 +169,7 @@ public interface AnnotatedObject {
    }
 
    /**
-    * <p> Gits the token at the given token index which is a relative offset from this object. For example, given the
+    * <p> Gets the token at the given token index which is a relative offset from this object. For example, given the
     * document with the following tokens: <code>["the", "quick", "brown", "fox", "jumps", "over", "the", "lazy",
     * "dog"]</code> and this annotated object spanning <code>["quick", "brown", "fox"]</code> "quick" would have a
     * relative offset in this object of 0 and document offset of 1. </p>

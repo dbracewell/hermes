@@ -207,12 +207,10 @@ public class Document extends HString {
    public static Document read(@NonNull StructuredFormat format, @NonNull Resource resource) throws IOException {
       try (StructuredReader reader = format.createReader(resource)) {
          reader.beginDocument();
-
          Map<String, Val> docProperties = new HashMap<>();
          List<Annotation> annotations = new LinkedList<>();
          Map<AttributeType, Val> attributeValMap = Collections.emptyMap();
          Map<AnnotatableType, String> completed = new HashMap<>();
-
          while (reader.peek() != ElementType.END_DOCUMENT) {
             if (reader.peek() == ElementType.NAME) {
 
@@ -255,14 +253,13 @@ public class Document extends HString {
             }
          }
          reader.endDocument();
-
          if (!docProperties.containsKey("content")) {
             throw new IOException("Malformed document: no \"content\" file is present");
          }
 
-         Document document = new Document(
-                                            docProperties.containsKey("id") ? docProperties.get("id").asString() : null,
-                                            docProperties.get("content").asString()
+
+         Document document = new Document(docProperties.containsKey("id") ? docProperties.get("id").asString() : null,
+                                          docProperties.get("content").asString()
          );
 
          document.putAll(attributeValMap);

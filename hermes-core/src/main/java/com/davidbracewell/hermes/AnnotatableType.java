@@ -41,7 +41,7 @@ import lombok.NonNull;
  * @author David B. Bracewell
  */
 public interface AnnotatableType {
-   static String ANNOTATOR_PACKAGE = "com.davidbracewell.hermes.annotator";
+   String ANNOTATOR_PACKAGE = "com.davidbracewell.hermes.annotator";
 
    /**
     * Gets the annotator associated with this type for a given language.

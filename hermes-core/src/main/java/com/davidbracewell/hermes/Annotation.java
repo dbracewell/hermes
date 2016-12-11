@@ -128,11 +128,11 @@ public final class Annotation extends Fragment implements Serializable {
       Map<String, Val> annotationProperties = new HashMap<>();
       Map<AttributeType, Val> attributeValMap = Collections.emptyMap();
       List<Relation> relations = new LinkedList<>();
-
       while (reader.peek() != ElementType.END_OBJECT) {
          if (reader.peek() == ElementType.NAME) {
             Maps.put(annotationProperties, reader.nextKeyValue());
          } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
+
             reader.beginObject("attributes");
             attributeValMap = AttributeType.readAttributeList(reader);
             reader.endObject();
@@ -151,6 +151,7 @@ public final class Annotation extends Fragment implements Serializable {
             throw new IOException("Unexpected " + reader.peek());
          }
       }
+
 
       Annotation annotation = Fragments.detachedAnnotation(
          AnnotationType.create(annotationProperties.get("type").asString()),

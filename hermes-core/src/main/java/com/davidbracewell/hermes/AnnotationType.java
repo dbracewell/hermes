@@ -48,18 +48,18 @@ import java.util.stream.Collectors;
  * <code>getTag()</code>. </p>
  * <p>Type information is defined via configuration. An Example is as follows:
  * </pre> {@code
- *    Annotation {
- *          ENTITY {
- *             attributes = ENTITY_TYPE, CONFIDENCE
- *             tag = ENTITY_TYPE
- *          }
- *          REGEX_ENTITY {
- *             parent = ENTITY
- *             annotator = @{DEFAULT_ENTITY_REGEX}
- *         }
- *    }
- *  }
- *  </pre>
+ * Annotation {
+ * ENTITY {
+ * attributes = ENTITY_TYPE, CONFIDENCE
+ * tag = ENTITY_TYPE
+ * }
+ * REGEX_ENTITY {
+ * parent = ENTITY
+ * annotator = @{DEFAULT_ENTITY_REGEX}
+ * }
+ * }
+ * }
+ * </pre>
  * </p>
  */
 public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> implements Comparable<AnnotationType>, AnnotatableType {
@@ -77,7 +77,7 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
 
 
    private AnnotationType(String name, AnnotationType parent) {
-      super(CANONICAL_NAME,name, parent);
+      super(CANONICAL_NAME, name, parent);
    }
 
 
