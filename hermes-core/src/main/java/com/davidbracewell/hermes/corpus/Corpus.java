@@ -41,6 +41,7 @@ import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.io.Resources;
@@ -99,6 +100,11 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
       return new InMemoryCorpus(documentStream.collect(Collectors.toList()));
    }
 
+   /**
+    * For each parallel.
+    *
+    * @param consumer the consumer
+    */
    default void forEachParallel(@NonNull SerializableConsumer<? super Document> consumer) {
       stream().parallel().forEach(consumer);
    }
@@ -155,6 +161,13 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
    Corpus annotate(AnnotatableType... types);
 
 
+   /**
+    * Applies a lexicon to the corpus creating annotations of the given type for matches.
+    *
+    * @param lexicon the lexicon to match
+    * @param type    the annotation type to give the matches
+    * @return the corpus
+    */
    default Corpus applyLexicon(@NonNull Lexicon lexicon, @NonNull AnnotationType type) {
       return map(doc -> {
          if (!doc.isCompleted(type)) {
@@ -785,6 +798,11 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
    }
 
 
+   /**
+    * Gets corpus type.
+    *
+    * @return the corpus type
+    */
    CorpusType getCorpusType();
 
    /**

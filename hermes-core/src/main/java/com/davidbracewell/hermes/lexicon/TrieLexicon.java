@@ -22,8 +22,8 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.collection.Trie;
-import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import lombok.NonNull;
 
 import java.util.Collections;
@@ -74,6 +74,10 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    @Override
    public List<LexiconEntry> getEntries(@NonNull HString hString) {
       String str = normalize(hString);
+      System.out.println(str + " => " + trie.containsKey(str));
+      if( trie.containsKey(str)){
+         System.out.println(trie.get(str));
+      }
       if (trie.containsKey(str)) {
          return trie.get(str).stream()
                     .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
@@ -106,10 +110,7 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
 
    @Override
    public boolean isPrefixMatch(String string) {
-      if (isCaseSensitive()) {
-         return trie.prefix(string).size() > 0;
-      }
-      return trie.prefix(string.toLowerCase()).size() > 0;
+      return trie.prefix(normalize(string)).size() > 0;
    }
 
 }//END OF BaseTrieLexicon

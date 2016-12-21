@@ -22,9 +22,9 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Fragments;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.parsing.*;
 import com.davidbracewell.parsing.expressions.BinaryOperatorExpression;
 import com.davidbracewell.parsing.expressions.Expression;

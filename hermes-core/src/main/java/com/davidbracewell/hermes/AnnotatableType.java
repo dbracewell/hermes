@@ -23,8 +23,10 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.annotator.Annotator;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.reflection.BeanUtils;
 import com.davidbracewell.reflection.Reflect;
 import com.davidbracewell.reflection.ReflectionException;
@@ -113,6 +115,21 @@ public interface AnnotatableType {
     */
    default String canonicalName() {
       return type() + "." + name();
+   }
+
+
+   static AnnotatableType create(String name) {
+      if (StringUtils.isNullOrBlank(name)) {
+         return null;
+      }
+//      if (name.contains("AnnotationType")) {
+//         return Types.annotation(name.substring(name.lastIndexOf('.')+1));
+//      } else if (name.contains("RelationType")) {
+//         return Types.relation(name.substring(name.lastIndexOf('.') + 1));
+//      } else if (name.contains("AttributeType")) {
+//         return Types.attribute(name.substring(name.lastIndexOf('.') + 1));
+//      }
+      return Convert.convert(name, AnnotatableType.class);
    }
 
 

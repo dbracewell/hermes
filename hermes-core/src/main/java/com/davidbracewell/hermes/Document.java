@@ -23,18 +23,17 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Streams;
+import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.guava.common.collect.Maps;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredFormat;
-import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.string.StringUtils;
-import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -190,7 +189,7 @@ public class Document extends HString {
     */
    public static Document fromJson(String jsonString) {
       try {
-         return read(StructuredFormat.JSON, Resources.fromString(jsonString));
+         return read(Resources.fromString(jsonString));
       } catch (IOException e) {
          throw Throwables.propagate(e);
       }
@@ -199,87 +198,72 @@ public class Document extends HString {
    /**
     * Reads in a document in structured format (xml and json are supported).
     *
-    * @param format   the format of the file
     * @param resource the resource the file is in
     * @return the document
     * @throws IOException something went wrong reading the file
     */
-   public static Document read(@NonNull StructuredFormat format, @NonNull Resource resource) throws IOException {
-      try (StructuredReader reader = format.createReader(resource)) {
-         reader.beginDocument();
-         Map<String, Val> docProperties = new HashMap<>();
-         List<Annotation> annotations = new LinkedList<>();
-         Map<AttributeType, Val> attributeValMap = Collections.emptyMap();
-         Map<AnnotatableType, String> completed = new HashMap<>();
-         while (reader.peek() != ElementType.END_DOCUMENT) {
-            if (reader.peek() == ElementType.NAME) {
+   public static Document read(@NonNull Resource resource) throws IOException {
+      //Load the document to a map
+      Map<String, Val> json = StructuredFormat.JSON.loads(resource.readToString());
 
-               com.davidbracewell.collection.map.Maps.put(docProperties, reader.nextKeyValue());
+      //Create the initial document using raw content
+      Document doc = DocumentFactory.getInstance().createRaw(json.getOrDefault("id", Val.NULL).asString(),
+                                                             json.get("content").asString());
 
-            } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
-
-               String name = reader.beginObject();
-
-               switch (name) {
-                  case "attributes":
-                     attributeValMap = AttributeType.readAttributeList(reader);
-                     break;
-                  case "completed":
-                     while (reader.peek() != ElementType.END_OBJECT) {
-                        Tuple2<String, Val> keyValue = reader.nextKeyValue();
-                        completed.put(Types.from(keyValue.getKey()), keyValue.getValue().asString());
-                     }
-                     break;
-                  default:
-                     throw new IOException("Unexpected object named [" + name + "]");
-               }
-
-               reader.endObject();
-
-
-            } else if (reader.peek() == ElementType.BEGIN_ARRAY) {
-
-               String name = reader.beginArray();
-
-               if (name.equals("annotations")) {
-                  while (reader.peek() != ElementType.END_ARRAY) {
-                     annotations.add(Annotation.read(reader));
-                  }
-               } else {
-                  throw new IOException("Unexpected array named [" + name + "]");
-               }
-
-               reader.endArray();
-            }
-         }
-         reader.endDocument();
-         if (!docProperties.containsKey("content")) {
-            throw new IOException("Malformed document: no \"content\" file is present");
-         }
-
-
-         Document document = new Document(docProperties.containsKey("id") ? docProperties.get("id").asString() : null,
-                                          docProperties.get("content").asString()
-         );
-
-         document.putAll(attributeValMap);
-         annotations.forEach(annotation -> {
-            Annotation newAnnotation = new Annotation(document,
-                                                      annotation.getType(),
-                                                      annotation.start(),
-                                                      annotation.end());
-            newAnnotation.putAll(annotation.getAttributeMap());
-            newAnnotation.setId(annotation.getId());
-            newAnnotation.addAll(annotation.allRelations(false));
-            document.annotationSet.add(newAnnotation);
+      //Add document attributes
+      if (json.containsKey("attributes")) {
+         json.get("attributes").<Map<String, Val>>cast().forEach((k, av) -> {
+            AttributeType attrType = Types.attribute(k);
+            doc.put(attrType, attrType.getValueType().decode(av));
          });
-         completed.entrySet().forEach(e -> document.annotationSet.setIsCompleted(e.getKey(), true, e.getValue()));
-         if (annotations.size() > 0) {
-            long max = annotations.stream().mapToLong(Annotation::getId).max().orElseGet(() -> 0L);
-            document.idGenerator.set(max + 1);
-         }
-         return document;
       }
+
+      //Set completed annotations
+      if (json.containsKey("completed")) {
+         json.get("completed").<Map<String, Val>>cast()
+            .forEach((k, av) -> {
+               AnnotatableType type = AnnotatableType.create(k);
+               doc.getAnnotationSet().setIsCompleted(type, true, av.asString());
+            });
+      }
+
+      //Create the annotations
+      AtomicLong maxAnnotationId = new AtomicLong(-1);
+      if (json.containsKey("annotations")) {
+         json.get("annotations").<List<Val>>cast()
+            .forEach(v -> {
+               Map<String, Val> vv = v.cast();
+
+               //Create new annotation
+               Annotation annotation = doc.createAnnotation(AnnotationType.create(vv.get("type").cast()),
+                                                            vv.get("start").<Integer>cast(),
+                                                            vv.get("end").<Integer>cast());
+
+               //Read in and set id and update max id value
+               annotation.setId(vv.get("id").asLongValue());
+               maxAnnotationId.getAndUpdate(old -> old < annotation.getId() ? annotation.getId() : old);
+
+               //Read in the attributes (map of types and values)
+               vv.getOrDefault("attributes", Val.of(Collections.emptyMap())).<Map<String, Val>>cast().forEach(
+                  (k, av) -> {
+                     AttributeType attrType = Types.attribute(k);
+                     annotation.put(attrType, attrType.getValueType().decode(av));
+                  });
+
+               if (vv.containsKey("relations")) {
+                  //Read in the relations (a list of maps containing type, value, and target)
+                  vv.get("relations").<List<Map<String, Val>>>cast()
+                     .forEach(rel -> annotation.add(new Relation(RelationType.create(rel.get("type").asString()),
+                                                                 rel.get("value").asString(),
+                                                                 rel.get("target").asLongValue())));
+               }
+            });
+
+         //Set the next annotation id
+         doc.idGenerator.set(maxAnnotationId.get() + 1);
+      }
+
+      return doc;
    }
 
    @Override
@@ -556,7 +540,7 @@ public class Document extends HString {
    public String toJson() {
       try {
          Resource stringResource = Resources.fromString();
-         write(StructuredFormat.JSON, stringResource);
+         write(stringResource);
          return stringResource.readToString().trim();
       } catch (IOException e) {
          throw Throwables.propagate(e);
@@ -571,12 +555,11 @@ public class Document extends HString {
    /**
     * Writes the document in a structured format
     *
-    * @param format   the format to write in (supports xml and json)
     * @param resource the resource to write to
     * @throws IOException something went wrong writing
     */
-   public void write(@NonNull StructuredFormat format, @NonNull Resource resource) throws IOException {
-      try (StructuredWriter writer = format.createWriter(resource)) {
+   public void write(@NonNull Resource resource) throws IOException {
+      try (StructuredWriter writer = StructuredFormat.JSON.createWriter(resource)) {
          writer.beginDocument();
          writer.writeKeyValue("id", getId());
          writer.writeKeyValue("content", toString());
@@ -584,14 +567,12 @@ public class Document extends HString {
          if (attributes.size() > 0) {
             writer.beginObject("attributes");
             for (Map.Entry<AttributeType, Val> entry : attributeValues()) {
-               entry.getKey().write(writer, entry.getValue());
+               writer.writeKeyValue(entry.getKey().name(), entry.getKey().getValueType().encode(entry.getValue()));
             }
             writer.endObject();
          }
 
          if (annotationSet.size() > 0) {
-
-
             writer.beginObject("completed");
             for (AnnotatableType type : getAnnotationSet().getCompleted()) {
                writer.writeKeyValue(type.canonicalName(), getAnnotationSet().getAnnotationProvider(type));
@@ -600,7 +581,39 @@ public class Document extends HString {
 
             writer.beginArray("annotations");
             for (Annotation annotation : annotationSet) {
-               annotation.write(writer);
+               writer.beginObject();
+               writer.writeKeyValue("type", annotation.getType().name());
+               writer.writeKeyValue("start", annotation.start());
+               writer.writeKeyValue("end", annotation.end());
+               writer.writeKeyValue("id", annotation.getId());
+               if (Config.get("Annotation.writeContent").asBooleanValue(false)) {
+                  writer.writeKeyValue("content", annotation.toString());
+               }
+
+               if (annotation.getAttributeMap().size() > 0) {
+                  writer.beginObject("attributes");
+                  for (Map.Entry<AttributeType, Val> entry : annotation.attributeValues()) {
+                     writer.writeKeyValue(entry.getKey().name(),
+                                          entry.getKey().getValueType().encode(entry.getValue()));
+
+                  }
+                  writer.endObject();
+               }
+
+               Collection<Relation> relations = annotation.allRelations();
+               if (relations.size() > 0) {
+                  writer.beginArray("relations");
+                  for (Relation relation : relations) {
+                     writer.beginObject();
+                     writer.writeKeyValue("type", relation.getType());
+                     writer.writeKeyValue("value", relation.getValue());
+                     writer.writeKeyValue("target", relation.getTarget());
+                     writer.endObject();
+                  }
+                  writer.endArray();
+               }
+
+               writer.endObject();
             }
             writer.endArray();
          }

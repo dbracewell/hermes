@@ -47,15 +47,6 @@ public class FormatsTests {
   }
 
   @Test
-  public void testXMLReadWrite() throws Exception {
-    Resource writeTo = Resources.temporaryDirectory();
-    Corpus c = Corpus.builder().add(DocumentProvider.getAnnotatedDocument())
-      .build()
-      .write("XML", writeTo);
-    assertEquals(1d, c.size(), 0d);
-  }
-
-  @Test
   public void testJSONReadWrite() throws Exception {
     Resource writeTo = Resources.fromString();
     Corpus c = Corpus.builder()

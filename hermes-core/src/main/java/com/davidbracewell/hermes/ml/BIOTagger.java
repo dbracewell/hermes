@@ -86,7 +86,7 @@ public class BIOTagger extends AnnotationTagger {
             HString span = start.union(end);
             Annotation entity = sentence.document().createAnnotation(annotationType, span);
             entity.put(annotationType.getTagAttributeType(),
-                       annotationType.getTagAttributeType().getValueType().convert(type));
+                       annotationType.getTagAttributeType().getValueType().decode(type));
          }
       }
    }

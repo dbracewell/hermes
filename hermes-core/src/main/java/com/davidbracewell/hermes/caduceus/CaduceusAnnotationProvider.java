@@ -23,8 +23,8 @@ package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.AnnotationType;
-import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import lombok.Builder;
 import lombok.Value;
 
@@ -71,10 +71,10 @@ class CaduceusAnnotationProvider implements Serializable {
   private static Map<AttributeType, Val> readAttributes(List<Object> list) throws IOException {
     Map<AttributeType, Val> result = new HashMap<>();
     for (Object o : list) {
-      CaduceusProgram.ensureMap(o, "Attribute values should be key-value pairs").entrySet().stream()
+      CaduceusProgram.ensureMap(o, "Attribute values should be key-value pairs").entrySet()
         .forEach(entry -> {
           AttributeType attributeType = AttributeType.create(entry.getKey());
-          result.put(attributeType, Val.of(attributeType.getValueType().convert(entry.getValue())));
+          result.put(attributeType, Val.of(attributeType.getValueType().decode(entry.getValue())));
         });
     }
     return result;

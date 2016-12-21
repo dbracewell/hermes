@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes;
+package com.davidbracewell.hermes.attribute;
 
 import com.davidbracewell.EnumValue;
 import com.davidbracewell.Language;
@@ -27,12 +27,10 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.NewObjectConverter;
 import com.davidbracewell.conversion.Val;
-import com.davidbracewell.hermes.attribute.EntityType;
-import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.tokenization.TokenType;
 
 import java.text.DateFormat;
-import java.util.Date;
+import java.util.*;
 
 /**
  * The enum Attribute value type.
@@ -240,6 +238,34 @@ public enum AttributeValueType {
       protected Object encodeImpl(Object value) {
          return Cast.<java.net.URL>as(value).toString();
       }
+   },
+   /**
+    * Value type for {@link com.davidbracewell.hermes.attribute.StringTag}s
+    */
+   STRING_TAG {
+      @Override
+      @SuppressWarnings("unchecked")
+      protected StringTag decodeImpl(Object value) {
+         return value instanceof StringTag
+                ? Cast.as(value) : new StringTag(value.toString());
+      }
+
+      @Override
+      protected Object encodeImpl(Object value) {
+         return Cast.<StringTag>as(value).name();
+      }
+   },
+   DEFAULT {
+      @Override
+      @SuppressWarnings("unchecked")
+      protected String decodeImpl(Object value) {
+         return value.toString();
+      }
+
+      @Override
+      protected Object encodeImpl(Object value) {
+         return Convert.convert(value, String.class);
+      }
    };
 
    /**
@@ -267,6 +293,16 @@ public enum AttributeValueType {
    public final <T> T decode(Object value) {
       if (value == null) {
          return null;
+      }
+      if (value instanceof Collection) {
+         List<T> list = new ArrayList<>();
+         Cast.<Collection<?>>as(value).forEach(o -> list.add(decode(o)));
+         return Cast.as(list);
+      }
+      if (value instanceof Map) {
+         Map<String, T> map = new HashMap<>();
+         Cast.<Map<?, ?>>as(value).forEach((k, v) -> map.put(k.toString(), decode(v)));
+         return Cast.as(map);
       }
       if (value instanceof Val) {
          return decodeImpl(Cast.<Val>as(value).get());

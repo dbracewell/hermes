@@ -31,7 +31,7 @@ import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
-import com.davidbracewell.io.AsyncWriter;
+import com.davidbracewell.io.MultiFileWriter;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
@@ -188,7 +188,7 @@ public final class Pipeline implements Serializable {
     * @param documents the source of documents to be annotated
     */
    @SneakyThrows
-   public Corpus process(Corpus documents) {
+   public Corpus process(@NonNull Corpus documents) {
       timer.start();
 
       Broker.Builder<Document> builder = Broker.<Document>builder()
@@ -197,9 +197,10 @@ public final class Pipeline implements Serializable {
 
       Corpus corpus = documents;
       if (returnCorpus && corpus.getDataSetType() == DatasetType.OffHeap) {
-         Resource tempFile = Resources.temporaryFile();
+         Resource tempFile = Resources.temporaryDirectory();
          tempFile.deleteOnExit();
-         try (AsyncWriter writer = new AsyncWriter(tempFile.writer())) {
+         try (MultiFileWriter writer = new MultiFileWriter(tempFile, "part-", numberOfThreads)) {
+            //Todo: reimpliment so that each thread has its own writer and file.
             builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer),
                                 numberOfThreads)
                    .build()
@@ -335,9 +336,9 @@ public final class Pipeline implements Serializable {
       private final AnnotatableType[] annotationTypes;
       private final java.util.function.Consumer<Document> onComplete;
       private final AtomicLong counter;
-      private final AsyncWriter writer;
+      private final MultiFileWriter writer;
 
-      private AnnotateConsumer(AnnotatableType[] annotationTypes, Consumer<Document> onComplete, AtomicLong counter, AsyncWriter writer) {
+      private AnnotateConsumer(AnnotatableType[] annotationTypes, Consumer<Document> onComplete, AtomicLong counter, MultiFileWriter writer) {
          this.annotationTypes = annotationTypes;
          this.onComplete = onComplete;
          this.counter = counter;

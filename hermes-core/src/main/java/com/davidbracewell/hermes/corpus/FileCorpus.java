@@ -32,12 +32,11 @@ import com.davidbracewell.logging.Logger;
 import com.davidbracewell.stream.MStream;
 import lombok.NonNull;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * <p>
@@ -59,7 +58,7 @@ public class FileCorpus implements Corpus, Serializable {
    /**
     * Instantiates a new file based corpus
     *
-    * @param corpusFormat  the corpus format
+    * @param corpusFormat    the corpus format
     * @param resource        the resource containing the corpus
     * @param documentFactory the document factory to use when constructing documents
     */
@@ -92,25 +91,19 @@ public class FileCorpus implements Corpus, Serializable {
       ));
    }
 
+   private void write(MStream<String> lines, Writer writer) throws IOException {
+      for (String line : Collect.asIterable(lines.iterator())) {
+         writer.write(line);
+         writer.write("\n");
+      }
+   }
+
    @Override
    public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
       CorpusFormat corpusFormat = CorpusFormats.forName(format);
-      if (corpusFormat == this.corpusFormat) {
-         try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
-            try (MStream<String> lines = this.resource.lines()) {
-               AtomicLong count = new AtomicLong();
-               for (String line : Collect.asIterable(lines.iterator())) {
-                  writer.write(line);
-                  writer.write("\n");
-                  if (count.incrementAndGet() % 1000 == 0) {
-                     writer.flush();
-                  }
-               }
-            } catch (Exception e) {
-               throw new IOException(e);
-            }
-         }
-         return Corpus.builder().format(format).source(resource).build();
+      if (corpusFormat.name().equals(this.corpusFormat.name())) {
+         this.resource.copy(resource);
+         return Corpus.builder().source(resource).format(corpusFormat).build();
       } else {
          return Corpus.super.write(format, resource);
       }

@@ -27,6 +27,7 @@ import com.davidbracewell.HierarchicalEnumValue;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.guava.common.collect.Sets;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 

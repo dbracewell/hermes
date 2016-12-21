@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import lombok.NonNull;
 
 import java.util.*;

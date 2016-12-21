@@ -30,6 +30,7 @@ import com.davidbracewell.apollo.ml.classification.ClassifierLearner;
 import com.davidbracewell.apollo.ml.classification.LibLinearLearner;
 import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotations;
 import com.davidbracewell.hermes.ml.feature.NGramFeature;

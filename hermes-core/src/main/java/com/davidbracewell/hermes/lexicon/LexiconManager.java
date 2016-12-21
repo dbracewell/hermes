@@ -25,8 +25,8 @@ import com.davidbracewell.cache.Cache;
 import com.davidbracewell.cache.CacheManager;
 import com.davidbracewell.cache.CacheSpec;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.reflection.BeanUtils;
 import com.davidbracewell.string.StringPredicates;
@@ -111,7 +111,6 @@ public final class LexiconManager implements Serializable {
        * Instance empty lexicon.
        */
       INSTANCE;
-
 
 
       @Override

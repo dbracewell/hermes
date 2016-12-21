@@ -39,21 +39,24 @@ import static org.junit.Assert.*;
 public class EntityAnnotatorTest {
 
 
-  @Test
-  public void testAnnotate() throws Exception {
-    Config.initializeTest();
-    Document document = DocumentProvider.getAnnotatedEmoticonDocument();
-    Pipeline.process(document, Types.ENTITY);
-    List<Annotation> entities = document.get(Types.ENTITY);
+   @Test
+   public void testAnnotate() throws Exception {
+      Config.initializeTest();
+      Config.setProperty("com.davidbracewell.hermes.annotator.EntityAnnotator.subTypes", "TOKEN_TYPE_ENTITY");
+      Document document = DocumentProvider.getAnnotatedEmoticonDocument();
+      Pipeline.process(document, Types.ENTITY);
+      List<Annotation> entities = document.get(Types.ENTITY);
 
-    assertEquals(";-)", entities.get(0).toString());
-    assertEquals(Entities.EMOTICON, entities.get(0).getTag().get());
+      document.tokenStream().forEach(token -> System.out.println(token + "/" + token.getType()));
 
-    assertEquals("http://www.somevideo.com/video.html", entities.get(1).toString());
-    assertEquals(Entities.URL, entities.get(1).getTag().get());
+      assertEquals(";-)", entities.get(0).toString());
+      assertEquals(Entities.EMOTICON, entities.get(0).getTag().get());
 
-    assertEquals("$100", entities.get(2).toString());
-    assertEquals(Entities.MONEY, entities.get(2).getTag().get());
+      assertEquals("http://www.somevideo.com/video.html", entities.get(1).toString());
+      assertEquals(Entities.URL, entities.get(1).getTag().get());
 
-  }
+      assertEquals("$100", entities.get(2).toString());
+      assertEquals(Entities.MONEY, entities.get(2).getTag().get());
+
+   }
 }

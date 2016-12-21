@@ -23,14 +23,13 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Tag;
 import com.davidbracewell.collection.map.Maps;
-import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.io.structured.ElementType;
 import com.davidbracewell.io.structured.StructuredReader;
-import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
@@ -134,7 +133,7 @@ public final class Annotation extends Fragment implements Serializable {
          } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
 
             reader.beginObject("attributes");
-            attributeValMap = AttributeType.readAttributeList(reader);
+//            attributeValMap = AttributeType.readAttributeList(reader);
             reader.endObject();
          } else if (reader.peek() == ElementType.BEGIN_ARRAY) {
             reader.beginArray("relations");
@@ -302,7 +301,7 @@ public final class Annotation extends Fragment implements Serializable {
    public boolean isInstanceOfTag(String tag) {
       return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttributeType()
                                                                                       .getValueType()
-                                                                                      .convert(tag)));
+                                                                                      .decode(tag)));
    }
 
    /**
@@ -409,47 +408,6 @@ public final class Annotation extends Fragment implements Serializable {
          }
       }
       return tokens == null ? Collections.emptyList() : Arrays.asList(tokens);
-   }
-
-   /**
-    * Write.
-    *
-    * @param writer the writer
-    * @throws IOException the io exception
-    */
-   void write(StructuredWriter writer) throws IOException {
-      writer.beginObject();
-
-      writer.writeKeyValue("type", annotationType.name());
-      writer.writeKeyValue("start", start());
-      writer.writeKeyValue("end", end());
-      writer.writeKeyValue("id", getId());
-
-      if (Config.get("Annotation.writeContent").asBooleanValue(false)) {
-         writer.writeKeyValue("content", toString());
-      }
-
-      if (getAttributeMap().size() > 0) {
-         writer.beginObject("attributes");
-         for (Map.Entry<AttributeType, Val> entry : attributeValues()) {
-            entry.getKey().write(writer, entry.getValue());
-         }
-         writer.endObject();
-      }
-
-      if (relations.size() > 0) {
-         writer.beginArray("relations");
-         for (Relation relation : relations) {
-            writer.beginObject();
-            writer.writeKeyValue("type", relation.getType());
-            writer.writeKeyValue("value", relation.getValue());
-            writer.writeKeyValue("target", relation.getTarget());
-            writer.endObject();
-         }
-         writer.endArray();
-      }
-
-      writer.endObject();
    }
 
 }//END OF Annotation

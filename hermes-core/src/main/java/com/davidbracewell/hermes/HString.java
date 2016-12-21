@@ -31,6 +31,7 @@ import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.string.StringUtils;

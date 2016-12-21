@@ -25,7 +25,6 @@ import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.io.structured.StructuredFormat;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
@@ -47,7 +46,7 @@ public class JSONFormat extends FileBasedFormat {
 
   @Override
   public void write(Resource resource, Document document) throws IOException {
-    document.write(StructuredFormat.JSON, resource);
+    document.write(resource);
   }
 
   @Override
