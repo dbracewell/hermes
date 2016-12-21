@@ -59,12 +59,12 @@ public class TrieWordList implements WordList, PrefixSearchable, Serializable {
 
    @Override
    public boolean isPrefixMatch(HString hString) {
-      return false;
+      return !words.prefix(hString.toString()).isEmpty();
    }
 
    @Override
    public boolean isPrefixMatch(String hString) {
-      return false;
+      return !words.prefix(hString).isEmpty();
    }
 
    @Override

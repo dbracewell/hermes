@@ -37,22 +37,28 @@ import java.util.Collections;
  */
 @MetaInfServices(CorpusFormat.class)
 public class JSONFormat extends FileBasedFormat {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  @Override
-  public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
-    return Collections.singleton(Document.fromJson(resource.readToString()));
-  }
+   @Override
+   public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
+      return Collections.singleton(Document.fromJson(resource.readToString()));
+   }
 
-  @Override
-  public void write(Resource resource, Document document) throws IOException {
-    document.write(resource);
-  }
+//  @Override
+//  public void write(Resource resource, Document document) throws IOException {
+//    document.write(resource);
+//  }
 
-  @Override
-  public String name() {
-    return "JSON";
-  }
+
+   @Override
+   public String toString(Document document) {
+      return document.toJson();
+   }
+
+   @Override
+   public String name() {
+      return "JSON";
+   }
 
 
 }//END OF JSONFormat

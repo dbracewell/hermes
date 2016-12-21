@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.SystemInfo;
 import com.davidbracewell.apollo.affinity.ContingencyTable;
 import com.davidbracewell.apollo.affinity.ContingencyTableCalculator;
 import com.davidbracewell.apollo.ml.Featurizer;
@@ -34,22 +35,29 @@ import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
+import com.davidbracewell.concurrent.Broker;
+import com.davidbracewell.concurrent.IterableProducer;
+import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableConsumer;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.function.Unchecked;
 import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.lexicon.Lexicon;
+import com.davidbracewell.io.AsyncWriter;
+import com.davidbracewell.io.MultiFileWriter;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.StreamingContext;
 import com.davidbracewell.tuple.Tuple;
+import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -620,8 +628,8 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
    default Counter<String> terms(@NonNull TermSpec termSpec) {
       return termSpec.getValueCalculator().adjust(
          Counters.newCounter(stream().parallel().flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
-                                                        .filter(termSpec.getFilter())
-                                                        .map(termSpec.getToStringFunction()))
+                                                                   .filter(termSpec.getFilter())
+                                                                   .map(termSpec.getToStringFunction()))
                                      .countByValue()
                             ));
    }
@@ -701,6 +709,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
       return write(CorpusFormats.forName(format), resource);
    }
 
+
    /**
     * Write corpus.
     *
@@ -710,7 +719,54 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     * @throws IOException the io exception
     */
    default Corpus write(@NonNull CorpusFormat format, @NonNull Resource resource) throws IOException {
-      format.write(resource, this);
+      if (format.isOnePerLine()) {
+         if ((resource.exists() && resource.isDirectory()) || (!resource.exists() && !resource.path().contains("."))) {
+            try (MultiFileWriter writer = new MultiFileWriter(resource, "part-",
+                                                              Config.get("file.parts").asIntegerValue(10))) {
+               Broker.<Document>builder()
+                  .addProducer(new IterableProducer<>(this))
+                  .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document))),
+                               SystemInfo.NUMBER_OF_PROCESSORS - 1)
+                  .build().run();
+            } catch (RuntimeException re) {
+               if (re.getCause() instanceof IOException) {
+                  throw Cast.<IOException>as(re.getCause());
+               }
+               throw re;
+            }
+         } else {
+            try (AsyncWriter writer = new AsyncWriter(resource.writer())) {
+               Broker.<Document>builder()
+                  .addProducer(new IterableProducer<>(this))
+                  .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document))),
+                               SystemInfo.NUMBER_OF_PROCESSORS - 1)
+                  .build().run();
+            } catch (RuntimeException re) {
+               if (re.getCause() instanceof IOException) {
+                  throw Cast.<IOException>as(re.getCause());
+               }
+               throw re;
+            }
+         }
+      } else {
+         //None one-per-line formats require multiple files
+         Preconditions.checkArgument(!resource.exists() || resource.isDirectory(), "Must specify a directory");
+         try {
+            Broker.<Document>builder()
+               .addProducer(new IterableProducer<>(this))
+               .addConsumer(Unchecked.consumer(document ->
+                                                  resource.getChild(document.getId() + "." + format.extension())
+                                                          .write(format.toString(document))
+
+                                              ), SystemInfo.NUMBER_OF_PROCESSORS - 1)
+               .build().run();
+         } catch (RuntimeException re) {
+            if (re.getCause() instanceof IOException) {
+               throw Cast.<IOException>as(re.getCause());
+            }
+            throw re;
+         }
+      }
       return builder().from(format, resource, getDocumentFactory()).build();
    }
 

@@ -200,8 +200,32 @@ public class CoNLLFormat extends FileBasedFormat {
       return "CONLL";
    }
 
+//   @Override
+//   public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
+//      StringBuilder builder = new StringBuilder();
+//      List<CoNLLColumnProcessor> processors = getProcessors();
+//      String fieldSep = Config.get(FS_PROPERTY).asString("\\s+").replaceFirst("[\\*\\+]$", "");
+//      if (fieldSep.equals("\\s")) {
+//         fieldSep = " ";
+//      }
+//      for (Annotation sentence : document.sentences()) {
+//         for (int i = 0; i < sentence.tokenLength(); i++) {
+//            for (int p = 0; p < processors.size(); p++) {
+//               if (p > 0) {
+//                  builder.append(fieldSep);
+//               }
+//               builder.append(processors.get(p).processOutput(sentence, sentence.tokenAt(i), i));
+//            }
+//            builder.append(SystemInfo.LINE_SEPARATOR);
+//         }
+//         builder.append(SystemInfo.LINE_SEPARATOR);
+//      }
+//      resource.write(builder.toString());
+//   }
+
+
    @Override
-   public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
+   public String toString(Document document) {
       StringBuilder builder = new StringBuilder();
       List<CoNLLColumnProcessor> processors = getProcessors();
       String fieldSep = Config.get(FS_PROPERTY).asString("\\s+").replaceFirst("[\\*\\+]$", "");
@@ -220,7 +244,7 @@ public class CoNLLFormat extends FileBasedFormat {
          }
          builder.append(SystemInfo.LINE_SEPARATOR);
       }
-      resource.write(builder.toString());
+      return builder.toString();
    }
 
 }//END OF CoNLLFormat

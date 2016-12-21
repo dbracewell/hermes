@@ -21,7 +21,6 @@
 
 package com.davidbracewell.hermes.corpus;
 
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
@@ -34,7 +33,6 @@ import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.Writer;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -91,23 +89,16 @@ public class FileCorpus implements Corpus, Serializable {
       ));
    }
 
-   private void write(MStream<String> lines, Writer writer) throws IOException {
-      for (String line : Collect.asIterable(lines.iterator())) {
-         writer.write(line);
-         writer.write("\n");
-      }
-   }
-
-   @Override
-   public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
-      CorpusFormat corpusFormat = CorpusFormats.forName(format);
-      if (corpusFormat.name().equals(this.corpusFormat.name())) {
-         this.resource.copy(resource);
-         return Corpus.builder().source(resource).format(corpusFormat).build();
-      } else {
-         return Corpus.super.write(format, resource);
-      }
-   }
+//   @Override
+//   public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
+//      CorpusFormat corpusFormat = CorpusFormats.forName(format);
+//      if (corpusFormat.name().equals(this.corpusFormat.name())) {
+//         this.resource.copy(resource);
+//         return Corpus.builder().source(resource).format(corpusFormat).build();
+//      } else {
+//         return Corpus.super.write(format, resource);
+//      }
+//   }
 
 
    @Override

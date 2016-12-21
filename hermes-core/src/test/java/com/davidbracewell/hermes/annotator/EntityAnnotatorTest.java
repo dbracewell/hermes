@@ -47,7 +47,6 @@ public class EntityAnnotatorTest {
       Pipeline.process(document, Types.ENTITY);
       List<Annotation> entities = document.get(Types.ENTITY);
 
-      document.tokenStream().forEach(token -> System.out.println(token + "/" + token.getType()));
 
       assertEquals(";-)", entities.get(0).toString());
       assertEquals(Entities.EMOTICON, entities.get(0).getTag().get());

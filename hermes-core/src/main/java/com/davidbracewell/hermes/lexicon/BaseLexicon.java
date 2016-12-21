@@ -121,7 +121,6 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
          for (int start = end - 1; start >= 0 && start >= (end - maxLen); start--) {
             HString span = HString.union(tokens.subList(start, end));
             LexiconEntry entry = getEntries(span).stream().findFirst().orElse(new LexiconEntry("", 0, null, null));
-//            System.out.println(span + " : " + entry);
             LexiconMatch score = new LexiconMatch(span, entry.getProbability(), entry.getLemma(), entry.getTag());
             double segmentScore = score.getScore() + best[start];
             if (segmentScore >= best[end]) {

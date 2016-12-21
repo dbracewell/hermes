@@ -53,7 +53,7 @@ public class TwitterSearchFormat extends FileBasedFormat {
          String id = String.format("%.0f", Val.of(status.get("id")).asDoubleValue());
          String content = Val.of(status.get("text")).asString();
          Language language = Language.fromString(
-               Val.of(status.get("metadata")).asMap(String.class, Val.class).get("iso_language_code").asString()
+            Val.of(status.get("metadata")).asMap(String.class, Val.class).get("iso_language_code").asString()
                                                 );
          Document document = documentFactory.create(id, content, language);
          documentList.add(document);

@@ -74,10 +74,6 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    @Override
    public List<LexiconEntry> getEntries(@NonNull HString hString) {
       String str = normalize(hString);
-      System.out.println(str + " => " + trie.containsKey(str));
-      if( trie.containsKey(str)){
-         System.out.println(trie.get(str));
-      }
       if (trie.containsKey(str)) {
          return trie.get(str).stream()
                     .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))

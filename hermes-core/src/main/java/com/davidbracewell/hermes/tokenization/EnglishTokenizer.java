@@ -234,12 +234,13 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
          if (!emoticons.isPrefixMatch(emoLower)) {
             return n;
          }
+
          Token nn;
          int end = n.charEndIndex;
          int peek = 0;
          while ((nn = peek(peek)) != null) {
             String tempLower = emoLower + nn.text.toLowerCase();
-            if (emoticons.contains(tempLower) && emoticons.isPrefixMatch(tempLower)) {
+            if (!emoticons.contains(tempLower) && emoticons.isPrefixMatch(tempLower)) {
                end = nn.charEndIndex;
                emo = emo + nn.text;
                emoLower = tempLower;
@@ -256,6 +257,11 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
                return n;
             }
          }
+
+//         if (emoticons.contains(emoLower)) {
+//            nn = consume(peek - 1);
+//            return new Token(emo, TokenType.EMOTICON, n.charStartIndex, nn.charEndIndex + 1, n.index);
+//         }
 
          return n;
       }

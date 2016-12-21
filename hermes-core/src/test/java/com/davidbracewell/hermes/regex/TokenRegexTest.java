@@ -45,6 +45,7 @@ public class TokenRegexTest {
    @Before
    public void setUp() throws Exception {
       Config.initializeTest();
+      Config.setProperty("com.davidbracewell.hermes.annotator.EntityAnnotator.subTypes", "TOKEN_TYPE_ENTITY");
       document = DocumentFactory.getInstance().create("John met Sally by the seashore at 12:30pm yesterday.");
       Pipeline.process(document, Types.TOKEN, Types.SENTENCE, Types.ENTITY);
 
@@ -249,8 +250,8 @@ public class TokenRegexTest {
       assertEquals("Sally", matcher.group().toString());
       assertTrue(matcher.find());
       assertEquals("seashore", matcher.group().toString());
-//      assertTrue(matcher.find());
-//      assertEquals("12:30pm yesterday", matcher.group().toString());
+      assertTrue(matcher.find());
+      assertEquals("12:30pm", matcher.group().toString());
       assertFalse(matcher.find());
 
       matcher = TokenRegex.compile("{ENTITY $PERSON}").matcher(document);
@@ -267,8 +268,8 @@ public class TokenRegexTest {
       assertEquals("Sally", matcher.group().toString());
       assertTrue(matcher.find());
       assertEquals("seashore", matcher.group().toString());
-//      assertTrue(matcher.find());
-//      assertEquals("12:30pm yesterday", matcher.group().toString());
+      assertTrue(matcher.find());
+      assertEquals("12:30pm", matcher.group().toString());
       assertFalse(matcher.find());
 
       matcher = TokenRegex.compile("^{ENTITY}").matcher(document);

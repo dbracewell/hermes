@@ -28,13 +28,11 @@ import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.io.resource.StringResource;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
@@ -164,35 +162,41 @@ public class OnePerLineFormat extends FileBasedFormat {
 //      } catch (RuntimeException re) {
 //         throw new IOException(re.getCause());
 //      }
-      for (Document document : documents) {
-         Resource stringResource = new StringResource();
-         subFormat.write(stringResource, document);
-         String string = stringResource.readToString().trim();
-         if (!subFormat.isOnePerLine()) {
-            string = string.replace("\n", "\\n");
-         }
-         writer.write(string);
-         writer.write("\n");
-      }
-   }
-
-   @Override
-   public void write(@NonNull Resource resource, @NonNull Iterable<Document> documents) throws IOException {
-//      if ((resource.exists() && resource.isDirectory()) || (!resource.exists() && !resource.path().contains("."))) {
-//         try (MultiFileWriter writer = new MultiFileWriter(resource, "part-",
-//                                                           Config.get("file.splits").asIntegerValue(20))) {
-//            write(writer, documents);
+//      for (Document document : documents) {
+//         Resource stringResource = new StringResource();
+//         subFormat.write(stringResource, document);
+//         String string = stringResource.readToString().trim();
+//         if (!subFormat.isOnePerLine()) {
+//            string = string.replace("\n", "\\n");
 //         }
-//      } else {
-         try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
-            write(writer, documents);
-         }
+//         writer.write(string);
+//         writer.write("\n");
 //      }
    }
 
+//   @Override
+//   public void write(@NonNull Resource resource, @NonNull Iterable<Document> documents) throws IOException {
+////      if ((resource.exists() && resource.isDirectory()) || (!resource.exists() && !resource.path().contains("."))) {
+////         try (MultiFileWriter writer = new MultiFileWriter(resource, "part-",
+////                                                           Config.get("file.splits").asIntegerValue(20))) {
+////            write(writer, documents);
+////         }
+////      } else {
+//         try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
+//            write(writer, documents);
+//         }
+////      }
+//   }
+
+//   @Override
+//   public void write(Resource resource, Document document) throws IOException {
+//      subFormat.write(resource, document);
+//   }
+
+
    @Override
-   public void write(Resource resource, Document document) throws IOException {
-      subFormat.write(resource, document);
+   public String toString(Document document) {
+      return subFormat.toString(document).replaceAll("\n", "\\n") + "\n";
    }
 
    @Override
