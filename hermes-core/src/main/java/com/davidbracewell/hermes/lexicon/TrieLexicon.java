@@ -26,10 +26,7 @@ import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.attribute.AttributeType;
 import lombok.NonNull;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -102,6 +99,11 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    @Override
    public boolean isPrefixMatch(@NonNull HString hString) {
       return trie.prefix(normalize(hString)).size() > 0 || trie.prefix(normalize(hString.getLemma())).size() > 0;
+   }
+
+   @Override
+   public Set<String> prefixes(String string) {
+      return trie.prefix(string).keySet();
    }
 
    @Override

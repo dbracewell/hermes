@@ -63,6 +63,11 @@ public class TrieWordList implements WordList, PrefixSearchable, Serializable {
    }
 
    @Override
+   public Set<String> prefixes(String string) {
+      return words.prefix(string).keySet();
+   }
+
+   @Override
    public boolean isPrefixMatch(String hString) {
       return !words.prefix(hString).isEmpty();
    }
@@ -77,9 +82,15 @@ public class TrieWordList implements WordList, PrefixSearchable, Serializable {
       return words.size();
    }
 
-   public static TrieWordList read(@NonNull Resource resource) throws IOException {
+   public static TrieWordList read(@NonNull Resource resource, boolean lowerCase) throws IOException {
       return new TrieWordList(resource.readLines().stream()
-                                      .map(line -> line.trim().toLowerCase())
+                                      .filter(line -> !line.startsWith("#"))
+                                      .map(line -> {
+                                         if (lowerCase) {
+                                            return line.trim().toLowerCase();
+                                         }
+                                         return line.trim();
+                                      })
                                       .collect(Collectors.toSet()));
    }
 

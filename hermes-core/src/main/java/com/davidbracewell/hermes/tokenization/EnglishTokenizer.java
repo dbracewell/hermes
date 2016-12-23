@@ -36,6 +36,7 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * The type English tokenizer.
@@ -44,7 +45,7 @@ import java.util.NoSuchElementException;
  */
 public class EnglishTokenizer implements Tokenizer, Serializable {
    private static final long serialVersionUID = 1L;
-   private final WordList abbreviations;
+   private final TrieWordList abbreviations;
    private final WordList tlds;
    private final TrieWordList emoticons;
 
@@ -83,12 +84,15 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
          }
 
          Token token = consume();
+         if (token == null) {
+            throw new NoSuchElementException();
+         }
+
          if (token.type.isInstance(TokenType.URL)) {
             token = checkURL(token);
-         } else if (peekIsType(0, TokenType.PUNCTUATION) &&
-                       (token.type.isInstance(TokenType.ACRONYM) || abbreviations.contains(token.text.toLowerCase()))) {
+         } else if (abbreviations.isPrefixMatch(token.text)) {
             token = mergeAbbreviationAndAcronym(token);
-         } else if (token.type.isInstance(TokenType.PUNCTUATION, TokenType.HYPHEN)) {
+         } else if (token.type.isInstance(TokenType.PUNCTUATION, TokenType.HYPHEN, TokenType.EMOTICON)) {
             token = handleEmoticon(token);
          } else if (token.type.isInstance(TokenType.MONEY) && peekIsType(0, TokenType.NUMBER)) {
             token = mergeMoneyNumber(token);
@@ -236,11 +240,18 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
          }
 
          Token nn;
+         Token last = n;
          int end = n.charEndIndex;
          int peek = 0;
          while ((nn = peek(peek)) != null) {
-            String tempLower = emoLower + nn.text.toLowerCase();
-            if (!emoticons.contains(tempLower) && emoticons.isPrefixMatch(tempLower)) {
+            String tempLower = emoLower;
+            if (last.charEndIndex < nn.charStartIndex) {
+               tempLower += StringUtils.repeat(' ', nn.charStartIndex - last.charEndIndex);
+            }
+            tempLower += nn.text.toLowerCase();
+            last = nn;
+            Set<String> prefixes = emoticons.prefixes(tempLower);
+            if (emoticons.prefixes(tempLower).size() > 1 || (prefixes.size() == 1 && !prefixes.contains(tempLower))) {
                end = nn.charEndIndex;
                emo = emo + nn.text;
                emoLower = tempLower;
@@ -248,9 +259,9 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
             } else if (emoticons.contains(tempLower)) {
                consume(peek);
                lastIndex = n.index;
-               return new Token(emo, TokenType.EMOTICON, n.charStartIndex, end + 1, n.index);
-            } else if (emoLower.length() > 1 && emoticons.contains(emoLower.substring(0, emoLower.length() - 1))) {
-               Token last = consume(peek - 1);
+               return new Token(emo, TokenType.EMOTICON, n.charStartIndex, nn.charEndIndex, n.index);
+            } else if (emoticons.contains(emoLower)) {
+               last = consume(peek - 1);
                lastIndex = n.index;
                return new Token(emo, TokenType.EMOTICON, n.charStartIndex, last.charEndIndex, n.index);
             } else {
@@ -258,10 +269,14 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
             }
          }
 
-//         if (emoticons.contains(emoLower)) {
-//            nn = consume(peek - 1);
-//            return new Token(emo, TokenType.EMOTICON, n.charStartIndex, nn.charEndIndex + 1, n.index);
-//         }
+         if (emoticons.contains(emoLower)) {
+            if (emoLower.length() > 1) {
+               nn = consume(peek - 1);
+               return new Token(emo, TokenType.EMOTICON, n.charStartIndex, nn.charEndIndex, n.index);
+            } else {
+               return new Token(emo, TokenType.EMOTICON, n.charStartIndex, n.charEndIndex, n.index);
+            }
+         }
 
          return n;
       }
@@ -286,20 +301,35 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
       }
 
       private Token mergeAbbreviationAndAcronym(Token n) {
-         Token nn = peek(0);
-         if (nn == null) {
-            return n;
-         }
-         if (nn.text.equals(".")) {
-            Token token = new Token(
-                                      n.text + nn.text,
-                                      TokenType.ACRONYM,
-                                      n.charStartIndex,
-                                      nn.charEndIndex,
-                                      n.index
-            );
-            consume();
-            return token;
+         String abbreviation = n.text;
+         int end = n.charEndIndex;
+         int peek = 0;
+         Token pn = n;
+         Token nn;
+         while ((nn = peek(peek)) != null) {
+            String temp = abbreviation;
+            if (pn.charEndIndex < nn.charStartIndex) {
+               temp += StringUtils.repeat(' ', nn.charStartIndex - pn.charEndIndex);
+            }
+            temp += nn.text;
+            if (nn.charStartIndex == pn.charEndIndex && abbreviations.contains(temp)) {
+               peek++;
+               end = nn.charEndIndex;
+               abbreviation = temp;
+            } else if (peek == 0) {
+               if (abbreviations.contains(n.text.toLowerCase())) {
+                  return new Token(n.text,
+                                   TokenType.ACRONYM,
+                                   n.charStartIndex,
+                                   n.charEndIndex,
+                                   n.index);
+               }
+               return n;
+            } else {
+               consume(peek - 1);
+               return new Token(abbreviation, TokenType.ACRONYM, n.charStartIndex, end, n.index);
+            }
+            pn = nn;
          }
          return n;
       }

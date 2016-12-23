@@ -253,13 +253,17 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
                                                   .build();
 
    private boolean isEndOfSentenceMark(Annotation token) {
-      char c = token.isEmpty() ? ' ' : token.charAt(token.length() - 1);
+      if (token.isEmpty() || token.get(Types.TOKEN_TYPE).<TokenType>cast().isInstance(TokenType.EMOTICON,
+                                                                                      TokenType.PERSON_TITLE)) {
+         return false;
+      }
+      char c = token.charAt(token.length() - 1);
       return Arrays.binarySearch(endOfSentence, c) >= 0;
    }
 
    private boolean isContinue(Annotation token) {
       char c = token.isEmpty() ? ' ' : token.charAt(token.length() - 1);
-      return Arrays.binarySearch(endOfSentence, c) >= 0;
+      return Arrays.binarySearch(sContinue, c) >= 0;
    }
 
    private boolean isEndPunctuation(Annotation token) {
@@ -294,16 +298,21 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
    }
 
    private boolean isAbbreviation(Annotation token) {
-      return token.get(Types.TOKEN_TYPE).equals(TokenType.ACRONYM)
-                || token.get(Types.TOKEN_TYPE).equals(TokenType.TIME);
+      TokenType type = token.get(Types.TOKEN_TYPE).cast();
+      return type.equals(TokenType.ACRONYM)
+                || (type.equals(TokenType.TIME) && (token.next().isEmpty() || Character.isUpperCase(
+         token.next().charAt(0))));
    }
 
-   private boolean expectsCapital(Annotation token) {
-      return true;
-   }
 
    private boolean isCapitalized(Annotation token) {
-      return token.length() > 1 && (!StringUtils.hasLetter(token) || Character.isUpperCase(token.charAt(0)));
+      if (token.length() == 1 && token.contentEqual("I")) {
+         return true;
+      } else if (token.length() > 1) {
+         return !StringUtils.hasLetter(token)
+                   || Character.isUpperCase(token.charAt(0));
+      }
+      return false;
    }
 
    private int countNewLineBeforeNext(Document doc, Annotation cToken, Annotation nToken) {
@@ -338,9 +347,11 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
          }
 
          boolean isAbbreviation = isAbbreviation(cToken);
-         if ((isAbbreviation && expectsCapital(cToken) && !isCapitalized(nToken))
-                || (!isAbbreviation && !cToken.get(Types.TOKEN_TYPE).equals(
-            TokenType.PERSON_TITLE) && isEndOfSentenceMark(cToken))
+         TokenType cTokenType = cToken.get(Types.TOKEN_TYPE).cast();
+
+
+         if ((isAbbreviation && isCapitalized(nToken))
+                || (!isAbbreviation && !cTokenType.isInstance(TokenType.PERSON_TITLE) && isEndOfSentenceMark(cToken))
             ) {
 
             while (isEndOfSentenceMark(nToken)) {

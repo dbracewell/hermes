@@ -22,10 +22,12 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.function.SerializableFunction;
+import com.davidbracewell.function.Unchecked;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
+import com.davidbracewell.io.AsyncWriter;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.stream.MStream;
@@ -89,16 +91,30 @@ public class FileCorpus implements Corpus, Serializable {
       ));
    }
 
-//   @Override
-//   public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
-//      CorpusFormat corpusFormat = CorpusFormats.forName(format);
-//      if (corpusFormat.name().equals(this.corpusFormat.name())) {
-//         this.resource.copy(resource);
-//         return Corpus.builder().source(resource).format(corpusFormat).build();
-//      } else {
-//         return Corpus.super.write(format, resource);
-//      }
-//   }
+   @Override
+   public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
+      CorpusFormat corpusFormat = CorpusFormats.forName(format);
+      if (corpusFormat.name().equals(this.corpusFormat.name())) {
+         if ((resource.exists() && resource.isDirectory()) || (!resource.exists() && !resource.path().contains("."))) {
+            this.resource.copy(resource);
+         } else {
+            try (AsyncWriter writer = new AsyncWriter(resource.writer())) {
+               for (Resource child : this.resource.getChildren()) {
+                  try (MStream<String> lines = child.lines()) {
+                     lines.forEach(Unchecked.consumer(writer::write));
+                  } catch (RuntimeException re) {
+                     throw new IOException(re.getCause());
+                  } catch (Exception e) {
+                     throw new IOException(e);
+                  }
+               }
+            }
+         }
+         return Corpus.builder().source(resource).format(corpusFormat).build();
+      } else {
+         return Corpus.super.write(format, resource);
+      }
+   }
 
 
    @Override

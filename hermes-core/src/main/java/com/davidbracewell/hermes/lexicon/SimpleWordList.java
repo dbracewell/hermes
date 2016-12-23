@@ -64,9 +64,14 @@ public class SimpleWordList implements WordList, Serializable {
       return words.size();
    }
 
-   public static WordList read(@NonNull Resource resource) throws IOException {
+   public static WordList read(@NonNull Resource resource, boolean lowerCase) throws IOException {
       return new SimpleWordList(resource.readLines().stream()
-                                        .map(line -> line.trim().toLowerCase())
+                                        .map(line -> {
+                                           if (lowerCase) {
+                                              return line.trim().toLowerCase();
+                                           }
+                                           return line.trim();
+                                        })
                                         .collect(Collectors.toSet()));
    }
 

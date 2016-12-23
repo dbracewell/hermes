@@ -23,6 +23,8 @@ package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.hermes.HString;
 
+import java.util.Set;
+
 /**
  * The interface Prefix searchable.
  *
@@ -37,6 +39,9 @@ public interface PrefixSearchable {
     * @return the boolean
     */
    boolean isPrefixMatch(HString hString);
+
+
+   Set<String> prefixes(String string);
 
 
    boolean isPrefixMatch(String hString);
