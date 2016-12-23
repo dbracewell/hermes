@@ -30,36 +30,45 @@ import lombok.NonNull;
 import java.util.stream.Collectors;
 
 /**
- * <p>Implementation of a {@link KeywordExtractor} that simply counts the occurrences of words in the document.</p>
+ * The type Tfidf keyword extractor.
  *
  * @author David B. Bracewell
  */
-public class TFKeywordExtractor implements KeywordExtractor {
+public class TFIDFKeywordExtractor implements KeywordExtractor {
    private static final long serialVersionUID = 1L;
    private final TermSpec termSpec;
+   private final Counter<String> inverseDocumentFrequencies;
 
    /**
-    * Instantiates a new Tf keyword extractor.
+    * Instantiates a new Tfidf keyword extractor.
+    *
+    * @param inverseDocumentFrequencies the document frequencies
     */
-   public TFKeywordExtractor() {
-      this(TermSpec.create());
+   public TFIDFKeywordExtractor(@NonNull Counter<String> inverseDocumentFrequencies) {
+      this(TermSpec.create(), inverseDocumentFrequencies);
    }
 
    /**
-    * Instantiates a new Tf keyword extractor.
+    * Instantiates a new Tfidf keyword extractor.
     *
-    * @param termSpec the specification on how to extract terms
+    * @param termSpec                   the term spec
+    * @param inverseDocumentFrequencies the document frequencies
     */
-   public TFKeywordExtractor(@NonNull TermSpec termSpec) {
+   public TFIDFKeywordExtractor(@NonNull TermSpec termSpec, @NonNull Counter<String> inverseDocumentFrequencies) {
       this.termSpec = termSpec;
+      this.inverseDocumentFrequencies = inverseDocumentFrequencies;
    }
 
    @Override
    public Counter<String> extract(@NonNull HString hstring) {
-      return termSpec.getValueCalculator().adjust(Counters.newCounter(hstring.get(termSpec.getAnnotationType()).stream()
-                                                                             .filter(termSpec.getFilter())
-                                                                             .map(termSpec.getToStringFunction())
-                                                                             .collect(Collectors.toList())
-                                                                     ));
+      Counter<String> tf = Counters.newCounter(hstring.get(termSpec.getAnnotationType()).stream()
+                                                      .filter(termSpec.getFilter())
+                                                      .map(termSpec.getToStringFunction())
+                                                      .collect(Collectors.toList()));
+      Counter<String> tfidf = Counters.newCounter();
+      final double maxTF = tf.maximumCount();
+      tf.forEach((kw, freq) -> tfidf.set(kw, (0.5 + (0.5 * freq) / maxTF) * inverseDocumentFrequencies.get(kw)));
+      return tfidf;
    }
-}//END OF TFKeywordExtractor
+
+}//END OF TFIDFKeywordExtractor
