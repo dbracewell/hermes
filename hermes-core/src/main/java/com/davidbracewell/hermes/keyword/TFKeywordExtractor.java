@@ -39,14 +39,14 @@ public class TFKeywordExtractor implements KeywordExtractor {
    private final TermSpec termSpec;
 
    /**
-    * Instantiates a new Tf keyword extractor.
+    * Instantiates a new Term Frequency based keyword extractor.
     */
    public TFKeywordExtractor() {
-      this(TermSpec.create());
+      this(TermSpec.create().lowerCase());
    }
 
    /**
-    * Instantiates a new Tf keyword extractor.
+    * Instantiates a new Term Frequency based keyword extractor.
     *
     * @param termSpec the specification on how to extract terms
     */

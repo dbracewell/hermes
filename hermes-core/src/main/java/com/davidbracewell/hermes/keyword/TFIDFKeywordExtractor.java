@@ -40,19 +40,19 @@ public class TFIDFKeywordExtractor implements KeywordExtractor {
    private final Counter<String> inverseDocumentFrequencies;
 
    /**
-    * Instantiates a new Tfidf keyword extractor.
+    * Instantiates a new TFIDF based keyword extractor.
     *
-    * @param inverseDocumentFrequencies the document frequencies
+    * @param inverseDocumentFrequencies the inverse document frequencies
     */
    public TFIDFKeywordExtractor(@NonNull Counter<String> inverseDocumentFrequencies) {
-      this(TermSpec.create(), inverseDocumentFrequencies);
+      this(TermSpec.create().lowerCase(), inverseDocumentFrequencies);
    }
 
    /**
-    * Instantiates a new Tfidf keyword extractor.
+    * Instantiates a new TFIDF based keyword extractor.
     *
-    * @param termSpec                   the term spec
-    * @param inverseDocumentFrequencies the document frequencies
+    * @param termSpec                   the specification for filtering and converting annotations to strings
+    * @param inverseDocumentFrequencies the inverse document frequencies
     */
    public TFIDFKeywordExtractor(@NonNull TermSpec termSpec, @NonNull Counter<String> inverseDocumentFrequencies) {
       this.termSpec = termSpec;

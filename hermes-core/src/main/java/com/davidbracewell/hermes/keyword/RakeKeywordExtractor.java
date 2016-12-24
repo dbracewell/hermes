@@ -46,11 +46,19 @@ public class RakeKeywordExtractor implements KeywordExtractor {
    private static final long serialVersionUID = 1L;
    private final TermSpec termSpec;
 
+   /**
+    * Instantiates a new Rake keyword extractor using a default {@link TermSpec} that lower cases words.
+    */
    public RakeKeywordExtractor() {
-      this(TermSpec.create());
+      this(TermSpec.create().lowerCase());
    }
 
 
+   /**
+    * Instantiates a new Rake keyword extractor.
+    *
+    * @param termSpec the specification for how to convert tokens/phrases to strings (all other options are ignored).
+    */
    public RakeKeywordExtractor(@NonNull TermSpec termSpec) {
       this.termSpec = termSpec;
    }
