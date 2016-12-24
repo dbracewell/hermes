@@ -22,16 +22,18 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
+import com.davidbracewell.annotation.Preload;
 import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.attribute.AttributeValueType;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 /**
- * <p>Common Annotation Types</p>
+ * <p>Common Annotation Types. The predefined types are pre-loaded on initialization.</p>
  *
  * @author David B. Bracewell
  */
+@Preload
 public interface Types {
 
    /**

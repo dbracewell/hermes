@@ -116,24 +116,6 @@ public final class AttributeType extends EnumValue implements AnnotatableType, C
       return this.canonicalName().compareTo(o.canonicalName());
    }
 
-//
-//   boolean checkType(Val value) {
-//      if (value == null || value.isNull() || Config.get("Attribute", "ignoreTypeChecks").asBoolean(false)) {
-//         return false;
-//      }
-//      ValueType valueType = getValueType();
-//      value = value.getWrappedClass().isInstance(Val.class) ? value.cast() : value;
-//      if (!valueType.getType().isAssignableFrom(value.getWrappedClass())) {
-//         if (Config.get("Attribute.ignoreTypeErrors").asBooleanValue(false)) {
-//            return false;
-//         }
-//         throw new IllegalArgumentException(
-//                                              value + " [" + value.getWrappedClass()
-//                                                                  .getName() + "] is of wrong type. " +
-//                                                 name() + "'s defined type is " + valueType.getType().getName());
-//      }
-//      return true;
-//   }
 
    @Override
    public String type() {
@@ -150,60 +132,15 @@ public final class AttributeType extends EnumValue implements AnnotatableType, C
       if (valueType == AttributeValueType.DEFAULT) {
          synchronized (this) {
             if (valueType == AttributeValueType.DEFAULT) {
-               valueType = AttributeValueType.valueOf(Config.get(typeName, name()).asString("STRING"));
+               if (Config.hasProperty(typeName, name())) {
+                  valueType = AttributeValueType.valueOf(Config.get(typeName, name()).asString());
+               } else {
+                  return AttributeValueType.STRING;
+               }
             }
          }
       }
       return valueType;
    }
-
-//   void write(StructuredWriter writer, Object val) throws IOException {
-//      AttributeValueCodec encoder = getCodec();
-//      Val wrapped = val instanceof Val ? Cast.as(val) : Val.of(val);
-//      ValueType vType = getValueType();
-//
-//      //Ignore nulls
-//      if (!wrapped.isNull()) {
-//         //Check the type
-//         if (checkType(wrapped)) {
-//            //No encoder is specified
-//            if (encoder == null) {
-//               //The value type already knows how to write, because it's Writable
-//               if (StructuredSerializable.class.isAssignableFrom(vType.getType())) {
-//                  Cast.<StructuredSerializable>as(wrapped.get()).write(writer);
-//               } else if (vType.isCollection()) {
-//                  writer.beginArray(name());
-//                  Collection<?> collection = wrapped.asCollection(valueType.getType(),
-//                                                                  valueType.getParameterTypes()[0]);
-//                  for (Object o : collection) {
-//                     writer.writeValue(o);
-//                  }
-//                  writer.endArray();
-//               } else if (vType.isMap()) {
-//                  writer.beginObject(name());
-//                  Map<?, ?> map = wrapped.asMap(valueType.getParameterTypes()[0], valueType.getParameterTypes()[1]);
-//                  for (Map.Entry<?, ?> entry : map.entrySet()) {
-//                     writer.writeKeyValue(Convert.convert(entry.getKey(), String.class), entry.getValue());
-//                  }
-//                  writer.endObject();
-//               } else {
-//                  writer.writeKeyValue(name(), wrapped.get());
-//               }
-//            } else if (encoder.isObject()) {
-//               writer.beginObject(this.name());
-//               encoder.encode(writer, this, wrapped.get());
-//               writer.endObject();
-//            } else if (encoder.isArray()) {
-//               writer.beginArray(this.name());
-//               encoder.encode(writer, this, wrapped.get());
-//               writer.endArray();
-//            } else {
-//               encoder.encode(writer, this, wrapped.get());
-//            }
-//         }
-//      }
-//
-//   }
-
 
 }//END OF Attribute

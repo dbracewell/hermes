@@ -38,46 +38,47 @@ import java.util.*;
 @Value
 @Builder
 class CaduceusAnnotationProvider implements Serializable {
-  private static final long serialVersionUID = 1L;
-  private final String group;
-  private final AnnotationType annotationType;
-  private final Map<AttributeType, Val> attributes;
-  private final Set<String> requires;
+   private static final long serialVersionUID = 1L;
+   private final String group;
+   private final AnnotationType annotationType;
+   private final Map<AttributeType, Val> attributes;
+   private final Set<String> requires;
 
-  static CaduceusAnnotationProvider fromMap(Map<String, Object> groupMap, String programName, String ruleName) throws IOException {
-    if (!groupMap.containsKey("type")) {
-      throw new IOException("An annotation must provide a type.");
-    }
+   static CaduceusAnnotationProvider fromMap(Map<String, Object> groupMap, String programName, String ruleName) throws IOException {
+      if (!groupMap.containsKey("type")) {
+         throw new IOException("An annotation must provide a type.");
+      }
 
-    Map<AttributeType, Val> attributeValMap = new HashMap<>();
-    if (groupMap.containsKey("attributes")) {
-      attributeValMap = readAttributes(CaduceusProgram.ensureList(groupMap.get("attributes"), "Attributes should be specified as a list."));
-    }
-    attributeValMap.put(Types.CADUCEUS_RULE, Val.of(programName + "::" + ruleName));
+      Map<AttributeType, Val> attributeValMap = new HashMap<>();
+      if (groupMap.containsKey("attributes")) {
+         attributeValMap = readAttributes(
+            CaduceusProgram.ensureList(groupMap.get("attributes"), "Attributes should be specified as a list."));
+      }
+      attributeValMap.put(Types.CADUCEUS_RULE, Val.of(programName + "::" + ruleName));
 
-    Set<String> requires = new HashSet<>();
-    if (groupMap.containsKey("requires")) {
-      requires.addAll(Val.of(groupMap.get("requires")).asList(String.class));
-    }
+      Set<String> requires = new HashSet<>();
+      if (groupMap.containsKey("requires")) {
+         requires.addAll(Val.of(groupMap.get("requires")).asList(String.class));
+      }
 
-    return builder()
-      .annotationType(Types.annotation(groupMap.get("type").toString()))
-      .group(groupMap.getOrDefault("capture", "*").toString())
-      .attributes(attributeValMap)
-      .requires(requires)
-      .build();
-  }
+      return builder()
+                .annotationType(Types.annotation(groupMap.get("type").toString()))
+                .group(groupMap.getOrDefault("capture", "*").toString())
+                .attributes(attributeValMap)
+                .requires(requires)
+                .build();
+   }
 
-  private static Map<AttributeType, Val> readAttributes(List<Object> list) throws IOException {
-    Map<AttributeType, Val> result = new HashMap<>();
-    for (Object o : list) {
-      CaduceusProgram.ensureMap(o, "Attribute values should be key-value pairs").entrySet()
-        .forEach(entry -> {
-          AttributeType attributeType = AttributeType.create(entry.getKey());
-          result.put(attributeType, Val.of(attributeType.getValueType().decode(entry.getValue())));
-        });
-    }
-    return result;
-  }
+   private static Map<AttributeType, Val> readAttributes(List<Object> list) throws IOException {
+      Map<AttributeType, Val> result = new HashMap<>();
+      for (Object o : list) {
+         CaduceusProgram.ensureMap(o, "Attribute values should be key-value pairs").entrySet()
+                        .forEach(entry -> {
+                           AttributeType attributeType = AttributeType.create(entry.getKey());
+                           result.put(attributeType, Val.of(attributeType.getValueType().decode(entry.getValue())));
+                        });
+      }
+      return result;
+   }
 
 }//END OF Caduceus
