@@ -214,7 +214,10 @@ public class Document extends HString {
       if (json.containsKey("attributes")) {
          json.get("attributes").<Map<String, Val>>cast().forEach((k, av) -> {
             AttributeType attrType = Types.attribute(k);
-            doc.put(attrType, attrType.getValueType().decode(av));
+            Object val = attrType.getValueType().decode(av);
+            if (val != null) {
+               doc.put(attrType, val);
+            }
          });
       }
 
@@ -247,12 +250,17 @@ public class Document extends HString {
                vv.getOrDefault("attributes", Val.of(Collections.emptyMap())).<Map<String, Val>>cast().forEach(
                   (k, av) -> {
                      AttributeType attrType = Types.attribute(k);
-                     annotation.put(attrType, attrType.getValueType().decode(av));
+                     Object val = attrType.getValueType().decode(av);
+                     if (val != null) {
+                        annotation.put(attrType, val);
+                     }
                   });
 
                if (vv.containsKey("relations")) {
                   //Read in the relations (a list of maps containing type, value, and target)
-                  vv.get("relations").<List<Map<String, Val>>>cast()
+                  vv.get("relations").<List<Val>>cast()
+                     .stream()
+                     .map(val -> val.asMap(HashMap.class, String.class, Val.class))
                      .forEach(rel -> annotation.add(new Relation(RelationType.create(rel.get("type").asString()),
                                                                  rel.get("value").asString(),
                                                                  rel.get("target").asLongValue())));

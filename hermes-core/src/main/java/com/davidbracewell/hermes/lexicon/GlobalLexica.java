@@ -28,13 +28,15 @@ import com.davidbracewell.io.Resources;
 import java.io.Serializable;
 
 /**
+ * <p>Universal lexicons that can be used across languages.</p>
+ *
  * @author David B. Bracewell
  */
 public final class GlobalLexica implements Serializable {
    private static final long serialVersionUID = 1L;
 
    private static volatile Lazy<WordList> tlds = new Lazy<>(Unchecked.supplier(() -> SimpleWordList.read(
-      Resources.fromClasspath("com/davidbracewell/hermes/lexicon/tlds.txt"),true)));
+      Resources.fromClasspath("com/davidbracewell/hermes/lexicon/tlds.txt"), true)));
    private static volatile Lazy<TrieWordList> abbreviations = new Lazy<>(Unchecked.supplier(() -> TrieWordList.read(
       Resources.fromClasspath("com/davidbracewell/hermes/lexicon/abbreviations.txt"), false)));
    private static volatile Lazy<TrieWordList> emoticons = new Lazy<>(Unchecked.supplier(() -> TrieWordList.read(
@@ -44,16 +46,19 @@ public final class GlobalLexica implements Serializable {
       throw new IllegalAccessError();
    }
 
-
    /**
     * Gets a lexicon (as a WordList) of the top level internet domain names.
+    *
+    * @return the top level domains
     */
    public static WordList getTopLevelDomains() {
       return tlds.get();
    }
 
    /**
-    * Gets a lexicon (as a WordList) of the top level internet domain names.
+    * Gets a lexicon (as a TrieWordList) of common abbreviations.
+    *
+    * @return the abbreviations
     */
    public static TrieWordList getAbbreviations() {
       return abbreviations.get();
@@ -61,6 +66,8 @@ public final class GlobalLexica implements Serializable {
 
    /**
     * Gets a lexicon (as a TrieWordList) of emoticons.
+    *
+    * @return the emoticons
     */
    public static TrieWordList getEmoticons() {
       return emoticons.get();

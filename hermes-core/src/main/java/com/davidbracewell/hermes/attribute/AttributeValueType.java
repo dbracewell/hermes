@@ -28,6 +28,7 @@ import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.NewObjectConverter;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.tokenization.TokenType;
+import com.davidbracewell.string.StringUtils;
 
 import java.text.DateFormat;
 import java.util.*;
@@ -151,6 +152,9 @@ public enum AttributeValueType {
       @Override
       @SuppressWarnings("unchecked")
       protected EntityType decodeImpl(Object value) {
+         if(StringUtils.isNullOrBlank(value.toString())){
+            return null;
+         }
          return value instanceof EntityType ? Cast.as(value) : EntityType.create(value.toString());
       }
 
