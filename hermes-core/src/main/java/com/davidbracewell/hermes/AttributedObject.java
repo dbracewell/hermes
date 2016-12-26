@@ -213,10 +213,8 @@ public interface AttributedObject {
     *
     * @param map the attribute-value map
     */
-   default void putAll(Map<AttributeType, ?> map) {
-      if (map != null) {
-         map.entrySet().stream().forEach(e -> this.put(e.getKey(), e.getValue()));
-      }
+   default void putAll(@NonNull Map<AttributeType, ?> map) {
+      map.entrySet().forEach(e -> this.put(e.getKey(), e.getValue()));
    }
 
    /**

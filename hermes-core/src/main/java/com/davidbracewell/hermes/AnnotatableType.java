@@ -59,13 +59,16 @@ public interface AnnotatableType {
       Annotator annotator = null;
 
       if (StringUtils.isNotNullOrBlank(key)) {
+         //Annotator is defined via configuration (this will override defaults)
          annotator = Config.get(key).as(Annotator.class);
 
       } else {
-         String typeName = StringUtils.toTitleCase(name().replaceAll("[^a-zA-z]+", " ")
+         //Check for annotator using convention of Default[LANGUAGE]?[TypeName]Annotator
+         //This only works for annotators in the package "com.davidbracewell.hermes.annotator"
+         String typeName = StringUtils.toTitleCase(name().replaceAll("[^a-zA-Z]", " ")
                                                          .trim()
-                                                         .toLowerCase())
-                                      .replaceAll("\\s+", "");
+                                                         .toLowerCase()).replaceAll("\\s+", "");
+
          String languageName = StringUtils.toTitleCase(language.name().toLowerCase());
          Class<?> annotatorClass = ReflectionUtils.getClassForNameQuietly(
             ANNOTATOR_PACKAGE + ".Default" + languageName + typeName + "Annotator");
@@ -113,22 +116,21 @@ public interface AnnotatableType {
     *
     * @return the canonical form of the name
     */
-   default String canonicalName() {
-      return type() + "." + name();
-   }
+   String canonicalName();
 
 
    static AnnotatableType create(String name) {
       if (StringUtils.isNullOrBlank(name)) {
          return null;
       }
-//      if (name.contains("AnnotationType")) {
-//         return Types.annotation(name.substring(name.lastIndexOf('.')+1));
-//      } else if (name.contains("RelationType")) {
-//         return Types.relation(name.substring(name.lastIndexOf('.') + 1));
-//      } else if (name.contains("AttributeType")) {
-//         return Types.attribute(name.substring(name.lastIndexOf('.') + 1));
-//      }
+      //Short hand versions
+      if (name.startsWith("Annotation")) {
+         return Types.annotation(name.substring(name.lastIndexOf('.') + 1));
+      } else if (name.startsWith("Relation")) {
+         return Types.relation(name.substring(name.lastIndexOf('.') + 1));
+      } else if (name.startsWith("Attribute")) {
+         return Types.attribute(name.substring(name.lastIndexOf('.') + 1));
+      }
       return Convert.convert(name, AnnotatableType.class);
    }
 

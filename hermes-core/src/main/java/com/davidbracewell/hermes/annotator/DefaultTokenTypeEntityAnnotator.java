@@ -38,7 +38,7 @@ import static com.davidbracewell.collection.map.Maps.map;
 /**
  * @author David B. Bracewell
  */
-public class TokenTypeEntityAnnotator extends SentenceLevelAnnotator {
+public class DefaultTokenTypeEntityAnnotator extends SentenceLevelAnnotator {
   private static final long serialVersionUID = 1L;
 
   private static final Map<TokenType, EntityType> mapping = ImmutableMap.<TokenType, EntityType>builder()

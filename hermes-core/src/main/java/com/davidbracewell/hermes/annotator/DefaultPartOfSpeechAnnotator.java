@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * @author David B. Bracewell
  */
-public class DefaultPOSAnnotator extends SentenceLevelAnnotator implements Serializable {
+public class DefaultPartOfSpeechAnnotator extends SentenceLevelAnnotator implements Serializable {
   private static final long serialVersionUID = 1L;
   private volatile ConcurrentMap<Language, POSTagger> taggers = new ConcurrentHashMap<>();
 

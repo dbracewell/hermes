@@ -22,19 +22,14 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Tag;
-import com.davidbracewell.collection.map.Maps;
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.attribute.EntityType;
-import com.davidbracewell.io.structured.ElementType;
-import com.davidbracewell.io.structured.StructuredReader;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -113,54 +108,6 @@ public final class Annotation extends Fragment implements Serializable {
    protected Annotation(AnnotationType type, int start, int end) {
       super(null, start, end);
       this.annotationType = type == null ? AnnotationType.ROOT : type;
-   }
-
-   /**
-    * Read annotation.
-    *
-    * @param reader the reader
-    * @return the annotation
-    * @throws IOException the io exception
-    */
-   static Annotation read(StructuredReader reader) throws IOException {
-      reader.beginObject();
-      Map<String, Val> annotationProperties = new HashMap<>();
-      Map<AttributeType, Val> attributeValMap = Collections.emptyMap();
-      List<Relation> relations = new LinkedList<>();
-      while (reader.peek() != ElementType.END_OBJECT) {
-         if (reader.peek() == ElementType.NAME) {
-            Maps.put(annotationProperties, reader.nextKeyValue());
-         } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
-
-            reader.beginObject("attributes");
-//            attributeValMap = AttributeType.readAttributeList(reader);
-            reader.endObject();
-         } else if (reader.peek() == ElementType.BEGIN_ARRAY) {
-            reader.beginArray("relations");
-            while (reader.peek() != ElementType.END_ARRAY) {
-               reader.beginObject();
-               Map<String, Val> rel = reader.nextMap();
-               relations.add(new Relation(rel.get("type").as(RelationType.class),
-                                          rel.get("value").asString(),
-                                          rel.get("target").asLongValue()));
-               reader.endObject();
-            }
-            reader.endArray();
-         } else {
-            throw new IOException("Unexpected " + reader.peek());
-         }
-      }
-
-
-      Annotation annotation = Fragments.detachedAnnotation(
-         AnnotationType.create(annotationProperties.get("type").asString()),
-         annotationProperties.get("start").asIntegerValue(),
-         annotationProperties.get("end").asIntegerValue());
-      annotation.relations.addAll(relations);
-      annotation.setId(annotationProperties.get("id").asLongValue());
-      annotation.putAll(attributeValMap);
-      reader.endObject();
-      return annotation;
    }
 
    @Override

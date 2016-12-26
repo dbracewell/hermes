@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * @author David B. Bracewell
  */
-public class MLEntityAnnotator extends SentenceLevelAnnotator implements Serializable, Loggable {
+public class DefaultMlEntityAnnotator extends SentenceLevelAnnotator implements Serializable, Loggable {
    private static final long serialVersionUID = 1L;
    private volatile ConcurrentMap<Language, BIOTagger> taggers = new ConcurrentHashMap<>();
 

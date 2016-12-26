@@ -30,7 +30,7 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * The type Annotation tree.
+ * <p>Annotation tree using a Red-Black backed Interval tree.</p>
  *
  * @author David B. Bracewell
  */

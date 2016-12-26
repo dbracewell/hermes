@@ -48,16 +48,16 @@ import java.util.stream.Collectors;
  * can be defined for a type using the <code>tag</code> property, which defines the attribute to return on calls to
  * <code>getTag()</code>. </p>
  * <p>Type information is defined via configuration. An Example is as follows:
- * </pre> {@code
+ * <pre> {@code
  * Annotation {
- * ENTITY {
- * attributes = ENTITY_TYPE, CONFIDENCE
- * tag = ENTITY_TYPE
- * }
- * REGEX_ENTITY {
- * parent = ENTITY
- * annotator = @{DEFAULT_ENTITY_REGEX}
- * }
+ *       ENTITY {
+ *          tag = ENTITY_TYPE
+ *       }
+ *
+ *       REGEX_ENTITY {
+ *          parent = ENTITY
+ *          annotator = @{DEFAULT_ENTITY_REGEX}
+ *       }
  * }
  * }
  * </pre>
@@ -68,7 +68,6 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
    public static final String CANONICAL_NAME = AnnotationType.class.getCanonicalName();
    private static final String typeName = "Annotation";
    private volatile transient AttributeType tagAttributeType = null;
-   private volatile transient Set<AttributeType> definedAttributeTypes = null;
    private static final Set<AnnotationType> values = Sets.newConcurrentHashSet();
 
    /**

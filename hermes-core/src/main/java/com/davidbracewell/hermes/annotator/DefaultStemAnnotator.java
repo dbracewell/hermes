@@ -38,7 +38,7 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public class StemAnnotator implements Annotator, Serializable {
+public class DefaultStemAnnotator implements Annotator, Serializable {
   private static final long serialVersionUID = 1L;
 
   @Override

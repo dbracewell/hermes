@@ -45,7 +45,7 @@ import java.util.*;
 /**
  * @author David B. Bracewell
  */
-public class MaltParserAnnotator extends SentenceLevelAnnotator implements Loggable {
+public class DefaultDependencyAnnotator extends SentenceLevelAnnotator implements Loggable {
    private static final long serialVersionUID = 1L;
    private static volatile Map<Language, ConcurrentMaltParserModel> models = new EnumMap<>(Language.class);
 

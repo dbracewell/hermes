@@ -36,7 +36,7 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-public class LemmaAnnotator implements Annotator, Serializable {
+public class DefaultLemmaAnnotator implements Annotator, Serializable {
   private static final long serialVersionUID = 1L;
 
   @Override

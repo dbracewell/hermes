@@ -45,124 +45,125 @@ import java.util.function.Predicate;
  */
 public interface AnnotationSet extends Iterable<Annotation> {
 
-  /**
-   * <p>Selects all annotations of a given annotation type within a given range and matching a given criteria.</p>
-   *
-   * @param span     the range in which to search form annotations
-   * @param criteria the criteria that an annotation must match
-   * @return A list of annotations that are an instance of the given class within the given range and matching the
-   * given criteria
-   */
-  List<Annotation> select(Span span, Predicate<? super Annotation> criteria);
+   /**
+    * <p>Selects all annotations of a given annotation type within a given range and matching a given criteria.</p>
+    *
+    * @param span     the range in which to search form annotations
+    * @param criteria the criteria that an annotation must match
+    * @return A list of annotations that are an instance of the given class within the given range and matching the
+    * given criteria
+    */
+   List<Annotation> select(Span span, Predicate<? super Annotation> criteria);
 
-  /**
-   * <p>Selects all annotations of a given annotation type and matching a given criteria.</p>
-   *
-   * @param criteria the criteria that an annotation must match
-   * @return A list of annotations that are an instance of the given class and matching the given criteria
-   */
-  List<Annotation> select(Predicate<? super Annotation> criteria);
+   /**
+    * <p>Selects all annotations of a given annotation type and matching a given criteria.</p>
+    *
+    * @param criteria the criteria that an annotation must match
+    * @return A list of annotations that are an instance of the given class and matching the given criteria
+    */
+   List<Annotation> select(Predicate<? super Annotation> criteria);
 
-  /**
-   * Sets the given annotation type as being completed or not
-   *  @param type                 the annotation type
-   * @param isCompleted          True if the annotation is completed, False if not.
-   * @param annotatorInformation the annotator information
-   */
-  void setIsCompleted(AnnotatableType type, boolean isCompleted, String annotatorInformation);
+   /**
+    * Sets the given annotation type as being completed or not
+    *
+    * @param type                 the annotation type
+    * @param isCompleted          True if the annotation is completed, False if not.
+    * @param annotatorInformation the annotator information
+    */
+   void setIsCompleted(AnnotatableType type, boolean isCompleted, String annotatorInformation);
 
-  /**
-   * Gets if the given annotation type is completed or not
-   *
-   * @param type the annotation type
-   * @return True if the annotation is completed, False if not.
-   */
-  boolean isCompleted(AnnotatableType type);
+   /**
+    * Gets if the given annotation type is completed or not
+    *
+    * @param type the annotation type
+    * @return True if the annotation is completed, False if not.
+    */
+   boolean isCompleted(AnnotatableType type);
 
-  /**
-   * Gets information on what annotator provided the annotation of the given type
-   *
-   * @param type The annotation type
-   * @return String representing the annotation provider or null
-   */
-  String getAnnotationProvider(AnnotatableType type);
+   /**
+    * Gets information on what annotator provided the annotation of the given type
+    *
+    * @param type The annotation type
+    * @return String representing the annotation provider or null
+    */
+   String getAnnotationProvider(AnnotatableType type);
 
-  /**
-   * Gets completed annotations.
-   *
-   * @return Set of classes for completed annotations
-   */
-  Set<AnnotatableType> getCompleted();
+   /**
+    * Gets completed annotations.
+    *
+    * @return Set of classes for completed annotations
+    */
+   Set<AnnotatableType> getCompleted();
 
-  /**
-   * Removes all annotations of a given type and marks that type as not completed.
-   *
-   * @param type the type
-   * @return The list of annotations that were removed
-   */
-  default List<Annotation> removeAll(AnnotationType type) {
-    if (type != null) {
-      setIsCompleted(type, false, null);
-      List<Annotation> annotations = select(a -> a.isInstance(type));
-      annotations.forEach(this::remove);
-      return annotations;
-    }
-    return Collections.emptyList();
-  }
+   /**
+    * Removes all annotations of a given type and marks that type as not completed.
+    *
+    * @param type the type
+    * @return The list of annotations that were removed
+    */
+   default List<Annotation> removeAll(AnnotationType type) {
+      if (type != null) {
+         setIsCompleted(type, false, null);
+         List<Annotation> annotations = select(a -> a.isInstance(type));
+         annotations.forEach(this::remove);
+         return annotations;
+      }
+      return Collections.emptyList();
+   }
 
-  /**
-   * Gets the annotation for the given id
-   *
-   * @param id The id of the annotation
-   * @return The annotation associated with that id or null if one does not exist
-   */
-  Annotation get(long id);
+   /**
+    * Gets the annotation for the given id
+    *
+    * @param id The id of the annotation
+    * @return The annotation associated with that id or null if one does not exist
+    */
+   Annotation get(long id);
 
-  /**
-   * Checks if an annotation is in the set or not
-   *
-   * @param annotation The annotation to check
-   * @return True if the annotation is  in the set, False if not
-   */
-  boolean contains(Annotation annotation);
+   /**
+    * Checks if an annotation is in the set or not
+    *
+    * @param annotation The annotation to check
+    * @return True if the annotation is  in the set, False if not
+    */
+   boolean contains(Annotation annotation);
 
-  /**
-   * Removes an annotation from the document
-   *
-   * @param annotation The annotation to detach
-   */
-  boolean remove(Annotation annotation);
+   /**
+    * Removes an annotation from the document
+    *
+    * @param annotation The annotation to detach
+    */
+   boolean remove(Annotation annotation);
 
-  /**
-   * Adds an annotation to the set
-   *
-   * @param annotation The annotation to attach
-   */
-  void add(Annotation annotation);
+   /**
+    * Adds an annotation to the set
+    *
+    * @param annotation The annotation to attach
+    */
+   void add(Annotation annotation);
 
-  /**
-   * Gets the first annotation after a given one of the same type
-   *
-   * @param annotation The annotation we want the next for
-   * @param type       the type of the next annotation wanted
-   * @return The next annotation of the same type or null
-   */
-  Annotation next(Annotation annotation, AnnotationType type);
+   /**
+    * Gets the first annotation after a given one of the same type
+    *
+    * @param annotation The annotation we want the next for
+    * @param type       the type of the next annotation wanted
+    * @return The next annotation of the same type or null
+    */
+   Annotation next(Annotation annotation, AnnotationType type);
 
-  /**
-   * Gets the first annotation before a given one of the same type
-   *
-   * @param annotation The annotation we want the previous for
-   * @param type       the type of the previous annotation wanted
-   * @return The previous annotation of the same type or null
-   */
-  Annotation previous(Annotation annotation, AnnotationType type);
+   /**
+    * Gets the first annotation before a given one of the same type
+    *
+    * @param annotation The annotation we want the previous for
+    * @param type       the type of the previous annotation wanted
+    * @return The previous annotation of the same type or null
+    */
+   Annotation previous(Annotation annotation, AnnotationType type);
 
-  /**
-   * The number of annotations in the set
-   *
-   * @return Number of annotations in the set
-   */
-  int size();
+   /**
+    * The number of annotations in the set
+    *
+    * @return Number of annotations in the set
+    */
+   int size();
 
 }//END OF AnnotationSet

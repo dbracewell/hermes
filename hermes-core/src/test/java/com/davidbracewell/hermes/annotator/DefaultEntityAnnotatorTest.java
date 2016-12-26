@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
 /**
  * @author David B. Bracewell
  */
-public class EntityAnnotatorTest {
+public class DefaultEntityAnnotatorTest {
 
 
    @Test

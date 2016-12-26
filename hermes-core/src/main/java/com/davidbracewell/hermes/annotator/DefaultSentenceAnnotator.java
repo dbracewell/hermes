@@ -253,8 +253,9 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
                                                   .build();
 
    private boolean isEndOfSentenceMark(Annotation token) {
-      if (token.isEmpty() || token.get(Types.TOKEN_TYPE).<TokenType>cast().isInstance(TokenType.EMOTICON,
-                                                                                      TokenType.PERSON_TITLE)) {
+      if (token.isEmpty() || token.get(Types.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN).isInstance(
+         TokenType.EMOTICON,
+         TokenType.PERSON_TITLE)) {
          return false;
       }
       char c = token.charAt(token.length() - 1);
@@ -299,9 +300,10 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
 
    private boolean isAbbreviation(Annotation token) {
       TokenType type = token.get(Types.TOKEN_TYPE).cast();
-      return type.equals(TokenType.ACRONYM)
-                || (type.equals(TokenType.TIME) && (token.next().isEmpty() || Character.isUpperCase(
-         token.next().charAt(0))));
+      return type != null &&
+                (type.equals(TokenType.ACRONYM)
+                    || (type.equals(TokenType.TIME) && (token.next().isEmpty()
+                                                           || Character.isUpperCase(token.next().charAt(0)))));
    }
 
 
@@ -347,8 +349,8 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
          }
 
          boolean isAbbreviation = isAbbreviation(cToken);
-         TokenType cTokenType = cToken.get(Types.TOKEN_TYPE).cast();
 
+         TokenType cTokenType = cToken.get(Types.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN);
 
          if ((isAbbreviation && isCapitalized(nToken))
                 || (!isAbbreviation && !cTokenType.isInstance(TokenType.PERSON_TITLE) && isEndOfSentenceMark(cToken))
