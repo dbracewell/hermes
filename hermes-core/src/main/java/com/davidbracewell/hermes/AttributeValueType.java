@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.attribute;
+package com.davidbracewell.hermes;
 
 import com.davidbracewell.EnumValue;
 import com.davidbracewell.Language;
@@ -27,6 +27,9 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.NewObjectConverter;
 import com.davidbracewell.conversion.Val;
+import com.davidbracewell.hermes.attribute.EntityType;
+import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.attribute.StringTag;
 import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.string.StringUtils;
 

@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.SystemInfo;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.guava.common.collect.ImmutableSet;
@@ -30,6 +31,7 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Relation;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.io.Resources;
+import com.davidbracewell.io.resource.FileResource;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Loggable;
 import org.maltparser.concurrent.ConcurrentMaltParserModel;
@@ -40,14 +42,18 @@ import org.maltparser.concurrent.graph.ConcurrentDependencyNode;
 import org.maltparser.core.exception.MaltChainedException;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author David B. Bracewell
  */
 public class DefaultDependencyAnnotator extends SentenceLevelAnnotator implements Loggable {
    private static final long serialVersionUID = 1L;
-   private static volatile Map<Language, ConcurrentMaltParserModel> models = new EnumMap<>(Language.class);
+   private static volatile Map<Language, ConcurrentMaltParserModel> models = new ConcurrentHashMap<>();
 
    @Override
    public void annotate(Annotation sentence) {
@@ -86,25 +92,48 @@ public class DefaultDependencyAnnotator extends SentenceLevelAnnotator implement
       if (!models.containsKey(language)) {
          synchronized (this) {
             if (!models.containsKey(language)) {
-               Resource modelLocation = Resources.fromClasspath(
-                  "hermes/models/" + language.getCode().toLowerCase() + "/dependency.mco");
-               if (modelLocation.exists()) {
-                  Resource tmpLocation = Resources.temporaryFile();
-                  tmpLocation.deleteOnExit();
-                  try {
-                     logFine("Writing dependency model to temporary file [{0}].", tmpLocation);
-                     tmpLocation.write(modelLocation.readBytes());
-                  } catch (IOException e) {
-                     throw Throwables.propagate(e);
+               String langCode = language.getCode().toLowerCase();
+               Resource modelDir = Config.get("models.dir").asResource(Resources.from(SystemInfo.USER_HOME));
+               Resource classpathDir = Resources.fromClasspath("hermes/models/");
+               String configProperty = "Relation.DEPENDENCY";
+               String modelName = "dependency.mco";
+               Exception thrownException = null;
+
+               for (Resource r : new Resource[]{
+                  Config.get("", language, "model").asResource(),
+                  classpathDir.getChild(langCode).getChild(modelName),
+                  modelDir.getChild(langCode).getChild(modelName),
+                  Config.get(configProperty, "model").asResource(),
+                  classpathDir.getChild(modelName),
+                  modelDir.getChild(modelName)
+               }) {
+                  if (r != null && r.exists()) {
+                     if (!(r instanceof FileResource)) {
+                        Resource tmpLocation = Resources.temporaryFile();
+                        tmpLocation.deleteOnExit();
+                        try {
+                           logFine("Writing dependency model to temporary file [{0}].", tmpLocation);
+                           tmpLocation.write(r.readBytes());
+                           r = tmpLocation;
+                        } catch (IOException e) {
+                           //no opt
+                        }
+                     }
+                     if (r instanceof FileResource) {
+                        try {
+                           models.put(language,
+                                      ConcurrentMaltParserService.initializeParserModel(r.asURL().get()));
+                           return models.get(language);
+                        } catch (Exception e) {
+                           thrownException = e;
+                        }
+                     }
                   }
-                  modelLocation = tmpLocation;
-               } else {
-                  modelLocation = Config.get("Relation.DEPENDENCY", language, "model").asResource();
                }
-               try {
-                  models.put(language, ConcurrentMaltParserService.initializeParserModel(modelLocation.asURL().get()));
-               } catch (Exception e) {
-                  throw Throwables.propagate(e);
+               if (thrownException == null) {
+                  throw new RuntimeException(modelName + " does not exist");
+               } else {
+                  throw Throwables.propagate(thrownException);
                }
             }
          }

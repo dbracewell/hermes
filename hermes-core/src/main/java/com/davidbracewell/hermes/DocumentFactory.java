@@ -24,7 +24,6 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Language;
 import com.davidbracewell.guava.common.base.Joiner;
 import com.davidbracewell.guava.common.collect.Sets;
-import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.preprocessing.TextNormalization;
 import com.davidbracewell.hermes.preprocessing.TextNormalizer;
 import lombok.NonNull;

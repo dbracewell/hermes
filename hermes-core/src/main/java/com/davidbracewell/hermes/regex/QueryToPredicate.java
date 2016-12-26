@@ -23,10 +23,10 @@ package com.davidbracewell.hermes.regex;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.RelationType;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.filter.HStringPredicates;
 import com.davidbracewell.hermes.filter.StopWords;

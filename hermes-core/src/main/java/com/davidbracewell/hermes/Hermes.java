@@ -22,11 +22,18 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.SystemInfo;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.config.Configurator;
+import com.davidbracewell.guava.common.base.Throwables;
+import com.davidbracewell.io.Resources;
+import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
+import lombok.NonNull;
 
 import java.util.Locale;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * <p>Convenience methods for getting common configuration options. </p>
@@ -39,9 +46,6 @@ public final class Hermes {
    private Hermes() {
       throw new IllegalAccessError();
    }
-
-
-
 
 
    /**
@@ -94,6 +98,48 @@ public final class Hermes {
     */
    public static void initializeWorker(Config config) {
       Configurator.INSTANCE.configure(config);
+   }
+
+
+   public static <T> T loadModel(@NonNull Object lock, @NonNull Language language, @NonNull String configProperty, @NonNull String modelName, @NonNull Supplier<T> modelGetter, @NonNull Consumer<T> modelSetter) {
+      if (modelGetter.get() == null) {
+         synchronized (lock) {
+            String langCode = language.getCode().toLowerCase();
+            Resource modelDir = Config.get("models.dir").asResource(Resources.from(SystemInfo.USER_HOME));
+            Resource classpathDir = Resources.fromClasspath("hermes/models/");
+            if (modelGetter.get() == null) {
+               Exception thrownException = null;
+
+               for (Resource r : new Resource[]{
+                  Config.get(configProperty, language, "model").asResource(),
+                  classpathDir.getChild(langCode).getChild(modelName),
+                  modelDir.getChild(langCode).getChild(modelName),
+                  Config.get(configProperty, "model").asResource(),
+                  classpathDir.getChild(modelName),
+                  modelDir.getChild(modelName)
+               }) {
+                  if (r != null && r.exists()) {
+                     try {
+                        T model = r.readObject();
+                        modelSetter.accept(model);
+                        return model;
+                     } catch (Exception e) {
+                        thrownException = e;
+                     }
+                  }
+               }
+
+               if (thrownException == null) {
+                  throw new RuntimeException(modelName + " does not exist");
+               } else {
+                  throw Throwables.propagate(thrownException);
+               }
+
+            }
+         }
+      }
+
+      return modelGetter.get();
    }
 
 

@@ -22,14 +22,11 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.config.Config;
-import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.Hermes;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.pos.POSTagger;
-import com.davidbracewell.io.Resources;
-import com.davidbracewell.io.resource.Resource;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -41,38 +38,24 @@ import java.util.concurrent.ConcurrentMap;
  * @author David B. Bracewell
  */
 public class DefaultPartOfSpeechAnnotator extends SentenceLevelAnnotator implements Serializable {
-  private static final long serialVersionUID = 1L;
-  private volatile ConcurrentMap<Language, POSTagger> taggers = new ConcurrentHashMap<>();
+   private static final long serialVersionUID = 1L;
+   private volatile ConcurrentMap<Language, POSTagger> taggers = new ConcurrentHashMap<>();
 
 
-  private POSTagger loadModel(Language language) {
-    if (!taggers.containsKey(language)) {
-      synchronized (this) {
-        if (!taggers.containsKey(language)) {
-          try {
-            Resource classPath = Resources.fromClasspath("hermes/models/" + language.getCode().toLowerCase() + "/pos.model.gz");
-            if (classPath.exists()) {
-              taggers.put(language, POSTagger.read(classPath));
-            } else {
-              taggers.put(language, POSTagger.read(Config.get("Attribute.PART_OF_SPEECH", language, "model").asResource()));
-            }
-          } catch (Exception e) {
-            throw Throwables.propagate(e);
-          }
-        }
-      }
-    }
-    return taggers.get(language);
-  }
+   @Override
+   public void annotate(Annotation sentence) {
+      Hermes.loadModel(this,
+                       sentence.getLanguage(),
+                       "Attribute.PART_OF_SPEECH",
+                       "pos.model.gz",
+                       () -> taggers.get(sentence.getLanguage()),
+                       tagger -> taggers.put(sentence.getLanguage(), tagger)
+                      ).tag(sentence);
+   }
 
-  @Override
-  public void annotate(Annotation sentence) {
-    loadModel(sentence.getLanguage()).tag(sentence);
-  }
-
-  @Override
-  public Set<AnnotatableType> satisfies() {
-    return Collections.singleton(Types.PART_OF_SPEECH);
-  }
+   @Override
+   public Set<AnnotatableType> satisfies() {
+      return Collections.singleton(Types.PART_OF_SPEECH);
+   }
 
 }//END OF DefaultPOSAnnotator

@@ -22,8 +22,8 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.collection.Trie;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.attribute.AttributeType;
 import lombok.NonNull;
 
 import java.util.*;

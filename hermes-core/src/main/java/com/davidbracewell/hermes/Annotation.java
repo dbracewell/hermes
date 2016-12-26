@@ -24,7 +24,6 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.guava.common.base.Preconditions;
-import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;

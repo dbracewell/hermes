@@ -23,9 +23,9 @@ package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.AttributeType;
 import lombok.NonNull;
 
 import java.io.Serializable;

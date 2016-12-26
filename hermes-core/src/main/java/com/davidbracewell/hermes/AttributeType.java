@@ -19,13 +19,12 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.attribute;
+package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.guava.common.collect.Sets;
-import com.davidbracewell.hermes.AnnotatableType;
 import lombok.NonNull;
 
 import java.util.Collection;

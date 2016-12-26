@@ -46,7 +46,6 @@ import com.davidbracewell.function.Unchecked;
 import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.io.AsyncWriter;

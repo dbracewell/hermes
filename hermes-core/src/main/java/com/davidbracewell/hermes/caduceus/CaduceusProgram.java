@@ -26,7 +26,6 @@ import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.guava.common.collect.HashMultimap;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.attribute.AttributeType;
 import com.davidbracewell.hermes.regex.TokenMatcher;
 import com.davidbracewell.hermes.regex.TokenRegex;
 import com.davidbracewell.io.resource.Resource;

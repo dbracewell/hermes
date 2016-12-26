@@ -23,8 +23,6 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.annotation.Preload;
-import com.davidbracewell.hermes.attribute.AttributeType;
-import com.davidbracewell.hermes.attribute.AttributeValueType;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 

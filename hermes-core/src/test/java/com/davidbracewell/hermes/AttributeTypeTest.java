@@ -23,8 +23,6 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.attribute.AttributeType;
-import com.davidbracewell.hermes.attribute.AttributeValueType;
 import org.junit.Before;
 import org.junit.Test;
 

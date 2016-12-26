@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.tokenization;
 
 
-import com.davidbracewell.hermes.attribute.AttributeType;
+import com.davidbracewell.hermes.AttributeType;
 import lombok.NonNull;
 
 import java.io.Reader;

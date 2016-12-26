@@ -23,8 +23,8 @@ package com.davidbracewell.hermes.caduceus;
 
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.AttributeType;
 import lombok.Builder;
 import lombok.Value;
 
