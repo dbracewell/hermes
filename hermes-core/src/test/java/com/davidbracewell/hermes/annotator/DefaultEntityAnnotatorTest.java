@@ -42,7 +42,7 @@ public class DefaultEntityAnnotatorTest {
    @Test
    public void testAnnotate() throws Exception {
       Config.initializeTest();
-      Config.setProperty("com.davidbracewell.hermes.annotator.EntityAnnotator.subTypes", "TOKEN_TYPE_ENTITY");
+      Config.setProperty("com.davidbracewell.hermes.annotator.DefaultEntityAnnotator.subTypes", "TOKEN_TYPE_ENTITY");
       Document document = DocumentProvider.getAnnotatedEmoticonDocument();
       Pipeline.process(document, Types.ENTITY);
       List<Annotation> entities = document.get(Types.ENTITY);

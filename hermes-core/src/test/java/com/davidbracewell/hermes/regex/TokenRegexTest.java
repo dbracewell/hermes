@@ -44,9 +44,10 @@ public class TokenRegexTest {
    @Before
    public void setUp() throws Exception {
       Config.initializeTest();
-      Config.setProperty("com.davidbracewell.hermes.annotator.EntityAnnotator.subTypes", "TOKEN_TYPE_ENTITY");
+      Config.setProperty("com.davidbracewell.hermes.annotator.DefaultEntityAnnotator.subTypes", "TOKEN_TYPE_ENTITY");
       document = DocumentFactory.getInstance().create("John met Sally by the seashore at 12:30pm yesterday.");
       Pipeline.process(document, Types.TOKEN, Types.SENTENCE, Types.ENTITY);
+
 
       //Add basic POS
       document.tokenAt(0).put(Types.PART_OF_SPEECH, POS.NOUN);
