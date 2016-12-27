@@ -46,48 +46,61 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
 
    @Override
    public boolean add(Annotation annotation) {
-      if (annotation != null) {
-         Node z = new Node(annotation);
+      if (annotation == null) {
+         return false;
+      }
 
-         //Empty tree, add this and return
-         if (isNull(root)) {
-            size++;
-            root = z;
-            root.setBlack();
-            return true;
-         }
+      Node z = new Node(annotation);
 
-         Node iNode = root;
-         Node parent = NULL;
-         while (!isNull(iNode)) {
-            parent = iNode;
-            if (annotation.start() == iNode.span.start() && annotation.end() == iNode.span.end()) {
-               iNode.annotations.add(annotation);
-               return true;
-            } else if (annotation.start() <= iNode.span.start()) {
-               iNode = iNode.left;
-            } else {
-               iNode = iNode.right;
-            }
-         }
-
-
-         z.parent = parent;
+      //Empty tree, add this and return
+      if (isNull(root)) {
          size++;
-         if (isNull(parent)) {
-            root = z;
-         } else if (annotation.start() <= parent.span.start()) {
-            parent.left = z;
-         } else {
-            parent.right = z;
-         }
-
-         update(z);
-         balance(z);
+         root = z;
+         root.setBlack();
          return true;
       }
 
-      return false;
+      Node iNode = root;
+      Node parent = NULL;
+      while (!isNull(iNode)) {
+         parent = iNode;
+         if (annotation.start() == iNode.span.start() && annotation.end() == iNode.span.end()) {
+            //Same span, so we will add it to this node
+            if (iNode.annotations.add(annotation)) {
+               //Increment the size if the annotation was added to the node's set.
+               size++;
+            }
+            return true;
+         } else if (annotation.start() <= iNode.span.start()) {
+            //Need to go to the left because the annotation's doesn't have the same span as the iNode and its
+            // start is <= the iNode's
+            iNode = iNode.left;
+         } else {
+            //Need to go to the right because the annotation's doesn't have the same span as the iNode and its
+            // start is >= the iNode's
+            iNode = iNode.right;
+         }
+      }
+
+      //At this point we did not found a matching span and traveled to the bottom of the tree
+      // We will set our the parent to last non-null iNode and increment the size.
+      z.parent = parent;
+      size++;
+      if (isNull(parent)) {
+         //Safety check that we are not at the root
+         root = z;
+      } else if (annotation.start() <= parent.span.start()) {
+         //the new node will go to the left of its parent
+         parent.left = z;
+      } else {
+         //the new node will go to the right of its parent
+         parent.right = z;
+      }
+
+      //Need to update and re-balance
+      update(z);
+      balance(z);
+      return true;
    }
 
    @Override
@@ -152,7 +165,7 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
 
    @Override
    public boolean contains(Object o) {
-      if (o instanceof Annotation) {
+      if (o != null && o instanceof Annotation) {
          Node n = findNode(root, Cast.as(o));
          return !n.isNull() && n.annotations.contains(o);
       }
@@ -201,10 +214,10 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
    }
 
    /**
-    * Overlapping list.
+    * Gets all annotations that overlap the given span
     *
     * @param span the span
-    * @return the list
+    * @return the list of overlapping annotation
     */
    public List<Annotation> overlapping(Span span) {
       if (span == null || root.isNull()) {

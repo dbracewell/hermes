@@ -37,7 +37,9 @@ import java.text.DateFormat;
 import java.util.*;
 
 /**
- * The enum Attribute value type.
+ * <p>
+ * Methods for encoding and decoding possible attribute value types.
+ * </p>
  *
  * @author David B. Bracewell
  */
@@ -155,7 +157,7 @@ public enum AttributeValueType {
       @Override
       @SuppressWarnings("unchecked")
       protected EntityType decodeImpl(Object value) {
-         if(StringUtils.isNullOrBlank(value.toString())){
+         if (StringUtils.isNullOrBlank(value.toString())) {
             return null;
          }
          return value instanceof EntityType ? Cast.as(value) : EntityType.create(value.toString());
@@ -318,10 +320,10 @@ public enum AttributeValueType {
    }
 
    /**
-    * Encode object.
+    * Encodes a value into a Json writeable type (String or Number).
     *
     * @param value the value
-    * @return the object
+    * @return the encoded value
     */
    public final Object encode(Val value) {
       if (value == null) {
@@ -331,10 +333,10 @@ public enum AttributeValueType {
    }
 
    /**
-    * Encode object.
+    * Encodes a value into a Json writeable type (String or Number).
     *
     * @param value the value
-    * @return the object
+    * @return the encoded value
     */
    public final Object encode(Object value) {
       if (value == null) {
@@ -348,10 +350,11 @@ public enum AttributeValueType {
 
 
    /**
-    * Encode object.
+    * Implementation of a conversion from value to type writeable via JSON (Number or String). Value is guaranteed to
+    * be non-null.
     *
     * @param value the value
-    * @return the object
+    * @return the JSON writeable type
     */
    protected abstract Object encodeImpl(Object value);
 

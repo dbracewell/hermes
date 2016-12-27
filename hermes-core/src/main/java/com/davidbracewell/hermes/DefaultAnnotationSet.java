@@ -7,11 +7,8 @@ import java.util.stream.Collectors;
 
 
 /**
- * <p>
- * A default implementation of an <code>AnnotationSet</code> that uses two sorted sets. One set is sorted by the
- * starting char index and the other by the ending char index. This allows a compromise between memory usage and time
- * to select annotations.
- * </p>
+ * <p> A default implementation of an <code>AnnotationSet</code> that uses an {@link AnnotationTree} which is an
+ * Red-Black backed Interval Tree. </p>
  *
  * @author David B. Bracewell
  */

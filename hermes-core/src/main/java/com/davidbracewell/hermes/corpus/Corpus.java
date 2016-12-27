@@ -56,6 +56,7 @@ import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.StreamingContext;
 import com.davidbracewell.stream.accumulator.MCounterAccumulator;
+import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
@@ -476,8 +477,9 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     */
    default Counter<String> documentFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
       MCounterAccumulator<String> df = getStreamingContext().counterAccumulator();
-      forEach(doc -> df.merge(Counters.newCounter(doc.stream(type)
+      forEachParallel(doc -> df.merge(Counters.newCounter(doc.stream(type)
                                                              .map(toString)
+                                                             .filter(StringUtils::isNotNullOrBlank)
                                                              .distinct()
                                                              .collect(Collectors.toList()))));
       return df.value();
@@ -629,11 +631,12 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     */
    default Counter<String> terms(@NonNull TermSpec termSpec) {
       return termSpec.getValueCalculator().adjust(
-         Counters.newCounter(stream().parallel().flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
-                                                                   .filter(termSpec.getFilter())
-                                                                   .map(termSpec.getToStringFunction()))
-                                     .countByValue()
-                            ));
+         Counters.newCounter(stream().parallel()
+                                     .flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
+                                                        .filter(termSpec.getFilter())
+                                                        .map(termSpec.getToStringFunction()))
+                                     .filter(StringUtils::isNotNullOrBlank)
+                                     .countByValue()));
    }
 
    /**

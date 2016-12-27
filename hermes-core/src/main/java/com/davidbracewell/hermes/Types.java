@@ -51,13 +51,13 @@ public interface Types {
     */
    RelationType DEPENDENCY = RelationType.create("DEPENDENCY");
    /**
-    * Entity annotation type
-    */
-   AnnotationType ENTITY = AnnotationType.create("ENTITY");
-   /**
     * The constant ENTITY_TYPE.
     */
    AttributeType ENTITY_TYPE = AttributeType.create("ENTITY_TYPE", AttributeValueType.ENTITY_TYPE);
+   /**
+    * Entity annotation type
+    */
+   AnnotationType ENTITY = AnnotationType.create("ENTITY", AnnotationType.ROOT, ENTITY_TYPE);
    /**
     * File used to create the document
     */
@@ -93,7 +93,7 @@ public interface Types {
    /**
     * phrase chunk annotation type
     */
-   AnnotationType PHRASE_CHUNK = AnnotationType.create("PHRASE_CHUNK");
+   AnnotationType PHRASE_CHUNK = AnnotationType.create("PHRASE_CHUNK", AnnotationType.ROOT, PART_OF_SPEECH);
    /**
     * Date content was published
     */
@@ -125,7 +125,7 @@ public interface Types {
    /**
     * token annotation type
     */
-   AnnotationType TOKEN = AnnotationType.create("TOKEN");
+   AnnotationType TOKEN = AnnotationType.create("TOKEN", AnnotationType.ROOT, PART_OF_SPEECH);
    /**
     * The type of token
     */
@@ -141,8 +141,10 @@ public interface Types {
    /**
     * The constant WORD_SENSE.
     */
-   AnnotationType WORD_SENSE = AnnotationType.create("WORD_SENSE");
-
+   AnnotationType WORD_SENSE = AnnotationType.create("WORD_SENSE", AnnotationType.ROOT, PART_OF_SPEECH);
+   /**
+    * The constant ML_ENTITY.
+    */
    AnnotationType ML_ENTITY = AnnotationType.create("ML_ENTITY", ENTITY);
 
    /**

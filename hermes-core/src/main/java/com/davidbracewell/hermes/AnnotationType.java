@@ -94,9 +94,28 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
     * @throws IllegalArgumentException name is invalid, or annotation type already exists with different parent
     */
    public static AnnotationType create(String name, AnnotationType parent) {
+      return create(name, parent, null);
+   }
+
+   /**
+    * Creates a new Annotation Type or retrieves an already existing one for a given name
+    *
+    * @param name             the name
+    * @param parent           the parent
+    * @param tagAttributeType The attribute used as this annotations tag
+    * @return the annotation type
+    * @throws IllegalArgumentException name is invalid, or annotation type already exists with different parent
+    */
+   public static AnnotationType create(String name, AnnotationType parent, AttributeType tagAttributeType) {
       AnnotationType toReturn = DynamicEnum.register(new AnnotationType(name, parent));
       if (toReturn.setParentIfAbsent(parent)) {
          Config.setProperty(typeName + "." + toReturn.name() + ".parent", parent.name());
+      }
+      if (tagAttributeType != null && toReturn.tagAttributeType == null) {
+         toReturn.tagAttributeType = tagAttributeType;
+         Config.setProperty(typeName + "." + toReturn.name() + ".tag", tagAttributeType.name());
+      } else if (tagAttributeType != null && !toReturn.tagAttributeType.equals(tagAttributeType)) {
+         throw new IllegalArgumentException("Attempting to change tag of " + name + " from " + toReturn.tagAttributeType + " to " + tagAttributeType);
       }
       values.add(toReturn);
       return toReturn;

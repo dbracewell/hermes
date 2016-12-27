@@ -28,6 +28,7 @@ import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
+import org.apache.mahout.math.set.OpenHashSet;
 
 import java.io.Serializable;
 import java.util.*;
@@ -63,7 +64,7 @@ public final class Annotation extends Fragment implements Serializable {
     */
    public static long DETACHED_ID = Long.MIN_VALUE;
    private final AnnotationType annotationType;
-   private final Set<Relation> relations = new HashSet<>();
+   private final Set<Relation> relations = new OpenHashSet<>();
    private long id = DETACHED_ID;
    private volatile transient Annotation[] tokens;
 

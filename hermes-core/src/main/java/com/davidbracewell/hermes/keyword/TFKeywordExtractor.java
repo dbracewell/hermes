@@ -25,6 +25,7 @@ import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.corpus.TermSpec;
+import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 import java.util.stream.Collectors;
@@ -56,10 +57,10 @@ public class TFKeywordExtractor implements KeywordExtractor {
 
    @Override
    public Counter<String> extract(@NonNull HString hstring) {
-      return termSpec.getValueCalculator().adjust(Counters.newCounter(hstring.get(termSpec.getAnnotationType()).stream()
+      return termSpec.getValueCalculator().adjust(Counters.newCounter(hstring.stream(termSpec.getAnnotationType())
                                                                              .filter(termSpec.getFilter())
                                                                              .map(termSpec.getToStringFunction())
-                                                                             .collect(Collectors.toList())
-                                                                     ));
+                                                                             .filter(StringUtils::isNotNullOrBlank)
+                                                                             .collect(Collectors.toList())));
    }
 }//END OF TFKeywordExtractor

@@ -25,6 +25,7 @@ import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.corpus.TermSpec;
+import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 import java.util.stream.Collectors;
@@ -61,9 +62,10 @@ public class TFIDFKeywordExtractor implements KeywordExtractor {
 
    @Override
    public Counter<String> extract(@NonNull HString hstring) {
-      Counter<String> tf = Counters.newCounter(hstring.get(termSpec.getAnnotationType()).stream()
+      Counter<String> tf = Counters.newCounter(hstring.stream(termSpec.getAnnotationType())
                                                       .filter(termSpec.getFilter())
                                                       .map(termSpec.getToStringFunction())
+                                                      .filter(StringUtils::isNotNullOrBlank)
                                                       .collect(Collectors.toList()));
       Counter<String> tfidf = Counters.newCounter();
       final double maxTF = tf.maximumCount();

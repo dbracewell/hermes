@@ -154,7 +154,7 @@ public interface AttributedObject {
     * @param attributeType the attribute type
     * @return the attribute value as a tag
     */
-   default <T extends Tag> T getAttributeAsTag(@NonNull AttributeType attributeType) {
+   default <T extends Tag> T getAsTag(@NonNull AttributeType attributeType) {
       return get(attributeType).cast();
    }
 
