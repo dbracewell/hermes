@@ -35,18 +35,23 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * <p>
- * Associates a type, e.g. token, sentence, named entity, and a set of attributes, e.g. part of speech and entity type,
- * to  a specific  span of a document, which may include the entire document. Annotation type information is defined
- * via the {@link AnnotationType} class.
+ * <p> Annotations are specialized {@link HString}s representing linguistic overlays on a document that associate a
+ * type, e.g. token, sentence, named entity, and a set of attributes, e.g. part of speech and entity type, to  a
+ * specific  span of a document, which may include the entire document. Annotation type information is defined via the
+ * {@link AnnotationType} class. </p>
+ *
+ * <p> Annotations provide many convenience methods to make navigating the the annotation and relation graph easier. The
+ * {@link #next()}, {@link #next(AnnotationType)}, {@link #previous()}, and {@link #previous(AnnotationType)} methods
+ * facilitate retrieval of the next and previous annotation of the same or different type. The <code>sources</code>,
+ * <code>targets</code>, and {@link #get(RelationType, boolean)} methods allow retrieval of the annotations connected
+ * via relations and the relations (edges) themeselves.
  * </p>
- * <p>
- * Commonly, annotations have an associated <code>Tag</code> attribute which acts as label. Examples of tags include
+ *
+ * <p> Commonly, annotations have an associated <code>Tag</code> attribute which acts as label. Examples of tags include
  * part-of-speech and entity type. Tags can be retrieved using the {@link #getTag()} method. Annotation types specify
  * the attribute that represents the tag of an annotation of its type (in some cases annotations may have multiple tags
  * and this definition allows the primary tag to specified). If no tag is specified, a default attribute of
- * <code>TAG</code>.
- * </p>
+ * <code>TAG</code> is used. </p>
  *
  * @author David B. Bracewell
  */
@@ -67,8 +72,8 @@ public final class Annotation extends Fragment implements Serializable {
     *
     * @param owner          the document that owns this annotation
     * @param annotationType The type of annotation
-    * @param start          the start
-    * @param end            the end
+    * @param start          the character starting offset in the document
+    * @param end            the character ending offset in the document
     */
    public Annotation(@NonNull Document owner, @NonNull AnnotationType annotationType, int start, int end) {
       super(owner, start, end);
@@ -98,11 +103,11 @@ public final class Annotation extends Fragment implements Serializable {
 
 
    /**
-    * Instantiates a new Annotation.
+    * Instantiates a new orphaned Annotation.
     *
-    * @param type  the type
-    * @param start the start
-    * @param end   the end
+    * @param type  The type of annotation
+    * @param start the character starting offset in the document
+    * @param end   the character ending offset in the document
     */
    protected Annotation(AnnotationType type, int start, int end) {
       super(null, start, end);
@@ -181,10 +186,10 @@ public final class Annotation extends Fragment implements Serializable {
    private Stream<Relation> getRelationStream(boolean includeSubAnnotations) {
       Stream<Relation> relationStream = relations.stream();
       if (this.getType() != Types.TOKEN && includeSubAnnotations) {
-         relationStream = Stream.concat(
-            relationStream,
-            getAllAnnotations().stream().filter(a -> a != this).flatMap(token -> token.allRelations(false).stream())
-                                       );
+         relationStream = Stream.concat(relationStream,
+                                        getAllAnnotations().stream()
+                                                           .filter(a -> a != this)
+                                                           .flatMap(token -> token.allRelations(false).stream()));
       }
       return relationStream;
    }

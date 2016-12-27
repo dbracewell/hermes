@@ -25,6 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.data.DatasetType;
 import com.davidbracewell.concurrent.Broker;
 import com.davidbracewell.concurrent.IterableProducer;
+import com.davidbracewell.config.Config;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.base.Stopwatch;
 import com.davidbracewell.guava.common.base.Throwables;
@@ -199,8 +200,8 @@ public final class Pipeline implements Serializable {
       if (returnCorpus && corpus.getDataSetType() == DatasetType.OffHeap) {
          Resource tempFile = Resources.temporaryDirectory();
          tempFile.deleteOnExit();
-         try (MultiFileWriter writer = new MultiFileWriter(tempFile, "part-", numberOfThreads)) {
-            //Todo: reimpliment so that each thread has its own writer and file.
+         try (MultiFileWriter writer = new MultiFileWriter(tempFile, "part-", Config.get("files.partition")
+                                                                                    .asIntegerValue(numberOfThreads))) {
             builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer),
                                 numberOfThreads)
                    .build()

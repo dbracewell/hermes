@@ -115,7 +115,7 @@ public class HermesFX extends JavaFXApplication {
         }
       });
       attributeList.setRoot(new TreeItem<>("ATTRIBUTES"));
-      currentDocument.attributes().forEach(attr -> attributeList.getRoot().getChildren().add(new TreeItem<>(attr.name() + "::" + currentDocument.get(attr).toString())));
+      currentDocument.attributeTypeSet().forEach(attr -> attributeList.getRoot().getChildren().add(new TreeItem<>(attr.name() + "::" + currentDocument.get(attr).toString())));
     } catch (IOException e) {
       e.printStackTrace();
     }

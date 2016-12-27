@@ -218,7 +218,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    @Override
-   public Set<Map.Entry<AttributeType, Val>> attributeValues() {
+   public Set<Map.Entry<AttributeType, Val>> attributeEntrySet() {
       return getAttributeMap().entrySet();
    }
 
@@ -965,13 +965,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                      .filter(t -> !t.parent().isPresent())
                      .map(Cast::<HString>as)
                      .findFirst()
-                     .orElseGet(() ->
-                                   tokens().stream()
-                                           .filter(t -> !this.overlaps(t.parent().get()))
-                                           .map(Cast::<HString>as)
-                                           .findFirst()
-                                           .orElse(this)
-                               );
+                     .orElseGet(() -> tokens().stream()
+                                              .filter(t -> !this.overlaps(t.parent().get()))
+                                              .map(Cast::<HString>as)
+                                              .findFirst()
+                                              .orElse(this));
    }
 
    /**

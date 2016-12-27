@@ -35,21 +35,29 @@ import lombok.NonNull;
 
 /**
  * <p>
- * An annotatable type is one that can be added to a document through the use of a {@link Pipeline}.
- * The interface exists to unify {@link AnnotationType}s, {@link AttributeType}s, and {@link RelationType}s.
+ * An annotatable type is one that can be added to a document through the use of a {@link Pipeline}. The interface
+ * exists to unify {@link AnnotationType}s, {@link AttributeType}s, and {@link RelationType}s.
  * </p>
  *
  * @author David B. Bracewell
  */
 public interface AnnotatableType {
+   /**
+    * The constant ANNOTATOR_PACKAGE.
+    */
    String ANNOTATOR_PACKAGE = "com.davidbracewell.hermes.annotator";
 
    /**
-    * Gets the annotator associated with this type for a given language.
+    * Gets the annotator associated with this type for a given language. First, an annotator is checked for in the
+    * config using <code>Type.Language.Name.Annotator</code> where the language is optional. If not found, it will then
+    * check for classes that meet common conventions with class names of <code>Default[Language][Type]Annotator</code>
+    * or <code>Default[Type]Annotator</code>, where type is is camel-cased and non-alphabetic characters removed (e.g.
+    * <code>MY_ENTITY</code> would become MyEntity) and the class is expected be in the package
+    * <code>com.davidbracewell.hermes.annotator</code>
     *
     * @param language the language for which the annotator is needed.
-    * @return the annotator for this type and the given langauge
-    * @throws IllegalStateException If this type is a gold standard annotation.
+    * @return the annotator for this type and the given language
+    * @throws IllegalStateException If no annotator is defined or the defined annotator does not satisfy this type.
     */
    default Annotator getAnnotator(@NonNull Language language) {
       //Step 1: Check for a config override
@@ -90,9 +98,9 @@ public interface AnnotatableType {
       }
 
       annotator = BeanUtils.parameterizeObject(annotator);
-      Preconditions.checkArgument(annotator.satisfies().contains(this),
-                                  "Attempting to register " + annotator.getClass()
-                                                                       .getName() + " for " + name() + " which it does not provide.");
+      Preconditions.checkState(annotator.satisfies().contains(this),
+                               "Attempting to register " + annotator.getClass()
+                                                                    .getName() + " for " + name() + " which it does not provide.");
       return annotator;
    }
 
@@ -104,33 +112,40 @@ public interface AnnotatableType {
    String type();
 
    /**
-    * The annotatable type's name (e.g. TOKEN, PART_OF_SPEECT)
+    * The annotatable type's name (e.g. TOKEN, PART_OF_SPEECH)
     *
     * @return the name
     */
    String name();
 
    /**
-    * The canonical name in the form of "type.name"
+    * The canonical name of the type (typically in the form of <code>PackageName.ClassName.Name</code>)
     *
     * @return the canonical form of the name
     */
    String canonicalName();
 
 
-   static AnnotatableType create(String name) {
-      if (StringUtils.isNullOrBlank(name)) {
+   /**
+    * Convenience method for creating an <code>AnnotatableType</code> from a string. The string should either be the
+    * canonical form or shorthand form (<code>Type.Name</code>, but only works for Annotation, Relation, and Attribute)
+    *
+    * @param string the canonical name or shorthand name of the annotatable type to create
+    * @return the annotatable type or null
+    */
+   static AnnotatableType create(String string) {
+      if (StringUtils.isNullOrBlank(string)) {
          return null;
       }
-      //Short hand versions
-      if (name.startsWith("Annotation")) {
-         return Types.annotation(name.substring(name.lastIndexOf('.') + 1));
-      } else if (name.startsWith("Relation")) {
-         return Types.relation(name.substring(name.lastIndexOf('.') + 1));
-      } else if (name.startsWith("Attribute")) {
-         return Types.attribute(name.substring(name.lastIndexOf('.') + 1));
+      //Shorthand versions
+      if (string.startsWith("Annotation")) {
+         return Types.annotation(string.substring(string.lastIndexOf('.') + 1));
+      } else if (string.startsWith("Relation")) {
+         return Types.relation(string.substring(string.lastIndexOf('.') + 1));
+      } else if (string.startsWith("Attribute")) {
+         return Types.attribute(string.substring(string.lastIndexOf('.') + 1));
       }
-      return Convert.convert(name, AnnotatableType.class);
+      return Convert.convert(string, AnnotatableType.class);
    }
 
 

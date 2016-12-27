@@ -84,8 +84,9 @@ public class AttributeTypeTest {
       //Reading back in token type is ignored for the first token, because it is not a valid type
       document = Document.fromJson(json);
 
-      assertEquals(Arrays.asList("One", "Two", "Three"), document.tokenAt(0).getAttributeAsList(listAttributeType));
-      assertEquals(map("A", "B", "C", "D"), document.tokenAt(1).getAttributeAsMap(mapAttributeType));
+      assertEquals(Arrays.asList("One", "Two", "Three"),
+                   document.tokenAt(0).getAsList(listAttributeType, String.class));
+      assertEquals(map("A", "B", "C", "D"), document.tokenAt(1).getAsMap(mapAttributeType, String.class));
 
    }
 

@@ -59,10 +59,7 @@ public interface AnnotatedObject {
     * @return the forst token annotation
     */
    default Annotation firstToken() {
-      if (tokenLength() > 0) {
-         return tokenAt(0);
-      }
-      return Fragments.detachedEmptyAnnotation();
+      return tokenAt(0);
    }
 
    /**
@@ -125,10 +122,7 @@ public interface AnnotatedObject {
     * @return the last token annotation
     */
    default Annotation lastToken() {
-      if (tokenLength() > 0) {
-         return tokenAt(tokenLength() - 1);
-      }
-      return Fragments.detachedEmptyAnnotation();
+      return tokenAt(tokenLength() - 1);
    }
 
    /**

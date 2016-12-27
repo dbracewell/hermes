@@ -1,14 +1,9 @@
-s'
-'s
-’s
-'ve
-’ve
-'ll
-’ll
 'd
-’d
+'ll
 're
-’re
+'s
+'s
+'ve
 a
 able
 about
@@ -255,9 +250,10 @@ keep
 keeps
 kept
 know
-knows
 known
+knows
 l
+label
 last
 lately
 later
@@ -295,6 +291,7 @@ must
 my
 myself
 n
+n't
 name
 namely
 nd
@@ -378,6 +375,7 @@ relatively
 respectively
 right
 s
+s'
 said
 same
 saw
@@ -506,7 +504,6 @@ using
 usually
 uucp
 v
-label
 various
 very
 via
@@ -578,5 +575,8 @@ yourself
 yourselves
 z
 zero
-'s
-n't
+’d
+’ll
+’re
+’s
+’ve

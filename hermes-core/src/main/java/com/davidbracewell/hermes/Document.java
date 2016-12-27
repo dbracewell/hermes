@@ -274,7 +274,7 @@ public class Document extends HString {
    }
 
    @Override
-   public Set<AttributeType> attributes() {
+   public Set<AttributeType> attributeTypeSet() {
       return attributes.keySet();
    }
 
@@ -573,7 +573,7 @@ public class Document extends HString {
 
          if (attributes.size() > 0) {
             writer.beginObject("attributes");
-            for (Map.Entry<AttributeType, Val> entry : attributeValues()) {
+            for (Map.Entry<AttributeType, Val> entry : attributeEntrySet()) {
                writer.writeKeyValue(entry.getKey().name(), entry.getKey().getValueType().encode(entry.getValue()));
             }
             writer.endObject();
@@ -599,7 +599,7 @@ public class Document extends HString {
 
                if (annotation.getAttributeMap().size() > 0) {
                   writer.beginObject("attributes");
-                  for (Map.Entry<AttributeType, Val> entry : annotation.attributeValues()) {
+                  for (Map.Entry<AttributeType, Val> entry : annotation.attributeEntrySet()) {
                      writer.writeKeyValue(entry.getKey().name(),
                                           entry.getKey().getValueType().encode(entry.getValue()));
 

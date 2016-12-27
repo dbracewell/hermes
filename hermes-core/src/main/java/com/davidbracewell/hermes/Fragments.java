@@ -41,7 +41,7 @@ public final class Fragments {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public Set<AttributeType> attributes() {
+    public Set<AttributeType> attributeTypeSet() {
       return Collections.emptySet();
     }
 
@@ -133,7 +133,7 @@ public final class Fragments {
     }
 
     @Override
-    public Set<AttributeType> attributes() {
+    public Set<AttributeType> attributeTypeSet() {
       return attributes.keySet();
     }
 

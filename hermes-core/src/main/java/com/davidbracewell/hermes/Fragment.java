@@ -59,7 +59,7 @@ class Fragment extends HString {
   }
 
   @Override
-  public Set<AttributeType> attributes() {
+  public Set<AttributeType> attributeTypeSet() {
     return attributes.keySet();
   }
 

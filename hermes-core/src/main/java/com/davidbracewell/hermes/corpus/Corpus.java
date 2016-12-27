@@ -55,6 +55,7 @@ import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.StreamingContext;
+import com.davidbracewell.stream.accumulator.MCounterAccumulator;
 import com.davidbracewell.tuple.Tuple;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
@@ -474,10 +475,12 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     * @return A counter containing document frequencies of the given annotation type
     */
    default Counter<String> documentFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
-      return Counters.newCounter(Cast.cast(stream()
-                                              .flatMap(document -> document.get(type).stream().map(toString).distinct())
-                                              .countByValue())
-                                );
+      MCounterAccumulator<String> df = getStreamingContext().counterAccumulator();
+      forEach(doc -> df.merge(Counters.newCounter(doc.stream(type)
+                                                             .map(toString)
+                                                             .distinct()
+                                                             .collect(Collectors.toList()))));
+      return df.value();
    }
 
    /**

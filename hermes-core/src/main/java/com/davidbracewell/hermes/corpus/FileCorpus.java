@@ -21,8 +21,10 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.collection.Streams;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.Unchecked;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
@@ -37,6 +39,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
@@ -135,7 +138,22 @@ public class FileCorpus implements Corpus, Serializable {
    @Override
    public long size() {
       if (size == -1) {
-         size = stream().count();
+         if (corpusFormat.isOnePerLine()) {
+            Iterator<Resource> itr = resource.isDirectory() ?
+                                     resource.childIterator(true) :
+                                     Collections.singleton(resource).iterator();
+            AtomicInteger sz = new AtomicInteger(0);
+            Streams.asParallelStream(itr).forEach(r -> {
+               try (MStream<String> lineStream = r.lines()) {
+                  lineStream.forEach(l -> sz.addAndGet(1));
+               } catch (Exception e) {
+                  throw Throwables.propagate(e);
+               }
+            });
+            size = sz.get();
+         } else {
+            size = stream().count();
+         }
       }
       return size;
    }

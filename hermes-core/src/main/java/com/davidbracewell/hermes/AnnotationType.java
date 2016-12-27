@@ -149,7 +149,6 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
       return Cast.as(Config.get(typeName, name(), "parent").as(getClass(), null));
    }
 
-
    /**
     * <p>Checks if this type is an instance of another type. Type B is an instance of Type A if A == B, B is the gold
     * standard version of A, or A is in B's parent tree.</p>
