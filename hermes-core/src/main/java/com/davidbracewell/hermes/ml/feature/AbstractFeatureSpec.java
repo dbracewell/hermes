@@ -20,123 +20,134 @@ import java.io.Serializable;
  */
 @ToString
 public abstract class AbstractFeatureSpec<T extends AbstractFeatureSpec> implements Serializable {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  private AnnotationType annotationType = Types.TOKEN;
-  private SerializableFunction<HString, String> toStringFunction = HString::toString;
-  private SerializablePredicate<HString> filter = hString -> true;
-  private ValueCalculator valueCalculator = ValueCalculator.Frequency;
+   private AnnotationType annotationType = Types.TOKEN;
+   private SerializableFunction<HString, String> toStringFunction = HString::toString;
+   private SerializablePredicate<HString> filter = hString -> true;
+   private ValueCalculator valueCalculator = ValueCalculator.Frequency;
 
-  /**
-   * Value calculator t.
-   *
-   * @param valueCalculator the value calculator
-   * @return the t
-   */
-  public T valueCalculator(@NonNull ValueCalculator valueCalculator) {
-    this.valueCalculator = valueCalculator;
-    return Cast.as(this);
-  }
+   public AbstractFeatureSpec(){
+
+   }
+
+   public AbstractFeatureSpec(@NonNull AbstractFeatureSpec<T> copy){
+      this.annotationType = copy.annotationType;
+      this.toStringFunction = copy.toStringFunction;
+      this.filter = copy.filter;
+      this.valueCalculator = copy.valueCalculator;
+   }
+
+   /**
+    * Value calculator t.
+    *
+    * @param valueCalculator the value calculator
+    * @return the t
+    */
+   public T valueCalculator(@NonNull ValueCalculator valueCalculator) {
+      this.valueCalculator = valueCalculator;
+      return Cast.as(this);
+   }
 
 
-  /**
-   * Gets value calculator.
-   *
-   * @return the value calculator
-   */
-  public ValueCalculator getValueCalculator() {
-    return valueCalculator;
-  }
+   /**
+    * Gets value calculator.
+    *
+    * @return the value calculator
+    */
+   public ValueCalculator getValueCalculator() {
+      return valueCalculator;
+   }
 
-  /**
-   * Annotation type t.
-   *
-   * @param annotationType the annotation type
-   * @return the t
-   */
-  public T annotationType(@NonNull AnnotationType annotationType) {
-    this.annotationType = annotationType;
-    return Cast.as(this);
-  }
+   /**
+    * Annotation type t.
+    *
+    * @param annotationType the annotation type
+    * @return the t
+    */
+   public T annotationType(@NonNull AnnotationType annotationType) {
+      this.annotationType = annotationType;
+      return Cast.as(this);
+   }
 
-  /**
-   * Filter t.
-   *
-   * @param filter the filter
-   * @return the t
-   */
-  public T filter(@NonNull SerializablePredicate<HString> filter) {
-    this.filter = filter;
-    return Cast.as(this);
-  }
+   /**
+    * Filter t.
+    *
+    * @param filter the filter
+    * @return the t
+    */
+   public T filter(@NonNull SerializablePredicate<HString> filter) {
+      this.filter = filter;
+      return Cast.as(this);
+   }
 
-  /**
-   * Gets annotation type.
-   *
-   * @return the annotation type
-   */
-  public AnnotationType getAnnotationType() {
-    return annotationType;
-  }
+   /**
+    * Gets annotation type.
+    *
+    * @return the annotation type
+    */
+   public AnnotationType getAnnotationType() {
+      return annotationType;
+   }
 
-  /**
-   * Gets filter.
-   *
-   * @return the filter
-   */
-  public SerializablePredicate<HString> getFilter() {
-    return filter;
-  }
+   /**
+    * Gets filter.
+    *
+    * @return the filter
+    */
+   public SerializablePredicate<HString> getFilter() {
+      return filter;
+   }
 
-  /**
-   * Gets to string function.
-   *
-   * @return the to string function
-   */
-  public SerializableFunction<HString, String> getToStringFunction() {
-    return toStringFunction;
-  }
+   /**
+    * Gets to string function.
+    *
+    * @return the to string function
+    */
+   public SerializableFunction<HString, String> getToStringFunction() {
+      return toStringFunction;
+   }
 
-  /**
-   * Ignore stop words t.
-   *
-   * @return the t
-   */
-  public T ignoreStopWords() {
-    this.filter = StopWords.notHasStopWord();
-    return Cast.as(this);
-  }
+   /**
+    * Ignore stop words t.
+    *
+    * @return the t
+    */
+   public T ignoreStopWords() {
+      this.filter = StopWords.notHasStopWord();
+      return Cast.as(this);
+   }
 
-  /**
-   * Lower case t.
-   *
-   * @return the t
-   */
-  public T lowerCase() {
-    this.toStringFunction = HString::toLowerCase;
-    return Cast.as(this);
-  }
+   /**
+    * Lower case t.
+    *
+    * @return the t
+    */
+   public T lowerCase() {
+      this.toStringFunction = HString::toLowerCase;
+      return Cast.as(this);
+   }
 
-  /**
-   * Lemmatize t.
-   *
-   * @return the t
-   */
-  public T lemmatize() {
-    toStringFunction = HString::getLemma;
-    return Cast.as(this);
-  }
+   /**
+    * Lemmatize t.
+    *
+    * @return the t
+    */
+   public T lemmatize() {
+      toStringFunction = HString::getLemma;
+      return Cast.as(this);
+   }
 
-  /**
-   * To string function t.
-   *
-   * @param toStringFunction the to string function
-   * @return the t
-   */
-  public T toStringFunction(@NonNull SerializableFunction<HString, String> toStringFunction) {
-    this.toStringFunction = toStringFunction;
-    return Cast.as(this);
-  }
+   /**
+    * To string function t.
+    *
+    * @param toStringFunction the to string function
+    * @return the t
+    */
+   public T toStringFunction(@NonNull SerializableFunction<HString, String> toStringFunction) {
+      this.toStringFunction = toStringFunction;
+      return Cast.as(this);
+   }
 
 
 }// END OF AbstractFeatureSpec

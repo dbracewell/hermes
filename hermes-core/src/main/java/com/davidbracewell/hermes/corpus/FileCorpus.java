@@ -39,7 +39,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.StreamSupport;
 
 /**
  * <p>
@@ -79,6 +83,88 @@ public class FileCorpus implements Corpus, Serializable {
    @Override
    public CorpusType getCorpusType() {
       return CorpusType.OFF_HEAP;
+   }
+
+//   @Override
+//   public void forEachParallel(@NonNull SerializableConsumer<? super Document> consumer) {
+//      StreamSupport.stream(spliterator(),true).forEach(consumer);
+//   }
+
+
+   private class RSI implements Spliterator<Document> {
+      List<Resource> resources;
+      int start;
+      int end;
+      Iterator<Document> documentIterator;
+
+      public RSI(Resource r) {
+         if (r.isDirectory()) {
+            resources = r.getChildren(true);
+         } else {
+            resources = Collections.singletonList(r);
+         }
+         this.start = 0;
+         this.end = resources.size();
+      }
+
+      public RSI(List<Resource> r, int start, int end) {
+         this.resources = r;
+         this.start = start;
+         this.end = end;
+      }
+
+      @Override
+      public boolean tryAdvance(Consumer<? super Document> action) {
+         if (documentIterator != null && documentIterator.hasNext()) {
+            action.accept(documentIterator.next());
+            return true;
+         }
+
+         while (start < end && (documentIterator == null || !documentIterator.hasNext())) {
+            documentIterator = new RecursiveDocumentIterator(resources.get(start), documentFactory,
+                                                             (resource1, documentFactory1) -> {
+                                                                try {
+                                                                   return corpusFormat.read(resource1,
+                                                                                            documentFactory1);
+                                                                } catch (IOException e) {
+                                                                   log.warn("Error reading {0} : {1}", resource1, e);
+                                                                   return Collections.emptyList();
+                                                                }
+                                                             });
+            start++;
+            if (documentIterator.hasNext()) {
+               action.accept(documentIterator.next());
+               return true;
+            }
+         }
+         return false;
+      }
+
+      @Override
+      public Spliterator<Document> trySplit() {
+         int low = start;
+         int high = ((low + end) >>> 1) & ~1;
+         if (low < high) {
+            this.start = high;
+            return new RSI(resources, low, high);
+         }
+         return null;
+      }
+
+      @Override
+      public long estimateSize() {
+         return (long) ((end - start) / 2.0);
+      }
+
+      @Override
+      public int characteristics() {
+         return NONNULL;
+      }
+   }
+
+   @Override
+   public Spliterator<Document> spliterator() {
+      return new RSI(resource);
    }
 
    @Override
@@ -122,7 +208,7 @@ public class FileCorpus implements Corpus, Serializable {
 
    @Override
    public MStream<Document> stream() {
-      return getStreamingContext().stream(iterator());
+      return getStreamingContext().stream(StreamSupport.stream(spliterator(), true));
    }
 
    @Override

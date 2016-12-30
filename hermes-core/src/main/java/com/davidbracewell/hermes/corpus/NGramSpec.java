@@ -21,32 +21,46 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.Copyable;
 import com.davidbracewell.hermes.ml.feature.AbstractNGramFeatureSpec;
+import lombok.NonNull;
 
 /**
  * @author David B. Bracewell
  */
-public class NGramSpec extends AbstractNGramFeatureSpec<NGramSpec> {
-  private static final long serialVersionUID = 1L;
+public class NGramSpec extends AbstractNGramFeatureSpec<NGramSpec> implements Copyable<NGramSpec> {
+   private static final long serialVersionUID = 1L;
 
-  public static NGramSpec create() {
-    return new NGramSpec();
-  }
+   public NGramSpec() {
+   }
 
-  public static NGramSpec unigrams() {
-    return new NGramSpec();
-  }
+   public NGramSpec(@NonNull NGramSpec copy) {
+      super(copy);
+   }
 
-  public static NGramSpec bigrams() {
-    return new NGramSpec().order(2);
-  }
+   public static NGramSpec create() {
+      return new NGramSpec();
+   }
 
-  public static NGramSpec trigrams() {
-    return new NGramSpec().order(3);
-  }
+   public static NGramSpec unigrams() {
+      return new NGramSpec();
+   }
 
-  public static NGramSpec order(int min, int max) {
-    return new NGramSpec().min(min).max(max);
-  }
+   public static NGramSpec bigrams() {
+      return new NGramSpec().order(2);
+   }
+
+   public static NGramSpec trigrams() {
+      return new NGramSpec().order(3);
+   }
+
+   public static NGramSpec order(int min, int max) {
+      return new NGramSpec().min(min).max(max);
+   }
+
+   @Override
+   public NGramSpec copy() {
+      return new NGramSpec(this);
+   }
 
 }//END OF NGramSpec

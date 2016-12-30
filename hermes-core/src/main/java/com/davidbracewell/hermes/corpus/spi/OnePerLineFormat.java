@@ -107,7 +107,7 @@ public class OnePerLineFormat extends FileBasedFormat {
                isClosed = true;
                return false;
             } else {
-               for (Document d : format.read(Resources.fromString(line), documentFactory)) {
+               for (Document d : format.read(Resources.fromString(line.replaceAll("\\r?\\n", "\n")), documentFactory)) {
                   documentQueue.add(d);
                }
             }

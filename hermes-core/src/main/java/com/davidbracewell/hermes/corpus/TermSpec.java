@@ -21,16 +21,31 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.Copyable;
 import com.davidbracewell.hermes.ml.feature.AbstractFeatureSpec;
+import lombok.NonNull;
 
 /**
  * @author David B. Bracewell
  */
-public class TermSpec extends AbstractFeatureSpec<TermSpec> {
-  private static final long serialVersionUID = 1L;
+public class TermSpec extends AbstractFeatureSpec<TermSpec> implements Copyable<TermSpec> {
+   private static final long serialVersionUID = 1L;
 
-  public static TermSpec create() {
-    return new TermSpec();
-  }
+   public TermSpec() {
 
+   }
+
+   public TermSpec(@NonNull TermSpec copy) {
+      super(copy);
+   }
+
+   public static TermSpec create() {
+      return new TermSpec();
+   }
+
+
+   @Override
+   public TermSpec copy() {
+      return new TermSpec(this);
+   }
 }//END OF TermSpec

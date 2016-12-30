@@ -99,7 +99,7 @@ public class CorpusExample {
 
       //We can also calculate the document frequency
       //For this corpus there will not be much difference.
-      Counter<String> docFrequencies = corpus.documentFrequencies(true);
+      Counter<String> docFrequencies = corpus.documentFrequencies(TermSpec.create().lemmatize());
 
       //Lets print out the top 10 terms
       System.out.println("Top 10 by Document Frequency");

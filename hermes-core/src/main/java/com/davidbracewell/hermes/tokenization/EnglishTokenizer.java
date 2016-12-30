@@ -88,6 +88,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
             throw new NoSuchElementException();
          }
 
+         TokenType orig = token.type;
          if (token.type.isInstance(TokenType.URL)) {
             token = checkURL(token);
          } else if (abbreviations.isPrefixMatch(token.text)) {
@@ -142,9 +143,11 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
          while (buffer.size() <= distance) {
             try {
                Token token = tokenizer.next();
+
                if (token == null) {
                   return null;
                }
+
                if (!StringUtils.isNullOrBlank(token.text)) {
                   buffer.add(token);
                }
@@ -164,6 +167,7 @@ public class EnglishTokenizer implements Tokenizer, Serializable {
       private Token checkURL(Token n) {
          //Ensure that the TLD is valid
 
+//         System.err.println(n);
          if (n.text.contains("://")) {
             return n;
          }

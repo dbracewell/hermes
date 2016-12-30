@@ -207,7 +207,7 @@ public class Document extends HString {
 
       //Create the initial document using raw content
       Document doc = DocumentFactory.getInstance().createRaw(json.getOrDefault("id", Val.NULL).asString(),
-                                                             json.get("content").asString());
+                                                             json.get("content").asString(""));
 
       //Add document attributes
       if (json.containsKey("attributes")) {

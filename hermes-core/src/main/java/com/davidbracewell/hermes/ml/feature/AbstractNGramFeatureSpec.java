@@ -22,6 +22,8 @@
 package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.hermes.filter.StopWords;
+import lombok.NonNull;
 
 /**
  * The type N gram feature spec.
@@ -30,55 +32,69 @@ import com.davidbracewell.conversion.Cast;
  * @author David B. Bracewell
  */
 public abstract class AbstractNGramFeatureSpec<T extends AbstractNGramFeatureSpec> extends AbstractFeatureSpec<T> {
-  private static final long serialVersionUID = 1L;
-  private int min = 1;
-  private int max = 1;
+   private static final long serialVersionUID = 1L;
+   private int min = 1;
+   private int max = 1;
 
+   public AbstractNGramFeatureSpec() {
+   }
 
-  public T order(int order){
-    this.min = order;
-    this.max = order;
-    return Cast.as(this);
-  }
+   public AbstractNGramFeatureSpec(@NonNull AbstractNGramFeatureSpec<T> copy) {
+      super(copy);
+      this.min = copy.min;
+      this.max = copy.max;
+   }
 
-  /**
-   * Gets max.
-   *
-   * @return the max
-   */
-  public int getMax() {
-    return max;
-  }
+   public T order(int order) {
+      this.min = order;
+      this.max = order;
+      return Cast.as(this);
+   }
 
-  /**
-   * Max t.
-   *
-   * @param max the max
-   * @return the t
-   */
-  public T max(int max) {
-    this.max = max;
-    return Cast.as(this);
-  }
+   @Override
+   public T ignoreStopWords() {
+      filter(StopWords.notHasStopWord());
+      return Cast.as(this);
+   }
 
-  /**
-   * Gets min.
-   *
-   * @return the min
-   */
-  public int getMin() {
-    return min;
-  }
+   /**
+    * Gets max.
+    *
+    * @return the max
+    */
+   public int getMax() {
+      return max;
+   }
 
-  /**
-   * Min t.
-   *
-   * @param min the min
-   * @return the t
-   */
-  public T min(int min) {
-    this.min = min;
-    return Cast.as(this);
-  }
+   /**
+    * Max t.
+    *
+    * @param max the max
+    * @return the t
+    */
+   public T max(int max) {
+      this.max = max;
+      return Cast.as(this);
+   }
+
+   /**
+    * Gets min.
+    *
+    * @return the min
+    */
+   public int getMin() {
+      return min;
+   }
+
+   /**
+    * Min t.
+    *
+    * @param min the min
+    * @return the t
+    */
+   public T min(int min) {
+      this.min = min;
+      return Cast.as(this);
+   }
 
 }//END OF AbstractNGramFeatureSpec

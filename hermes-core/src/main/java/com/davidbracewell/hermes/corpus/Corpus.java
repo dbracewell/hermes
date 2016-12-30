@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.SystemInfo;
+import com.davidbracewell.apollo.affinity.AssociationMeasures;
 import com.davidbracewell.apollo.affinity.ContingencyTable;
 import com.davidbracewell.apollo.affinity.ContingencyTableCalculator;
 import com.davidbracewell.apollo.ml.Featurizer;
@@ -52,6 +53,7 @@ import com.davidbracewell.io.AsyncWriter;
 import com.davidbracewell.io.MultiFileWriter;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.logging.Loggable;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.StreamingContext;
@@ -64,6 +66,7 @@ import lombok.NonNull;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -82,7 +85,7 @@ import static com.davidbracewell.tuple.Tuples.$;
  *
  * @author David B. Bracewell
  */
-public interface Corpus extends Iterable<Document>, AutoCloseable {
+public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
 
 
    /**
@@ -460,28 +463,32 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
    /**
     * Calculates the document frequency of tokens in the corpus.
     *
-    * @param lemmatize True - count lemmas, False - count as is
     * @return A counter containing document frequencies of the given annotation type
     */
-   default Counter<String> documentFrequencies(boolean lemmatize) {
-      return documentFrequencies(Types.TOKEN, h -> lemmatize ? h.getLemma() : h.toString());
+   default Counter<String> documentFrequencies() {
+      return documentFrequencies(TermSpec.create().lowerCase());
    }
 
    /**
     * Calculates the document frequency of annotations of the given annotation type in the corpus. Annotations are
     * transformed into strings using the given toString function.
     *
-    * @param type     the annotation type to count.
-    * @param toString the function to convert Annotations into strings
+    * @param termSpec the term spec
     * @return A counter containing document frequencies of the given annotation type
     */
-   default Counter<String> documentFrequencies(@NonNull AnnotationType type, @NonNull Function<? super Annotation, String> toString) {
+   default Counter<String> documentFrequencies(@NonNull TermSpec termSpec) {
       MCounterAccumulator<String> df = getStreamingContext().counterAccumulator();
-      forEachParallel(doc -> df.merge(Counters.newCounter(doc.stream(type)
-                                                             .map(toString)
-                                                             .filter(StringUtils::isNotNullOrBlank)
-                                                             .distinct()
-                                                             .collect(Collectors.toList()))));
+      AtomicLong cntr = new AtomicLong();
+      forEachParallel(doc -> {
+         df.merge(Counters.newCounter(doc.stream(termSpec.getAnnotationType())
+                                         .filter(termSpec.getFilter())
+                                         .map(termSpec.getToStringFunction())
+                                         .filter(StringUtils::isNotNullOrBlank)
+                                         .collect(Collectors.toSet())));
+         if (cntr.addAndGet(1) % 10_000 == 0) {
+            logFine("Processed {0} documents", cntr.get());
+         }
+      });
       return df.value();
    }
 
@@ -598,20 +605,33 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
     * @return the counter
     */
    default Counter<Tuple> ngrams(@NonNull NGramSpec nGramSpec) {
+      AtomicLong cntr = new AtomicLong();
       return nGramSpec.getValueCalculator().adjust(Counters.newCounter(
-         stream().flatMap(doc ->
-                             doc.ngrams(nGramSpec.getAnnotationType(), nGramSpec.getMin(), nGramSpec.getMax())
-                                .stream()
-                                .filter(nGramSpec.getFilter())
-                                .map(
-                                   hString -> $(
-                                      hString.get(nGramSpec.getAnnotationType())
-                                             .stream()
-                                             .map(nGramSpec.getToStringFunction())
-                                             .collect(Collectors.toList())
-                                               )
-                                    )
-                         ).countByValue()));
+         stream().parallel().flatMap(doc -> {
+                                        Stream<Tuple> ngrams = doc.ngrams(nGramSpec.getAnnotationType(), nGramSpec.getMin(),
+                                                                          nGramSpec.getMax())
+                                                                  .stream()
+                                                                  .filter(nGramSpec.getFilter())
+                                                                  .map(
+                                                                     hString -> $(
+                                                                        hString.get(nGramSpec.getAnnotationType())
+                                                                               .stream()
+                                                                               .map(nGramSpec.getToStringFunction())
+                                                                               .collect(Collectors.toList())
+                                                                                 )
+                                                                      )
+                                                                  .filter(tuple -> Streams.asStream(tuple.iterator())
+                                                                                          .filter(o -> StringUtils.isNotNullOrBlank(
+                                                                                             o.toString()))
+                                                                                          .count() == tuple.degree()
+                                                                         );
+
+                                        if (cntr.incrementAndGet() % 5_000 == 0) {
+                                           logFine("Processed {0} ngrams({1},{2})", cntr.get(), nGramSpec.getMin(), nGramSpec.getMax());
+                                        }
+                                        return ngrams;
+                                     }
+                                    ).countByValue()));
    }
 
    /**
@@ -634,48 +654,40 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
          Counters.newCounter(stream().parallel()
                                      .flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
                                                         .filter(termSpec.getFilter())
-                                                        .map(termSpec.getToStringFunction()))
-                                     .filter(StringUtils::isNotNullOrBlank)
+                                                        .map(termSpec.getToStringFunction())
+                                                        .filter(StringUtils::isNotNullOrBlank)
+                                             )
                                      .countByValue()));
    }
 
    /**
     * Significant bigrams counter.
     *
-    * @param minCount        the min count
-    * @param calculator      the calculator
-    * @param minScore        the min score
-    * @param removeStopWords the remove stop words
-    * @param lemmatize       the lemmatize
+    * @param nGramSpec the term spec
+    * @param minCount  the min count
+    * @param minScore  the min score
     * @return the counter
     */
-   default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, boolean lemmatize) {
-      return significantBigrams(minCount,
-                                calculator,
-                                minScore,
-                                removeStopWords,
-                                h -> lemmatize ? h.getLemma() : h.toString());
+   default Counter<Tuple> significantBigrams(@NonNull NGramSpec nGramSpec, int minCount, double minScore) {
+      return significantBigrams(nGramSpec,
+                                minCount,
+                                AssociationMeasures.Mikolov,
+                                minScore);
    }
 
    /**
     * Significant bigrams counter.
     *
-    * @param minCount        the min count
-    * @param calculator      the calculator
-    * @param minScore        the min score
-    * @param removeStopWords the remove stop words
-    * @param toString        the to string
+    * @param nGramSpec  the n gram spec
+    * @param minCount   the min count
+    * @param calculator the calculator
+    * @param minScore   the min score
     * @return the counter
     */
-   default Counter<Tuple> significantBigrams(int minCount, @NonNull ContingencyTableCalculator calculator, double minScore, boolean removeStopWords, @NonNull SerializableFunction<HString, String> toString) {
-      Counter<Tuple> unigrams = ngrams(NGramSpec.create().toStringFunction(toString).order(1));
-      Counter<Tuple> bigrams = ngrams(NGramSpec.create()
-                                               .toStringFunction(toString)
-                                               .filter(hString -> !removeStopWords || !StopWords
-                                                                                          .getInstance(
-                                                                                             hString.getLanguage())
-                                                                                          .hasStopWord(hString))
-                                               .order(2)).filterByValue(v -> v >= minCount);
+   default Counter<Tuple> significantBigrams(@NonNull NGramSpec nGramSpec, int minCount, @NonNull ContingencyTableCalculator calculator, double minScore) {
+      Counter<Tuple> unigrams = ngrams(nGramSpec.copy().order(1)).filterByValue(v -> v >= minCount);
+      SerializablePredicate<HString> filter = nGramSpec.getFilter();
+      Counter<Tuple> bigrams = ngrams(nGramSpec.copy().filter(h -> filter.test(h) && unigrams.contains($(nGramSpec.getToStringFunction().apply(h)))).order(2)).filterByValue(v -> v >= minCount);
       Counter<Tuple> filtered = Counters.newCounter();
       bigrams.items().forEach(bigram -> {
          double score = calculator.calculate(
@@ -727,7 +739,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable {
       if (format.isOnePerLine()) {
          if ((resource.exists() && resource.isDirectory()) || (!resource.exists() && !resource.path().contains("."))) {
             try (MultiFileWriter writer = new MultiFileWriter(resource, "part-",
-                                                              Config.get("file.parts").asIntegerValue(10))) {
+                                                              Config.get("files.partition").asIntegerValue(10))) {
                Broker.<Document>builder()
                   .addProducer(new IterableProducer<>(this))
                   .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document))),

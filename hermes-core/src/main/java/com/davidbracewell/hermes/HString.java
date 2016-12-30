@@ -32,6 +32,7 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.corpus.TermSpec;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple;
@@ -136,6 +137,17 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    public HString trim(@NonNull Predicate<? super Annotation> toTrimPredicate) {
       return trimRight(toTrimPredicate).trimLeft(toTrimPredicate);
+   }
+
+
+   public Counter<String> terms(@NonNull TermSpec termSpec) {
+      return termSpec.getValueCalculator()
+                     .adjust(Counters.newCounter(stream(termSpec.getAnnotationType())
+                                                    .filter(termSpec.getFilter())
+                                                    .map(termSpec.getToStringFunction())
+                                                    .filter(StringUtils::isNotNullOrBlank)
+                                                    .collect(Collectors.toList()))
+                            );
    }
 
    /**

@@ -102,7 +102,7 @@ AMPM = ([AaPp]"."?[mM]"."?)
 EMAIL={ALPHANUM}(("."|"-"|"_"){ALPHANUM})*"@"{ALPHANUM}(("."|"-"){ALPHANUM})+
 
 // Absolute URI (Partial BNF from RFC3986) https://github.com/rdelbru/lucene-uri-preserving-standard-tokenizer
-URI=({ALPHA}+"://"?({USERINFO}"@")?)?{AUTHORITY}{PATH}("?"{QUERY})?("#"{FRAGMENT})?
+URI=(("http" "s"?|{ALPHA}+)"://"?({USERINFO}"@")?)?{AUTHORITY}{PATH}("?"{QUERY})?("#"{FRAGMENT})?
 AUTHORITY={HOST}(":"{PORT})?
 QUERY=({SEGMENT}|"/"|"?")*
 FRAGMENT=({SEGMENT}|"/"|"?")*
@@ -110,7 +110,7 @@ USERINFO={USERNAME}(":"{PASSWD})?
 USERNAME={UNRESERVED}+
 PASSWD=({UNRESERVED}|":"|{SUBDELIMS})+
 HOST={DOMAINLABEL}("."{DOMAINLABEL})*"."{TLD}
-TLD = [a-zA-z]{2,4}
+TLD = [a-zA-Z]{2,4}
 DOMAINLABEL={ALPHANUM}(("-"|{ALPHANUM})*{ALPHANUM})?
 PORT=[:digit:]+
 PATH=("/"{SEGMENT})*
@@ -148,7 +148,6 @@ EMOTICON=[\u219d\u2300-\u2800\ud800-\uddff\ude00-\ue079\ue200-\ue263\ue3ff-\ue46
  {PCT_ENCODED}          {return attachToken(TokenType.NUMBER);}
  {ALPHANUM}             {return attachToken(TokenType.ALPHA_NUMERIC);}
  {PUNCTUATION}          {return attachToken(TokenType.PUNCTUATION);}
-// "~"                      {return attachToken(TokenType.PUNCTUATION);}
  {CJ}                   {return attachToken(TokenType.CHINESE_JAPANESE);}
  {EMAIL}                {return attachToken(TokenType.EMAIL);}
  {PERSON_TITLE}         {return attachToken(TokenType.PERSON_TITLE);}
@@ -158,8 +157,8 @@ EMOTICON=[\u219d\u2300-\u2800\ud800-\uddff\ude00-\ue079\ue200-\ue263\ue3ff-\ue46
  {COMPANY}              {return attachToken(TokenType.COMPANY);}
  {UNDERSCORE}           {return attachToken(TokenType.ALPHA_NUMERIC);}
  {URI}                  {return attachToken(TokenType.URL);}
- {EMOTICON}              {return attachToken(TokenType.EMOTICON);}
- {MATH}    {return attachToken(TokenType.UNKNOWN);}
+ {EMOTICON}             {return attachToken(TokenType.EMOTICON);}
+ {MATH}                 {return attachToken(TokenType.UNKNOWN);}
  {WHITESPACE}           {}
 }
 

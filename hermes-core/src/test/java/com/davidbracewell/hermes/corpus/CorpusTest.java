@@ -171,7 +171,7 @@ public class CorpusTest {
     assertEquals(1d, fivegrams.get(NTuple.of("This", "is", "the", "first", "document")), 0d);
 
 
-    cntr = corpus.documentFrequencies(false);
+    cntr = corpus.documentFrequencies(TermSpec.create());
     assertEquals(3, cntr.get("the"), 0d);
     assertEquals(3, cntr.get("document"), 0d);
     assertEquals(3, cntr.get("This"), 0d);
