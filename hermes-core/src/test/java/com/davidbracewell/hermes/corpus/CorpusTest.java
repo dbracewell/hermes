@@ -55,7 +55,7 @@ public class CorpusTest {
     assertEquals(3, corpus.size());
     assertEquals("This is the first document.", corpus.stream().first().get().toString());
     corpus.annotate(Types.TOKEN);
-    Counter<String> cntr = corpus.terms();
+    Counter<String> cntr = corpus.termFrequencies();
     assertEquals(3, cntr.get("the"), 0d);
     assertEquals(3, cntr.get("document"), 0d);
     assertEquals(3, cntr.get("This"), 0d);
@@ -143,7 +143,7 @@ public class CorpusTest {
     assertFalse(corpus.isEmpty());
     assertEquals(3, corpus.size());
     corpus = corpus.annotate(Types.TOKEN);
-    Counter<String> cntr = corpus.terms();
+    Counter<String> cntr = corpus.termFrequencies();
     assertEquals(3, cntr.get("the"), 0d);
     assertEquals(3, cntr.get("document"), 0d);
     assertEquals(3, cntr.get("This"), 0d);
@@ -154,20 +154,20 @@ public class CorpusTest {
     assertEquals(1, cntr.get("third"), 0d);
     assertEquals(1, corpus.filter(d -> d.contains("third")).size(), 0d);
 
-    Counter<String> ngrams = corpus.ngrams(NGramSpec.create().order(1)).mapKeys(tuple -> tuple.get(0).toString());
+    Counter<String> ngrams = corpus.nGramFrequencies(NGramSpec.create().order(1)).mapKeys(tuple -> tuple.get(0).toString());
     assertEquals(cntr, ngrams);
 
-    Counter<Tuple> bigrams = corpus.ngrams(NGramSpec.create().order(2));
+    Counter<Tuple> bigrams = corpus.nGramFrequencies(NGramSpec.create().order(2));
     assertEquals(3d, bigrams.get(Tuple2.of("This", "is")), 0d);
     assertEquals(1d, bigrams.get(Tuple2.of("the", "first")), 0d);
 
-    Counter<Tuple> trigrams = corpus.ngrams(NGramSpec.create().order(3));
+    Counter<Tuple> trigrams = corpus.nGramFrequencies(NGramSpec.create().order(3));
     assertEquals(3d, trigrams.get(Tuple3.of("This", "is", "the")), 0d);
 
-    Counter<Tuple> quadgrams = corpus.ngrams(NGramSpec.create().order(4));
+    Counter<Tuple> quadgrams = corpus.nGramFrequencies(NGramSpec.create().order(4));
     assertEquals(1d, quadgrams.get(Tuple4.of("This", "is", "the", "first")), 0d);
 
-    Counter<Tuple> fivegrams = corpus.ngrams(NGramSpec.create().order(5));
+    Counter<Tuple> fivegrams = corpus.nGramFrequencies(NGramSpec.create().order(5));
     assertEquals(1d, fivegrams.get(NTuple.of("This", "is", "the", "first", "document")), 0d);
 
 
@@ -196,7 +196,7 @@ public class CorpusTest {
     assertEquals(3, corpus.size());
     assertEquals("This is the first document.", corpus.stream().first().get().toString());
     corpus = corpus.annotate(Types.TOKEN);
-    Counter<String> cntr = corpus.terms();
+    Counter<String> cntr = corpus.termFrequencies();
     assertEquals(3, cntr.get("the"), 0d);
     assertEquals(3, cntr.get("document"), 0d);
     assertEquals(3, cntr.get("This"), 0d);

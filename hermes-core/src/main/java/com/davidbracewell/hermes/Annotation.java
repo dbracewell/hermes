@@ -209,7 +209,7 @@ public final class Annotation extends Fragment implements Serializable {
       } else if (isInstance(Types.ENTITY)) {
          return Optional.ofNullable(get(Types.ENTITY_TYPE).as(EntityType.class));
       }
-      AttributeType tagAttributeType = annotationType.getTagAttributeType();
+      AttributeType tagAttributeType = annotationType.getTagAttribute();
       if (tagAttributeType == null) {
          return Optional.ofNullable(get(Types.TAG).as(Tag.class));
       }
@@ -251,7 +251,7 @@ public final class Annotation extends Fragment implements Serializable {
     * @return the boolean
     */
    public boolean isInstanceOfTag(String tag) {
-      return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttributeType()
+      return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute()
                                                                                       .getValueType()
                                                                                       .decode(tag)));
    }

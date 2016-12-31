@@ -108,13 +108,8 @@ public class AnnotationTree implements Serializable, Collection<Annotation> {
       if (c == null) {
          return false;
       }
-      boolean added = true;
-      for (Annotation a : c) {
-         if (!add(a)) {
-            added = false;
-         }
-      }
-      return added;
+      return c.stream()
+              .allMatch(this::add);
    }
 
    private void balance(Node z) {

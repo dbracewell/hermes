@@ -33,7 +33,7 @@ public class SparkExample implements Serializable {
 
     //Calculate term frequencies for the corpus. Note we are saying we want lemmatized versions, but have not
     //run the lemma annotator, instead it will just return the lowercase version of the content.
-    Counter<String> counts = corpus.terms(TermSpec.create().lemmatize());
+    Counter<String> counts = corpus.termFrequencies(TermSpec.create().lemmatize());
     counts.entries().forEach(entry -> System.out.println(entry.getKey() + " => " + entry.getValue()));
   }
 

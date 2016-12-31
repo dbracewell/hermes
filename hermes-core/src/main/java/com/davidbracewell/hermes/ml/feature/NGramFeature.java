@@ -24,11 +24,10 @@ package com.davidbracewell.hermes.ml.feature;
 import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.cache.Cached;
-import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.stream.StreamingContext;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author David B. Bracewell
@@ -44,14 +43,12 @@ public class NGramFeature implements Featurizer<HString> {
    @Override
    @Cached(keyMaker = HStringKeyMaker.class)
    public Set<Feature> apply(HString hString) {
-      return spec.getValueCalculator().apply(
-         Counters.newCounter(
-            StreamingContext.local().stream(hString.ngrams(spec.getAnnotationType(), spec.getMin(), spec.getMax()))
-                            .filter(spec.getFilter())
-                            .map(spec.getToStringFunction())
-                            .countByValue()
-                            )
-                                            );
+      return spec.countTuples(hString).entries().stream()
+                 .map(e -> Feature.real(e.getKey().stream()
+                                         .map(Object::toString)
+                                         .collect(Collectors.joining(" ")),
+                                        e.getValue()))
+                 .collect(Collectors.toSet());
    }
 
 

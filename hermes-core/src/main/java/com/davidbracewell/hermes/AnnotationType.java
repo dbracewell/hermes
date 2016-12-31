@@ -39,14 +39,15 @@ import java.util.stream.Collectors;
 /**
  * <p> An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The definition
  * provided by the type facilitates the portability of the annotation between different modules. An annotation type
- * defines the type name, parent type, and optionally a set of attributes that are expected to be associated with an
- * annotation of this type. </p>
- * <p> Annotation types are hierarchical and all types have a parent defined. If no parent
- * is explicitly declared, its parent is resolved to the <code>ROOT</code> type. Annotation types inherit their parent's
- * attributes. Attribute information on the type serves as documentation and is not type checked. Additionally, a "tag"
- * can be defined for a type using the <code>tag</code> property, which defines the attribute to return on calls to
- * <code>getTag()</code>. </p>
- * <p>Type information is defined via configuration. An Example is as follows:
+ * defines the type name, parent type, annotator, and the tag type. </p>
+ *
+ * <p> Annotation types are hierarchical and all types have a parent defined. If no parent is explicitly declared, its
+ * parent is resolved to the <code>ROOT</code> type. Annotation types inherit their parent's tag attribute. A tag can be
+ * defined for a type during creation or by using the <code>tag</code> (e.g. <code>TypeName.tag=AttributeType</code>)
+ * property, which defines the attribute to return on calls to <code>getTag()</code>. Children will inherit the tag type
+ * of their parent unless explicitly specified.</p>
+ *
+ * <p>Type information can be defined during creation or via configuration. An Example is as follows:
  * <pre> {@code
  * Annotation {
  *       ENTITY {
@@ -194,17 +195,17 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
    }
 
    /**
-    * Gets tag attribute.
+    * Gets the attribute associated with the tag of this annotation.
     *
     * @return the tag attribute
     */
-   public AttributeType getTagAttributeType() {
+   public AttributeType getTagAttribute() {
       if (tagAttributeType == null) {
          synchronized (this) {
             if (tagAttributeType == null) {
                String attribute = Config.get(typeName, name(), "tag").asString();
                if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {
-                  tagAttributeType = getParent().getTagAttributeType();
+                  tagAttributeType = getParent().getTagAttribute();
                } else if (StringUtils.isNullOrBlank(attribute)) {
                   tagAttributeType = Types.TAG;
                } else {

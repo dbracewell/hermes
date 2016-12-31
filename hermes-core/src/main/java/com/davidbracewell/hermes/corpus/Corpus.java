@@ -57,8 +57,7 @@ import com.davidbracewell.logging.Loggable;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.StreamingContext;
-import com.davidbracewell.stream.accumulator.MCounterAccumulator;
-import com.davidbracewell.string.StringUtils;
+import com.davidbracewell.stream.accumulator.MLongAccumulator;
 import com.davidbracewell.tuple.Tuple;
 import com.google.common.base.Preconditions;
 import lombok.NonNull;
@@ -66,12 +65,9 @@ import lombok.NonNull;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.davidbracewell.tuple.Tuples.$;
 
 /**
  * <p>
@@ -113,15 +109,6 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    }
 
    /**
-    * For each parallel.
-    *
-    * @param consumer the consumer
-    */
-   default void forEachParallel(@NonNull SerializableConsumer<? super Document> consumer) {
-      stream().parallel().forEach(consumer);
-   }
-
-   /**
     * Of corpus.
     *
     * @param documentStream the document stream
@@ -130,7 +117,6 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    static Corpus of(@NonNull MStream<Document> documentStream) {
       return new InMemoryCorpus(documentStream.collect());
    }
-
 
    /**
     * Of corpus.
@@ -162,7 +148,6 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
       return new InMemoryCorpus(documentCollection);
    }
 
-
    /**
     * Annotates this corpus with the given annotation types and returns a new corpus with the given annotation types
     * present
@@ -171,7 +156,6 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @return A new corpus with the given annotation types present.
     */
    Corpus annotate(AnnotatableType... types);
-
 
    /**
     * Applies a lexicon to the corpus creating annotations of the given type for matches.
@@ -187,6 +171,46 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
          }
          return doc;
       });
+   }
+
+   /**
+    * As classification data set dataset.
+    *
+    * @param featurizer the featurizer
+    * @return the dataset
+    */
+   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer) {
+      return Dataset.classification().type(getDataSetType()).source(stream().map(featurizer::extractInstance));
+   }
+
+   /**
+    * As classification data set dataset.
+    *
+    * @param featurizer         the featurizer
+    * @param labelAttributeType the label attribute
+    * @return the dataset
+    */
+   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull AttributeType labelAttributeType) {
+      return Dataset
+                .classification()
+                .type(getDataSetType())
+                .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
+         ;
+   }
+
+   /**
+    * As classification data set dataset.
+    *
+    * @param featurizer    the featurizer
+    * @param labelFunction the label function
+    * @return the dataset
+    */
+   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Object> labelFunction) {
+      return Dataset
+                .classification()
+                .type(getDataSetType())
+                .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
+         ;
    }
 
    /**
@@ -223,47 +247,6 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
                                Collection::stream);
    }
 
-
-   /**
-    * As sequence stream m stream.
-    *
-    * @return the m stream
-    */
-   default MStream<SequenceInput<Annotation>> asSequenceStream() {
-      return asSequenceStream(Types.SENTENCE);
-   }
-
-   /**
-    * As sequence stream m stream.
-    *
-    * @param sequenceType the sequence type
-    * @return the m stream
-    */
-   default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull AnnotationType sequenceType) {
-      return stream().flatMap(doc -> doc.get(sequenceType).stream()).map(HString::asSequence);
-   }
-
-   /**
-    * As sequence stream m stream.
-    *
-    * @param labelFunction the label function
-    * @return the m stream
-    */
-   default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull Function<? super Annotation, String> labelFunction) {
-      return asSequenceStream(Types.SENTENCE, labelFunction);
-   }
-
-   /**
-    * As sequence stream m stream.
-    *
-    * @param sequenceType  the sequence type
-    * @param labelFunction the label function
-    * @return the m stream
-    */
-   default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction) {
-      return stream().flatMap(doc -> doc.get(sequenceType).stream()).map(hs -> hs.asSequence(labelFunction));
-   }
-
    /**
     * As labeled stream m stream.
     *
@@ -285,13 +268,43 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    }
 
    /**
-    * As classification data set dataset.
+    * As regression data set dataset.
     *
     * @param featurizer the featurizer
     * @return the dataset
     */
-   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer) {
-      return Dataset.classification().type(getDataSetType()).source(stream().map(featurizer::extractInstance));
+   default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer) {
+      return Dataset.regression().type(getDataSetType()).source(stream().map(featurizer::extractInstance));
+   }
+
+   /**
+    * As regression data set dataset.
+    *
+    * @param featurizer         the featurizer
+    * @param labelAttributeType the label attribute
+    * @return the dataset
+    */
+   default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull AttributeType labelAttributeType) {
+      return Dataset
+                .regression()
+                .type(getDataSetType())
+                .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
+         ;
+   }
+
+   /**
+    * As regression data set dataset.
+    *
+    * @param featurizer    the featurizer
+    * @param labelFunction the label function
+    * @return the dataset
+    */
+   default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Double> labelFunction) {
+      return Dataset
+                .regression()
+                .type(getDataSetType())
+                .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
+         ;
    }
 
    /**
@@ -356,96 +369,43 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    }
 
    /**
-    * As regression data set dataset.
+    * As sequence stream m stream.
     *
-    * @param featurizer the featurizer
-    * @return the dataset
+    * @return the m stream
     */
-   default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer) {
-      return Dataset.regression().type(getDataSetType()).source(stream().map(featurizer::extractInstance));
+   default MStream<SequenceInput<Annotation>> asSequenceStream() {
+      return asSequenceStream(Types.SENTENCE);
    }
 
    /**
-    * As classification data set dataset.
+    * As sequence stream m stream.
     *
-    * @param featurizer         the featurizer
-    * @param labelAttributeType the label attribute
-    * @return the dataset
+    * @param sequenceType the sequence type
+    * @return the m stream
     */
-   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull AttributeType labelAttributeType) {
-      return Dataset
-                .classification()
-                .type(getDataSetType())
-                .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
-         ;
+   default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull AnnotationType sequenceType) {
+      return stream().flatMap(doc -> doc.get(sequenceType).stream()).map(HString::asSequence);
    }
 
    /**
-    * As regression data set dataset.
+    * As sequence stream m stream.
     *
-    * @param featurizer         the featurizer
-    * @param labelAttributeType the label attribute
-    * @return the dataset
-    */
-   default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull AttributeType labelAttributeType) {
-      return Dataset
-                .regression()
-                .type(getDataSetType())
-                .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
-         ;
-   }
-
-   /**
-    * As classification data set dataset.
-    *
-    * @param featurizer    the featurizer
     * @param labelFunction the label function
-    * @return the dataset
+    * @return the m stream
     */
-   default Dataset<Instance> asClassificationDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Object> labelFunction) {
-      return Dataset
-                .classification()
-                .type(getDataSetType())
-                .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
-         ;
+   default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull Function<? super Annotation, String> labelFunction) {
+      return asSequenceStream(Types.SENTENCE, labelFunction);
    }
 
    /**
-    * As regression data set dataset.
+    * As sequence stream m stream.
     *
-    * @param featurizer    the featurizer
+    * @param sequenceType  the sequence type
     * @param labelFunction the label function
-    * @return the dataset
+    * @return the m stream
     */
-   default Dataset<Instance> asRegressionDataSet(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, Double> labelFunction) {
-      return Dataset
-                .regression()
-                .type(getDataSetType())
-                .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
-         ;
-   }
-
-
-   /**
-    * Map corpus.
-    *
-    * @param function the function
-    * @return the corpus
-    */
-   Corpus map(SerializableFunction<Document, Document> function);
-
-   /**
-    * Gets data set type.
-    *
-    * @return the data set type
-    */
-   default DatasetType getDataSetType() {
-      if (isInMemory()) {
-         return DatasetType.InMemory;
-      } else if (isDistributed()) {
-         return DatasetType.Distributed;
-      }
-      return DatasetType.OffHeap;
+   default MStream<SequenceInput<Annotation>> asSequenceStream(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction) {
+      return stream().flatMap(doc -> doc.get(sequenceType).stream()).map(hs -> hs.asSequence(labelFunction));
    }
 
    /**
@@ -477,19 +437,19 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @return A counter containing document frequencies of the given annotation type
     */
    default Counter<String> documentFrequencies(@NonNull TermSpec termSpec) {
-      MCounterAccumulator<String> df = getStreamingContext().counterAccumulator();
-      AtomicLong cntr = new AtomicLong();
-      forEachParallel(doc -> {
-         df.merge(Counters.newCounter(doc.stream(termSpec.getAnnotationType())
-                                         .filter(termSpec.getFilter())
-                                         .map(termSpec.getToStringFunction())
-                                         .filter(StringUtils::isNotNullOrBlank)
-                                         .collect(Collectors.toSet())));
-         if (cntr.addAndGet(1) % 10_000 == 0) {
-            logFine("Processed {0} documents", cntr.get());
-         }
-      });
-      return df.value();
+      MLongAccumulator counter = getStreamingContext().longAccumulator();
+      return termSpec.getValueCalculator()
+                     .adjust(Counters.newCounter(stream().parallel()
+                                                         .flatMap(
+                                                            doc -> {
+                                                               counter.add(1);
+                                                               counter.report(count -> count % 5_000 == 0,
+                                                                              count -> logFine(
+                                                                                 "documentFrequencies: Processed {0} documents",
+                                                                                 count));
+                                                               return termSpec.stream(doc).distinct();
+                                                            })
+                                                         .countByValue()));
    }
 
    /**
@@ -503,11 +463,50 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    }
 
    /**
+    * For each parallel.
+    *
+    * @param consumer the consumer
+    */
+   default void forEachParallel(@NonNull SerializableConsumer<? super Document> consumer) {
+      stream().parallel().forEach(consumer);
+   }
+
+   /**
+    * Gets corpus type.
+    *
+    * @return the corpus type
+    */
+   CorpusType getCorpusType();
+
+   /**
+    * Gets data set type.
+    *
+    * @return the data set type
+    */
+   default DatasetType getDataSetType() {
+      if (isInMemory()) {
+         return DatasetType.InMemory;
+      } else if (isDistributed()) {
+         return DatasetType.Distributed;
+      }
+      return DatasetType.OffHeap;
+   }
+
+   /**
     * Gets document factory.
     *
     * @return the document factory
     */
    DocumentFactory getDocumentFactory();
+
+   /**
+    * Gets streaming context.
+    *
+    * @return the streaming context
+    */
+   default StreamingContext getStreamingContext() {
+      return getCorpusType().getStreamingContext();
+   }
 
    /**
     * Groups documents in the document store using the given function.
@@ -523,6 +522,15 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    }
 
    /**
+    * Is distributed boolean.
+    *
+    * @return the boolean
+    */
+   default boolean isDistributed() {
+      return false;
+   }
+
+   /**
     * Is empty boolean.
     *
     * @return the boolean
@@ -531,9 +539,53 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
       return stream().isEmpty();
    }
 
+   /**
+    * Is in memory boolean.
+    *
+    * @return the boolean
+    */
+   default boolean isInMemory() {
+      return false;
+   }
+
+   /**
+    * Is off heap boolean.
+    *
+    * @return the boolean
+    */
+   default boolean isOffHeap() {
+      return false;
+   }
+
    @Override
    default Iterator<Document> iterator() {
       return stream().iterator();
+   }
+
+   /**
+    * Map corpus.
+    *
+    * @param function the function
+    * @return the corpus
+    */
+   Corpus map(SerializableFunction<Document, Document> function);
+
+   /**
+    * Ngrams counter.
+    *
+    * @param nGramSpec the n gram spec
+    * @return the counter
+    */
+   default Counter<Tuple> nGramFrequencies(@NonNull NGramSpec nGramSpec) {
+      MLongAccumulator counter = getStreamingContext().longAccumulator();
+      return nGramSpec.getValueCalculator().adjust(Counters.newCounter(
+         stream().parallel().flatMap(doc -> {
+                                        counter.add(1);
+                                        counter.report(count -> count % 5_000 == 0,
+                                                       count -> logFine("nGramCounts: Processed {0} documents", count));
+                                        return nGramSpec.streamTuples(doc);
+                                     }
+                                    ).countByValue()));
    }
 
    /**
@@ -545,6 +597,16 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     */
    default Corpus query(String query) throws ParseException {
       return filter(new QueryParser(QueryParser.Operator.AND).parse(query));
+   }
+
+   /**
+    * Repartition corpus.
+    *
+    * @param numPartitions the num partitions
+    * @return the corpus
+    */
+   default Corpus repartition(int numPartitions) {
+      return this;
    }
 
    /**
@@ -582,6 +644,46 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    }
 
    /**
+    * Significant bigrams counter.
+    *
+    * @param nGramSpec the term spec
+    * @param minCount  the min count
+    * @param minScore  the min score
+    * @return the counter
+    */
+   default Counter<Tuple> significantBigrams(@NonNull NGramSpec nGramSpec, int minCount, double minScore) {
+      return significantBigrams(nGramSpec, minCount, AssociationMeasures.Mikolov, minScore);
+   }
+
+   /**
+    * Significant bigrams counter.
+    *
+    * @param nGramSpec  the n gram spec
+    * @param minCount   the min count
+    * @param calculator the calculator
+    * @param minScore   the min score
+    * @return the counter
+    */
+   default Counter<Tuple> significantBigrams(@NonNull NGramSpec nGramSpec, int minCount, @NonNull ContingencyTableCalculator calculator, double minScore) {
+      Counter<Tuple> ngrams = nGramFrequencies(nGramSpec.min(1).max(2))
+                                 .filterByValue(v -> v >= minCount);
+      Counter<Tuple> unigrams = ngrams.filterByKey(t -> t.degree() == 1);
+      Counter<Tuple> bigrams = ngrams.filterByKey(t -> t.degree() == 2);
+      ngrams.clear();
+      Counter<Tuple> filtered = Counters.newCounter();
+      bigrams.items().forEach(bigram -> {
+         double score = calculator.calculate(ContingencyTable.create2X2(bigrams.get(bigram),
+                                                                        unigrams.get(bigram.slice(0, 1)),
+                                                                        unigrams.get(bigram.slice(1, 2)),
+                                                                        unigrams.sum()));
+         if (score >= minScore) {
+            filtered.set(bigram, score);
+         }
+      });
+      return filtered;
+   }
+
+   /**
     * Size long.
     *
     * @return the long
@@ -597,50 +699,13 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     */
    MStream<Document> stream();
 
-
-   /**
-    * Ngrams counter.
-    *
-    * @param nGramSpec the n gram spec
-    * @return the counter
-    */
-   default Counter<Tuple> ngrams(@NonNull NGramSpec nGramSpec) {
-      AtomicLong cntr = new AtomicLong();
-      return nGramSpec.getValueCalculator().adjust(Counters.newCounter(
-         stream().parallel().flatMap(doc -> {
-                                        Stream<Tuple> ngrams = doc.ngrams(nGramSpec.getAnnotationType(), nGramSpec.getMin(),
-                                                                          nGramSpec.getMax())
-                                                                  .stream()
-                                                                  .filter(nGramSpec.getFilter())
-                                                                  .map(
-                                                                     hString -> $(
-                                                                        hString.get(nGramSpec.getAnnotationType())
-                                                                               .stream()
-                                                                               .map(nGramSpec.getToStringFunction())
-                                                                               .collect(Collectors.toList())
-                                                                                 )
-                                                                      )
-                                                                  .filter(tuple -> Streams.asStream(tuple.iterator())
-                                                                                          .filter(o -> StringUtils.isNotNullOrBlank(
-                                                                                             o.toString()))
-                                                                                          .count() == tuple.degree()
-                                                                         );
-
-                                        if (cntr.incrementAndGet() % 5_000 == 0) {
-                                           logFine("Processed {0} ngrams({1},{2})", cntr.get(), nGramSpec.getMin(), nGramSpec.getMax());
-                                        }
-                                        return ngrams;
-                                     }
-                                    ).countByValue()));
-   }
-
    /**
     * Terms counter.
     *
     * @return the counter
     */
-   default Counter<String> terms() {
-      return terms(TermSpec.create());
+   default Counter<String> termFrequencies() {
+      return termFrequencies(TermSpec.create());
    }
 
    /**
@@ -649,59 +714,16 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @param termSpec the term spec
     * @return the counter
     */
-   default Counter<String> terms(@NonNull TermSpec termSpec) {
-      return termSpec.getValueCalculator().adjust(
-         Counters.newCounter(stream().parallel()
-                                     .flatMap(doc -> doc.get(termSpec.getAnnotationType()).stream()
-                                                        .filter(termSpec.getFilter())
-                                                        .map(termSpec.getToStringFunction())
-                                                        .filter(StringUtils::isNotNullOrBlank)
-                                             )
-                                     .countByValue()));
-   }
-
-   /**
-    * Significant bigrams counter.
-    *
-    * @param nGramSpec the term spec
-    * @param minCount  the min count
-    * @param minScore  the min score
-    * @return the counter
-    */
-   default Counter<Tuple> significantBigrams(@NonNull NGramSpec nGramSpec, int minCount, double minScore) {
-      return significantBigrams(nGramSpec,
-                                minCount,
-                                AssociationMeasures.Mikolov,
-                                minScore);
-   }
-
-   /**
-    * Significant bigrams counter.
-    *
-    * @param nGramSpec  the n gram spec
-    * @param minCount   the min count
-    * @param calculator the calculator
-    * @param minScore   the min score
-    * @return the counter
-    */
-   default Counter<Tuple> significantBigrams(@NonNull NGramSpec nGramSpec, int minCount, @NonNull ContingencyTableCalculator calculator, double minScore) {
-      Counter<Tuple> unigrams = ngrams(nGramSpec.copy().order(1)).filterByValue(v -> v >= minCount);
-      SerializablePredicate<HString> filter = nGramSpec.getFilter();
-      Counter<Tuple> bigrams = ngrams(nGramSpec.copy().filter(h -> filter.test(h) && unigrams.contains($(nGramSpec.getToStringFunction().apply(h)))).order(2)).filterByValue(v -> v >= minCount);
-      Counter<Tuple> filtered = Counters.newCounter();
-      bigrams.items().forEach(bigram -> {
-         double score = calculator.calculate(
-            ContingencyTable.create2X2(bigrams.get(bigram),
-                                       unigrams.get(bigram.slice(0, 1)),
-                                       unigrams.get(bigram.slice(1, 2)),
-                                       unigrams.sum()
-                                      )
-                                            );
-         if (score >= minScore) {
-            filtered.set(bigram, score);
-         }
-      });
-      return filtered;
+   default Counter<String> termFrequencies(@NonNull TermSpec termSpec) {
+      MLongAccumulator counter = getStreamingContext().longAccumulator();
+      return termSpec.getValueCalculator().adjust(Counters.newCounter(
+         stream().parallel().flatMap(doc -> {
+                                        counter.add(1);
+                                        counter.report(count -> count % 5_000 == 0,
+                                                       count -> logFine("termCounts: Processed {0} documents", count));
+                                        return termSpec.stream(doc);
+                                     }
+                                    ).countByValue()));
    }
 
    /**
@@ -725,7 +747,6 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    default Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
       return write(CorpusFormats.forName(format), resource);
    }
-
 
    /**
     * Write corpus.
@@ -831,60 +852,6 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     */
    default Corpus write(@NonNull String resource) throws IOException {
       return write(CorpusFormats.JSON_OPL, resource);
-   }
-
-   /**
-    * Repartition corpus.
-    *
-    * @param numPartitions the num partitions
-    * @return the corpus
-    */
-   default Corpus repartition(int numPartitions) {
-      return this;
-   }
-
-   /**
-    * Is in memory boolean.
-    *
-    * @return the boolean
-    */
-   default boolean isInMemory() {
-      return false;
-   }
-
-   /**
-    * Is distributed boolean.
-    *
-    * @return the boolean
-    */
-   default boolean isDistributed() {
-      return false;
-   }
-
-   /**
-    * Is off heap boolean.
-    *
-    * @return the boolean
-    */
-   default boolean isOffHeap() {
-      return false;
-   }
-
-
-   /**
-    * Gets corpus type.
-    *
-    * @return the corpus type
-    */
-   CorpusType getCorpusType();
-
-   /**
-    * Gets streaming context.
-    *
-    * @return the streaming context
-    */
-   default StreamingContext getStreamingContext() {
-      return getCorpusType().getStreamingContext();
    }
 
 }//END OF Corpus

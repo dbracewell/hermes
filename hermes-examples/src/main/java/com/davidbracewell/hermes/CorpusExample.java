@@ -88,7 +88,7 @@ public class CorpusExample {
       //Here we will use a convenience method which will use the standard definition of term (i.e. a token) and
       //we will tell it to use the lemma version of the tokens. Since we annotated lemmas, we will actually get lemmas.
       //If we had not annotated with lemmas, it would simply lowercase the tokens.
-      Counter<String> termFrequencies = corpus.terms(TermSpec.create().lemmatize());
+      Counter<String> termFrequencies = corpus.termFrequencies(TermSpec.create().lemmatize());
 
       //Lets print out the top 10 terms
       System.out.println("Top 10 by Term Frequency");
@@ -111,7 +111,7 @@ public class CorpusExample {
 
       //Another thing we might want to do is extract all the bigrams in the corpus.
       //We will ignore bigrams with a stop word (e.g. the, it, of, etc.) and lowercase the output
-      Counter<Tuple> bigrams = corpus.ngrams(NGramSpec.create().order(2).ignoreStopWords().lowerCase());
+      Counter<Tuple> bigrams = corpus.nGramFrequencies(NGramSpec.create().order(2).ignoreStopWords().lowerCase());
 
       //Lets print out the top 10 bigrams
       System.out.println("Top 10 Bigrams");

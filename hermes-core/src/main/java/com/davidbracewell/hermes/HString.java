@@ -32,7 +32,6 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.attribute.POS;
-import com.davidbracewell.hermes.corpus.TermSpec;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple;
@@ -73,6 +72,12 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
 
+   /**
+    * Tagged text string.
+    *
+    * @param type the type
+    * @return the string
+    */
    public String taggedText(@NonNull AnnotationType type) {
       StringBuilder builder = new StringBuilder();
       interleaved(type, Types.TOKEN).forEach(annotation -> {
@@ -137,17 +142,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    public HString trim(@NonNull Predicate<? super Annotation> toTrimPredicate) {
       return trimRight(toTrimPredicate).trimLeft(toTrimPredicate);
-   }
-
-
-   public Counter<String> terms(@NonNull TermSpec termSpec) {
-      return termSpec.getValueCalculator()
-                     .adjust(Counters.newCounter(stream(termSpec.getAnnotationType())
-                                                    .filter(termSpec.getFilter())
-                                                    .map(termSpec.getToStringFunction())
-                                                    .filter(StringUtils::isNotNullOrBlank)
-                                                    .collect(Collectors.toList()))
-                            );
    }
 
    /**
@@ -567,7 +561,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     *
     * @param text the substring to search for.
     * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
-    * @see String#indexOf(String) String#indexOf(String)String#indexOf(String)
+    * @see String#indexOf(String) String#indexOf(String)String#indexOf(String)String#indexOf(String)
     */
    public int indexOf(String text) {
       return indexOf(text, 0);
@@ -579,7 +573,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param text  the substring to search for.
     * @param start the index to to start searching from
     * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
-    * @see String#indexOf(String, int) String#indexOf(String, int)String#indexOf(String, int)
+    * @see String#indexOf(String, int) String#indexOf(String, int)String#indexOf(String, int)String#indexOf(String, int)
     */
    public int indexOf(String text, int start) {
       return toString().indexOf(text, start);
@@ -650,71 +644,48 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     *
     * @param regex the regular expression
     * @return true if, and only if, this string matches the given regular expression
-    * @see String#matches(String) String#matches(String)String#matches(String)
+    * @see String#matches(String) String#matches(String)String#matches(String)String#matches(String)
     */
    public boolean matches(String regex) {
       return toString().matches(regex);
    }
 
 
-   /**
-    * <p>
-    * Extracts token level NGrams
-    * </p>
-    *
-    * @param order the order of the ngram
-    * @return the ngrams
-    */
-   public List<HString> tokenNGrams(int order) {
-      return ngrams(Types.TOKEN, order);
-   }
-
-   /**
-    * Ngrams list.
-    *
-    * @param minOrder the min order
-    * @param maxOrder the max order
-    * @return the list
-    */
-   public List<HString> tokenNGrams(int minOrder, int maxOrder) {
-      return ngrams(Types.TOKEN, minOrder, maxOrder);
-   }
-
-   /**
-    * <p>
-    * Extracts ngrams of the given annotation and order (e.g. unigram, bigram, trigram, etc.)
-    * </p>
-    *
-    * @param order          the order, i.e. number of annotations in the ngarm
-    * @param annotationType the type of annotation to extract
-    * @return the ngrams
-    */
-   public List<HString> ngrams(@NonNull AnnotationType annotationType, int order) {
-      return ngrams(annotationType, order, order);
-   }
-
-   /**
-    * Ngrams list.
-    *
-    * @param annotationType the annotation type
-    * @param minOrder       the min order
-    * @param maxOrder       the max order
-    * @return the list
-    */
-   public List<HString> ngrams(@NonNull AnnotationType annotationType, int minOrder, int maxOrder) {
-      Preconditions.checkArgument(minOrder <= maxOrder,
-                                  "minimum ngram order must be less than or equal to the maximum ngram order");
-      Preconditions.checkArgument(minOrder > 0, "minimum ngram order must be greater than 0.");
-      List<HString> ngrams = new ArrayList<>();
-      List<Annotation> annotations = get(annotationType);
-      for (int i = 0; i < annotations.size(); i++) {
-         for (int j = i + minOrder - 1; j < annotations.size() && j < i + maxOrder; j++) {
-            ngrams.add(annotations.get(i).union(annotations.get(j)));
-         }
-      }
-      return ngrams;
-   }
-
+//   /**
+//    * <p>
+//    * Counts string versions of ngrams
+//    * </p>
+//    *
+//    * @param nGramSpec information on the n-gram order (min,max), annotation type, and filters.
+//    * @return the ngrams
+//    */
+//   public Counter<Tuple> nGramCounts(@NonNull AbstractNGramFeatureSpec<?> nGramSpec) {
+//      return nGramSpec
+//                .getValueCalculator()
+//                .adjust(Counters.newCounter(nGramTuples(nGramSpec)));
+//   }
+//
+//   /**
+//    * <p>
+//    * Extracts ngrams of the given annotation and order (e.g. unigram, bigram, trigram, etc.)
+//    * </p>
+//    *
+//    * @param nGramSpec information on the n-gram order (min,max), annotation type, and filters.
+//    * @return the ngrams
+//    */
+//   public List<Tuple> nGramTuples(@NonNull AbstractNGramFeatureSpec<?> nGramSpec) {
+//      return nGramSpec.stringStream(this).collect(Collectors.toList());
+//   }
+//
+//   /**
+//    * N grams list.
+//    *
+//    * @param nGramSpec the n gram spec
+//    * @return the list
+//    */
+//   public List<HString> nGrams(@NonNull AbstractNGramFeatureSpec<?> nGramSpec) {
+//      return nGramSpec.hStringStream(this).collect(Collectors.toList());
+//   }
 
    /**
     * Checks if this HString overlaps with the given other.
@@ -765,7 +736,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param newString the new string
     * @return the string
     * @see String#replace(CharSequence, CharSequence) String#replace(CharSequence, CharSequence)String#replace(CharSequence,
-    * CharSequence)
+    * CharSequence)String#replace(CharSequence, CharSequence)
     */
    public String replace(String oldString, String newString) {
       return toString().replace(oldString, newString);
@@ -777,7 +748,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param regex       the regular expression
     * @param replacement the string to be substituted
     * @return the resulting string
-    * @see String#replaceAll(String, String) String#replaceAll(String, String)String#replaceAll(String, String)
+    * @see String#replaceAll(String, String) String#replaceAll(String, String)String#replaceAll(String,
+    * String)String#replaceAll(String, String)
     */
    public String replaceAll(String regex, String replacement) {
       return toString().replaceAll(regex, replacement);
@@ -789,7 +761,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param regex       the regular expression
     * @param replacement the string to be substituted
     * @return the resulting string
-    * @see String#replaceFirst(String, String) String#replaceFirst(String, String)String#replaceFirst(String, String)
+    * @see String#replaceFirst(String, String) String#replaceFirst(String, String)String#replaceFirst(String,
+    * String)String#replaceFirst(String, String)
     */
    public String replaceFirst(String regex, String replacement) {
       return toString().replaceFirst(regex, replacement);
@@ -828,7 +801,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param relativeEnd   the relative end within this HString
     * @return the specified substring.
     * @throws IndexOutOfBoundsException - if the relativeStart is negative, or relativeEnd is larger than the length of
-    *                                   this HString object, or relativeStart is larger than relativeEnd.
+    *                                                                    this HString object, or relativeStart is larger
+    *                                   than relativeEnd.
     */
    public HString substring(int relativeStart, int relativeEnd) {
       Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
@@ -839,8 +813,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * To lower case.
     *
     * @return the string
-    * @see String#toLowerCase(Locale) String#toLowerCase(Locale)String#toLowerCase(Locale)NOTE: Uses locale associated
-    * with the HString's langauge
+    * @see String#toLowerCase(Locale) String#toLowerCase(Locale)String#toLowerCase(Locale)String#toLowerCase(Locale)NOTE:
+    * Uses locale associated with the HString's langauge
     */
    public String toLowerCase() {
       return toString().toLowerCase(getLanguage().asLocale());
@@ -879,8 +853,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * Converts the HString to upper case
     *
     * @return the upper case version of the HString
-    * @see String#toUpperCase(Locale) String#toUpperCase(Locale)String#toUpperCase(Locale)NOTE: Uses locale associated
-    * with the HString's langauge
+    * @see String#toUpperCase(Locale) String#toUpperCase(Locale)String#toUpperCase(Locale)String#toUpperCase(Locale)NOTE:
+    * Uses locale associated with the HString's langauge
     */
    public String toUpperCase() {
       return toString().toUpperCase(getLanguage().asLocale());
@@ -1027,14 +1001,34 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return si;
    }
 
+   /**
+    * Dependency graph relation graph.
+    *
+    * @return the relation graph
+    */
    public RelationGraph dependencyGraph() {
       return annotationGraph($(Types.DEPENDENCY), Types.TOKEN);
    }
 
+   /**
+    * Dependency graph relation graph.
+    *
+    * @param type1 the type 1
+    * @param other the other
+    * @return the relation graph
+    */
    public RelationGraph dependencyGraph(AnnotationType type1, AnnotationType... other) {
       return annotationGraph($(Types.DEPENDENCY), type1, other);
    }
 
+   /**
+    * Annotation graph relation graph.
+    *
+    * @param relationTypes   the relation types
+    * @param type            the type
+    * @param annotationTypes the annotation types
+    * @return the relation graph
+    */
    public RelationGraph annotationGraph(Tuple relationTypes, AnnotationType type, AnnotationType... annotationTypes) {
       RelationGraph g = new RelationGraph();
       List<Annotation> vertices = interleaved(type, annotationTypes);

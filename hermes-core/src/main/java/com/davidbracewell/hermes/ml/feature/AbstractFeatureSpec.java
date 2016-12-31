@@ -23,15 +23,24 @@ public abstract class AbstractFeatureSpec<T extends AbstractFeatureSpec> impleme
    private static final long serialVersionUID = 1L;
 
    private AnnotationType annotationType = Types.TOKEN;
+   private SerializableFunction<HString, HString> trimFunction = h -> h;
    private SerializableFunction<HString, String> toStringFunction = HString::toString;
-   private SerializablePredicate<HString> filter = hString -> true;
+   private SerializablePredicate<? super HString> filter = hString -> true;
    private ValueCalculator valueCalculator = ValueCalculator.Frequency;
 
-   public AbstractFeatureSpec(){
+   /**
+    * Instantiates a new Abstract feature spec.
+    */
+   public AbstractFeatureSpec() {
 
    }
 
-   public AbstractFeatureSpec(@NonNull AbstractFeatureSpec<T> copy){
+   /**
+    * Instantiates a new Abstract feature spec.
+    *
+    * @param copy the copy
+    */
+   public AbstractFeatureSpec(@NonNull AbstractFeatureSpec<T> copy) {
       this.annotationType = copy.annotationType;
       this.toStringFunction = copy.toStringFunction;
       this.filter = copy.filter;
@@ -76,7 +85,7 @@ public abstract class AbstractFeatureSpec<T extends AbstractFeatureSpec> impleme
     * @param filter the filter
     * @return the t
     */
-   public T filter(@NonNull SerializablePredicate<HString> filter) {
+   public T filter(@NonNull SerializablePredicate<? super HString> filter) {
       this.filter = filter;
       return Cast.as(this);
    }
@@ -95,7 +104,7 @@ public abstract class AbstractFeatureSpec<T extends AbstractFeatureSpec> impleme
     *
     * @return the filter
     */
-   public SerializablePredicate<HString> getFilter() {
+   public SerializablePredicate<? super HString> getFilter() {
       return filter;
    }
 
@@ -149,5 +158,25 @@ public abstract class AbstractFeatureSpec<T extends AbstractFeatureSpec> impleme
       return Cast.as(this);
    }
 
+
+   /**
+    * Get trim function serializable function.
+    *
+    * @return the serializable function
+    */
+   public SerializableFunction<HString, HString> getTrimFunction() {
+      return this.trimFunction;
+   }
+
+   /**
+    * Trim function t.
+    *
+    * @param trimFunction the trim function
+    * @return the t
+    */
+   public T trimFunction(@NonNull SerializableFunction<HString, HString> trimFunction) {
+      this.trimFunction = trimFunction;
+      return Cast.as(this);
+   }
 
 }// END OF AbstractFeatureSpec

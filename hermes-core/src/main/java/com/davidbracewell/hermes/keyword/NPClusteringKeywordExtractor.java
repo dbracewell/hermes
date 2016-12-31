@@ -28,6 +28,7 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.corpus.NGramSpec;
 import com.davidbracewell.hermes.filter.StopWords;
 import lombok.NonNull;
 
@@ -106,8 +107,9 @@ public class NPClusteringKeywordExtractor implements KeywordExtractor {
             });
 
 
+      NGramSpec nGramSpec = NGramSpec.order(2, 4);
       notAdded.forEach((lemma, pc) -> {
-         for (HString ng : pc.ngrams(Types.TOKEN, 2, 4)) {
+         for (HString ng : nGramSpec.collectHString(pc)) {
             String ngLemma = ng.getLemma();
             boolean added = false;
             for (String cKey : clusters.keySet()) {

@@ -153,7 +153,7 @@ public class FileCorpus implements Corpus, Serializable {
 
       @Override
       public long estimateSize() {
-         return (long) ((end - start) / 2.0);
+         return (long) (end - start);
       }
 
       @Override

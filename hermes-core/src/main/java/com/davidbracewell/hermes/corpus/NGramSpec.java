@@ -26,34 +26,71 @@ import com.davidbracewell.hermes.ml.feature.AbstractNGramFeatureSpec;
 import lombok.NonNull;
 
 /**
+ * The type N gram spec.
+ *
  * @author David B. Bracewell
  */
 public class NGramSpec extends AbstractNGramFeatureSpec<NGramSpec> implements Copyable<NGramSpec> {
    private static final long serialVersionUID = 1L;
 
+   /**
+    * Instantiates a new N gram spec.
+    */
    public NGramSpec() {
    }
 
+   /**
+    * Instantiates a new N gram spec.
+    *
+    * @param copy the copy
+    */
    public NGramSpec(@NonNull NGramSpec copy) {
       super(copy);
    }
 
+   /**
+    * Create n gram spec.
+    *
+    * @return the n gram spec
+    */
    public static NGramSpec create() {
       return new NGramSpec();
    }
 
+   /**
+    * Unigrams n gram spec.
+    *
+    * @return the n gram spec
+    */
    public static NGramSpec unigrams() {
       return new NGramSpec();
    }
 
+   /**
+    * Bigrams n gram spec.
+    *
+    * @return the n gram spec
+    */
    public static NGramSpec bigrams() {
       return new NGramSpec().order(2);
    }
 
+   /**
+    * Trigrams n gram spec.
+    *
+    * @return the n gram spec
+    */
    public static NGramSpec trigrams() {
       return new NGramSpec().order(3);
    }
 
+   /**
+    * Order n gram spec.
+    *
+    * @param min the min
+    * @param max the max
+    * @return the n gram spec
+    */
    public static NGramSpec order(int min, int max) {
       return new NGramSpec().min(min).max(max);
    }
@@ -62,5 +99,6 @@ public class NGramSpec extends AbstractNGramFeatureSpec<NGramSpec> implements Co
    public NGramSpec copy() {
       return new NGramSpec(this);
    }
+
 
 }//END OF NGramSpec

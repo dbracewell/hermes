@@ -22,45 +22,38 @@
 package com.davidbracewell.hermes.keyword;
 
 import com.davidbracewell.collection.counter.Counter;
-import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.corpus.TermSpec;
-import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
-import java.util.stream.Collectors;
-
 /**
- * <p>Implementation of a {@link KeywordExtractor} that simply counts the occurrences of words in the document.</p>
+ * <p>Implementation of a {@link KeywordExtractor} that extracts and scores terms based on a given {@link TermSpec}.</p>
  *
  * @author David B. Bracewell
  */
-public class TFKeywordExtractor implements KeywordExtractor {
+public class TermSpecExtractor implements KeywordExtractor {
    private static final long serialVersionUID = 1L;
    private final TermSpec termSpec;
 
    /**
-    * Instantiates a new Term Frequency based keyword extractor.
+    * Instantiates a new TermSpec keyword extractor that uses a default TermSpec with lowercase words
     */
-   public TFKeywordExtractor() {
+   public TermSpecExtractor() {
       this(TermSpec.create().lowerCase());
    }
 
    /**
-    * Instantiates a new Term Frequency based keyword extractor.
+    * Instantiates a new TermSpec keyword extractor.
     *
     * @param termSpec the specification on how to extract terms
     */
-   public TFKeywordExtractor(@NonNull TermSpec termSpec) {
+   public TermSpecExtractor(@NonNull TermSpec termSpec) {
       this.termSpec = termSpec;
    }
 
    @Override
    public Counter<String> extract(@NonNull HString hstring) {
-      return termSpec.getValueCalculator().adjust(Counters.newCounter(hstring.stream(termSpec.getAnnotationType())
-                                                                             .filter(termSpec.getFilter())
-                                                                             .map(termSpec.getToStringFunction())
-                                                                             .filter(StringUtils::isNotNullOrBlank)
-                                                                             .collect(Collectors.toList())));
+      return termSpec.count(hstring);
    }
-}//END OF TFKeywordExtractor
+
+}//END OF TermSpecExtractor

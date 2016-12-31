@@ -25,7 +25,7 @@ import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.corpus.TermSpec;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.keyword.NPClusteringKeywordExtractor;
-import com.davidbracewell.hermes.keyword.TFKeywordExtractor;
+import com.davidbracewell.hermes.keyword.TermSpecExtractor;
 
 /**
  * @author David B. Bracewell
@@ -58,11 +58,11 @@ public class KeywordExample {
 
 
       System.out.println("   TFKeywordExtractor");
-      TFKeywordExtractor tfke = new TFKeywordExtractor(TermSpec.create()
-                                                               .annotationType(Types.PHRASE_CHUNK)
-                                                               .toStringFunction(
+      TermSpecExtractor tfke = new TermSpecExtractor(TermSpec.create()
+                                                             .annotationType(Types.PHRASE_CHUNK)
+                                                             .toStringFunction(
                                                                   pc -> pc.trim(StopWords.isStopWord()).getLemma())
-                                                               .filter(pc -> pc.getPOS().isInstance(POS.NOUN))
+                                                             .filter(pc -> pc.getPOS().isInstance(POS.NOUN))
       );
       tfke.extract(document).topN(10).forEach((kw, score) -> System.out.println(kw + "\t" + score));
 

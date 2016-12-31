@@ -34,11 +34,10 @@ import java.util.Set;
 /**
  * <p> An <code>Attribute</code> represents a name and value type. Attributes are crated via the {@link #create(String)}
  * or the {@link #create(String, AttributeValueType)} static methods. The value type of an attribute is either defined
- * via the create method or via a config parameter (<pre>{@code Attribute.<NAME> = VALUE_TYPE}</pre>). Attributes that
- * do not have a defined type default to being String types.
- * </p>
+ * via the create method or via a config parameter (<pre>{@code Attribute.AttributeName = VALUE_TYPE}</pre>). Attributes
+ * that do not have a defined type default to being String types. </p>
  *
- * <p> Attribute names are normalized so that an Attribute created with the name <code>partofspeech</code> and one
+ * <p> Attribute names are normalized, so that an Attribute created with the name <code>partofspeech</code> and one
  * created with the name <code>PartOfSpeech</code> are equal (see {@link DynamicEnum} for normalization information).
  * </p>
  *

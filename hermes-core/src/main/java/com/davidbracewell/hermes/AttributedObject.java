@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 /**
  * <p>
  * An <code>AttributedObject</code> is an object that has zero or more attributes associated with it. An attribute
- * may represent a learned annotation (e.g. part of speech or word sense), metadata (e.g. author or source url), or a
+ * may represent a learned property (e.g. part of speech or word sense), metadata (e.g. author or source url), or a
  * feature (e.g. suffix or phonetic encoding).
  * </p>
  *

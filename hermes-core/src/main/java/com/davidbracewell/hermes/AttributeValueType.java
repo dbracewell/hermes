@@ -37,15 +37,14 @@ import java.text.DateFormat;
 import java.util.*;
 
 /**
- * <p>
- * Methods for encoding and decoding possible attribute value types.
- * </p>
+ * <p> Acceptable types for attribute values. Other types may be assigned, but only these are supported. Each type can
+ * be used inside a collection or as the value in a map whose keys are strings. </p>
  *
  * @author David B. Bracewell
  */
 public enum AttributeValueType {
    /**
-    * Value type for Strings
+    * String value
     */
    STRING {
       @Override
@@ -60,7 +59,7 @@ public enum AttributeValueType {
       }
    },
    /**
-    * Value type for Integers
+    * Integer value
     */
    INTEGER {
       @Override
@@ -75,7 +74,7 @@ public enum AttributeValueType {
       }
    },
    /**
-    * Value type for Longs
+    * Long value
     */
    LONG {
       @Override
@@ -90,7 +89,7 @@ public enum AttributeValueType {
       }
    },
    /**
-    * Value type for Doubles
+    * Double value
     */
    DOUBLE {
       @Override
@@ -106,7 +105,7 @@ public enum AttributeValueType {
 
    },
    /**
-    * Value type for Booleans
+    * Boolean value
     */
    BOOLEAN {
       @Override
