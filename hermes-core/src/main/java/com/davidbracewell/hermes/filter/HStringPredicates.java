@@ -5,7 +5,7 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableBiPredicate;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.regex.QueryToPredicate;
+import com.davidbracewell.hermes.extraction.regex.QueryToPredicate;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringPredicates;
 import lombok.NonNull;

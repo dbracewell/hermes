@@ -27,7 +27,7 @@ import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.primitives.Doubles;
 import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.regex.QueryToPredicate;
+import com.davidbracewell.hermes.extraction.regex.QueryToPredicate;
 import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.CSVReader;
 import com.davidbracewell.io.resource.Resource;

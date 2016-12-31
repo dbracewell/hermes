@@ -21,10 +21,8 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.corpus.NGramSpec;
-import com.davidbracewell.hermes.filter.StopWords;
+import com.davidbracewell.hermes.extraction.NGramExtractor;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -105,20 +103,6 @@ public class HStringTest {
       Document document = DocumentFactory.getInstance().create(
          "Once upon a time there lived a princess who was stuck in time.");
       Pipeline.process(document, Types.TOKEN);
-      Counter<String> counts = document.countLemmas(Types.TOKEN);
-      assertEquals(2, counts.get("time"), 0d);
-      assertEquals(2d, counts.get("a"), 0d);
-
-      counts = document.count(Types.TOKEN);
-      assertEquals(2, counts.get("time"), 0d);
-      assertEquals(2d, counts.get("a"), 0d);
-
-      counts = document.count(Types.TOKEN, HString::toLowerCase);
-      assertEquals(2, counts.get("time"), 0d);
-      assertEquals(2d, counts.get("a"), 0d);
-
-      counts = document.count(Types.TOKEN, StopWords.isNotStopWord(), HString::toLowerCase);
-      assertEquals(0d, counts.get("a"), 0d);
 
       List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b"));
       assertEquals(2, patterns.size(), 0d);
@@ -176,10 +160,10 @@ public class HStringTest {
       Pipeline.process(document, Types.TOKEN);
 
 
-      List<HString> ngrams = NGramSpec.unigrams().collectHString(document);
+      List<HString> ngrams = NGramExtractor.unigrams().collectHString(document);
       assertEquals(14, ngrams.size());
 
-      ngrams = NGramSpec.bigrams().annotationType(Types.TOKEN).collectHString(document);
+      ngrams = NGramExtractor.bigrams().annotationType(Types.TOKEN).collectHString(document);
       assertEquals(13, ngrams.size());
    }
 

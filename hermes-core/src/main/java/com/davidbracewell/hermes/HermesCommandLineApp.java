@@ -77,7 +77,7 @@ public abstract class HermesCommandLineApp extends CommandLineApplication {
 
 
    /**
-    * Gets corpus.
+    * Creates a corpus based on the command line parameters.
     *
     * @return the corpus
     */
@@ -89,23 +89,29 @@ public abstract class HermesCommandLineApp extends CommandLineApplication {
    }
 
 
+   /**
+    * Writes the given corpus based on the output location and format.
+    *
+    * @param corpus the corpus to write
+    * @throws IOException Something went wrong writing the corpus
+    */
    public void writeCorpus(@NonNull Corpus corpus) throws IOException {
       corpus.write(outputFormat, output);
    }
 
    /**
-    * Gets corpus.
+    * Gets the location of the input corpus.
     *
-    * @return the corpus
+    * @return the input location of the corpus
     */
    public Resource getInputLocation() {
       return input;
    }
 
    /**
-    * Gets corpus format.
+    * Gets the input corpus format.
     *
-    * @return the corpus format
+    * @return the input corpus format
     */
    public String getInputFormat() {
       return inputFormat;
@@ -142,6 +148,11 @@ public abstract class HermesCommandLineApp extends CommandLineApplication {
       }
    }
 
+   /**
+    * Gets output location.
+    *
+    * @return the output location
+    */
    public Resource getOutputLocation() {
       return output;
    }

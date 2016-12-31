@@ -224,7 +224,7 @@ public class Document extends HString {
       if (json.containsKey("completed")) {
          json.get("completed").<Map<String, Val>>cast()
             .forEach((k, av) -> {
-               AnnotatableType type = AnnotatableType.create(k);
+               AnnotatableType type = Types.from(k);
                doc.getAnnotationSet().setIsCompleted(type, true, av.asString());
             });
       }

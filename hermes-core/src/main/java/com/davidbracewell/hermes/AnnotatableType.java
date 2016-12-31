@@ -23,7 +23,6 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.reflection.BeanUtils;
@@ -124,29 +123,5 @@ public interface AnnotatableType {
     * @return the canonical form of the name
     */
    String canonicalName();
-
-
-   /**
-    * Convenience method for creating an <code>AnnotatableType</code> from a string. The string should either be the
-    * canonical form or shorthand form (<code>Type.Name</code>, but only works for Annotation, Relation, and Attribute)
-    *
-    * @param string the canonical name or shorthand name of the annotatable type to create
-    * @return the annotatable type or null
-    */
-   static AnnotatableType create(String string) {
-      if (StringUtils.isNullOrBlank(string)) {
-         return null;
-      }
-      //Shorthand versions
-      if (string.startsWith("Annotation")) {
-         return Types.annotation(string.substring(string.lastIndexOf('.') + 1));
-      } else if (string.startsWith("Relation")) {
-         return Types.relation(string.substring(string.lastIndexOf('.') + 1));
-      } else if (string.startsWith("Attribute")) {
-         return Types.attribute(string.substring(string.lastIndexOf('.') + 1));
-      }
-      return Convert.convert(string, AnnotatableType.class);
-   }
-
 
 }//END OF Annotatable

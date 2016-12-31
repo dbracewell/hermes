@@ -4,7 +4,7 @@ import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
-import com.davidbracewell.hermes.corpus.TermSpec;
+import com.davidbracewell.hermes.extraction.TermExtractor;
 import com.davidbracewell.io.Resources;
 
 import java.io.Serializable;
@@ -33,7 +33,7 @@ public class SparkExample implements Serializable {
 
     //Calculate term frequencies for the corpus. Note we are saying we want lemmatized versions, but have not
     //run the lemma annotator, instead it will just return the lowercase version of the content.
-    Counter<String> counts = corpus.termFrequencies(TermSpec.create().lemmatize());
+    Counter<String> counts = corpus.termFrequencies(TermExtractor.create().lemmatize());
     counts.entries().forEach(entry -> System.out.println(entry.getKey() + " => " + entry.getValue()));
   }
 

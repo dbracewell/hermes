@@ -28,6 +28,8 @@ import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.extraction.NGramExtractor;
+import com.davidbracewell.hermes.extraction.TermExtractor;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.parsing.ParseException;
@@ -154,24 +156,24 @@ public class CorpusTest {
     assertEquals(1, cntr.get("third"), 0d);
     assertEquals(1, corpus.filter(d -> d.contains("third")).size(), 0d);
 
-    Counter<String> ngrams = corpus.nGramFrequencies(NGramSpec.create().order(1)).mapKeys(tuple -> tuple.get(0).toString());
+    Counter<String> ngrams = corpus.nGramFrequencies(NGramExtractor.create().order(1)).mapKeys(tuple -> tuple.get(0).toString());
     assertEquals(cntr, ngrams);
 
-    Counter<Tuple> bigrams = corpus.nGramFrequencies(NGramSpec.create().order(2));
+    Counter<Tuple> bigrams = corpus.nGramFrequencies(NGramExtractor.create().order(2));
     assertEquals(3d, bigrams.get(Tuple2.of("This", "is")), 0d);
     assertEquals(1d, bigrams.get(Tuple2.of("the", "first")), 0d);
 
-    Counter<Tuple> trigrams = corpus.nGramFrequencies(NGramSpec.create().order(3));
+    Counter<Tuple> trigrams = corpus.nGramFrequencies(NGramExtractor.create().order(3));
     assertEquals(3d, trigrams.get(Tuple3.of("This", "is", "the")), 0d);
 
-    Counter<Tuple> quadgrams = corpus.nGramFrequencies(NGramSpec.create().order(4));
+    Counter<Tuple> quadgrams = corpus.nGramFrequencies(NGramExtractor.create().order(4));
     assertEquals(1d, quadgrams.get(Tuple4.of("This", "is", "the", "first")), 0d);
 
-    Counter<Tuple> fivegrams = corpus.nGramFrequencies(NGramSpec.create().order(5));
+    Counter<Tuple> fivegrams = corpus.nGramFrequencies(NGramExtractor.create().order(5));
     assertEquals(1d, fivegrams.get(NTuple.of("This", "is", "the", "first", "document")), 0d);
 
 
-    cntr = corpus.documentFrequencies(TermSpec.create());
+    cntr = corpus.documentFrequencies(TermExtractor.create());
     assertEquals(3, cntr.get("the"), 0d);
     assertEquals(3, cntr.get("document"), 0d);
     assertEquals(3, cntr.get("This"), 0d);

@@ -44,307 +44,307 @@ import java.util.*;
  *
  * @author David B. Bracewell
  */
-public class DocumentFactory implements Serializable {
-  private static final long serialVersionUID = 1L;
+public final class DocumentFactory implements Serializable {
+   private static final long serialVersionUID = 1L;
 
-  private static volatile DocumentFactory CONFIGURED_INSTANCE;
-  private final TextNormalization normalizer;
-  private final Language defaultLanguage;
+   private static volatile DocumentFactory CONFIGURED_INSTANCE;
+   private final TextNormalization normalizer;
+   private final Language defaultLanguage;
 
 
-  private DocumentFactory() {
-    this.normalizer = TextNormalization.configuredInstance();
-    this.defaultLanguage = Hermes.defaultLanguage();
-  }
+   private DocumentFactory() {
+      this.normalizer = TextNormalization.configuredInstance();
+      this.defaultLanguage = Hermes.defaultLanguage();
+   }
 
-  private DocumentFactory(Set<? extends TextNormalizer> normalizers, Language defaultLanguage) {
-    this.normalizer = TextNormalization.createInstance(normalizers);
-    this.defaultLanguage = (defaultLanguage == null) ? Hermes.defaultLanguage() : defaultLanguage;
-  }
+   private DocumentFactory(Set<? extends TextNormalizer> normalizers, Language defaultLanguage) {
+      this.normalizer = TextNormalization.createInstance(normalizers);
+      this.defaultLanguage = (defaultLanguage == null) ? Hermes.defaultLanguage() : defaultLanguage;
+   }
 
-  /**
-   * Creates a builder for constructing custom document factories.
-   *
-   * @return A Builder to create a DocumentFactory
-   */
-  public static Builder builder() {
-    return new Builder();
-  }
+   /**
+    * Creates a builder for constructing custom document factories.
+    *
+    * @return A Builder to create a DocumentFactory
+    */
+   public static Builder builder() {
+      return new Builder();
+   }
 
-  /**
-   * Gets instance of the document factory configured using configuration settings.
-   *
-   * @return A document factory whose preprocessors are set via configuration options
-   */
-  public static DocumentFactory getInstance() {
-    if (CONFIGURED_INSTANCE == null) {
-      synchronized (DocumentFactory.class) {
-        if (CONFIGURED_INSTANCE == null) {
-          CONFIGURED_INSTANCE = new DocumentFactory();
-        }
+   /**
+    * Gets instance of the document factory configured using configuration settings.
+    *
+    * @return A document factory whose preprocessors are set via configuration options
+    */
+   public static DocumentFactory getInstance() {
+      if (CONFIGURED_INSTANCE == null) {
+         synchronized (DocumentFactory.class) {
+            if (CONFIGURED_INSTANCE == null) {
+               CONFIGURED_INSTANCE = new DocumentFactory();
+            }
+         }
       }
-    }
-    return CONFIGURED_INSTANCE;
-  }
+      return CONFIGURED_INSTANCE;
+   }
 
-  /**
-   * From tokens document.
-   *
-   * @param id       the id
-   * @param tokens   the tokens
-   * @param language the language
-   * @return the document
-   */
-  public Document fromTokens(String id, @NonNull String[] tokens, @NonNull Language language) {
-    int delta = language.usesWhitespace() ? 1 : 0;
-    String content = Joiner.on(language.usesWhitespace() ? " " : "").join(tokens);
-    Document doc = new Document(id, content, language);
-    int charStart = 0;
-    for (int i = 0; i < tokens.length; i++) {
-      int charEnd = charStart + tokens[i].length();
-      doc.createAnnotation(Types.TOKEN, charStart, charEnd);
-      charStart = charEnd + delta;
-    }
-    doc.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
-    return doc;
-  }
-
-  /**
-   * Creates a document with the given content.
-   *
-   * @param content the content
-   * @return the document
-   */
-  public Document create(@NonNull String content) {
-    return create("", content, defaultLanguage, Collections.emptyMap());
-  }
-
-  /**
-   * Creates a document with the given id and content
-   *
-   * @param id      the id
-   * @param content the content
-   * @return the document
-   */
-  public Document create(@NonNull String id, @NonNull String content) {
-    return create(id, content, defaultLanguage, Collections.emptyMap());
-  }
-
-  /**
-   * Create document.
-   *
-   * @param content  the content
-   * @param language the language
-   * @return the document
-   */
-  public Document create(@NonNull String content, @NonNull Language language) {
-    return create("", content, language, Collections.emptyMap());
-  }
-
-  /**
-   * Create document.
-   *
-   * @param id       the id
-   * @param content  the content
-   * @param language the language
-   * @return the document
-   */
-  public Document create(@NonNull String id, @NonNull String content, @NonNull Language language) {
-    return create(id, content, language, Collections.emptyMap());
-  }
-
-  /**
-   * Create document.
-   *
-   * @param content      the content
-   * @param language     the language
-   * @param attributeMap the attribute map
-   * @return the document
-   */
-  public Document create(@NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
-    return create("", content, language, attributeMap);
-  }
-
-  /**
-   * Create document.
-   *
-   * @param id           the id
-   * @param content      the content
-   * @param language     the language
-   * @param attributeMap the attribute map
-   * @return the document
-   */
-  public Document create(@NonNull String id, @NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
-    Document document = new Document(id, normalizer.normalize(content, language), language);
-    document.putAll(attributeMap);
-    document.setLanguage(language);
-    return document;
-  }
-
-  /**
-   * Create raw.
-   *
-   * @param id           the id
-   * @param content      the content
-   * @param language     the language
-   * @param attributeMap the attribute map
-   * @return the document
-   */
-  public Document createRaw(@NonNull String id, @NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
-    Document document = new Document(id, content, language);
-    document.putAll(attributeMap);
-    document.setLanguage(language);
-    return document;
-  }
-
-  /**
-   * From tokens document.
-   *
-   * @param tokens the tokens
-   * @return the document
-   */
-  public Document fromTokens(@NonNull Iterable<String> tokens) {
-    return fromTokens(tokens, getDefaultLanguage());
-  }
-
-  /**
-   * Creates a document from an iterable of strings that represent tokens.
-   *
-   * @param tokens   the tokens
-   * @param language the language
-   * @return the document
-   */
-  public Document fromTokens(@NonNull Iterable<String> tokens, @NonNull Language language) {
-    StringBuilder content = new StringBuilder();
-    List<Span> tokenSpans = new ArrayList<>();
-    for (String token : tokens) {
-      tokenSpans.add(new Span(content.length(), content.length() + token.length()));
-      content.append(token);
-      if (language.usesWhitespace()) {
-        content.append(" ");
+   /**
+    * From tokens document.
+    *
+    * @param id       the id
+    * @param tokens   the tokens
+    * @param language the language
+    * @return the document
+    */
+   public Document fromTokens(String id, @NonNull String[] tokens, @NonNull Language language) {
+      int delta = language.usesWhitespace() ? 1 : 0;
+      String content = Joiner.on(language.usesWhitespace() ? " " : "").join(tokens);
+      Document doc = new Document(id, content, language);
+      int charStart = 0;
+      for (int i = 0; i < tokens.length; i++) {
+         int charEnd = charStart + tokens[i].length();
+         doc.createAnnotation(Types.TOKEN, charStart, charEnd);
+         charStart = charEnd + delta;
       }
-    }
-    Document doc = new Document("", content.toString().trim(), defaultLanguage);
-    for (int idx = 0; idx < tokenSpans.size(); idx++) {
-      doc.createAnnotation(Types.TOKEN, tokenSpans.get(idx))
-         .put(Types.INDEX, idx);
-    }
-    doc.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
-    return doc;
-  }
+      doc.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
+      return doc;
+   }
 
-  /**
-   * Create document.
-   *
-   * @param content the content
-   * @return the document
-   */
-  public Document createRaw(@NonNull String content) {
-    return createRaw("", content, defaultLanguage, Collections.emptyMap());
-  }
+   /**
+    * Creates a document with the given content.
+    *
+    * @param content the content
+    * @return the document
+    */
+   public Document create(@NonNull String content) {
+      return create("", content, defaultLanguage, Collections.emptyMap());
+   }
 
-  /**
-   * Create document.
-   *
-   * @param id      the id
-   * @param content the content
-   * @return the document
-   */
-  public Document createRaw(@NonNull String id, @NonNull String content) {
-    return createRaw(id, content, defaultLanguage, Collections.emptyMap());
-  }
+   /**
+    * Creates a document with the given id and content
+    *
+    * @param id      the id
+    * @param content the content
+    * @return the document
+    */
+   public Document create(@NonNull String id, @NonNull String content) {
+      return create(id, content, defaultLanguage, Collections.emptyMap());
+   }
 
-  /**
-   * Create document.
-   *
-   * @param content  the content
-   * @param language the language
-   * @return the document
-   */
-  public Document createRaw(@NonNull String content, @NonNull Language language) {
-    return createRaw("", content, language, Collections.emptyMap());
-  }
+   /**
+    * Create document.
+    *
+    * @param content  the content
+    * @param language the language
+    * @return the document
+    */
+   public Document create(@NonNull String content, @NonNull Language language) {
+      return create("", content, language, Collections.emptyMap());
+   }
 
-  /**
-   * Create document.
-   *
-   * @param id       the id
-   * @param content  the content
-   * @param language the language
-   * @return the document
-   */
-  public Document createRaw(@NonNull String id, @NonNull String content, @NonNull Language language) {
-    return createRaw(id, content, language, Collections.emptyMap());
-  }
+   /**
+    * Create document.
+    *
+    * @param id       the id
+    * @param content  the content
+    * @param language the language
+    * @return the document
+    */
+   public Document create(@NonNull String id, @NonNull String content, @NonNull Language language) {
+      return create(id, content, language, Collections.emptyMap());
+   }
 
-  /**
-   * Create document.
-   *
-   * @param content      the content
-   * @param language     the language
-   * @param attributeMap the attribute map
-   * @return the document
-   */
-  public Document createRaw(@NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
-    return createRaw("", content, language, attributeMap);
-  }
+   /**
+    * Create document.
+    *
+    * @param content      the content
+    * @param language     the language
+    * @param attributeMap the attribute map
+    * @return the document
+    */
+   public Document create(@NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
+      return create("", content, language, attributeMap);
+   }
 
-  /**
-   * Gets default language.
-   *
-   * @return the default language
-   */
-  public Language getDefaultLanguage() {
-    return defaultLanguage;
-  }
+   /**
+    * Create document.
+    *
+    * @param id           the id
+    * @param content      the content
+    * @param language     the language
+    * @param attributeMap the attribute map
+    * @return the document
+    */
+   public Document create(@NonNull String id, @NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
+      Document document = new Document(id, normalizer.normalize(content, language), language);
+      document.putAll(attributeMap);
+      document.setLanguage(language);
+      return document;
+   }
 
-  /**
-   * <p>Builder for DocumentFactory</p>
-   *
-   * @author David B. Bracewell
-   */
-  public static class Builder {
+   /**
+    * Create raw.
+    *
+    * @param id           the id
+    * @param content      the content
+    * @param language     the language
+    * @param attributeMap the attribute map
+    * @return the document
+    */
+   public Document createRaw(@NonNull String id, @NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
+      Document document = new Document(id, content, language);
+      document.putAll(attributeMap);
+      document.setLanguage(language);
+      return document;
+   }
 
-    private final Set<TextNormalizer> preprocessors = Sets.newHashSet();
-    private Language defaultLanguage;
+   /**
+    * From tokens document.
+    *
+    * @param tokens the tokens
+    * @return the document
+    */
+   public Document fromTokens(@NonNull Iterable<String> tokens) {
+      return fromTokens(tokens, getDefaultLanguage());
+   }
 
-    private Builder() {
-
-    }
-
-    /**
-     * Adds a Text preprocessor
-     *
-     * @param preprocessor The text preprocessor to add
-     * @return This instance of the DocumentFactoryBuilder
-     */
-    public Builder add(TextNormalizer preprocessor) {
-      if (preprocessor != null) {
-        preprocessors.add(preprocessor);
+   /**
+    * Creates a document from an iterable of strings that represent tokens.
+    *
+    * @param tokens   the tokens
+    * @param language the language
+    * @return the document
+    */
+   public Document fromTokens(@NonNull Iterable<String> tokens, @NonNull Language language) {
+      StringBuilder content = new StringBuilder();
+      List<Span> tokenSpans = new ArrayList<>();
+      for (String token : tokens) {
+         tokenSpans.add(new Span(content.length(), content.length() + token.length()));
+         content.append(token);
+         if (language.usesWhitespace()) {
+            content.append(" ");
+         }
       }
-      return this;
-    }
+      Document doc = new Document("", content.toString().trim(), defaultLanguage);
+      for (int idx = 0; idx < tokenSpans.size(); idx++) {
+         doc.createAnnotation(Types.TOKEN, tokenSpans.get(idx))
+            .put(Types.INDEX, idx);
+      }
+      doc.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
+      return doc;
+   }
 
-    /**
-     * Build document factory.
-     *
-     * @return A DocumentFactory
-     */
-    public DocumentFactory build() {
-      return new DocumentFactory(preprocessors, defaultLanguage);
-    }
+   /**
+    * Create document.
+    *
+    * @param content the content
+    * @return the document
+    */
+   public Document createRaw(@NonNull String content) {
+      return createRaw("", content, defaultLanguage, Collections.emptyMap());
+   }
 
-    /**
-     * Sets the default language for new documents
-     *
-     * @param language the default language
-     * @return This instance of the DocumentFactoryBuilder
-     */
-    public Builder defaultLanguage(Language language) {
-      this.defaultLanguage = language == null ? Hermes.defaultLanguage() : language;
-      return this;
-    }
+   /**
+    * Create document.
+    *
+    * @param id      the id
+    * @param content the content
+    * @return the document
+    */
+   public Document createRaw(@NonNull String id, @NonNull String content) {
+      return createRaw(id, content, defaultLanguage, Collections.emptyMap());
+   }
 
-  }//END OF DocumentFactory$Builder
+   /**
+    * Create document.
+    *
+    * @param content  the content
+    * @param language the language
+    * @return the document
+    */
+   public Document createRaw(@NonNull String content, @NonNull Language language) {
+      return createRaw("", content, language, Collections.emptyMap());
+   }
+
+   /**
+    * Create document.
+    *
+    * @param id       the id
+    * @param content  the content
+    * @param language the language
+    * @return the document
+    */
+   public Document createRaw(@NonNull String id, @NonNull String content, @NonNull Language language) {
+      return createRaw(id, content, language, Collections.emptyMap());
+   }
+
+   /**
+    * Create document.
+    *
+    * @param content      the content
+    * @param language     the language
+    * @param attributeMap the attribute map
+    * @return the document
+    */
+   public Document createRaw(@NonNull String content, @NonNull Language language, @NonNull Map<AttributeType, ?> attributeMap) {
+      return createRaw("", content, language, attributeMap);
+   }
+
+   /**
+    * Gets default language.
+    *
+    * @return the default language
+    */
+   public Language getDefaultLanguage() {
+      return defaultLanguage;
+   }
+
+   /**
+    * <p>Builder for DocumentFactory</p>
+    *
+    * @author David B. Bracewell
+    */
+   public static class Builder {
+
+      private final Set<TextNormalizer> preprocessors = Sets.newHashSet();
+      private Language defaultLanguage;
+
+      private Builder() {
+
+      }
+
+      /**
+       * Adds a Text preprocessor
+       *
+       * @param preprocessor The text preprocessor to add
+       * @return This instance of the DocumentFactoryBuilder
+       */
+      public Builder add(TextNormalizer preprocessor) {
+         if (preprocessor != null) {
+            preprocessors.add(preprocessor);
+         }
+         return this;
+      }
+
+      /**
+       * Build document factory.
+       *
+       * @return A DocumentFactory
+       */
+      public DocumentFactory build() {
+         return new DocumentFactory(preprocessors, defaultLanguage);
+      }
+
+      /**
+       * Sets the default language for new documents
+       *
+       * @param language the default language
+       * @return This instance of the DocumentFactoryBuilder
+       */
+      public Builder defaultLanguage(Language language) {
+         this.defaultLanguage = language == null ? Hermes.defaultLanguage() : language;
+         return this;
+      }
+
+   }//END OF DocumentFactory$Builder
 
 }//END OF DocumentFactory

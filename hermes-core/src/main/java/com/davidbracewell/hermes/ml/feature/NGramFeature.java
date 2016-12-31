@@ -25,6 +25,7 @@ import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.cache.Cached;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.extraction.AbstractNGramExtractor;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -56,7 +57,7 @@ public class NGramFeature implements Featurizer<HString> {
       return new Builder();
    }
 
-   public static class Builder extends AbstractNGramFeatureSpec<Builder> {
+   public static class Builder extends AbstractNGramExtractor<Builder> {
       private static final long serialVersionUID = 1L;
 
       public NGramFeature build() {

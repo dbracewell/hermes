@@ -47,6 +47,8 @@ import com.davidbracewell.function.Unchecked;
 import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.extraction.NGramExtractor;
+import com.davidbracewell.hermes.extraction.TermExtractor;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.io.AsyncWriter;
@@ -426,20 +428,20 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @return A counter containing document frequencies of the given annotation type
     */
    default Counter<String> documentFrequencies() {
-      return documentFrequencies(TermSpec.create().lowerCase());
+      return documentFrequencies(TermExtractor.create().lowerCase());
    }
 
    /**
     * Calculates the document frequency of annotations of the given annotation type in the corpus. Annotations are
     * transformed into strings using the given toString function.
     *
-    * @param termSpec the term spec
+    * @param termExtractor the term spec
     * @return A counter containing document frequencies of the given annotation type
     */
-   default Counter<String> documentFrequencies(@NonNull TermSpec termSpec) {
+   default Counter<String> documentFrequencies(@NonNull TermExtractor termExtractor) {
       MLongAccumulator counter = getStreamingContext().longAccumulator();
-      return termSpec.getValueCalculator()
-                     .adjust(Counters.newCounter(stream().parallel()
+      return termExtractor.getValueCalculator()
+                          .adjust(Counters.newCounter(stream().parallel()
                                                          .flatMap(
                                                             doc -> {
                                                                counter.add(1);
@@ -447,7 +449,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
                                                                               count -> logFine(
                                                                                  "documentFrequencies: Processed {0} documents",
                                                                                  count));
-                                                               return termSpec.stream(doc).distinct();
+                                                               return termExtractor.stream(doc).distinct();
                                                             })
                                                          .countByValue()));
    }
@@ -573,17 +575,17 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    /**
     * Ngrams counter.
     *
-    * @param nGramSpec the n gram spec
+    * @param nGramExtractor the n gram spec
     * @return the counter
     */
-   default Counter<Tuple> nGramFrequencies(@NonNull NGramSpec nGramSpec) {
+   default Counter<Tuple> nGramFrequencies(@NonNull NGramExtractor nGramExtractor) {
       MLongAccumulator counter = getStreamingContext().longAccumulator();
-      return nGramSpec.getValueCalculator().adjust(Counters.newCounter(
+      return nGramExtractor.getValueCalculator().adjust(Counters.newCounter(
          stream().parallel().flatMap(doc -> {
                                         counter.add(1);
                                         counter.report(count -> count % 5_000 == 0,
                                                        count -> logFine("nGramCounts: Processed {0} documents", count));
-                                        return nGramSpec.streamTuples(doc);
+                                        return nGramExtractor.streamTuples(doc);
                                      }
                                     ).countByValue()));
    }
@@ -646,26 +648,26 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    /**
     * Significant bigrams counter.
     *
-    * @param nGramSpec the term spec
+    * @param nGramExtractor the term spec
     * @param minCount  the min count
     * @param minScore  the min score
     * @return the counter
     */
-   default Counter<Tuple> significantBigrams(@NonNull NGramSpec nGramSpec, int minCount, double minScore) {
-      return significantBigrams(nGramSpec, minCount, AssociationMeasures.Mikolov, minScore);
+   default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor, int minCount, double minScore) {
+      return significantBigrams(nGramExtractor, minCount, AssociationMeasures.Mikolov, minScore);
    }
 
    /**
     * Significant bigrams counter.
     *
-    * @param nGramSpec  the n gram spec
+    * @param nGramExtractor  the n gram spec
     * @param minCount   the min count
     * @param calculator the calculator
     * @param minScore   the min score
     * @return the counter
     */
-   default Counter<Tuple> significantBigrams(@NonNull NGramSpec nGramSpec, int minCount, @NonNull ContingencyTableCalculator calculator, double minScore) {
-      Counter<Tuple> ngrams = nGramFrequencies(nGramSpec.min(1).max(2))
+   default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor, int minCount, @NonNull ContingencyTableCalculator calculator, double minScore) {
+      Counter<Tuple> ngrams = nGramFrequencies(nGramExtractor.min(1).max(2))
                                  .filterByValue(v -> v >= minCount);
       Counter<Tuple> unigrams = ngrams.filterByKey(t -> t.degree() == 1);
       Counter<Tuple> bigrams = ngrams.filterByKey(t -> t.degree() == 2);
@@ -705,23 +707,23 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @return the counter
     */
    default Counter<String> termFrequencies() {
-      return termFrequencies(TermSpec.create());
+      return termFrequencies(TermExtractor.create());
    }
 
    /**
     * Terms counter.
     *
-    * @param termSpec the term spec
+    * @param termExtractor the term spec
     * @return the counter
     */
-   default Counter<String> termFrequencies(@NonNull TermSpec termSpec) {
+   default Counter<String> termFrequencies(@NonNull TermExtractor termExtractor) {
       MLongAccumulator counter = getStreamingContext().longAccumulator();
-      return termSpec.getValueCalculator().adjust(Counters.newCounter(
+      return termExtractor.getValueCalculator().adjust(Counters.newCounter(
          stream().parallel().flatMap(doc -> {
                                         counter.add(1);
                                         counter.report(count -> count % 5_000 == 0,
                                                        count -> logFine("termCounts: Processed {0} documents", count));
-                                        return termSpec.stream(doc);
+                                        return termExtractor.stream(doc);
                                      }
                                     ).countByValue()));
    }

@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.hermes.caduceus.CaduceusProgram;
+import com.davidbracewell.hermes.extraction.caduceus.CaduceusProgram;
 import com.davidbracewell.io.Resources;
 
 /**

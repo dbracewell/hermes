@@ -26,8 +26,6 @@ import com.davidbracewell.Tag;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Streams;
-import com.davidbracewell.collection.counter.Counter;
-import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
@@ -281,54 +279,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    public boolean contentEqualIgnoreCase(String content) {
       return toString().equalsIgnoreCase(content);
-   }
-
-   /**
-    * Counts the string version of the given annotation types.
-    *
-    * @param type the annotation type to count
-    * @return A counter whose key is the content of the annotations of the given type
-    */
-   public Counter<String> count(AnnotationType type) {
-      return count(type, Object::toString);
-   }
-
-   /**
-    * Counts the string version of the given annotation types. Strings are constructed using the provided function.
-    *
-    * @param type      the annotation type to count
-    * @param transform the function to transform the annotation into a string
-    * @return A counter whose key is the content of the annotations of the given type
-    */
-   public Counter<String> count(AnnotationType type, @NonNull Function<? super Annotation, String> transform) {
-      return count(type, a -> true, transform);
-   }
-
-   /**
-    * Counts the string version of the given annotation types that satisfy the given predicate. Strings are constructed
-    * using the provided function.
-    *
-    * @param type      the annotation type to count
-    * @param predicate the predicate to test annotations against.
-    * @param transform the function to transform the annotation into a string
-    * @return A counter whose key is the content of the annotations of the given type
-    */
-   public Counter<String> count(AnnotationType type, @NonNull Predicate<? super Annotation> predicate, @NonNull Function<? super Annotation, String> transform) {
-      return Counters.newCounter(get(type).stream()
-                                          .filter(predicate)
-                                          .map(transform)
-                                          .collect(Collectors.toList())
-                                );
-   }
-
-   /**
-    * Counts the lemmatized version of the given annotation types.
-    *
-    * @param type the annotation type to count
-    * @return A counter whose key is the lemmatized content of the annotations of the given type
-    */
-   public Counter<String> countLemmas(AnnotationType type) {
-      return count(type, HString::getLemma);
    }
 
    /**
@@ -651,42 +601,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
 
-//   /**
-//    * <p>
-//    * Counts string versions of ngrams
-//    * </p>
-//    *
-//    * @param nGramSpec information on the n-gram order (min,max), annotation type, and filters.
-//    * @return the ngrams
-//    */
-//   public Counter<Tuple> nGramCounts(@NonNull AbstractNGramFeatureSpec<?> nGramSpec) {
-//      return nGramSpec
-//                .getValueCalculator()
-//                .adjust(Counters.newCounter(nGramTuples(nGramSpec)));
-//   }
-//
-//   /**
-//    * <p>
-//    * Extracts ngrams of the given annotation and order (e.g. unigram, bigram, trigram, etc.)
-//    * </p>
-//    *
-//    * @param nGramSpec information on the n-gram order (min,max), annotation type, and filters.
-//    * @return the ngrams
-//    */
-//   public List<Tuple> nGramTuples(@NonNull AbstractNGramFeatureSpec<?> nGramSpec) {
-//      return nGramSpec.stringStream(this).collect(Collectors.toList());
-//   }
-//
-//   /**
-//    * N grams list.
-//    *
-//    * @param nGramSpec the n gram spec
-//    * @return the list
-//    */
-//   public List<HString> nGrams(@NonNull AbstractNGramFeatureSpec<?> nGramSpec) {
-//      return nGramSpec.hStringStream(this).collect(Collectors.toList());
-//   }
-
    /**
     * Checks if this HString overlaps with the given other.
     *
@@ -801,8 +715,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param relativeEnd   the relative end within this HString
     * @return the specified substring.
     * @throws IndexOutOfBoundsException - if the relativeStart is negative, or relativeEnd is larger than the length of
-    *                                                                    this HString object, or relativeStart is larger
-    *                                   than relativeEnd.
+    *                                   this HString object, or relativeStart is larger than relativeEnd.
     */
    public HString substring(int relativeStart, int relativeEnd) {
       Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
