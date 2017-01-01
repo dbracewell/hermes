@@ -389,7 +389,7 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
          }
       }
 
-      if (lastEnd < tokens.get(tokens.size() - 1).end()) {
+      if (tokens.size() > 0 && lastEnd < tokens.get(tokens.size() - 1).end()) {
          addSentence(doc, start, tokens.get(tokens.size() - 1).end(), sentenceIndex);
       }
 

@@ -21,7 +21,9 @@
 
 package com.davidbracewell.hermes.corpus;
 
+import com.davidbracewell.SystemInfo;
 import com.davidbracewell.collection.Streams;
+import com.davidbracewell.config.Config;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.Unchecked;
 import com.davidbracewell.guava.common.base.Throwables;
@@ -30,6 +32,8 @@ import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.io.AsyncWriter;
+import com.davidbracewell.io.MultiFileWriter;
+import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.stream.MStream;
@@ -251,6 +255,20 @@ public class FileCorpus implements Corpus, Serializable {
 
    @Override
    public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
-      return Corpus.builder().offHeap().addAll(stream().map(function).collect()).build();
+      Resource tmpDirectory = Resources.temporaryDirectory();
+      tmpDirectory.deleteOnExit();
+      FileCorpus newCorpus = new FileCorpus(CorpusFormats.forName(CorpusFormats.JSON_OPL), tmpDirectory,
+                                            documentFactory);
+      try (MultiFileWriter writer = new MultiFileWriter(tmpDirectory, "part-", Config.get("files.partition")
+                                                                                     .asIntegerValue(
+                                                                                        SystemInfo.NUMBER_OF_PROCESSORS * 2))) {
+         forEachParallel(Unchecked.consumer(document -> writer.write(function.apply(document).toJson() + "\n")));
+      } catch (RuntimeException e) {
+         e.printStackTrace();
+         throw e;
+      } catch (Exception e) {
+         throw Throwables.propagate(e);
+      }
+      return newCorpus;
    }
 }//END OF FileCorpus

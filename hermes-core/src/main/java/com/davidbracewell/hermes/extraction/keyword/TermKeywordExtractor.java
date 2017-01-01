@@ -23,23 +23,22 @@ package com.davidbracewell.hermes.extraction.keyword;
 
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.extraction.TermExtractor;
 import lombok.NonNull;
 
 /**
- * <p>Implementation of a {@link KeywordExtractor} that extracts and scores terms based on a given {@link TermExtractor}.</p>
+ * <p>Implementation of a {@link KeywordExtractor} that extracts and scores terms based on a given {@link com.davidbracewell.hermes.extraction.TermExtractor}.</p>
  *
  * @author David B. Bracewell
  */
-public class TermSpecExtractor implements KeywordExtractor {
+public class TermKeywordExtractor implements KeywordExtractor {
    private static final long serialVersionUID = 1L;
-   private final TermExtractor termExtractor;
+   private final com.davidbracewell.hermes.extraction.TermExtractor termExtractor;
 
    /**
     * Instantiates a new TermSpec keyword extractor that uses a default TermSpec with lowercase words
     */
-   public TermSpecExtractor() {
-      this(TermExtractor.create().lowerCase());
+   public TermKeywordExtractor() {
+      this(com.davidbracewell.hermes.extraction.TermExtractor.create().lowerCase());
    }
 
    /**
@@ -47,7 +46,7 @@ public class TermSpecExtractor implements KeywordExtractor {
     *
     * @param termExtractor the specification on how to extract terms
     */
-   public TermSpecExtractor(@NonNull TermExtractor termExtractor) {
+   public TermKeywordExtractor(@NonNull com.davidbracewell.hermes.extraction.TermExtractor termExtractor) {
       this.termExtractor = termExtractor;
    }
 

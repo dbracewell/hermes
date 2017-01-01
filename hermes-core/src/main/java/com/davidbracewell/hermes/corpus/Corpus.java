@@ -211,8 +211,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
       return Dataset
                 .classification()
                 .type(getDataSetType())
-                .source(asLabeledStream(labelFunction).map(featurizer::extractInstance))
-         ;
+                .source(asLabeledStream(labelFunction).map(featurizer::extractInstance));
    }
 
    /**
@@ -233,19 +232,20 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     */
    default Dataset<Sequence> asEmbeddingDataset(AnnotationType type1, AnnotationType... types) {
       return Dataset.embedding(getDataSetType(),
-                               stream().flatMap(document -> {
-                                  List<List<String>> sentences = new ArrayList<>();
-                                  document.sentences()
-                                          .forEach(sentence ->
-                                                      sentences.add(
-                                                         sentence.interleaved(type1, types)
-                                                                 .stream()
-                                                                 .filter(StopWords.isNotStopWord())
-                                                                 .map(HString::getLemma)
-                                                                 .collect(Collectors.toList()))
-                                                  );
-                                  return sentences.stream();
-                               }),
+                               stream().parallel()
+                                       .flatMap(document -> {
+                                          List<List<String>> sentences = new ArrayList<>();
+                                          document.sentences()
+                                                  .forEach(sentence ->
+                                                              sentences.add(
+                                                                 sentence.interleaved(type1, types)
+                                                                         .stream()
+                                                                         .filter(StopWords.isNotStopWord())
+                                                                         .map(HString::getLemma)
+                                                                         .collect(Collectors.toList()))
+                                                          );
+                                          return sentences.stream();
+                                       }),
                                Collection::stream);
    }
 
@@ -442,16 +442,16 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
       MLongAccumulator counter = getStreamingContext().longAccumulator();
       return termExtractor.getValueCalculator()
                           .adjust(Counters.newCounter(stream().parallel()
-                                                         .flatMap(
-                                                            doc -> {
-                                                               counter.add(1);
-                                                               counter.report(count -> count % 5_000 == 0,
-                                                                              count -> logFine(
-                                                                                 "documentFrequencies: Processed {0} documents",
-                                                                                 count));
-                                                               return termExtractor.stream(doc).distinct();
-                                                            })
-                                                         .countByValue()));
+                                                              .flatMap(
+                                                                 doc -> {
+                                                                    counter.add(1);
+                                                                    counter.report(count -> count % 5_000 == 0,
+                                                                                   count -> logFine(
+                                                                                      "documentFrequencies: Processed {0} documents",
+                                                                                      count));
+                                                                    return termExtractor.stream(doc).distinct();
+                                                                 })
+                                                              .countByValue()));
    }
 
    /**
@@ -649,8 +649,8 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * Significant bigrams counter.
     *
     * @param nGramExtractor the term spec
-    * @param minCount  the min count
-    * @param minScore  the min score
+    * @param minCount       the min count
+    * @param minScore       the min score
     * @return the counter
     */
    default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor, int minCount, double minScore) {
@@ -660,10 +660,10 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    /**
     * Significant bigrams counter.
     *
-    * @param nGramExtractor  the n gram spec
-    * @param minCount   the min count
-    * @param calculator the calculator
-    * @param minScore   the min score
+    * @param nGramExtractor the n gram spec
+    * @param minCount       the min count
+    * @param calculator     the calculator
+    * @param minScore       the min score
     * @return the counter
     */
    default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor, int minCount, @NonNull ContingencyTableCalculator calculator, double minScore) {
