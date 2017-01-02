@@ -24,48 +24,46 @@ package com.davidbracewell.hermes.ml.feature;
 import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.cache.Cached;
-import com.davidbracewell.collection.HashMapCounter;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.stream.Streams;
+import com.davidbracewell.hermes.extraction.AbstractNGramExtractor;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author David B. Bracewell
  */
 public class NGramFeature implements Featurizer<HString> {
-  private static final long serialVersionUID = 1L;
-  final Builder spec;
+   private static final long serialVersionUID = 1L;
+   final Builder spec;
 
-  protected NGramFeature(Builder spec) {
-    this.spec = spec;
-  }
+   protected NGramFeature(Builder spec) {
+      this.spec = spec;
+   }
 
-  @Override
-  @Cached(keyMaker = HStringKeyMaker.class)
-  public Set<Feature> apply(HString hString) {
-    return spec.getValueCalculator().apply(
-      new HashMapCounter<>(
-        Streams.of(hString.ngrams(spec.getAnnotationType(), spec.getMin(), spec.getMax()), false)
-          .filter(spec.getFilter())
-          .map(spec.getToStringFunction())
-          .countByValue()
-      )
-    );
-  }
+   @Override
+   @Cached(keyMaker = HStringKeyMaker.class)
+   public Set<Feature> apply(HString hString) {
+      return spec.countTuples(hString).entries().stream()
+                 .map(e -> Feature.real(e.getKey().stream()
+                                         .map(Object::toString)
+                                         .collect(Collectors.joining(" ")),
+                                        e.getValue()))
+                 .collect(Collectors.toSet());
+   }
 
 
-  public static Builder builder() {
-    return new Builder();
-  }
+   public static Builder builder() {
+      return new Builder();
+   }
 
-  public static class Builder extends AbstractNGramFeatureSpec<Builder> {
-    private static final long serialVersionUID = 1L;
+   public static class Builder extends AbstractNGramExtractor<Builder> {
+      private static final long serialVersionUID = 1L;
 
-    public NGramFeature build() {
-      return new NGramFeature(this);
-    }
+      public NGramFeature build() {
+         return new NGramFeature(this);
+      }
 
-  }
+   }
 
 }//END OF NGramFeature

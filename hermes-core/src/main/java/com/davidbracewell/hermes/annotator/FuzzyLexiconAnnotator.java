@@ -21,18 +21,18 @@
 
 package com.davidbracewell.hermes.annotator;
 
-import com.davidbracewell.collection.Counter;
-import com.davidbracewell.collection.HashMapCounter;
+import com.davidbracewell.collection.counter.Counter;
+import com.davidbracewell.collection.counter.Counters;
+import com.davidbracewell.guava.common.base.Joiner;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.collect.HashMultimap;
+import com.davidbracewell.guava.common.collect.Sets;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconEntry;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.lexicon.LexiconMatch;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Sets;
 import lombok.NonNull;
 
 import java.util.Arrays;
@@ -105,7 +105,7 @@ public class FuzzyLexiconAnnotator extends ViterbiAnnotator {
 
   private double distance(List<Annotation> span, String[] candidate) {
     //Make sure the span contains at least all of the words in the candidate
-    Counter<String> cCtr = new HashMapCounter<>(Arrays.asList(candidate));
+    Counter<String> cCtr = Counters.newCounter(Arrays.asList(candidate));
     for (Annotation a : span) {
       if (cCtr.contains(a.toString())) {
         cCtr.decrement(a.toString());

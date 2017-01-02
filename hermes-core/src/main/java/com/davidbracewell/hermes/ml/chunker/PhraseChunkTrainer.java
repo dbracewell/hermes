@@ -21,17 +21,12 @@
 
 package com.davidbracewell.hermes.ml.chunker;
 
-import com.davidbracewell.apollo.ml.Dataset;
-import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
-import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
-import com.davidbracewell.apollo.ml.sequence.Sequence;
-import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
-import com.davidbracewell.apollo.ml.sequence.SequenceLabelerLearner;
-import com.davidbracewell.apollo.ml.sequence.TransitionFeatures;
-import com.davidbracewell.apollo.ml.sequence.linear.CRFTrainer;
+import com.davidbracewell.apollo.ml.data.Dataset;
+import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.BIOLabelMaker;
 import com.davidbracewell.hermes.ml.BIOTrainer;
@@ -43,57 +38,64 @@ import com.davidbracewell.hermes.ml.BIOValidator;
  * @author David B. Bracewell
  */
 public class PhraseChunkTrainer extends BIOTrainer {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  /**
-   * Instantiates a new Phrase chunk trainer.
-   */
-  public PhraseChunkTrainer() {
-    super("PhraseChunkTrainer", Types.PHRASE_CHUNK);
-  }
+   /**
+    * Instantiates a new Phrase chunk trainer.
+    */
+   public PhraseChunkTrainer() {
+      super("PhraseChunkTrainer", Types.PHRASE_CHUNK);
+   }
 
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   */
-  public static void main(String[] args) {
-    new PhraseChunkTrainer().run(args);
-  }
+   /**
+    * The entry point of application.
+    *
+    * @param args the input arguments
+    */
+   public static void main(String[] args) {
+      new PhraseChunkTrainer().run(args);
+   }
 
-  @Override
-  protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
-    return Corpus
-      .builder()
-      .source(corpus)
-      .format(corpusFormat)
-      .build()
-      .map(d -> {
-        d.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH,false,null);
-        Pipeline.process(d, Types.PART_OF_SPEECH);
-        return d;
-      })
-      .asSequenceDataSet(new BIOLabelMaker(annotationType), featurizer);
-  }
+   @Override
+   protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
+      return Corpus.builder()
+                   .inMemory()
+                   .source(corpus)
+                   .format(corpusFormat)
+                   .build()
+                   .map(d -> {
+                      d.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, false, null);
+                      Pipeline.process(d, Types.PART_OF_SPEECH);
+                      d.get(Types.PHRASE_CHUNK).forEach(annotation -> {
+                         if (annotation.get(Types.PART_OF_SPEECH).as(POS.class).isInstance(POS.INTJ,
+                                                                                           POS.LST,
+                                                                                           POS.UCP)) {
+                            d.remove(annotation);
+                         }
+                      });
+                      return d;
+                   })
+                   .asSequenceDataSet(new BIOLabelMaker(annotationType), featurizer);
+   }
 
-  @Override
-  protected PreprocessorList<Sequence> getPreprocessors() {
-    return PreprocessorList.create(new CountFilter(d -> d >= 2).asSequenceProcessor());
-  }
+   @Override
+   public void setup() throws Exception {
+      LibraryLoader.INSTANCE.load();
+   }
 
-  @Override
-  protected SequenceFeaturizer<Annotation> getFeaturizer() {
-    return new PhraseChunkFeaturizer();
-  }
+   @Override
+   protected SequenceFeaturizer<Annotation> getFeaturizer() {
+      return new PhraseChunkFeaturizer();
+   }
 
-  @Override
-  protected SequenceLabelerLearner getLearner() {
-    SequenceLabelerLearner learner = new CRFTrainer();
-    learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
-    learner.setValidator(new BIOValidator());
-    learner.setParameter("maxIterations", 200);
-    learner.setParameter("verbose", true);
-    return learner;
-  }
+   @Override
+   protected SequenceLabelerLearner getLearner() {
+      SequenceLabelerLearner learner = new CRFTrainer();
+      learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
+      learner.setValidator(new BIOValidator());
+      learner.setParameter("maxIterations", 200);
+      learner.setParameter("verbose", true);
+      return learner;
+   }
 
 }// END OF PhraseChunkTrainer

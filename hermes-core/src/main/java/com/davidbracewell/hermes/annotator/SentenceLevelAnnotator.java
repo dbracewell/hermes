@@ -21,11 +21,11 @@
 
 package com.davidbracewell.hermes.annotator;
 
+import com.davidbracewell.guava.common.collect.Sets;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
-import com.google.common.collect.Sets;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -43,7 +43,7 @@ public abstract class SentenceLevelAnnotator implements Annotator, Serializable 
 
   @Override
   public final void annotate(Document document) {
-    document.sentences().stream().forEach(this::annotate);
+    document.sentences().forEach(this::annotate);
   }
 
   /**

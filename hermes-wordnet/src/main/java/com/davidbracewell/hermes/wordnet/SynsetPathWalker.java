@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.wordnet;
 
-import com.google.common.collect.Iterables;
+import com.davidbracewell.guava.common.collect.Iterables;
 
 import java.util.HashSet;
 import java.util.Iterator;

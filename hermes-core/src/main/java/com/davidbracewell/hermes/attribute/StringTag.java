@@ -22,8 +22,8 @@
 package com.davidbracewell.hermes.attribute;
 
 import com.davidbracewell.Tag;
+import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Preconditions;
 
 import java.io.Serializable;
 import java.util.Objects;

@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.corpus;
 
-import com.davidbracewell.collection.NormalizedStringMap;
+import com.davidbracewell.collection.map.NormalizedStringMap;
 import com.davidbracewell.hermes.corpus.spi.OnePerLineFormat;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
@@ -30,63 +30,76 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
+ * The type Corpus formats.
+ *
  * @author David B. Bracewell
  */
 public final class CorpusFormats {
-  private static final Map<String, CorpusFormat> formats = new NormalizedStringMap<>();
+   private static final Map<String, CorpusFormat> formats = new NormalizedStringMap<>();
 
 
-  static {
-    for (CorpusFormat df : ServiceLoader.load(CorpusFormat.class)) {
-      formats.put(df.name(), df);
-    }
-  }
+   static {
+      for (CorpusFormat df : ServiceLoader.load(CorpusFormat.class)) {
+         formats.put(df.name(), df);
+      }
+   }
 
-  public static CorpusFormat forName(@NonNull String name) {
-    String format = StringUtils.trim(name).toUpperCase();
-    boolean isOPL = format.endsWith("_OPL");
-    final String normFormat = format.replaceAll("_OPL$", "").trim();
-    if (formats.containsKey(normFormat)) {
-      return isOPL ? new OnePerLineFormat(formats.get(normFormat)) : formats.get(normFormat);
-    }
-    throw new IllegalArgumentException(name + " is an unknown format.");
-  }
+   /**
+    * For name corpus format.
+    *
+    * @param name the name
+    * @return the corpus format
+    */
+   public static CorpusFormat forName(@NonNull String name) {
+      String format = StringUtils.trim(name).toUpperCase();
+      boolean isOPL = format.endsWith("_OPL");
+      final String normFormat = format.replaceAll("_OPL$", "").trim();
+      if (formats.containsKey(normFormat)) {
+         return isOPL ? new OnePerLineFormat(formats.get(normFormat)) : formats.get(normFormat);
+      }
+      throw new IllegalArgumentException(name + " is an unknown format.");
+   }
 
-  /**
-   * JSON format created by using write or toJson from a Document
-   */
-  public static final String JSON = "JSON";
-  /**
-   * XML format created by using write from a Document
-   */
-  public static final String XML = "XML";
-  /**
-   * CONLL tab delimited format
-   */
-  public static final String CONLL = "CONLL";
-  /**
-   * Plain text
-   */
-  public static final String PLAIN_TEXT = "TEXT";
-  /**
-   * One per line JSON format
-   */
-  public static final String JSON_OPL = "JSON_OPL";
-  /**
-   * One per line plain text format
-   */
-  public static final String PLAIN_TEXT_OPL = "TEXT_OPL";
-  /**
-   * CSV Format
-   */
-  public static final String CSV = "CSV";
-  /**
-   * TSV Format
-   */
-  public static final String TSV = "TSV";
+   /**
+    * The constant TWITTER_SEARCH.
+    */
+   public static final String TWITTER_SEARCH = "TWITTER_SEARCH";
 
-  private CorpusFormats() {
-    throw new IllegalAccessError();
-  }
+   /**
+    * JSON format created by using write or toJson from a Document
+    */
+   public static final String JSON = "JSON";
+   /**
+    * XML format created by using write from a Document
+    */
+   public static final String XML = "XML";
+   /**
+    * CONLL tab delimited format
+    */
+   public static final String CONLL = "CONLL";
+   /**
+    * Plain text
+    */
+   public static final String PLAIN_TEXT = "TEXT";
+   /**
+    * One per line JSON format
+    */
+   public static final String JSON_OPL = "JSON_OPL";
+   /**
+    * One per line plain text format
+    */
+   public static final String PLAIN_TEXT_OPL = "TEXT_OPL";
+   /**
+    * CSV Format
+    */
+   public static final String CSV = "CSV";
+   /**
+    * TSV Format
+    */
+   public static final String TSV = "TSV";
+
+   private CorpusFormats() {
+      throw new IllegalAccessError();
+   }
 
 }//END OF DocumentFormats

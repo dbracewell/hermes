@@ -22,85 +22,78 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.collect.HashMultimap;
+import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.io.resource.Resource;
-import com.google.common.base.Throwables;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import lombok.SneakyThrows;
 import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.namefind.TokenNameFinderModel;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+
+import static com.davidbracewell.collection.map.Maps.map;
 
 /**
  * @author David B. Bracewell
  */
 public class OpenNLPEntityAnnotator implements Annotator, Serializable {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  public static final AnnotationType OPENNLP_ENTITY = AnnotationType.create("OPENNLP_ENTITY");
+   public static final AnnotationType OPENNLP_ENTITY = AnnotationType.create("OPENNLP_ENTITY");
 
-  private volatile Multimap<Language, TokenNameFinderModel> models = HashMultimap.create();
+   private volatile Multimap<Language, TokenNameFinderModel> models = HashMultimap.create();
 
-  @Override
-  public void annotate(Document document) {
-    for (Annotation sentence : document.sentences()) {
-      List<Annotation> tokenList = sentence.tokens();
-      String[] tokens = tokenList.stream().map(Object::toString).toArray(String[]::new);
-      for (TokenNameFinderModel model : loadModels(document.getLanguage())) {
-        NameFinderME finder = new NameFinderME(model);
-        opennlp.tools.util.Span[] spans = finder.find(tokens);
-        double[] probs = finder.probs(spans);
-        for (int i = 0; i < spans.length; i++) {
-          opennlp.tools.util.Span span = spans[i];
-          document.createAnnotation(
-              OPENNLP_ENTITY,
-              tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
-          ).putAll(
-            Collect.map(
-              Types.ENTITY_TYPE, EntityType.create(span.getType().toUpperCase()),
-              Types.CONFIDENCE, probs[i]
-            )
-          );
-        }
-      }
-    }
-  }
-
-  private Collection<TokenNameFinderModel> loadModels(Language language) {
-    if (!models.containsKey(language)) {
-      synchronized (OpenNLPEntityAnnotator.class) {
-        if (!models.containsKey(language)) {
-          for (Resource resource : Config.get("opennlp", language, "entity","models").asList(Resource.class)) {
-            try {
-              models.put(language, new TokenNameFinderModel(resource.inputStream()));
-            } catch (IOException e) {
-              throw Throwables.propagate(e);
+   @Override
+   public void annotate(Document document) {
+      Collection<TokenNameFinderModel> models = loadModels(document.getLanguage());
+      for (Annotation sentence : document.sentences()) {
+         List<Annotation> tokenList = sentence.tokens();
+         String[] tokens = tokenList.stream().map(Object::toString).toArray(String[]::new);
+         for (TokenNameFinderModel model : models) {
+            NameFinderME finder = new NameFinderME(model);
+            opennlp.tools.util.Span[] spans = finder.find(tokens);
+            double[] probs = finder.probs(spans);
+            for (int i = 0; i < spans.length; i++) {
+               opennlp.tools.util.Span span = spans[i];
+               document.createAnnotation(OPENNLP_ENTITY,
+                                         tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1)))
+                       .putAll(map(Types.ENTITY_TYPE, EntityType.create(span.getType().toUpperCase()),
+                                   Types.CONFIDENCE, probs[i]));
             }
-          }
-        }
+         }
       }
-    }
-    return models.get(language);
-  }
+   }
 
-  @Override
-  public Set<AnnotatableType> satisfies() {
-    return Collections.singleton(OPENNLP_ENTITY);
-  }
+   @SneakyThrows
+   private Collection<TokenNameFinderModel> loadModels(Language language) {
+      if (!models.containsKey(language)) {
+         synchronized (OpenNLPEntityAnnotator.class) {
+            if (!models.containsKey(language)) {
+               for (Resource resource : Config.get("opennlp", language, "entity", "models").asList(Resource.class)) {
+                  models.put(language, new TokenNameFinderModel(resource.inputStream()));
+               }
+            }
+         }
+      }
+      return Collections.unmodifiableCollection(models.get(language));
+   }
 
-  @Override
-  public Set<AnnotatableType> requires() {
-    return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN));
-  }
+   @Override
+   public Set<AnnotatableType> satisfies() {
+      return Collections.singleton(OPENNLP_ENTITY);
+   }
 
-  @Override
-  public String getVersion() {
-    return "1.6.0";
-  }
+   @Override
+   public Set<AnnotatableType> requires() {
+      return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN));
+   }
+
+   @Override
+   public String getVersion() {
+      return "1.6.0";
+   }
 }//END OF OpenNLPEntityAnnotator

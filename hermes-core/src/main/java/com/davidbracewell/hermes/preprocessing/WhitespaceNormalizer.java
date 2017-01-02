@@ -28,15 +28,15 @@ import com.davidbracewell.string.StringUtils;
  * @author David B. Bracewell
  */
 public class WhitespaceNormalizer extends TextNormalizer {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  @Override
-  public String performNormalization(String input, Language inputLanguage) {
-    String normSpaces = input.replaceAll("\\p{Zs}+", " ");
-    normSpaces = normSpaces.replaceAll("\r(?!\n)", "\n");
-    normSpaces = normSpaces.replaceAll("(?<!(\\p{P}\\p{Z}?))\n", " ");
-    normSpaces = normSpaces.replaceAll("\r?\n(" + StringUtils.MULTIPLE_WHITESPACE + "\r?\n)+", "\n");
-    return StringUtils.trim(normSpaces);
-  }
+   @Override
+   public String performNormalization(String input, Language inputLanguage) {
+      String normSpaces = input.replaceAll("\\p{Zs}+", " ");
+      normSpaces = normSpaces.replaceAll("\r(?!\n)", "\n");
+      normSpaces = normSpaces.replaceAll("(?<!(\\p{P}\\p{Z}?))\n", " ");
+      normSpaces = normSpaces.replaceAll("\r?\n(" + StringUtils.MULTIPLE_WHITESPACE + "\r?\n)+", "\n");
+      return StringUtils.trim(normSpaces);
+   }
 
 }//END OF WhitespacePreprocessor

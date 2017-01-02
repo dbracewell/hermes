@@ -35,60 +35,60 @@ import com.davidbracewell.hermes.HString;
  * @author David B. Bracewell
  */
 public class BIOTagger extends AnnotationTagger {
-  private static final long serialVersionUID = 1L;
-  /**
-   * The Featurizer.
-   */
-  final SequenceFeaturizer<Annotation> featurizer;
-  /**
-   * The Annotation type.
-   */
-  final AnnotationType annotationType;
-  /**
-   * The Labeler.
-   */
-  final SequenceLabeler labeler;
+   private static final long serialVersionUID = 1L;
+   /**
+    * The Featurizer.
+    */
+   final SequenceFeaturizer<Annotation> featurizer;
+   /**
+    * The Annotation type.
+    */
+   final AnnotationType annotationType;
+   /**
+    * The Labeler.
+    */
+   final SequenceLabeler labeler;
 
-  /**
-   * Instantiates a new Bio tagger.
-   *
-   * @param featurizer     the featurizer
-   * @param annotationType the annotation type
-   * @param labeler        the labeler
-   */
-  public BIOTagger(SequenceFeaturizer<Annotation> featurizer, AnnotationType annotationType, SequenceLabeler labeler) {
-    this.featurizer = featurizer;
-    this.annotationType = annotationType;
-    this.labeler = labeler;
-  }
+   /**
+    * Instantiates a new Bio tagger.
+    *
+    * @param featurizer     the featurizer
+    * @param annotationType the annotation type
+    * @param labeler        the labeler
+    */
+   public BIOTagger(SequenceFeaturizer<Annotation> featurizer, AnnotationType annotationType, SequenceLabeler labeler) {
+      this.featurizer = featurizer;
+      this.annotationType = annotationType;
+      this.labeler = labeler;
+   }
 
 
-  /**
-   * Tag labeling result.
-   *
-   * @param sentence the sentence
-   */
-  @Override
-  public void tag(Annotation sentence) {
-    SequenceInput<Annotation> sequenceInput = new SequenceInput<>(sentence.tokens());
-    Labeling result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
-    for (int i = 0; i < sentence.tokenLength(); ) {
-      if (result.getLabel(i).equals("O")) {
-        i++;
-      } else {
-        Annotation start = sentence.tokenAt(i);
-        String type = result.getLabel(i).substring(2);
-        i++;
-        while (i < sentence.tokenLength() && result.getLabel(i).startsWith("I-")) {
-          i++;
-        }
-        Annotation end = sentence.tokenAt(i - 1);
-        HString span = start.union(end);
-        sentence.document()
-          .createAnnotation(annotationType, span)
-          .put(annotationType.getTagAttributeType(), annotationType.getTagAttributeType().getValueType().convert(type));
+   /**
+    * Tag labeling result.
+    *
+    * @param sentence the sentence
+    */
+   @Override
+   public void tag(Annotation sentence) {
+      SequenceInput<Annotation> sequenceInput = new SequenceInput<>(sentence.tokens());
+      Labeling result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
+      for (int i = 0; i < sentence.tokenLength(); ) {
+         if (result.getLabel(i).equals("O")) {
+            i++;
+         } else {
+            Annotation start = sentence.tokenAt(i);
+            String type = result.getLabel(i).substring(2);
+            i++;
+            while (i < sentence.tokenLength() && result.getLabel(i).startsWith("I-")) {
+               i++;
+            }
+            Annotation end = sentence.tokenAt(i - 1);
+            HString span = start.union(end);
+            Annotation entity = sentence.document().createAnnotation(annotationType, span);
+            entity.put(annotationType.getTagAttribute(),
+                       annotationType.getTagAttribute().getValueType().decode(type));
+         }
       }
-    }
-  }
+   }
 
 }// END OF BIOTagger

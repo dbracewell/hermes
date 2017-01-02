@@ -13,14 +13,14 @@ import static org.junit.Assert.*;
  */
 public class TraditionalToSimplifiedTest {
 
-  @Test
-  public void testPerformNormalization() throws Exception {
-    Config.initializeTest();
-    Document document = DocumentFactory.builder()
-      .add(new TraditionalToSimplified())
-      .defaultLanguage(Language.CHINESE)
-      .build()
-      .create("電腦是新的。");
-    assertEquals("电脑是新的。", document.toString());
-  }
+   @Test
+   public void testPerformNormalization() throws Exception {
+      Config.initializeTest();
+      Document document = DocumentFactory.builder()
+                                         .normalizer(new TraditionalToSimplified())
+                                         .defaultLanguage(Language.CHINESE)
+                                         .build()
+                                         .create("電腦是新的。");
+      assertEquals("电脑是新的。", document.toString());
+   }
 }

@@ -21,9 +21,9 @@
 
 package com.davidbracewell.hermes.wordnet;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.base.Strings;
+import com.davidbracewell.guava.common.collect.Maps;
 
 import java.io.Serializable;
 import java.util.Map;

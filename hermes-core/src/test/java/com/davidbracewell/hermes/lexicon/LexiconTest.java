@@ -1,11 +1,17 @@
 package com.davidbracewell.hermes.lexicon;
 
+import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Fragments;
+import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.attribute.Entities;
 import com.davidbracewell.hermes.attribute.StringTag;
 import org.junit.Test;
 
+import java.util.stream.Collectors;
+
+import static com.davidbracewell.collection.list.Lists.list;
 import static org.junit.Assert.*;
 
 /**
@@ -16,12 +22,20 @@ public class LexiconTest {
 
   @Test
   public void test() {
-    Lexicon lexicon = new TrieLexicon(true, true, Types.TAG);
+    Config.initializeTest();
+    TrieLexicon lexicon = new TrieLexicon(true, true, Types.TAG);
     lexicon.add("test"); //Add an entry with no tag and no probability
     lexicon.add("testing", 0.8, new StringTag("TEST"));
     lexicon.add("bark", 0.8);
     lexicon.add("barking", new StringTag("TEST"));
+    lexicon.add("barking skills", new StringTag("TEST"));
 
+
+    Document document = Document.create("The dog was testing his barking skills on the wall.");
+    document.annotate(Types.TOKEN);
+    assertEquals(list("testing", "barking skills"),
+                 lexicon.match(document).stream().map(HString::toString).collect(Collectors.toList())
+                );
 
     //Items in the lexicon
     assertTrue(lexicon.test(Fragments.string("test")));

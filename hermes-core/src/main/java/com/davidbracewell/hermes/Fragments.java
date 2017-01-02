@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.conversion.Val;
-import com.google.common.base.Preconditions;
+import com.davidbracewell.guava.common.base.Preconditions;
 import lombok.NonNull;
 
 import java.util.*;
@@ -37,157 +37,157 @@ import java.util.function.Predicate;
  */
 public final class Fragments {
 
-  private static final HString ORPHANED_EMPTY = new HString(0, 0) {
-    private static final long serialVersionUID = 1L;
+   private static final HString ORPHANED_EMPTY = new HString(0, 0) {
+      private static final long serialVersionUID = 1L;
 
-    @Override
-    public Set<AttributeType> attributes() {
-      return Collections.emptySet();
-    }
-
-    @Override
-    public char charAt(int index) {
-      throw new IndexOutOfBoundsException();
-    }
-
-    @Override
-    public Document document() {
-      return null;
-    }
-
-    @Override
-    public List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter) {
-      return Collections.emptyList();
-    }
-
-    @Override
-    protected Map<AttributeType, Val> getAttributeMap() {
-      return Collections.emptyMap();
-    }
-  };
-
-
-  private Fragments() {
-    throw new IllegalAccessError();
-  }
-
-  /**
-   * Creates a detached annotation, i.e. no document associated with it.
-   *
-   * @param type  the type of annotation
-   * @param start the start of the span
-   * @param end   the end of the span
-   * @return the annotation
-   */
-  public static Annotation detachedAnnotation(AnnotationType type, int start, int end) {
-    return new Annotation(type, start, end);
-  }
-
-  /**
-   * Creates a new HString that has content, but no document associated with it
-   *
-   * @param content the content of the string
-   * @return the new HString
-   */
-  public static HString string(@NonNull String content) {
-    return new HStringImpl(content);
-  }
-
-  /**
-   * Creates a detached empty annotation, i.e. an empty span and no document associated with it.
-   *
-   * @return the annotation
-   */
-  public static Annotation detachedEmptyAnnotation() {
-    return new Annotation();
-  }
-
-  /**
-   * Creates a new HString that does not has no content or document associated with it.
-   *
-   * @return the new HString
-   */
-  public static HString detachedEmptyHString() {
-    return ORPHANED_EMPTY;
-  }
-
-  /**
-   * Creates an empty HString
-   *
-   * @param document the document
-   * @return the new HString (associated with the given document if it is not null)
-   */
-  public static HString empty(Document document) {
-    return new Fragment(document, 0, 0);
-  }
-
-  private static class HStringImpl extends HString {
-    private static final long serialVersionUID = 1L;
-
-    private final String content;
-    private final Map<AttributeType, Val> attributes = new HashMap<>(5);
-
-    private HStringImpl(@NonNull String content) {
-      super(0, content.length());
-      this.content = content;
-    }
-
-    @Override
-    public Set<AttributeType> attributes() {
-      return attributes.keySet();
-    }
-
-    @Override
-    public char charAt(int index) {
-      return content.charAt(index);
-    }
-
-    @Override
-    public Document document() {
-      return null;
-    }
-
-    @Override
-    public int end() {
-      return content.length();
-    }
-
-    @Override
-    public HString find(@NonNull String text, int start) {
-      Preconditions.checkPositionIndex(start, length());
-      int pos = indexOf(text, start);
-      if (pos == -1) {
-        return Fragments.detachedEmptyHString();
+      @Override
+      public Set<AttributeType> attributeTypeSet() {
+         return Collections.emptySet();
       }
-      return new HStringImpl(content.substring(pos, pos + text.length()));
-    }
 
-    @Override
-    protected Map<AttributeType, Val> getAttributeMap() {
-      return attributes;
-    }
+      @Override
+      public char charAt(int index) {
+         throw new IndexOutOfBoundsException();
+      }
 
-    @Override
-    public int start() {
-      return 0;
-    }
+      @Override
+      public Document document() {
+         return null;
+      }
 
-    @Override
-    public HString substring(int relativeStart, int relativeEnd) {
-      return new HStringImpl(content.substring(relativeStart, relativeEnd));
-    }
+      @Override
+      public List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter) {
+         return Collections.emptyList();
+      }
 
-    @Override
-    public List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter) {
-      return Collections.emptyList();
-    }
+      @Override
+      protected Map<AttributeType, Val> getAttributeMap() {
+         return Collections.emptyMap();
+      }
+   };
 
-    @Override
-    public String toString() {
-      return this.content;
-    }
 
-  }
+   private Fragments() {
+      throw new IllegalAccessError();
+   }
+
+   /**
+    * Creates a detached annotation, i.e. no document associated with it.
+    *
+    * @param type  the type of annotation
+    * @param start the start of the span
+    * @param end   the end of the span
+    * @return the annotation
+    */
+   public static Annotation detachedAnnotation(AnnotationType type, int start, int end) {
+      return new Annotation(type, start, end);
+   }
+
+   /**
+    * Creates a new HString that has content, but no document associated with it
+    *
+    * @param content the content of the string
+    * @return the new HString
+    */
+   public static HString string(@NonNull String content) {
+      return new HStringImpl(content);
+   }
+
+   /**
+    * Creates a detached empty annotation, i.e. an empty span and no document associated with it.
+    *
+    * @return the annotation
+    */
+   public static Annotation detachedEmptyAnnotation() {
+      return new Annotation();
+   }
+
+   /**
+    * Creates a new HString that does not has no content or document associated with it.
+    *
+    * @return the new HString
+    */
+   public static HString detachedEmptyHString() {
+      return ORPHANED_EMPTY;
+   }
+
+   /**
+    * Creates an empty HString
+    *
+    * @param document the document
+    * @return the new HString (associated with the given document if it is not null)
+    */
+   public static HString empty(Document document) {
+      return new Fragment(document, 0, 0);
+   }
+
+   private static class HStringImpl extends HString {
+      private static final long serialVersionUID = 1L;
+
+      private final String content;
+      private final Map<AttributeType, Val> attributes = new HashMap<>(5);
+
+      private HStringImpl(@NonNull String content) {
+         super(0, content.length());
+         this.content = content;
+      }
+
+      @Override
+      public Set<AttributeType> attributeTypeSet() {
+         return attributes.keySet();
+      }
+
+      @Override
+      public char charAt(int index) {
+         return content.charAt(index);
+      }
+
+      @Override
+      public Document document() {
+         return null;
+      }
+
+      @Override
+      public int end() {
+         return content.length();
+      }
+
+      @Override
+      public HString find(@NonNull String text, int start) {
+         Preconditions.checkPositionIndex(start, length());
+         int pos = indexOf(text, start);
+         if (pos == -1) {
+            return Fragments.detachedEmptyHString();
+         }
+         return new HStringImpl(content.substring(pos, pos + text.length()));
+      }
+
+      @Override
+      protected Map<AttributeType, Val> getAttributeMap() {
+         return attributes;
+      }
+
+      @Override
+      public int start() {
+         return 0;
+      }
+
+      @Override
+      public HString substring(int relativeStart, int relativeEnd) {
+         return new HStringImpl(content.substring(relativeStart, relativeEnd));
+      }
+
+      @Override
+      public List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter) {
+         return Collections.emptyList();
+      }
+
+      @Override
+      public String toString() {
+         return this.content;
+      }
+
+   }
 
 
 }//END OF Fragments

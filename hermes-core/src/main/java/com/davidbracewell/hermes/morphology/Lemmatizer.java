@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.morphology;
 
 
-import com.davidbracewell.collection.trie.PatriciaTrie;
+import com.davidbracewell.collection.Trie;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.attribute.POS;
@@ -75,7 +75,7 @@ public interface Lemmatizer {
    * @param partOfSpeech the part of speech
    * @return the prefixed lemmas
    */
-  PatriciaTrie<String> allPossibleLemmasAndPrefixes(String string, POS partOfSpeech);
+  Trie<String> allPossibleLemmasAndPrefixes(String string, POS partOfSpeech);
 
   boolean canLemmatize(String input, POS partOfSpeech);
 
@@ -94,8 +94,8 @@ public interface Lemmatizer {
       return lemmatize(fragment.toString(), pos);
     }
     return fragment.tokens().stream()
-      .map(this::lemmatize)
-      .collect(Collectors.joining(fragment.getLanguage().usesWhitespace() ? " " : ""));
+                   .map(this::lemmatize)
+                   .collect(Collectors.joining(fragment.getLanguage().usesWhitespace() ? " " : ""));
   }
 
 

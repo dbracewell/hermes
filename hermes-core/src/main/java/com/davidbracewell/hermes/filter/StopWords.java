@@ -25,10 +25,10 @@ import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.guava.common.collect.Maps;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
-import com.google.common.collect.Maps;
 
 import java.io.Serializable;
 import java.util.Map;

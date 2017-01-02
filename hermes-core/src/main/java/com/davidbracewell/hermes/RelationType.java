@@ -23,79 +23,74 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
-import com.davidbracewell.string.StringUtils;
+import com.davidbracewell.guava.common.collect.Sets;
+import lombok.NonNull;
 
-import java.io.ObjectStreamException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 
 /**
+ * <p>Dynamic enumeration of known types of relations that can exist between annotations. Relations represent edges
+ * between two annotations. Examples include syntactic (dependency parse) and semantic (semantic roles) relations.</p>
+ *
  * @author David B. Bracewell
  */
-public final class RelationType extends EnumValue implements AnnotatableType {
+public final class RelationType extends EnumValue implements AnnotatableType, Comparable<RelationType> {
+   /**
+    * The constant CANONICAL_NAME.
+    */
+   public static final String CANONICAL_NAME = RelationType.class.getCanonicalName();
+   private static final long serialVersionUID = 1L;
+   private static final String typeName = "Relation";
+   private static final Set<RelationType> values = Sets.newConcurrentHashSet();
 
-  private static final DynamicEnum<RelationType> index = new DynamicEnum<>();
-  private static final long serialVersionUID = 1L;
-  private static final String typeName = "Relation";
+   private RelationType(String name) {
+      super(CANONICAL_NAME, name);
+   }
 
+   /**
+    * <p>Creates a new or retrieves an existing instance of RelationType with the given name.</p>
+    *
+    * @param name the name
+    * @return The instance of RelationType corresponding th the give name.
+    */
+   public static RelationType create(@NonNull String name) {
+      RelationType toReturn = DynamicEnum.register(new RelationType(name));
+      values.add(toReturn);
+      return toReturn;
+   }
 
-  private RelationType(String name) {
-    super(name);
-  }
+   /**
+    * <p>Retrieves all currently known values of RelationType.</p>
+    *
+    * @return An unmodifiable collection of currently known values for RelationType.
+    */
+   public static Collection<RelationType> values() {
+      return Collections.unmodifiableSet(values);
+   }
 
-  /**
-   * Creates a new RelationType Type or retrieves an already existing one for a given name
-   *
-   * @param name the name
-   * @return the RelationType type
-   */
-  public static RelationType create(String name) {
-    if (StringUtils.isNullOrBlank(name)) {
-      throw new IllegalArgumentException(name + " is invalid");
-    }
-    return index.register(new RelationType(Types.toName(typeName, name)));
-  }
+   /**
+    * <p>Returns the constant of RelationType with the specified name.The normalized version of the specified name will
+    * be matched allowing for case and space variations.</p>
+    *
+    * @param name the name
+    * @return The constant of RelationType with the specified name
+    * @throws IllegalArgumentException if the specified name is not a member of RelationType.
+    */
+   public static RelationType valueOf(@NonNull String name) {
+      return DynamicEnum.valueOf(RelationType.class, name);
+   }
 
-  /**
-   * Determine if an RelationType exists for the given name
-   *
-   * @param name the name
-   * @return True if it exists, otherwise False
-   */
-  public static boolean isDefined(String name) {
-    return index.isDefined(Types.toName(typeName, name));
-  }
+   @Override
+   public int compareTo(@NonNull RelationType o) {
+      return this.canonicalName().compareTo(o.canonicalName());
+   }
 
-  /**
-   * Gets the RelationType from its name. Throws an <code>IllegalArgumentException</code> if the name is not valid.
-   *
-   * @param name the name as a string
-   * @return the RelationType for the string
-   */
-  public static RelationType valueOf(String name) {
-    return index.valueOf(Types.toName(typeName, name));
-  }
-
-  /**
-   * Returns the values for this dynamic enum
-   *
-   * @return All known RelationType
-   */
-  public static Collection<RelationType> values() {
-    return index.values();
-  }
-
-  @Override
-  public String type() {
-    return typeName;
-  }
-
-  private Object readResolve() throws ObjectStreamException {
-    if (isDefined(name())) {
-      return index.valueOf(name());
-    }
-    Object o = index.register(this);
-    return o;
-  }
+   @Override
+   public String type() {
+      return typeName;
+   }
 
 
 }//END OF RelationType

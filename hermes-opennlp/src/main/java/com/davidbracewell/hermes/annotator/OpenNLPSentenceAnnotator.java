@@ -22,17 +22,16 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.collection.Collect;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Stopwatch;
+import com.davidbracewell.guava.common.base.Throwables;
+import com.davidbracewell.guava.common.collect.Maps;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Stopwatch;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Maps;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.util.Span;
@@ -42,6 +41,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+
+import static com.davidbracewell.collection.map.Maps.map;
+
 
 /**
  * @author David B. Bracewell
@@ -82,7 +84,7 @@ public class OpenNLPSentenceAnnotator implements Annotator {
       while ((pos = findEOS(sentenceFragment)) != sentenceFragment.end()) {
         //There is a disagreement between what that tokenizer thinks is an aberviation or non-end of sentence
         //period and what the sentence segmenter says. Err on the side of the tokenizer.
-        document.createAnnotation(Types.SENTENCE, start, pos, Collect.map(Types.INDEX, index));
+        document.createAnnotation(Types.SENTENCE, start, pos, map(Types.INDEX, index));
         index++;
 
         start = pos;
@@ -92,7 +94,11 @@ public class OpenNLPSentenceAnnotator implements Annotator {
         sentenceFragment = document.substring(start, end);
       }
 
-      document.createAnnotation(Types.SENTENCE, sentenceFragment.start(), sentenceFragment.end(), Collect.map(Types.INDEX, index));
+      document.createAnnotation(Types.SENTENCE,
+                                sentenceFragment.start(),
+                                sentenceFragment.end(),
+                                map(Types.INDEX, index)
+      );
       index++;
     }
   }
@@ -124,7 +130,7 @@ public class OpenNLPSentenceAnnotator implements Annotator {
           sw.stop();
           if (log.isLoggable(Level.FINE)) {
             log.fine("Loaded sentence model [{0}] for {1} in {2}.",
-              Config.get(OpenNLPSentenceAnnotator.class, language, "model").asString(), language, sw
+                     Config.get(OpenNLPSentenceAnnotator.class, language, "model").asString(), language, sw
             );
           }
           sentenceDetectors.put(language, model);

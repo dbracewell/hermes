@@ -1,4 +1,3 @@
-
 /*
  * (c) 2005 David B. Bracewell
  *
@@ -22,96 +21,222 @@
 
 package com.davidbracewell.hermes.ml;
 
-import com.davidbracewell.apollo.ml.Dataset;
+import com.davidbracewell.apollo.ml.TrainTestSet;
+import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
-import com.davidbracewell.apollo.ml.preprocess.filter.CountFilter;
+import com.davidbracewell.apollo.ml.preprocess.filter.MinCountFilter;
 import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
+import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.corpus.Corpus;
+import com.davidbracewell.hermes.corpus.CorpusType;
 import com.davidbracewell.io.resource.Resource;
 
+import java.util.Collections;
+import java.util.Random;
+import java.util.Set;
+
 /**
+ * The type Bio trainer.
+ *
  * @author David B. Bracewell
  */
 public abstract class BIOTrainer extends CommandLineApplication {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  protected final AnnotationType annotationType;
-  @Option(description = "Location of the corpus to process", required = true)
-  protected Resource corpus;
-  @Option(name = "format", description = "Format of the corpus", required = true)
-  protected String corpusFormat;
-  @Option(description = "Location to save model", required = true)
-  protected Resource model;
-  @Option(description = "Minimum count for a feature to be kept", defaultValue = "5")
-  protected int minFeatureCount;
-  @Option(description = "TEST or TRAIN", defaultValue = "TEST")
-  protected Mode mode;
+   /**
+    * The Annotation type.
+    */
+   protected final AnnotationType annotationType;
+   /**
+    * The Corpus.
+    */
+   @Option(description = "Location of the corpus to process", required = true)
+   protected Resource corpus;
+   /**
+    * The Corpus format.
+    */
+   @Option(name = "format", description = "Format of the corpus", required = true)
+   protected String corpusFormat;
+   /**
+    * The Model.
+    */
+   @Option(description = "Location to save model", required = true)
+   protected Resource model;
+   /**
+    * The Min feature count.
+    */
+   @Option(description = "Minimum count for a feature to be kept", defaultValue = "5")
+   protected int minFeatureCount;
+   /**
+    * The Mode.
+    */
+   @Option(description = "TEST or TRAIN", defaultValue = "TEST")
+   protected Mode mode;
 
-  public BIOTrainer(String name, AnnotationType annotationType) {
-    super(name);
-    this.annotationType = annotationType;
-  }
+   @Option(description = "Type of corpus", defaultValue = "IN_MEMORY")
+   protected CorpusType corpusType;
 
-  protected SequenceValidator getValidator() {
-    return new BIOValidator();
-  }
+   @Option(name = "annotation", description = "The annotation type in the corpus to train with", aliases = "a")
+   protected AnnotationType trainingAnnotation;
 
-  protected abstract SequenceFeaturizer<Annotation> getFeaturizer();
+   /**
+    * Instantiates a new Bio trainer.
+    *
+    * @param name           the name
+    * @param annotationType the annotation type
+    */
+   public BIOTrainer(String name, AnnotationType annotationType) {
+      super(name);
+      this.annotationType = annotationType;
+      if (this.trainingAnnotation == null) {
+         this.trainingAnnotation = annotationType;
+      }
+   }
 
-  protected PreprocessorList<Sequence> getPreprocessors() {
-    if (minFeatureCount > 1) {
-      return PreprocessorList.create(
-        new CountFilter(d -> d >= minFeatureCount).asSequenceProcessor()
-      );
-    }
-    return PreprocessorList.create();
-  }
+   /**
+    * Gets validator.
+    *
+    * @return the validator
+    */
+   protected SequenceValidator getValidator() {
+      return new BIOValidator();
+   }
 
-  protected abstract SequenceLabelerLearner getLearner();
+   /**
+    * Gets featurizer.
+    *
+    * @return the featurizer
+    */
+   protected abstract SequenceFeaturizer<Annotation> getFeaturizer();
 
-  protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
-    return Corpus
-      .builder()
-      .source(corpus)
-      .format(corpusFormat)
-      .build()
-      .asSequenceDataSet(new BIOLabelMaker(annotationType), featurizer);
-  }
+   /**
+    * Gets preprocessors.
+    *
+    * @return the preprocessors
+    */
+   protected PreprocessorList<Sequence> getPreprocessors() {
+      if (minFeatureCount > 1) {
+         return PreprocessorList.create(new MinCountFilter(minFeatureCount).asSequenceProcessor());
+      }
+      return PreprocessorList.empty();
+   }
 
-  protected void test() throws Exception {
-    BIOTagger tagger = BIOTagger.read(model);
-    Dataset<Sequence> test = getDataset(tagger.featurizer);
-    BIOEvaluation eval = new BIOEvaluation();
-    eval.evaluate(tagger.labeler, test);
-    eval.output(System.out);
-  }
+   /**
+    * Gets learner.
+    *
+    * @return the learner
+    */
+   protected abstract SequenceLabelerLearner getLearner();
 
-  protected void train() throws Exception {
-    final SequenceFeaturizer<Annotation> featurizer = getFeaturizer();
-    Dataset<Sequence> train = getDataset(featurizer);
-    PreprocessorList<Sequence> preprocessors = getPreprocessors();
-    if (preprocessors != null && preprocessors.size() > 0) {
-      train = train.preprocess(preprocessors);
-    }
-    train.encode();
-    SequenceLabelerLearner learner = getLearner();
-    learner.setValidator(getValidator());
-    SequenceLabeler labeler = learner.train(train);
-    BIOTagger tagger = new BIOTagger(featurizer, annotationType, labeler);
-    tagger.write(model);
-  }
+   protected Set<String> validTags() {
+      return Collections.emptySet();
+   }
 
-  @Override
-  protected void programLogic() throws Exception {
-    if (mode == Mode.TEST) {
-      test();
-    } else {
-      train();
-    }
-  }
+   /**
+    * Gets dataset.
+    *
+    * @param featurizer the featurizer
+    * @return the dataset
+    */
+   protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
+      return Corpus
+                .builder()
+                .corpusType(corpusType)
+                .source(corpus)
+                .format(corpusFormat)
+                .build()
+                .asSequenceDataSet(new BIOLabelMaker(trainingAnnotation, validTags()), featurizer);
+   }
+
+   /**
+    * Test.
+    *
+    * @throws Exception the exception
+    */
+   protected void test() throws Exception {
+      BIOTagger tagger = BIOTagger.read(model);
+      Dataset<Sequence> test = getDataset(tagger.featurizer);
+      BIOEvaluation eval = new BIOEvaluation();
+      eval.evaluate(tagger.labeler, test);
+      eval.output(System.out);
+   }
+
+
+   protected void label() throws Exception {
+      BIOTagger tagger = BIOTagger.read(model);
+      Dataset<Sequence> test = getDataset(tagger.featurizer);
+      String fname = Config.get("wordFeature").asString("Word[0]=");
+      test.forEach(seq -> {
+         Labeling labeling = tagger.labeler.label(seq);
+         for (int i = 0; i < labeling.size(); i++) {
+            String word = seq.get(i).getFeatureSpace().filter(s -> s.startsWith(fname)).findFirst().map(
+               s -> s.substring(fname.length())).orElse("?");
+            System.out.print(word + "/" + labeling.getLabel(i) + " ");
+         }
+         System.out.println();
+      });
+   }
+
+   /**
+    * Train.
+    *
+    * @throws Exception the exception
+    */
+   protected void train() throws Exception {
+      final SequenceFeaturizer<Annotation> featurizer = getFeaturizer();
+      Dataset<Sequence> train = getDataset(featurizer);
+      PreprocessorList<Sequence> preprocessors = getPreprocessors();
+      if (preprocessors != null && preprocessors.size() > 0) {
+         train = train.preprocess(preprocessors);
+      }
+      train.encode();
+      SequenceLabelerLearner learner = getLearner();
+      learner.setValidator(getValidator());
+      SequenceLabeler labeler = learner.train(train);
+      BIOTagger tagger = new BIOTagger(featurizer, annotationType, labeler);
+      tagger.write(model);
+   }
+
+   protected void split() throws Exception {
+      final SequenceFeaturizer<Annotation> featurizer = getFeaturizer();
+      Dataset<Sequence> all = getDataset(featurizer);
+      all = all.shuffle(new Random(56789));
+      TrainTestSet<Sequence> trainTest = all.split(0.80);
+      trainTest.forEach(tt -> {
+         PreprocessorList<Sequence> preprocessors = getPreprocessors();
+         if (preprocessors != null && preprocessors.size() > 0) {
+            Dataset<Sequence> train = tt.getTrain().preprocess(preprocessors);
+            SequenceLabelerLearner learner = getLearner();
+            learner.setValidator(getValidator());
+            SequenceLabeler labeler = learner.train(train);
+            BIOTagger tagger = new BIOTagger(featurizer, annotationType, labeler);
+            BIOEvaluation eval = new BIOEvaluation();
+            eval.evaluate(tagger.labeler, tt.getTest());
+            eval.output(System.out);
+         }
+      });
+   }
+
+   @Override
+   protected void programLogic() throws Exception {
+      switch (mode) {
+         case TEST:
+            test();
+            break;
+         case TRAIN:
+            train();
+            break;
+         case SPLIT:
+            split();
+            break;
+         case LABEL:
+            label();
+            break;
+      }
+   }
 
 }// END OF BIOTrainer

@@ -23,9 +23,9 @@ package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.collect.Maps;
 import com.davidbracewell.hermes.HString;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 
 import java.util.concurrent.ConcurrentMap;
 

@@ -1,9 +1,9 @@
 package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Throwables;
+import com.davidbracewell.io.CSVReader;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.io.structured.csv.CSVReader;
-import com.google.common.base.Throwables;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,6 +29,7 @@ public abstract class DSVCorpus extends ColumnBasedFormat {
     super(configProperty);
     this.delimiter = delimiter;
   }
+
 
   @Override
   final Iterable<List<String>> rows(Resource resource) {

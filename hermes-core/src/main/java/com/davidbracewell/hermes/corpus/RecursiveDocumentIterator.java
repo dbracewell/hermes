@@ -37,54 +37,56 @@ import java.util.function.BiFunction;
  * @author David B. Bracewell
  */
 public class RecursiveDocumentIterator implements Iterator<Document> {
-  private final Iterator<Resource> resourceIterator;
-  private final DocumentFactory documentFactory;
-  private Iterator<Document> iterator;
-  private final BiFunction<Resource, DocumentFactory, Iterable<Document>> resourceReader;
+   private final Iterator<Resource> resourceIterator;
+   private final DocumentFactory documentFactory;
+   private Iterator<Document> iterator;
+   private final BiFunction<Resource, DocumentFactory, Iterable<Document>> resourceReader;
 
-  /**
-   * Instantiates a new Recursive document iterator.
-   *
-   * @param resource        the resource
-   * @param documentFactory the document factory
-   * @param resourceReader  the resource reader
-   */
-  public RecursiveDocumentIterator(@NonNull Resource resource, @NonNull DocumentFactory documentFactory, @NonNull BiFunction<Resource, DocumentFactory, Iterable<Document>> resourceReader) {
-    this.documentFactory = documentFactory;
-    this.resourceReader = resourceReader;
-    this.resourceIterator = resource.isDirectory() ? resource.childIterator(true) : Collections.singleton(resource).iterator();
-  }
+   /**
+    * Instantiates a new Recursive document iterator.
+    *
+    * @param resource        the resource
+    * @param documentFactory the document factory
+    * @param resourceReader  the resource reader
+    */
+   public RecursiveDocumentIterator(@NonNull Resource resource, @NonNull DocumentFactory documentFactory, @NonNull BiFunction<Resource, DocumentFactory, Iterable<Document>> resourceReader) {
+      this.documentFactory = documentFactory;
+      this.resourceReader = resourceReader;
+      this.resourceIterator = resource.isDirectory() ? resource.childIterator(true) : Collections.singleton(resource)
+                                                                                                 .iterator();
+   }
 
-  private boolean isNullOrEmpty() {
-    return iterator == null || !iterator.hasNext();
-  }
+   private boolean isNullOrEmpty() {
+      return iterator == null || !iterator.hasNext();
+   }
 
-  boolean advance() {
-    if (isNullOrEmpty()) {
-      while (resourceIterator.hasNext() && isNullOrEmpty()) {
-        Resource r = resourceIterator.next();
-        if (!r.isDirectory()) {
-          if (r.asFile().map(f -> !f.isHidden()).orElse(true)) {
-            iterator = resourceReader.apply(r, documentFactory).iterator();
-          }
-        }
+   boolean advance() {
+      if (isNullOrEmpty()) {
+         while (resourceIterator.hasNext() && isNullOrEmpty()) {
+            Resource r = resourceIterator.next();
+            if (!r.isDirectory()) {
+               if (r.asFile().map(f -> !f.isHidden()).orElse(true)) {
+                  iterator = resourceReader.apply(r, documentFactory).iterator();
+               }
+            }
+         }
       }
-    }
-    return !isNullOrEmpty();
-  }
+      return !isNullOrEmpty();
+   }
 
-  @Override
-  public boolean hasNext() {
-    return advance();
-  }
+   @Override
+   public boolean hasNext() {
+      return advance();
+   }
 
-  @Override
-  public Document next() {
-    if (!advance()) {
-      throw new NoSuchElementException();
-    }
-    return iterator.next();
-  }
+
+   @Override
+   public Document next() {
+      if (!advance()) {
+         throw new NoSuchElementException();
+      }
+      return iterator.next();
+   }
 
 
 }//END OF DocumentIterator

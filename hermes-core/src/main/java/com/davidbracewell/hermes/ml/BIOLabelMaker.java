@@ -21,33 +21,50 @@
 
 package com.davidbracewell.hermes.ml;
 
+import com.davidbracewell.Tag;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author David B. Bracewell
  */
 public class BIOLabelMaker implements SerializableFunction<Annotation, String> {
-  private static final long serialVersionUID = 1L;
-  private final AnnotationType annotationType;
+   private static final long serialVersionUID = 1L;
+   private final AnnotationType annotationType;
+   private final Set<String> validTags;
 
-  public BIOLabelMaker(@NonNull AnnotationType annotationType) {
-    this.annotationType = annotationType;
-  }
+   public BIOLabelMaker(@NonNull AnnotationType annotationType) {
+      this.annotationType = annotationType;
+      this.validTags = Collections.emptySet();
+   }
 
-  @Override
-  public String apply(Annotation annotation) {
-    Optional<Annotation> target = annotation.get(annotationType).stream().findFirst();
-    if (target.isPresent()) {
-      if (target.get().start() == annotation.start()) {
-        return "B-" + target.get().getTag().get().name();
-      }
-      return "I-" + target.get().getTag().get().name();
-    }
-    return "O";
-  }
+   public BIOLabelMaker(@NonNull AnnotationType annotationType, Set<String> validTags) {
+      this.annotationType = annotationType;
+      this.validTags = validTags;
+   }
+
+   @Override
+   public String apply(Annotation annotation) {
+      Optional<Annotation> target = annotation.get(annotationType).stream().findFirst();
+      return target.map(a -> {
+         String tag = a.getTag().map(Tag::name).orElse(StringUtils.EMPTY);
+         if (StringUtils.isNotNullOrBlank(tag) && (validTags.isEmpty() || validTags.contains(tag))) {
+            if (a.start() == annotation.start()) {
+               return "B-" + a.getTag().map(Tag::name).orElse(StringUtils.EMPTY);
+            } else {
+               return "I-" + a.getTag().map(Tag::name).orElse(StringUtils.EMPTY);
+            }
+         } else {
+            return "O";
+         }
+      }).orElse("O");
+   }
+
 }//END OF BIOLabelMaker

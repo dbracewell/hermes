@@ -27,14 +27,14 @@
     <parent>
         <groupId>com.davidbracewell</groupId>
         <artifactId>hermes</artifactId>
-        <version>0.3</version>
+        <version>0.4</version>
         <relativePath>..</relativePath>
     </parent>
     <dependencies>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.11</artifactId>
-            <version>1.6.1</version>
+            <version>2.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -45,36 +45,47 @@
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>mango-annotations</artifactId>
-            <version>0.2</version>
+            <version>0.3</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.davidbracewell</groupId>
+            <artifactId>atlas</artifactId>
+            <version>0.3</version>
         </dependency>
         <dependency>
             <groupId>org.maltparser</groupId>
             <artifactId>maltparser</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>de.bwaldvogel</groupId>
+                    <artifactId>liblinear</artifactId>
+                </exclusion>
+            </exclusions>
             <version>1.9.0</version>
         </dependency>
     </dependencies>
     <build>
         <plugins>
-                <plugin>
-                    <groupId>org.jacoco</groupId>
-                    <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.7.1.201405082137</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>prepare-agent</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>report</id>
-                            <phase>prepare-package</phase>
-                            <goals>
-                                <goal>report</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.7.1.201405082137</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>de.jflex</groupId>
                 <artifactId>jflex-maven-plugin</artifactId>

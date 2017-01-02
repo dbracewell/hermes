@@ -41,31 +41,34 @@ public class LexiconExample {
     //Load the config that defines the lexicon and annotator
     Config.loadConfig(Resources.fromClasspath("com/davidbracewell/hermes/example.conf"));
     Corpus.builder()
-      .format(CorpusFormats.PLAIN_TEXT_OPL)
-      .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
-      .build()
-      .annotate(Types.TOKEN, Types.SENTENCE, Types.ENTITY)
-      .forEach(document -> document.get(Types.ENTITY).forEach(entity -> System.out.println(entity + "/" + entity.getTag().get())));
+          .format(CorpusFormats.PLAIN_TEXT_OPL)
+          .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
+          .build()
+          .annotate(Types.TOKEN, Types.SENTENCE, Types.ENTITY)
+          .forEach(document -> document.get(Types.ENTITY)
+                                       .forEach(entity -> System.out.println(entity + "/" + entity.getTag().get())));
     System.out.println();
 
     //Alternatively we can do everything in code if we are not working in a distributed environment
     Lexicon lexicon = LexiconSpec.builder()
-      .caseSensitive(false)
-      .hasConstraints(false)
-      .probabilistic(false)
-      .tagAttribute(Types.ENTITY_TYPE)
-      .resource(Resources.fromClasspath("com/davidbracewell/hermes/people.dict"))
-      .build().create();
+                                 .caseSensitive(false)
+                                 .hasConstraints(false)
+                                 .probabilistic(false)
+                                 .tagAttribute(Types.ENTITY_TYPE)
+                                 .resource(Resources.fromClasspath("com/davidbracewell/hermes/people.dict"))
+                                 .build().create();
 
     //Register a lexicon annotator using the lexicon we created above to provide ENTITY annotations
     Pipeline.setAnnotator(Types.ENTITY, Language.ENGLISH, new LexiconAnnotator(Types.ENTITY, lexicon));
 
     Corpus.builder()
-      .format(CorpusFormats.PLAIN_TEXT_OPL)
-      .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
-      .build()
-      .annotate(Types.TOKEN, Types.SENTENCE, Types.ENTITY)
-      .forEach(document -> document.get(Types.ENTITY).forEach(entity -> System.out.println(entity + "/" + entity.getTag().get())));
+          .format(CorpusFormats.PLAIN_TEXT_OPL)
+          .source(Resources.fromClasspath("com/davidbracewell/hermes/example_docs.txt"))
+          .build()
+          .annotate(Types.TOKEN, Types.SENTENCE, Types.ENTITY)
+          .forEach(document -> document.get(Types.ENTITY)
+                                       .forEach(entity -> System.out.println(entity + "/" + entity.getTag().get()))
+                  );
 
 
   }

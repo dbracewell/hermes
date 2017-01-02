@@ -37,137 +37,152 @@ import java.util.List;
  */
 public class CorpusBuilder {
 
-  private boolean isDistributed = false;
-  private int partitions = -1;
-  private boolean isInMemory = false;
-  private Resource resource = null;
-  private List<Document> documents = new LinkedList<>();
-  private DocumentFactory documentFactory = DocumentFactory.getInstance();
-  private CorpusFormat corpusFormat = CorpusFormats.forName(CorpusFormats.JSON_OPL);
+   private boolean isDistributed = false;
+   private int partitions = -1;
+   private boolean isInMemory = false;
+   private Resource resource = null;
+   private List<Document> documents = new LinkedList<>();
+   private DocumentFactory documentFactory = DocumentFactory.getInstance();
+   private CorpusFormat corpusFormat = CorpusFormats.forName(CorpusFormats.JSON_OPL);
 
-  public CorpusBuilder distributed(boolean isDistributed) {
-    if (isDistributed) {
-      return distributed();
-    }
-    return offHeap();
-  }
-
-  public CorpusBuilder inMemory() {
-    this.isDistributed = false;
-    this.isInMemory = true;
-    return this;
-  }
-
-  public CorpusBuilder offHeap() {
-    this.isDistributed = false;
-    this.isInMemory = false;
-    return this;
-  }
-
-  public CorpusBuilder distributed() {
-    this.isDistributed = true;
-    this.isInMemory = false;
-    return this;
-  }
-
-  public CorpusBuilder distributed(int numPartitions) {
-    this.partitions = numPartitions;
-    this.isDistributed = true;
-    this.isInMemory = false;
-    return this;
-  }
-
-  public CorpusBuilder format(@NonNull String format) {
-    this.corpusFormat = CorpusFormats.forName(format);
-    return this;
-  }
-
-  public CorpusBuilder format(@NonNull CorpusFormat format) {
-    this.corpusFormat = format;
-    return this;
-  }
-
-  public CorpusBuilder add(@NonNull Document document) {
-    documents.add(document);
-    return this;
-  }
-
-  public CorpusBuilder addAll(@NonNull Collection<Document> documentCollection) {
-    documents.addAll(documentCollection);
-    return this;
-  }
-
-  public CorpusBuilder source(@NonNull Resource resource) {
-    this.resource = resource;
-    return this;
-  }
-
-  public CorpusBuilder source(@NonNull String format, @NonNull Resource resource) {
-    this.resource = resource;
-    return format(format);
-  }
-
-  public CorpusBuilder from(@NonNull String format, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
-    this.resource = resource;
-    this.documentFactory = documentFactory;
-    return format(format);
-  }
-
-  public CorpusBuilder from(@NonNull CorpusFormat format, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
-    this.resource = resource;
-    this.documentFactory = documentFactory;
-    return format(format);
-  }
-
-  public Corpus build() {
-
-    if (resource != null &&
-      (resource instanceof StringResource)
-      ) {
-      isInMemory = true;
-    }
-
-    if (isInMemory) {
-      List<Document> dList = new LinkedList<>(documents);
-      if (resource != null) {
-        dList.addAll(new FileCorpus(corpusFormat, resource, documentFactory).stream().collect());
+   public CorpusBuilder distributed(boolean isDistributed) {
+      if (isDistributed) {
+         return distributed();
       }
-      return new InMemoryCorpus(dList);
-    }
+      return offHeap();
+   }
 
-    if (isDistributed) {
-      Corpus corpus = null;
-      if (resource != null) {
-        corpus = new SparkCorpus(resource.descriptor(), corpusFormat, documentFactory);
-        if (partitions > 0) {
-          Cast.<SparkCorpus>as(corpus).repartition(partitions);
-        }
+   public CorpusBuilder corpusType(@NonNull CorpusType type) {
+      switch (type) {
+         case IN_MEMORY:
+            inMemory();
+            break;
+         case OFF_HEAP:
+            offHeap();
+            break;
+         case DISTRIBUTED:
+            distributed();
+            break;
+         default:
+            throw new IllegalArgumentException("Cannot create corpus of type " + type);
+      }
+      return this;
+   }
+
+   public CorpusBuilder inMemory() {
+      this.isDistributed = false;
+      this.isInMemory = true;
+      return this;
+   }
+
+   public CorpusBuilder offHeap() {
+      this.isDistributed = false;
+      this.isInMemory = false;
+      return this;
+   }
+
+   public CorpusBuilder distributed() {
+      this.isDistributed = true;
+      this.isInMemory = false;
+      return this;
+   }
+
+   public CorpusBuilder distributed(int numPartitions) {
+      this.partitions = numPartitions;
+      this.isDistributed = true;
+      this.isInMemory = false;
+      return this;
+   }
+
+   public CorpusBuilder format(@NonNull String format) {
+      this.corpusFormat = CorpusFormats.forName(format);
+      return this;
+   }
+
+   public CorpusBuilder format(@NonNull CorpusFormat format) {
+      this.corpusFormat = format;
+      return this;
+   }
+
+   public CorpusBuilder add(@NonNull Document document) {
+      documents.add(document);
+      return this;
+   }
+
+   public CorpusBuilder addAll(@NonNull Collection<Document> documentCollection) {
+      documents.addAll(documentCollection);
+      return this;
+   }
+
+   public CorpusBuilder source(@NonNull Resource resource) {
+      this.resource = resource;
+      return this;
+   }
+
+   public CorpusBuilder source(@NonNull String format, @NonNull Resource resource) {
+      this.resource = resource;
+      return format(format);
+   }
+
+   public CorpusBuilder from(@NonNull String format, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
+      this.resource = resource;
+      this.documentFactory = documentFactory;
+      return format(format);
+   }
+
+   public CorpusBuilder from(@NonNull CorpusFormat format, @NonNull Resource resource, @NonNull DocumentFactory documentFactory) {
+      this.resource = resource;
+      this.documentFactory = documentFactory;
+      return format(format);
+   }
+
+   public Corpus build() {
+
+      if (resource != null && (resource instanceof StringResource)) {
+         isInMemory = true;
       }
 
-      if (corpus == null) {
-        corpus = new SparkCorpus(documents);
-        if (partitions > 0) {
-          Cast.<SparkCorpus>as(corpus).repartition(partitions);
-        }
-      } else if (documents.size() > 0) {
-        corpus = corpus.union(new InMemoryCorpus(documents));
+      if (isInMemory) {
+         List<Document> dList = new LinkedList<>(documents);
+         if (resource != null) {
+            dList.addAll(new FileCorpus(corpusFormat, resource, documentFactory).stream().collect());
+         }
+         return new InMemoryCorpus(dList);
+      }
+
+      if (isDistributed) {
+         Corpus corpus = null;
+         if (resource != null) {
+            corpus = new SparkCorpus(resource.path(), corpusFormat, documentFactory);
+            if (partitions > 0) {
+               Cast.<SparkCorpus>as(corpus).repartition(partitions);
+            }
+         }
+
+         if (corpus == null) {
+            corpus = new SparkCorpus(documents);
+            if (partitions > 0) {
+               Cast.<SparkCorpus>as(corpus).repartition(partitions);
+            }
+         } else if (documents.size() > 0) {
+            corpus = corpus.union(new InMemoryCorpus(documents));
+         }
+
+         return corpus;
+      }
+
+
+      if (resource == null && documents.size() > 0) {
+         return new InMemoryCorpus(documents);
+      }
+
+      Corpus corpus = new FileCorpus(corpusFormat, resource, documentFactory);
+      if (documents.size() > 0) {
+         corpus.union(new InMemoryCorpus(documents));
       }
 
       return corpus;
-    }
-
-
-    if (resource == null && documents.size() > 0) {
-      return new InMemoryCorpus(documents);
-    }
-
-    Corpus corpus = new FileCorpus(corpusFormat, resource, documentFactory);
-    if (documents.size() > 0) {
-      corpus.union(new InMemoryCorpus(documents));
-    }
-
-    return corpus;
-  }
+   }
 
 
 }//END OF CorpusBuilder

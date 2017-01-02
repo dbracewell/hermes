@@ -23,14 +23,14 @@ package com.davidbracewell.hermes.wordnet.io;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Charsets;
+import com.davidbracewell.guava.common.base.Function;
+import com.davidbracewell.guava.common.base.Strings;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.wordnet.*;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.tuple.Tuple2;
 import com.davidbracewell.tuple.Tuple3;
-import com.google.common.base.Charsets;
-import com.google.common.base.Function;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 
 import java.io.BufferedReader;
 import java.io.IOException;

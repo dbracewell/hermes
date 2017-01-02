@@ -21,9 +21,8 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.collection.Counter;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.filter.StopWords;
+import com.davidbracewell.hermes.extraction.NGramExtractor;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,20 +37,20 @@ import static org.junit.Assert.*;
  */
 public class HStringTest {
 
-  @Before
-  public void setUp() throws Exception {
-    Config.initializeTest();
-  }
+   @Before
+   public void setUp() throws Exception {
+      Config.initializeTest();
+   }
 
-  @Test
-  public void testCharNGrams() {
-    HString hString = Fragments.string("abcdef");
-    List<HString> unigrams = hString.charNGrams(1);
-    assertEquals(6, unigrams.size());
-    List<HString> bigrams = hString.charNGrams(2);
-    assertEquals(5, bigrams.size());
-    List<HString> trigrams = hString.charNGrams(3);
-    assertEquals(4, trigrams.size());
+   @Test
+   public void testCharNGrams() {
+      HString hString = Fragments.string("abcdef");
+      List<HString> unigrams = hString.charNGrams(1);
+      assertEquals(6, unigrams.size());
+      List<HString> bigrams = hString.charNGrams(2);
+      assertEquals(5, bigrams.size());
+      List<HString> trigrams = hString.charNGrams(3);
+      assertEquals(4, trigrams.size());
 
 //    unigrams = hString.charNGrams(1, c -> c != 'a');
 //    assertEquals(5, unigrams.size());
@@ -59,124 +58,114 @@ public class HStringTest {
 //    assertEquals(4, bigrams.size());
 //    trigrams = hString.charNGrams(3, c -> c != 'a');
 //    assertEquals(3, trigrams.size());
-  }
+   }
 
-  @Test
-  public void testStringFunctions() {
-    HString hString = Fragments.string("abcdef");
-    assertTrue(hString.contentEqual("abcdef"));
-    assertTrue(hString.contentEqualIgnoreCase("ABCDEF"));
+   @Test
+   public void testStringFunctions() {
+      HString hString = Fragments.string("abcdef");
+      assertTrue(hString.contentEqual("abcdef"));
+      assertTrue(hString.contentEqualIgnoreCase("ABCDEF"));
 
-    assertEquals("abcdef", hString.toLowerCase());
-    assertEquals("ABCDEF", hString.toUpperCase());
-    assertEquals("gbcdef", hString.replace("a", "g"));
-    assertEquals("gbcdgf", hString.replaceAll("[aieou]", "g"));
-    assertEquals("gbcdef", hString.replaceFirst("[aieou]", "g"));
+      assertEquals("abcdef", hString.toLowerCase());
+      assertEquals("ABCDEF", hString.toUpperCase());
+      assertEquals("gbcdef", hString.replace("a", "g"));
+      assertEquals("gbcdgf", hString.replaceAll("[aieou]", "g"));
+      assertEquals("gbcdef", hString.replaceFirst("[aieou]", "g"));
 
-    Matcher m = hString.matcher("[aieou]");
-    assertTrue(m.find());
-    assertEquals("a", m.group());
+      Matcher m = hString.matcher("[aieou]");
+      assertTrue(m.find());
+      assertEquals("a", m.group());
 
-    List<HString> patterns = hString.findAllPatterns(Pattern.compile("[aieou]"));
-    assertEquals(2, patterns.size(), 0d);
-    assertTrue(patterns.get(0).contentEqual("a"));
-    assertTrue(patterns.get(1).contentEqual("e"));
+      List<HString> patterns = hString.findAllPatterns(Pattern.compile("[aieou]"));
+      assertEquals(2, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEqual("a"));
+      assertTrue(patterns.get(1).contentEqual("e"));
 
-    patterns = hString.findAll("a");
-    assertEquals(1, patterns.size(), 0d);
-    assertTrue(patterns.get(0).contentEqual("a"));
+      patterns = hString.findAll("a");
+      assertEquals(1, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEqual("a"));
 
-    assertTrue(hString.find("z").isEmpty());
-    assertTrue(hString.find("a").start() == 0);
+      assertTrue(hString.find("z").isEmpty());
+      assertTrue(hString.find("a").start() == 0);
 
-    assertEquals(0, hString.indexOf("a"));
-    assertEquals(-1, hString.indexOf("x"));
-    assertEquals(-1, hString.indexOf("a", 1));
+      assertEquals(0, hString.indexOf("a"));
+      assertEquals(-1, hString.indexOf("x"));
+      assertEquals(-1, hString.indexOf("a", 1));
 
-    assertFalse(hString.isAnnotation());
-    assertFalse(hString.asAnnotation().isPresent());
+      assertFalse(hString.isAnnotation());
+      assertFalse(hString.asAnnotation().isPresent());
 
-    assertFalse(hString.isDocument());
-  }
+      assertFalse(hString.isDocument());
+   }
 
-  @Test
-  public void testCounts() {
-    Document document = DocumentFactory.getInstance().create("Once upon a time there lived a princess who was stuck in time.");
-    Pipeline.process(document, Types.TOKEN);
-    Counter<String> counts = document.countLemmas(Types.TOKEN);
-    assertEquals(2, counts.get("time"), 0d);
-    assertEquals(2d, counts.get("a"), 0d);
+   @Test
+   public void testCounts() {
+      Document document = DocumentFactory.getInstance().create(
+         "Once upon a time there lived a princess who was stuck in time.");
+      Pipeline.process(document, Types.TOKEN);
 
-    counts = document.count(Types.TOKEN);
-    assertEquals(2, counts.get("time"), 0d);
-    assertEquals(2d, counts.get("a"), 0d);
+      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b"));
+      assertEquals(2, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEqual("a time"));
+      assertTrue(patterns.get(1).contentEqual("a princess"));
 
-    counts = document.count(Types.TOKEN, HString::toLowerCase);
-    assertEquals(2, counts.get("time"), 0d);
-    assertEquals(2d, counts.get("a"), 0d);
+      patterns = document.findAll("a time");
+      assertEquals(1, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEqual("a time"));
 
-    counts = document.count(Types.TOKEN, StopWords.isNotStopWord(), HString::toLowerCase);
-    assertEquals(0d, counts.get("a"), 0d);
+      assertTrue(document.find("z").isEmpty());
+      assertTrue(document.find("c").start() == 0);
 
-    List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b"));
-    assertEquals(2, patterns.size(), 0d);
-    assertTrue(patterns.get(0).contentEqual("a time"));
-    assertTrue(patterns.get(1).contentEqual("a princess"));
+      assertTrue(document.tokenAt(0).isAnnotation());
+      assertTrue(document.tokenAt(0).matches("(?i)once"));
+      assertTrue(document.tokenAt(0).asAnnotation().isPresent());
 
-    patterns = document.findAll("a time");
-    assertEquals(1, patterns.size(), 0d);
-    assertTrue(patterns.get(0).contentEqual("a time"));
+      assertTrue(document.isDocument());
+   }
 
-    assertTrue(document.find("z").isEmpty());
-    assertTrue(document.find("c").start() == 0);
+   @Test
+   public void testTokenPatterns() {
+      Document document = DocumentFactory.getInstance().create(
+         "Once upon a time there lived a princess who was stuck in time.");
+      Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
+      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b"));
+      assertEquals(2, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEqual("a time"));
+      assertTrue(patterns.get(1).contentEqual("a princess"));
 
-    assertTrue(document.tokenAt(0).isAnnotation());
-    assertTrue(document.tokenAt(0).matches("(?i)once"));
-    assertTrue(document.tokenAt(0).asAnnotation().isPresent());
+      patterns = document.findAll("a time");
+      assertEquals(1, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEqual("a time"));
 
-    assertTrue(document.isDocument());
-  }
+      assertTrue(document.find("z").isEmpty());
+      assertTrue(document.find("c").start() == 0);
 
-  @Test
-  public void testTokenPatterns() {
-    Document document = DocumentFactory.getInstance().create("Once upon a time there lived a princess who was stuck in time.");
-    Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
-    List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b"));
-    assertEquals(2, patterns.size(), 0d);
-    assertTrue(patterns.get(0).contentEqual("a time"));
-    assertTrue(patterns.get(1).contentEqual("a princess"));
+      assertTrue(document.tokenAt(0).startsWith("O"));
+      assertTrue(document.tokenAt(0).endsWith("ce"));
 
-    patterns = document.findAll("a time");
-    assertEquals(1, patterns.size(), 0d);
-    assertTrue(patterns.get(0).contentEqual("a time"));
+      assertTrue(document.first(Types.SENTENCE).encloses(document.tokenAt(0)));
+      assertTrue(document.first(Types.SENTENCE).overlaps(document.tokenAt(0)));
 
-    assertTrue(document.find("z").isEmpty());
-    assertTrue(document.find("c").start() == 0);
+      assertTrue(document.tokenAt(0).isAnnotation());
+      assertTrue(document.tokenAt(0).matches("(?i)once"));
+      assertTrue(document.tokenAt(0).asAnnotation().isPresent());
 
-    assertTrue(document.tokenAt(0).startsWith("O"));
-    assertTrue(document.tokenAt(0).endsWith("ce"));
+      assertTrue(document.isDocument());
+   }
 
-    assertTrue(document.first(Types.SENTENCE).encloses(document.tokenAt(0)));
-    assertTrue(document.first(Types.SENTENCE).overlaps(document.tokenAt(0)));
+   @Test
+   public void testTokenNgrams() {
+      Document document = DocumentFactory.getInstance().create(
+         "Once upon a time there lived a princess who was stuck in time.");
+      Pipeline.process(document, Types.TOKEN);
 
-    assertTrue(document.tokenAt(0).isAnnotation());
-    assertTrue(document.tokenAt(0).matches("(?i)once"));
-    assertTrue(document.tokenAt(0).asAnnotation().isPresent());
 
-    assertTrue(document.isDocument());
-  }
+      List<HString> ngrams = NGramExtractor.unigrams().collectHString(document);
+      assertEquals(14, ngrams.size());
 
-  @Test
-  public void testTokenNgrams() {
-    Document document = DocumentFactory.getInstance().create("Once upon a time there lived a princess who was stuck in time.");
-    Pipeline.process(document, Types.TOKEN);
-
-    List<HString> ngrams = document.ngrams(Types.TOKEN, 1);
-    assertEquals(14, ngrams.size());
-
-    ngrams = document.tokenNGrams(2);
-    assertEquals(13, ngrams.size());
-  }
+      ngrams = NGramExtractor.bigrams().annotationType(Types.TOKEN).collectHString(document);
+      assertEquals(13, ngrams.size());
+   }
 
 
 }

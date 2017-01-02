@@ -25,6 +25,7 @@ import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.io.Resources;
 import org.junit.Test;
@@ -38,39 +39,41 @@ import static org.junit.Assert.*;
  */
 public class LexiconAnnotatorTest {
 
-  @Test
-  public void testAnnotate() throws Exception {
-    Config.initializeTest();
-    Config.loadConfig(Resources.fromClasspath("com/davidbracewell/hermes/test.conf"));
-    Document document = DocumentProvider.getAnnotatedDocument();
+   @Test
+   public void testAnnotate() throws Exception {
+      Config.initializeTest();
+      Config.loadConfig(Resources.fromClasspath("com/davidbracewell/hermes/test.conf"));
+      Document document = DocumentProvider.getAnnotatedDocument();
 
-    LexiconManager.clear();
-    LexiconAnnotator annotator = new LexiconAnnotator(
-      Types.ENTITY,
-      "testing.lexicon"
-    );
+      LexiconManager.clear();
+      LexiconAnnotator annotator = new LexiconAnnotator(Types.ENTITY,
+                                                        "testing.lexicon");
 
 
-    annotator.annotate(document);
-    List<Annotation> entities = document.get(Types.ENTITY);
-    assertFalse(entities.isEmpty());
-    assertEquals("Alice", entities.get(0).toString());
-    assertEquals("Alice", entities.get(1).toString());
-    assertEquals("White Rabbit", entities.get(2).toString());
-    assertEquals("think", entities.get(4).toString());
-    assertEquals(0.7d, entities.get(4).get(Types.CONFIDENCE).asDoubleValue(), 0.0d);
+      Lexicon lexicon = LexiconManager.getLexicon("testing.lexicon");
 
-    document = DocumentProvider.getAnnotatedDocument();
-    annotator = new LexiconAnnotator(
-      Types.ENTITY,
-      "testing.lexicon2"
-    );
-    annotator.annotate(document);
-    entities = document.get(Types.ENTITY);
-    assertFalse(entities.isEmpty());
-    assertEquals("Alice", entities.get(0).toString());
-    assertEquals("Alice", entities.get(1).toString());
-    assertEquals("White Rabbit", entities.get(2).toString());
-    assertEquals("think", entities.get(4).toString());
-  }
+      lexicon.match(document).forEach(System.out::println);
+
+      annotator.annotate(document);
+      List<Annotation> entities = document.get(Types.ENTITY);
+      assertFalse(entities.isEmpty());
+      assertEquals("Alice", entities.get(0).toString());
+      assertEquals("Alice", entities.get(1).toString());
+      assertEquals("White Rabbit", entities.get(2).toString());
+      assertEquals("think", entities.get(4).toString());
+      assertEquals(0.7d, entities.get(4).get(Types.CONFIDENCE).asDoubleValue(), 0.0d);
+
+      document = DocumentProvider.getAnnotatedDocument();
+      annotator = new LexiconAnnotator(
+                                         Types.ENTITY,
+                                         "testing.lexicon2"
+      );
+      annotator.annotate(document);
+      entities = document.get(Types.ENTITY);
+      assertFalse(entities.isEmpty());
+      assertEquals("Alice", entities.get(0).toString());
+      assertEquals("Alice", entities.get(1).toString());
+      assertEquals("White Rabbit", entities.get(2).toString());
+      assertEquals("think", entities.get(4).toString());
+   }
 }

@@ -5,7 +5,7 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableBiPredicate;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.regex.QueryToPredicate;
+import com.davidbracewell.hermes.extraction.regex.QueryToPredicate;
 import com.davidbracewell.parsing.ParseException;
 import com.davidbracewell.string.StringPredicates;
 import lombok.NonNull;
@@ -210,8 +210,8 @@ public interface HStringPredicates {
    * @return the serializable predicate
    */
   static SerializablePredicate<HString> attributeMatch(@NonNull final AttributeType attributeType, final Object value) {
-    final Object convertedValue = attributeType.getValueType().convert(value);
-    final boolean isTag = Tag.class.isAssignableFrom(attributeType.getValueType().getType());
+    final Object convertedValue = attributeType.getValueType().decode(value);
+    final boolean isTag = Tag.class.isInstance(convertedValue);
 
     return annotation -> {
       if (isTag) {

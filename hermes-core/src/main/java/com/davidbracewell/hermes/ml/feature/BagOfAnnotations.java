@@ -24,10 +24,11 @@ package com.davidbracewell.hermes.ml.feature;
 import com.davidbracewell.apollo.ml.Feature;
 import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.cache.Cached;
-import com.davidbracewell.collection.HashMapCounter;
+import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.extraction.AbstractExtractor;
 import com.davidbracewell.stream.MStream;
-import com.davidbracewell.stream.Streams;
+import com.davidbracewell.stream.StreamingContext;
 
 import java.util.Set;
 
@@ -41,14 +42,14 @@ public class BagOfAnnotations implements Featurizer<HString> {
   /**
    * The Feature spec.
    */
-  final AbstractFeatureSpec<?> featureSpec;
+  final AbstractExtractor<?> featureSpec;
 
   /**
    * Instantiates a new Bag of annotations.
    *
    * @param featureSpec the feature spec
    */
-  public BagOfAnnotations(AbstractFeatureSpec featureSpec) {
+  public BagOfAnnotations(AbstractExtractor featureSpec) {
     this.featureSpec = featureSpec;
   }
 
@@ -56,12 +57,12 @@ public class BagOfAnnotations implements Featurizer<HString> {
   @Override
   @Cached(keyMaker = HStringKeyMaker.class)
   public Set<Feature> apply(HString hString) {
-    MStream<String> stream = Streams.of(
+    MStream<String> stream = StreamingContext.local().stream(
       hString.stream(featureSpec.getAnnotationType())
         .filter(featureSpec.getFilter())
         .map(featureSpec.getToStringFunction())
     );
-    return featureSpec.getValueCalculator().apply(new HashMapCounter<>(stream.countByValue()));
+    return featureSpec.getValueCalculator().apply(Counters.newCounter(stream.countByValue()));
   }
 
 
@@ -77,7 +78,7 @@ public class BagOfAnnotations implements Featurizer<HString> {
   /**
    * The type Builder.
    */
-  public static class Builder extends AbstractFeatureSpec<Builder> {
+  public static class Builder extends AbstractExtractor<Builder> {
     private static final long serialVersionUID = 1L;
 
     /**

@@ -21,8 +21,11 @@
 
 package com.davidbracewell.hermes.wordnet.io.properties;
 
-import com.davidbracewell.collection.Counter;
-import com.davidbracewell.collection.HashMapCounter;
+import com.davidbracewell.collection.counter.Counter;
+import com.davidbracewell.collection.counter.Counters;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.base.Strings;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.wordnet.Synset;
 import com.davidbracewell.hermes.wordnet.WordNetPOS;
@@ -33,11 +36,6 @@ import com.davidbracewell.hermes.wordnet.properties.PropertyName;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-
-import java.io.IOException;
 
 /**
  * @author David B. Bracewell
@@ -55,8 +53,8 @@ public class InformationContentLoader extends WordNetPropertyLoader {
 
   @Override
   public void load(WordNetDB db) {
-    Counter<String> ic = new HashMapCounter<>();
-    Counter<POS> roots = new HashMapCounter<>();
+    Counter<String> ic = Counters.newCounter();
+    Counter<POS> roots = Counters.newCounter();
     try (MStream<String> stream = resource.lines()) {
       stream.forEach(line -> {
         line = line.trim();
@@ -70,7 +68,7 @@ public class InformationContentLoader extends WordNetPropertyLoader {
           }
         }
       });
-    } catch (IOException ioe) {
+    } catch (Exception ioe) {
       throw Throwables.propagate(ioe);
     }
     for (String key : ic.items()) {
