@@ -31,21 +31,28 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
+ * <p>Dynamic enumeration of known types of relations that can exist between annotations. Relations represent edges
+ * between two annotations. Examples include syntactic (dependency parse) and semantic (semantic roles) relations.</p>
+ *
  * @author David B. Bracewell
  */
 public final class RelationType extends EnumValue implements AnnotatableType, Comparable<RelationType> {
+   /**
+    * The constant CANONICAL_NAME.
+    */
    public static final String CANONICAL_NAME = RelationType.class.getCanonicalName();
    private static final long serialVersionUID = 1L;
    private static final String typeName = "Relation";
-   private static final Set<RelationType> values =  Sets.newConcurrentHashSet();
+   private static final Set<RelationType> values = Sets.newConcurrentHashSet();
 
    private RelationType(String name) {
-      super(CANONICAL_NAME,name);
+      super(CANONICAL_NAME, name);
    }
 
    /**
     * <p>Creates a new or retrieves an existing instance of RelationType with the given name.</p>
     *
+    * @param name the name
     * @return The instance of RelationType corresponding th the give name.
     */
    public static RelationType create(@NonNull String name) {
@@ -67,6 +74,7 @@ public final class RelationType extends EnumValue implements AnnotatableType, Co
     * <p>Returns the constant of RelationType with the specified name.The normalized version of the specified name will
     * be matched allowing for case and space variations.</p>
     *
+    * @param name the name
     * @return The constant of RelationType with the specified name
     * @throws IllegalArgumentException if the specified name is not a member of RelationType.
     */
