@@ -23,9 +23,6 @@ package com.davidbracewell.hermes.extraction.regex;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.attribute.Entities;
-import com.davidbracewell.hermes.attribute.POS;
-import com.davidbracewell.hermes.attribute.StringTag;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import org.junit.Before;

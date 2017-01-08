@@ -27,9 +27,6 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.conversion.NewObjectConverter;
 import com.davidbracewell.conversion.Val;
-import com.davidbracewell.hermes.attribute.EntityType;
-import com.davidbracewell.hermes.attribute.POS;
-import com.davidbracewell.hermes.attribute.StringTag;
 import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.string.StringUtils;
 
@@ -248,7 +245,7 @@ public enum AttributeValueType {
       }
    },
    /**
-    * Value type for {@link com.davidbracewell.hermes.attribute.StringTag}s
+    * Value type for {@link StringTag}s
     */
    STRING_TAG {
       @Override

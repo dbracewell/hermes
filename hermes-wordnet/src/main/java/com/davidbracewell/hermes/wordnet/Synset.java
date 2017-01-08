@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.wordnet;
 
 import com.davidbracewell.guava.common.collect.HashMultimap;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.wordnet.properties.Property;
 import com.davidbracewell.hermes.wordnet.properties.PropertyName;
 import com.davidbracewell.tuple.Tuple2;

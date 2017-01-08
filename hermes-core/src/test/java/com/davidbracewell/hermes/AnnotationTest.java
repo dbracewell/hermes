@@ -23,7 +23,6 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.annotator.DocumentProvider;
-import com.davidbracewell.hermes.attribute.Entities;
 import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.io.Resources;
 import org.junit.Before;

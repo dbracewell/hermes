@@ -23,11 +23,7 @@ package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.Pipeline;
-import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.*;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

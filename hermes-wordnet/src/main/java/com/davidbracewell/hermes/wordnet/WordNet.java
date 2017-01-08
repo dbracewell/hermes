@@ -35,7 +35,7 @@ import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.base.Strings;
 import com.davidbracewell.guava.common.collect.*;
 import com.davidbracewell.hermes.Hermes;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.morphology.Lemmatizers;
 import com.davidbracewell.hermes.wordnet.io.WordNetDB;
 import com.davidbracewell.hermes.wordnet.io.WordNetLoader;

@@ -24,11 +24,10 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.guava.common.base.Preconditions;
-import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
-import org.apache.mahout.math.set.OpenHashSet;
+import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import java.io.Serializable;
 import java.util.*;
@@ -64,7 +63,7 @@ public final class Annotation extends Fragment implements Serializable {
     */
    public static long DETACHED_ID = Long.MIN_VALUE;
    private final AnnotationType annotationType;
-   private final Set<Relation> relations = new OpenHashSet<>();
+   private final Set<Relation> relations = new UnifiedSet<>();
    private long id = DETACHED_ID;
    private volatile transient Annotation[] tokens;
 

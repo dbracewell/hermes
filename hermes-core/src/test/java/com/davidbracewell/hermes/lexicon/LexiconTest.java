@@ -1,12 +1,7 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.Fragments;
-import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.Entities;
-import com.davidbracewell.hermes.attribute.StringTag;
+import com.davidbracewell.hermes.*;
 import org.junit.Test;
 
 import java.util.stream.Collectors;

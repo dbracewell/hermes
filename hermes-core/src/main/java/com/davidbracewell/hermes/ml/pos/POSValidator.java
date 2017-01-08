@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.ml.pos;
 
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.sequence.SequenceValidator;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.string.StringPredicates;
 import com.davidbracewell.string.StringUtils;
 
@@ -45,7 +45,7 @@ public class POSValidator implements SequenceValidator {
          return true;
       }
 
-      switch (word) {
+      switch (word.toLowerCase()) {
          case "\"":
          case "``":
          case "''":
@@ -85,6 +85,28 @@ public class POSValidator implements SequenceValidator {
             return pos.isTag(POS.RRB);
          case "&":
             return pos.isTag(POS.CC, POS.SYM);
+         case "i":
+            return pos.isTag(POS.PRP, POS.CD);
+         case "me":
+         case "myself":
+         case "you":
+         case "yourself":
+         case "he":
+         case "him":
+         case "himself":
+         case "she":
+         case "we":
+         case "us":
+         case "they":
+            return pos.isTag(POS.PRP);
+         case "my":
+         case "mine":
+         case "your":
+         case "yours":
+         case "his":
+         case "their":
+         case "our":
+            return pos.isTag(POS.PRP$);
       }
 
 

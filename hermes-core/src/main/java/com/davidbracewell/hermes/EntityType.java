@@ -1,4 +1,3 @@
-package com.davidbracewell.hermes.attribute;
 /*
  * (c) 2005 David B. Bracewell
  *
@@ -19,6 +18,8 @@ package com.davidbracewell.hermes.attribute;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.HierarchicalEnumValue;

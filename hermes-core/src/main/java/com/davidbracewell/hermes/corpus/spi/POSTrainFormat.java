@@ -2,11 +2,7 @@ package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.SystemInfo;
 import com.davidbracewell.guava.common.base.Preconditions;
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;

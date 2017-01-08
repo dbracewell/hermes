@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.wordnet.io;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.guava.common.collect.HashMultimap;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.wordnet.*;
 
 import java.io.Serializable;
