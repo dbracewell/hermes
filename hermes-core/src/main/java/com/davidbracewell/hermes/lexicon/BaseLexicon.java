@@ -171,7 +171,7 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
          if (prefix.test(token)) {
 
             LexiconMatch bestMatch = null;
-            for (int j = i + 1; j < tokens.size() && j < (i + 1 + longestLemma); j++) {
+            for (int j = i + 1; j <= tokens.size() && j < (i + 1 + longestLemma); j++) {
                HString temp = HString.union(tokens.subList(i, j));
                List<LexiconEntry> entries = getEntries(temp);
                if (entries.size() > 0) {

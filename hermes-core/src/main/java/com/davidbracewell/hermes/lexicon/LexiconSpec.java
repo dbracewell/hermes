@@ -120,7 +120,6 @@ public class LexiconSpec implements Serializable {
 
                if (hasConstraints && row.size() > nc) {
                   try {
-                     System.err.println(row.get(nc));
                      constraint = QueryToPredicate.parse(row.get(nc));
                   } catch (ParseException e) {
                      if (tag == null) {
