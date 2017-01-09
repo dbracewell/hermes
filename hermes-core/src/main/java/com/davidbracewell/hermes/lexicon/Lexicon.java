@@ -207,7 +207,6 @@ public interface Lexicon extends Predicate<HString>, WordList {
       }
    }
 
-
    /**
     * Find list.
     *
@@ -224,5 +223,6 @@ public interface Lexicon extends Predicate<HString>, WordList {
     * @return the entries
     */
    List<LexiconEntry> getEntries(HString hString);
+
 
 }//END OF Lexicon

@@ -29,6 +29,7 @@ import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -78,6 +79,8 @@ public class TermExtractor extends AbstractExtractor<TermExtractor> implements C
       return hString.stream(getAnnotationType())
                     .map(getTrimFunction())
                     .filter(getFilter())
+                    .filter(Objects::nonNull)
+                    .filter(h -> !h.isEmpty())
                     .map(getToStringFunction())
                     .filter(StringUtils::isNotNullOrBlank);
    }

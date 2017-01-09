@@ -106,16 +106,16 @@ public final class Hermes {
          synchronized (lock) {
             String langCode = language.getCode().toLowerCase();
             Resource modelDir = Config.get("models.dir").asResource(Resources.from(SystemInfo.USER_HOME));
-            Resource classpathDir = Resources.fromClasspath("hermes/models/");
+            Resource classpathDir = Resources.fromClasspath("hermes/");
             if (modelGetter.get() == null) {
                Exception thrownException = null;
 
                for (Resource r : new Resource[]{
                   Config.get(configProperty, language, "model").asResource(),
-                  classpathDir.getChild(langCode).getChild(modelName),
+                  classpathDir.getChild(langCode).getChild("model").getChild(modelName),
                   modelDir.getChild(langCode).getChild(modelName),
                   Config.get(configProperty, "model").asResource(),
-                  classpathDir.getChild(modelName),
+                  classpathDir.getChild("model").getChild(modelName),
                   modelDir.getChild(modelName)
                }) {
                   if (r != null && r.exists()) {

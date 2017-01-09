@@ -92,44 +92,46 @@ public class LexiconSpec implements Serializable {
       Lexicon lexicon = new TrieLexicon(caseSensitive, probabilistic, tagAttribute);
       if (resource != null) {
          String base = resource.baseName().replaceFirst("\\.[^\\.]*$", "");
-         try (CSVReader reader = CSV.builder().reader(resource)) {
+         try (CSVReader reader = CSV.builder().removeEmptyCells().reader(resource)) {
             reader.forEach(row -> {
-               String lemma = row.get(0);
-               double probability = 1d;
-               Tag tag = null;
-               SerializablePredicate<HString> constraint = null;
+               if (row.size() > 0) {
+                  String lemma = row.get(0);
+                  double probability = 1d;
+                  Tag tag = null;
+                  SerializablePredicate<HString> constraint = null;
 
-               int nc = 1;
-               if (tagAttribute != null && !useResourceNameAsTag) {
-                  tag = tagAttribute.getValueType().decode(row.get(nc));
-                  if (tag == null) {
-                     log.warn("{0} is an invalid {1}, skipping entry {2}.", row.get(nc), tagAttribute.name(), row);
-                     return;
-                  }
-                  nc++;
-               } else if (tagAttribute != null) {
-                  tag = tagAttribute.getValueType().decode(base);
-                  Preconditions.checkNotNull(tag, row.get(nc) + " is an invalid tag.");
-               }
-
-               if (probabilistic && row.size() > nc && Doubles.tryParse(row.get(nc)) != null) {
-                  probability = Double.parseDouble(row.get(nc));
-                  nc++;
-               }
-
-
-               if (hasConstraints && row.size() > nc) {
-                  try {
-                     constraint = QueryToPredicate.parse(row.get(nc));
-                  } catch (ParseException e) {
+                  int nc = 1;
+                  if (row.size() > nc && tagAttribute != null && !useResourceNameAsTag) {
+                     tag = tagAttribute.getValueType().decode(row.get(nc));
                      if (tag == null) {
-                        log.warn("Error parsing constraint {0}, skipping entry {1}.", row.get(nc), row);
+                        log.warn("{0} is an invalid {1}, skipping entry {2}.", row.get(nc), tagAttribute.name(), row);
                         return;
                      }
+                     nc++;
+                  } else if (row.size() > nc && tagAttribute != null) {
+                     tag = tagAttribute.getValueType().decode(base);
+                     Preconditions.checkNotNull(tag, row.get(nc) + " is an invalid tag.");
                   }
-               }
 
-               lexicon.add(new LexiconEntry(lemma, probability, constraint, tag));
+                  if (probabilistic && row.size() > nc && Doubles.tryParse(row.get(nc)) != null) {
+                     probability = Double.parseDouble(row.get(nc));
+                     nc++;
+                  }
+
+
+                  if (hasConstraints && row.size() > nc) {
+                     try {
+                        constraint = QueryToPredicate.parse(row.get(nc));
+                     } catch (ParseException e) {
+                        if (tag == null) {
+                           log.warn("Error parsing constraint {0}, skipping entry {1}.", row.get(nc), row);
+                           return;
+                        }
+                     }
+                  }
+
+                  lexicon.add(new LexiconEntry(lemma, probability, constraint, tag));
+               }
             });
          }
       }
