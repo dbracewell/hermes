@@ -31,6 +31,8 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.morphology.Stemmers;
+import com.davidbracewell.hermes.regex.TokenMatcher;
+import com.davidbracewell.hermes.regex.TokenRegex;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple;
 import com.google.common.base.Preconditions;
@@ -366,6 +368,15 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    public List<HString> findAllPatterns(@NonNull String regex) {
       return findAllPatterns(Pattern.compile(regex));
+   }
+
+   public List<HString> findAllPatterns(@NonNull TokenRegex regex){
+      TokenMatcher matcher = regex.matcher(this);
+      List<HString> matches = new ArrayList<>();
+      while( matcher.find()) {
+         matches.add(matcher.group());
+      }
+      return matches;
    }
 
    /**
