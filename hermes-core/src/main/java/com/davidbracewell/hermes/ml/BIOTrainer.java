@@ -28,6 +28,7 @@ import com.davidbracewell.apollo.ml.preprocess.filter.MinCountFilter;
 import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
+import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.corpus.Corpus;
@@ -164,6 +165,22 @@ public abstract class BIOTrainer extends CommandLineApplication {
       eval.output(System.out);
    }
 
+
+   protected void label() throws Exception {
+      BIOTagger tagger = BIOTagger.read(model);
+      Dataset<Sequence> test = getDataset(tagger.featurizer);
+      String fname = Config.get("wordFeature").asString("Word[0]=");
+      test.forEach(seq -> {
+         Labeling labeling = tagger.labeler.label(seq);
+         for (int i = 0; i < labeling.size(); i++) {
+            String word = seq.get(i).getFeatureSpace().filter(s -> s.startsWith(fname)).findFirst().map(
+               s -> s.substring(fname.length())).orElse("?");
+            System.out.print(word + "/" + labeling.getLabel(i) + " ");
+         }
+         System.out.println();
+      });
+   }
+
    /**
     * Train.
     *
@@ -215,6 +232,9 @@ public abstract class BIOTrainer extends CommandLineApplication {
             break;
          case SPLIT:
             split();
+            break;
+         case LABEL:
+            label();
             break;
       }
    }

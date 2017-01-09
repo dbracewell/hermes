@@ -23,8 +23,8 @@ package com.davidbracewell.hermes.corpus.spi.conll;
 
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.corpus.spi.CoNLLColumnProcessor;
 import com.davidbracewell.hermes.corpus.spi.CoNLLRow;
 import com.davidbracewell.hermes.corpus.spi.POSCorrection;

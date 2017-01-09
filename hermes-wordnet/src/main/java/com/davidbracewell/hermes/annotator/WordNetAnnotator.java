@@ -2,7 +2,6 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.collection.Trie;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.morphology.Lemmatizer;
 import com.davidbracewell.hermes.morphology.Lemmatizers;
 import com.davidbracewell.hermes.wordnet.WordNet;

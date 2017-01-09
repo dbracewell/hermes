@@ -22,9 +22,9 @@
 package com.davidbracewell.hermes.tokenization;
 
 import com.davidbracewell.collection.Collect;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Throwables;
 
 import java.io.IOException;
 import java.io.Reader;

@@ -32,112 +32,26 @@ import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static com.davidbracewell.collection.map.Maps.map;
 
 /**
- * The type Relation graph.
+ * A graph where vertices are annotations and edges represent relations. This allows for the implicit graph relation of
+ * {@link HString} to be visualized and manipulated in a traditional graph framework.
+ *
  * @author David B. Bracewell
  */
 public class RelationGraph extends AdjacencyMatrix<Annotation> {
    private static final long serialVersionUID = 1L;
-   private volatile transient Lazy<ShortestPath<Annotation>> lazyShortestPath = new Lazy<>(
-         () -> new DijkstraShortestPath<>(this));
-   private volatile transient Lazy<ShortestPath<Annotation>> lazyUnDirectedShortestPath = new Lazy<>(
-         () -> new DijkstraShortestPath<>(this, true));
-
-   /**
-    * Render.
-    *
-    * @param output the output
-    * @throws IOException the io exception
-    */
-   public void render(@NonNull Resource output) throws IOException {
-      render(output, GraphViz.Format.PNG);
-   }
-
-   /**
-    * Render.
-    *
-    * @param output the output
-    * @param format the format
-    * @throws IOException the io exception
-    */
-   public void render(@NonNull Resource output, @NonNull GraphViz.Format format) throws IOException {
-      GraphViz<Annotation> graphViz = new GraphViz<>();
-      graphViz.setVertexEncoder(v -> new Vertex(v.toString() + "_" + v.getPOS().toString(), Collections.emptyMap()));
-      graphViz.setEdgeEncoder(e -> map("label", Cast.<RelationEdge>as(e).getRelation()));
-      graphViz.setFormat(format);
-      graphViz.render(this, output);
-   }
-
-   private static class MatchState {
-      private LinkedList<RelationEdge> visited = new LinkedList<>();
-      private Set<RelationEdge> open = new HashSet<>();
-
-      /**
-       * Instantiates a new Match state.
-       *
-       * @param open the open
-       */
-      public MatchState(Set<RelationEdge> open) {
-         this(Collections.emptyList(), open);
-      }
-
-      /**
-       * Instantiates a new Match state.
-       *
-       * @param visited the visited
-       * @param open the open
-       */
-      public MatchState(List<RelationEdge> visited, Set<RelationEdge> open) {
-         this.visited.addAll(visited);
-         this.open.addAll(open);
-      }
-
-      /**
-       * Next list.
-       *
-       * @param p the p
-       * @return the list
-       */
-      public List<MatchState> next(Predicate<RelationEdge> p) {
-         return open.stream()
-                    .filter(e -> (visited.isEmpty()
-                          || e.getSecondVertex().equals(visited.getLast().getSecondVertex())
-                          || e.getFirstVertex().equals(visited.getLast().getSecondVertex())) && p.test(e))
-                    .map(edge -> {
-                       MatchState prime = new MatchState(visited, open);
-                       prime.visited.add(edge);
-                       prime.open.remove(edge);
-                       return prime;
-                    }).collect(Collectors.toList());
-      }
-
-   }
-
-   /**
-    * Match list.
-    *
-    * @param predicates the predicates
-    * @return the list
-    */
-   @SafeVarargs
-   public final List<RelationEdge> match(Predicate<RelationEdge>... predicates) {
-      List<MatchState> matches = new ArrayList<>();
-      matches.add(new MatchState(edges()));
-      for (Predicate<RelationEdge> predicate : predicates) {
-         List<MatchState> prime = matches.stream().flatMap(m -> m.next(predicate).stream())
-                                         .collect(Collectors.toList());
-         matches.clear();
-         matches.addAll(prime);
-      }
-      matches.forEach(m -> System.out.println(m.visited));
-      return matches.get(0).visited;
-   }
+   private volatile transient Lazy<ShortestPath<Annotation>> lazyShortestPath =
+      new Lazy<>(() -> new DijkstraShortestPath<>(this));
+   private volatile transient Lazy<ShortestPath<Annotation>> lazyUnDirectedShortestPath =
+      new Lazy<>(() -> new DijkstraShortestPath<>(this, true));
 
    /**
     * Instantiates a new Relation graph.
@@ -147,40 +61,12 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
    }
 
    /**
-    * Shortest path list.
-    *
-    * @param source the source
-    * @param target the target
-    * @return the list
-    */
-   public List<RelationEdge> shortestPath(Annotation source, Annotation target) {
-      if (source == null || target == null) {
-         return null;
-      }
-      return Cast.as(lazyShortestPath.get().path(source, target));
-   }
-
-   /**
-    * Shortest connection list.
-    *
-    * @param source the source
-    * @param target the target
-    * @return the list
-    */
-   public List<RelationEdge> shortestConnection(Annotation source, Annotation target) {
-      if (source == null || target == null) {
-         return null;
-      }
-      return Cast.as(lazyUnDirectedShortestPath.get().path(source, target));
-   }
-
-   /**
-    * From relation graph.
+    * Creates a RelationGraph from a collection of edges
     *
     * @param edges the edges
     * @return the relation graph
     */
-   public static RelationGraph from(Collection<RelationEdge> edges) {
+   public static RelationGraph from(@NonNull Collection<RelationEdge> edges) {
       RelationGraph gPrime = new RelationGraph();
       edges.forEach(e -> {
          if (!gPrime.containsVertex(e.getFirstVertex())) {
@@ -191,42 +77,6 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
          }
          gPrime.addEdge(e);
       });
-      return gPrime;
-   }
-
-   /**
-    * Filter vertices relation graph.
-    *
-    * @param vertexPredicate the vertex predicate
-    * @return the relation graph
-    */
-   public RelationGraph filterVertices(@NonNull Predicate<? super Annotation> vertexPredicate) {
-      RelationGraph gPrime = new RelationGraph();
-      vertices().stream().filter(vertexPredicate).forEach(gPrime::addVertex);
-      edges().stream()
-             .filter(e -> gPrime.containsVertex(e.getFirstVertex()) && gPrime.containsVertex(e.getSecondVertex()))
-             .forEach(gPrime::addEdge);
-      return gPrime;
-   }
-
-   /**
-    * Filter edges relation graph.
-    *
-    * @param edgePredicate the edge predicate
-    * @return the relation graph
-    */
-   public RelationGraph filterEdges(@NonNull Predicate<RelationEdge> edgePredicate) {
-      RelationGraph gPrime = new RelationGraph();
-      edges().stream().filter(edgePredicate)
-             .forEach(e -> {
-                if (!gPrime.containsVertex(e.getFirstVertex())) {
-                   gPrime.addVertex(e.getFirstVertex());
-                }
-                if (!gPrime.containsVertex(e.getSecondVertex())) {
-                   gPrime.addVertex(e.getSecondVertex());
-                }
-                gPrime.addEdge(e);
-             });
       return gPrime;
    }
 
@@ -242,29 +92,54 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
       return super.addEdge(fromVertex, toVertex, weight);
    }
 
+   @Override
+   @SuppressWarnings("unchecked")
+   public Set<RelationEdge> edges() {
+      return super.edges();
+   }
+
+   /**
+    * Filters the graph by evaluating the edges using the given predicate. The edges passing the predicate and
+    * their incident vertices are used to construct a new filtered RelationGraph.
+    *
+    * @param edgePredicate the edge predicate
+    * @return the relation graph
+    */
+   public RelationGraph filterByEdge(@NonNull Predicate<RelationEdge> edgePredicate) {
+      RelationGraph gPrime = new RelationGraph();
+      edges().stream().filter(edgePredicate)
+             .forEach(e -> {
+                if (!gPrime.containsVertex(e.getFirstVertex())) {
+                   gPrime.addVertex(e.getFirstVertex());
+                }
+                if (!gPrime.containsVertex(e.getSecondVertex())) {
+                   gPrime.addVertex(e.getSecondVertex());
+                }
+                gPrime.addEdge(e);
+             });
+      return gPrime;
+   }
+
+   /**
+    * Filters the graph by evaluating the edges using the given predicate. The vertices passing the predicate and
+    * their incident edges are used to construct a new filtered RelationGraph.
+    *
+    * @param vertexPredicate the vertex predicate
+    * @return the relation graph
+    */
+   public RelationGraph filterByVertex(@NonNull Predicate<? super Annotation> vertexPredicate) {
+      RelationGraph gPrime = new RelationGraph();
+      vertices().stream().filter(vertexPredicate).forEach(gPrime::addVertex);
+      edges().stream()
+             .filter(e -> gPrime.containsVertex(e.getFirstVertex()) && gPrime.containsVertex(e.getSecondVertex()))
+             .forEach(gPrime::addEdge);
+      return gPrime;
+   }
 
    @Override
    @SuppressWarnings("unchecked")
    public RelationEdge getEdge(Annotation v1, Annotation v2) {
       return super.getEdge(v1, v2);
-   }
-
-   @Override
-   @SuppressWarnings("unchecked")
-   public Set<RelationEdge> getInEdges(Annotation vertex) {
-      return super.getInEdges(vertex);
-   }
-
-   @Override
-   @SuppressWarnings("unchecked")
-   public RelationEdge removeEdge(Annotation fromVertex, Annotation toVertex) {
-      return super.removeEdge(fromVertex, toVertex);
-   }
-
-   @Override
-   @SuppressWarnings("unchecked")
-   public Set<RelationEdge> getOutEdges(Annotation vertex) {
-      return super.getOutEdges(vertex);
    }
 
    @Override
@@ -275,8 +150,68 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
 
    @Override
    @SuppressWarnings("unchecked")
-   public Set<RelationEdge> edges() {
-      return super.edges();
+   public Set<RelationEdge> getInEdges(Annotation vertex) {
+      return super.getInEdges(vertex);
    }
+
+   @Override
+   @SuppressWarnings("unchecked")
+   public Set<RelationEdge> getOutEdges(Annotation vertex) {
+      return super.getOutEdges(vertex);
+   }
+
+   @Override
+   @SuppressWarnings("unchecked")
+   public RelationEdge removeEdge(Annotation fromVertex, Annotation toVertex) {
+      return super.removeEdge(fromVertex, toVertex);
+   }
+
+   /**
+    * Renders the graph using {@link GraphViz} in PNG format to specified output location.
+    *
+    * @param output the PNG file to render the graph to
+    * @throws IOException Something went wrong rendering the graph
+    */
+   public void render(@NonNull Resource output) throws IOException {
+      render(output, GraphViz.Format.PNG);
+   }
+
+   /**
+    * Renders the graph in the specified format to the specified output location.
+    *
+    * @param output the location to save the rendered graph.
+    * @param format the graphic format to save the rendered graph in
+    * @throws IOException Something went wrong rendering the graph
+    */
+   public void render(@NonNull Resource output, @NonNull GraphViz.Format format) throws IOException {
+      GraphViz<Annotation> graphViz = new GraphViz<>();
+      graphViz.setVertexEncoder(v -> new Vertex(v.toString() + "_" + v.getPOS().toString(), Collections.emptyMap()));
+      graphViz.setEdgeEncoder(e -> map("label", Cast.<RelationEdge>as(e).getRelation()));
+      graphViz.setFormat(format);
+      graphViz.render(this, output);
+   }
+
+   /**
+    * Determines the shortest connection (undirected) between the source and target annotation
+    *
+    * @param source the source annotation
+    * @param target the target annotation
+    * @return the list of shortest edges between the two annotations or an empty list if there is no path
+    */
+   public List<RelationEdge> shortestConnection(@NonNull Annotation source, @NonNull Annotation target) {
+      return Cast.as(lazyUnDirectedShortestPath.get().path(source, target));
+   }
+
+   /**
+    * Determines the shortest path (directed) between the source and target annotation
+    *
+    * @param source the source annotation
+    * @param target the target annotation
+    * @return the list of shortest edges between the two annotations or an empty list if there is no path
+    */
+   public List<RelationEdge> shortestPath(@NonNull Annotation source, @NonNull Annotation target) {
+      return Cast.as(lazyShortestPath.get().path(source, target));
+   }
+
 
 }//END OF RelationGraph

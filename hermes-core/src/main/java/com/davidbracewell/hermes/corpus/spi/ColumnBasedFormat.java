@@ -5,12 +5,12 @@ import com.davidbracewell.collection.Collect;
 import com.davidbracewell.collection.index.HashMapIndex;
 import com.davidbracewell.collection.index.Index;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.collect.Lists;
 import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.util.*;
@@ -84,7 +84,7 @@ public abstract class ColumnBasedFormat extends FileBasedFormat {
         language = Language.fromString(field);
       } else {
         AttributeType attributeType = AttributeType.create(fieldName);
-        attributeMap.put(attributeType, attributeType.getValueType().convert(field));
+        attributeMap.put(attributeType, attributeType.getValueType().decode(field));
       }
     }
     return documentFactory.create(id, content, language, attributeMap);

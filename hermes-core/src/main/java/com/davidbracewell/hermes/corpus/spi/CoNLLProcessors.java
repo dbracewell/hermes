@@ -21,8 +21,8 @@
 
 package com.davidbracewell.hermes.corpus.spi;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.collect.ImmutableMap;
 import lombok.NonNull;
 
 import java.util.Collection;

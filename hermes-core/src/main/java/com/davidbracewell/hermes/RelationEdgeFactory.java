@@ -25,21 +25,23 @@ import com.davidbracewell.atlas.Edge;
 import com.davidbracewell.atlas.EdgeFactory;
 
 /**
+ * Factory class for constructing {@link RelationEdge}s
+ *
  * @author David B. Bracewell
  */
 public class RelationEdgeFactory implements EdgeFactory<Annotation> {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  @Override
-  public Edge<Annotation> createEdge(Annotation from, Annotation to, double weight) {
-    RelationEdge edge = new RelationEdge(from, to);
-    edge.setWeight(weight);
-    return edge;
-  }
+   @Override
+   public Edge<Annotation> createEdge(Annotation from, Annotation to, double weight) {
+      RelationEdge edge = new RelationEdge(from, to);
+      edge.setWeight(weight);
+      return edge;
+   }
 
-  @Override
-  public boolean isDirected() {
-    return true;
-  }
+   @Override
+   public boolean isDirected() {
+      return true;
+   }
 
 }//END OF RelationEdgeFactory

@@ -38,72 +38,76 @@ import java.io.IOException;
  */
 public interface CorpusFormat {
 
-  /**
-   * Create corpus.
-   *
-   * @param resource        the resource
-   * @param documentFactory the document factory
-   * @return the corpus
-   */
-  Corpus create(Resource resource, DocumentFactory documentFactory);
+   /**
+    * Create corpus.
+    *
+    * @param resource        the resource
+    * @param documentFactory the document factory
+    * @return the corpus
+    */
+   Corpus create(Resource resource, DocumentFactory documentFactory);
 
 
-  /**
-   * Read iterable.
-   *
-   * @param resource        the resource
-   * @param documentFactory the document factory
-   * @return the iterable
-   * @throws IOException the iO exception
-   */
-  Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException;
+   /**
+    * Read iterable.
+    *
+    * @param resource        the resource
+    * @param documentFactory the document factory
+    * @return the iterable
+    * @throws IOException the iO exception
+    */
+   Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException;
 
-  /**
-   * Writes the documents in this format from the given resource using the given factory.
-   *
-   * @param resource  the resource
-   * @param documents the documents
-   * @throws IOException something went wrong writing
-   */
-  default void write(Resource resource, Iterable<Document> documents) throws IOException {
-    throw new UnsupportedOperationException();
-  }
+   default String toString(Document document) {
+      throw new UnsupportedOperationException();
+   }
 
-  /**
-   * Write void.
-   *
-   * @param resource the resource
-   * @param document the document
-   * @throws IOException the iO exception
-   */
-  default void write(Resource resource, Document document) throws IOException {
-    throw new UnsupportedOperationException();
-  }
+//   /**
+//    * Writes the documents in this format from the given resource using the given factory.
+//    *
+//    * @param resource  the resource
+//    * @param documents the documents
+//    * @throws IOException something went wrong writing
+//    */
+//   default void write(Resource resource, Iterable<Document> documents) throws IOException {
+//      throw new UnsupportedOperationException();
+//   }
+//
+//   /**
+//    * Write void.
+//    *
+//    * @param resource the resource
+//    * @param document the document
+//    * @throws IOException the iO exception
+//    */
+//   default void write(Resource resource, Document document) throws IOException {
+//      throw new UnsupportedOperationException();
+//   }
 
-  /**
-   * Name string.
-   *
-   * @return the string
-   */
-  String name();
+   /**
+    * Name string.
+    *
+    * @return the string
+    */
+   String name();
 
-  /**
-   * Extension string.
-   *
-   * @return the string
-   */
-  default String extension() {
-    return name().toLowerCase();
-  }
+   /**
+    * Extension string.
+    *
+    * @return the string
+    */
+   default String extension() {
+      return name().toLowerCase();
+   }
 
 
-  /**
-   * Is one per line boolean.
-   *
-   * @return the boolean
-   */
-  default boolean isOnePerLine() {
-    return false;
-  }
+   /**
+    * Is one per line boolean.
+    *
+    * @return the boolean
+    */
+   default boolean isOnePerLine() {
+      return false;
+   }
 
 }//END OF CorpusFormat

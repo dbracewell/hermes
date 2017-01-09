@@ -21,11 +21,11 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.hermes.extraction.regex.TokenMatcher;
+import com.davidbracewell.hermes.extraction.regex.TokenRegex;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.lexicon.TrieLexicon;
-import com.davidbracewell.hermes.regex.TokenMatcher;
-import com.davidbracewell.hermes.regex.TokenRegex;
 import com.davidbracewell.parsing.ParseException;
 
 import java.util.Set;

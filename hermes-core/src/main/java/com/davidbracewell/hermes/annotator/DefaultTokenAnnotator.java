@@ -41,20 +41,21 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class DefaultTokenAnnotator implements Annotator, Serializable {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  @Override
-  public void annotate(Document document) {
-    Tokenizer tokenizer = TokenizerFactory.create(document.getLanguage());
-    for (Tokenizer.Token token : tokenizer.tokenize(document.toString())) {
-      Annotation aToken = document.createAnnotation(Types.TOKEN, token.charStartIndex, token.charEndIndex, token.properties);
-      aToken.put(Types.TOKEN_TYPE, token.type);
-    }
-  }
+   @Override
+   public void annotate(Document document) {
+      Tokenizer tokenizer = TokenizerFactory.create(document.getLanguage());
+      for (Tokenizer.Token token : tokenizer.tokenize(document.toString())) {
+         Annotation aToken = document.createAnnotation(Types.TOKEN, token.charStartIndex, token.charEndIndex,
+                                                       token.properties);
+         aToken.put(Types.TOKEN_TYPE, token.type);
+      }
+   }
 
-  @Override
-  public Set<AnnotatableType> satisfies() {
-    return Collections.singleton(Types.TOKEN);
-  }
+   @Override
+   public Set<AnnotatableType> satisfies() {
+      return Collections.singleton(Types.TOKEN);
+   }
 
 }//END OF DefaultTokenAnnotator

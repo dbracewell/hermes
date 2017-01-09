@@ -21,6 +21,8 @@
 
 package com.davidbracewell.hermes.wordnet.io.properties;
 
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.wordnet.io.WordNetDB;
 import com.davidbracewell.hermes.wordnet.io.WordNetPropertyLoader;
 import com.davidbracewell.hermes.wordnet.properties.PropertyName;
@@ -28,8 +30,6 @@ import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.CSVReader;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 import java.util.List;
 

@@ -21,43 +21,40 @@
 
 package com.davidbracewell.hermes.corpus.spi;
 
-import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.hermes.corpus.FileCorpus;
 import com.davidbracewell.io.resource.Resource;
-import lombok.NonNull;
 
-import java.io.IOException;
 import java.io.Serializable;
 
 /**
  * @author David B. Bracewell
  */
 public abstract class FileBasedFormat implements CorpusFormat, Serializable {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  @Override
-  public final Corpus create(Resource resource, DocumentFactory documentFactory) {
-    return new FileCorpus(this, resource, documentFactory);
-  }
+   @Override
+   public final Corpus create(Resource resource, DocumentFactory documentFactory) {
+      return new FileCorpus(this, resource, documentFactory);
+   }
 
-  @Override
-  public void write(@NonNull Resource resource, @NonNull Iterable<Document> documents) throws IOException {
-    if ((resource.isDirectory() && resource.exists()) || resource.mkdirs()) {
-      for (Document document : documents) {
-        write(resource.getChild(document.getId() + "." + extension()), document);
-      }
-    } else {
-      throw new IOException("Cannot make directories: " + resource.descriptor());
-    }
-  }
-
-  @Override
-  public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
-    throw new UnsupportedOperationException();
-  }
+//   @Override
+//   public void write(@NonNull Resource resource, @NonNull Iterable<Document> documents) throws IOException {
+//      if ((resource.isDirectory() && resource.exists()) || resource.mkdirs()) {
+//         for (Document document : documents) {
+//            write(resource.getChild(document.getId() + "." + extension()), document);
+//         }
+//      } else {
+//         throw new IOException("Cannot make directories: " + resource.descriptor());
+//      }
+//   }
+//
+//   @Override
+//   public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
+//      throw new UnsupportedOperationException();
+//   }
 
 
 }//END OF FileBasedFormat

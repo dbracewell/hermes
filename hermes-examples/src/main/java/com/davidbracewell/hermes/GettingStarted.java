@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.collection.counter.Counter;
+import com.davidbracewell.hermes.extraction.TermExtractor;
 
 import java.util.regex.Matcher;
 
@@ -53,7 +54,7 @@ public class GettingStarted {
 
     //Counts the token lemmas in the document (also lower cases)
     //We have not provided lemma annotations to the document, so instead it will simply lowercase the tokens
-    Counter<String> unigrams = document.countLemmas(Types.TOKEN);
+    Counter<String> unigrams = TermExtractor.create().lemmatize().count(document);
 
     //Prints: Count(the) = 2
     System.out.println("Count(the) = " + unigrams.get("the"));

@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.wordnet.properties;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
-import com.google.common.collect.Sets;
+import com.davidbracewell.guava.common.collect.Sets;
 import lombok.NonNull;
 
 import java.util.Collection;

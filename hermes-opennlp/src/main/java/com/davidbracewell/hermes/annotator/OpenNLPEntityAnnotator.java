@@ -23,11 +23,10 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.collect.HashMultimap;
+import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.io.resource.Resource;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import lombok.SneakyThrows;
 import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.namefind.TokenNameFinderModel;

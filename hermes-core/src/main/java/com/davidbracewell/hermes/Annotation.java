@@ -22,39 +22,36 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Tag;
-import com.davidbracewell.collection.map.Maps;
-import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.conversion.Val;
-import com.davidbracewell.hermes.attribute.EntityType;
-import com.davidbracewell.io.structured.ElementType;
-import com.davidbracewell.io.structured.StructuredReader;
-import com.davidbracewell.io.structured.StructuredWriter;
+import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
-import com.google.common.base.Preconditions;
 import lombok.NonNull;
+import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * <p>
- * Associates a type, e.g. token, sentence, named entity, and a set of attributes, e.g. part of speech and entity type,
- * to  a specific  span of a document, which may include the entire document. Annotation type information is defined
- * via
- * the {@link AnnotationType} class.
+ * <p> Annotations are specialized {@link HString}s representing linguistic overlays on a document that associate a
+ * type, e.g. token, sentence, named entity, and a set of attributes, e.g. part of speech and entity type, to  a
+ * specific  span of a document, which may include the entire document. Annotation type information is defined via the
+ * {@link AnnotationType} class. </p>
+ *
+ * <p> Annotations provide many convenience methods to make navigating the the annotation and relation graph easier. The
+ * {@link #next()}, {@link #next(AnnotationType)}, {@link #previous()}, and {@link #previous(AnnotationType)} methods
+ * facilitate retrieval of the next and previous annotation of the same or different type. The <code>sources</code>,
+ * <code>targets</code>, and {@link #get(RelationType, boolean)} methods allow retrieval of the annotations connected
+ * via relations and the relations (edges) themeselves.
  * </p>
- * <p>
- * Commonly, annotations have an associated <code>Tag</code> attribute which acts as label. Examples of tags include
+ *
+ * <p> Commonly, annotations have an associated <code>Tag</code> attribute which acts as label. Examples of tags include
  * part-of-speech and entity type. Tags can be retrieved using the {@link #getTag()} method. Annotation types specify
  * the attribute that represents the tag of an annotation of its type (in some cases annotations may have multiple tags
  * and this definition allows the primary tag to specified). If no tag is specified, a default attribute of
- * <code>TAG</code>.
- * </p>
+ * <code>TAG</code> is used. </p>
  *
  * @author David B. Bracewell
  */
@@ -66,7 +63,7 @@ public final class Annotation extends Fragment implements Serializable {
     */
    public static long DETACHED_ID = Long.MIN_VALUE;
    private final AnnotationType annotationType;
-   private final Set<Relation> relations = new HashSet<>();
+   private final Set<Relation> relations = new UnifiedSet<>();
    private long id = DETACHED_ID;
    private volatile transient Annotation[] tokens;
 
@@ -75,8 +72,8 @@ public final class Annotation extends Fragment implements Serializable {
     *
     * @param owner          the document that owns this annotation
     * @param annotationType The type of annotation
-    * @param start          the start
-    * @param end            the end
+    * @param start          the character starting offset in the document
+    * @param end            the character ending offset in the document
     */
    public Annotation(@NonNull Document owner, @NonNull AnnotationType annotationType, int start, int end) {
       super(owner, start, end);
@@ -106,63 +103,15 @@ public final class Annotation extends Fragment implements Serializable {
 
 
    /**
-    * Instantiates a new Annotation.
+    * Instantiates a new orphaned Annotation.
     *
-    * @param type  the type
-    * @param start the start
-    * @param end   the end
+    * @param type  The type of annotation
+    * @param start the character starting offset in the document
+    * @param end   the character ending offset in the document
     */
    protected Annotation(AnnotationType type, int start, int end) {
       super(null, start, end);
       this.annotationType = type == null ? AnnotationType.ROOT : type;
-   }
-
-   /**
-    * Read annotation.
-    *
-    * @param reader the reader
-    * @return the annotation
-    * @throws IOException the io exception
-    */
-   static Annotation read(StructuredReader reader) throws IOException {
-      reader.beginObject();
-      Map<String, Val> annotationProperties = new HashMap<>();
-      Map<AttributeType, Val> attributeValMap = Collections.emptyMap();
-      List<Relation> relations = new LinkedList<>();
-
-      while (reader.peek() != ElementType.END_OBJECT) {
-         if (reader.peek() == ElementType.NAME) {
-            Maps.put(annotationProperties, reader.nextKeyValue());
-         } else if (reader.peek() == ElementType.BEGIN_OBJECT) {
-            reader.beginObject("attributes");
-            attributeValMap = AttributeType.readAttributeList(reader);
-            reader.endObject();
-         } else if (reader.peek() == ElementType.BEGIN_ARRAY) {
-            reader.beginArray("relations");
-            while (reader.peek() != ElementType.END_ARRAY) {
-               reader.beginObject();
-               Map<String, Val> rel = reader.nextMap();
-               relations.add(new Relation(rel.get("type").as(RelationType.class),
-                                          rel.get("value").asString(),
-                                          rel.get("target").asLongValue()));
-               reader.endObject();
-            }
-            reader.endArray();
-         } else {
-            throw new IOException("Unexpected " + reader.peek());
-         }
-      }
-
-      Annotation annotation = Fragments.detachedAnnotation(
-            AnnotationType.create(annotationProperties.get("type").asString()),
-            annotationProperties.get("start").asIntegerValue(),
-            annotationProperties.get("end").asIntegerValue()
-                                                          );
-      annotation.relations.addAll(relations);
-      annotation.setId(annotationProperties.get("id").asLongValue());
-      annotation.putAll(attributeValMap);
-      reader.endObject();
-      return annotation;
    }
 
    @Override
@@ -202,11 +151,11 @@ public final class Annotation extends Fragment implements Serializable {
    @Override
    public Optional<Tuple2<String, Annotation>> dependencyRelation() {
       return getRelationStream(true)
-            .filter(r -> r.getType() == Types.DEPENDENCY)
-            .filter(r -> r.getTarget(this).isPresent())
-            .filter(r -> !this.overlaps(r.getTarget(this).orElse(null)))
-            .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).orElse(null)))
-            .findFirst();
+                .filter(r -> r.getType() == Types.DEPENDENCY)
+                .filter(r -> r.getTarget(this).isPresent())
+                .filter(r -> !this.overlaps(r.getTarget(this).orElse(null)))
+                .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).orElse(null)))
+                .findFirst();
    }
 
    @Override
@@ -226,7 +175,7 @@ public final class Annotation extends Fragment implements Serializable {
    }
 
    /**
-    * Sets id.
+    * Sets the unique id of the annotation.
     *
     * @param id the id
     */
@@ -237,21 +186,19 @@ public final class Annotation extends Fragment implements Serializable {
    private Stream<Relation> getRelationStream(boolean includeSubAnnotations) {
       Stream<Relation> relationStream = relations.stream();
       if (this.getType() != Types.TOKEN && includeSubAnnotations) {
-         relationStream = Stream.concat(
-               relationStream,
-               getAllAnnotations().stream().filter(a -> a != this).flatMap(token -> token.allRelations(false).stream())
-                                       );
+         relationStream = Stream.concat(relationStream,
+                                        getAllAnnotations().stream()
+                                                           .filter(a -> a != this)
+                                                           .flatMap(token -> token.allRelations(false).stream()));
       }
       return relationStream;
    }
 
    /**
-    * <p>
-    * Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type using
-    * the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
+    * <p> Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type
+    * using the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
     * Tags must implement the <code>Tag</code> interface. If no tag type is defined, the <code>Attrs.TAG</code>
-    * attribute will be retrieved.
-    * </p>
+    * attribute will be retrieved. </p>
     *
     * @return An optional containing the tag if present
     */
@@ -261,7 +208,7 @@ public final class Annotation extends Fragment implements Serializable {
       } else if (isInstance(Types.ENTITY)) {
          return Optional.ofNullable(get(Types.ENTITY_TYPE).as(EntityType.class));
       }
-      AttributeType tagAttributeType = annotationType.getTagAttributeType();
+      AttributeType tagAttributeType = annotationType.getTagAttribute();
       if (tagAttributeType == null) {
          return Optional.ofNullable(get(Types.TAG).as(Tag.class));
       }
@@ -303,9 +250,9 @@ public final class Annotation extends Fragment implements Serializable {
     * @return the boolean
     */
    public boolean isInstanceOfTag(String tag) {
-      return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttributeType()
+      return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute()
                                                                                       .getValueType()
-                                                                                      .convert(tag)));
+                                                                                      .decode(tag)));
    }
 
    /**
@@ -385,18 +332,18 @@ public final class Annotation extends Fragment implements Serializable {
    @Override
    public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
       return getRelationStream(includeSubAnnotations)
-            .filter(r -> r.getType().equals(type))
-            .filter(r -> r.getTarget(this).isPresent())
-            .map(r -> r.getTarget(this).get())
-            .collect(Collectors.toList());
+                .filter(r -> r.getType().equals(type))
+                .filter(r -> r.getTarget(this).isPresent())
+                .map(r -> r.getTarget(this).get())
+                .collect(Collectors.toList());
    }
 
    @Override
    public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
       return getRelationStream(includeSubAnnotations)
-            .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
-            .map(r -> document().getAnnotationSet().get(r.getTarget()))
-            .collect(Collectors.toList());
+                .filter(r -> r.getType().equals(type) && StringUtils.safeEquals(r.getValue(), value, true))
+                .map(r -> document().getAnnotationSet().get(r.getTarget()))
+                .collect(Collectors.toList());
    }
 
    @Override
@@ -412,47 +359,6 @@ public final class Annotation extends Fragment implements Serializable {
          }
       }
       return tokens == null ? Collections.emptyList() : Arrays.asList(tokens);
-   }
-
-   /**
-    * Write.
-    *
-    * @param writer the writer
-    * @throws IOException the io exception
-    */
-   void write(StructuredWriter writer) throws IOException {
-      writer.beginObject();
-
-      writer.writeKeyValue("type", annotationType.name());
-      writer.writeKeyValue("start", start());
-      writer.writeKeyValue("end", end());
-      writer.writeKeyValue("id", getId());
-
-      if (Config.get("Annotation.writeContent").asBooleanValue(false)) {
-         writer.writeKeyValue("content", toString());
-      }
-
-      if (getAttributeMap().size() > 0) {
-         writer.beginObject("attributes");
-         for (Map.Entry<AttributeType, Val> entry : attributeValues()) {
-            entry.getKey().write(writer, entry.getValue());
-         }
-         writer.endObject();
-      }
-
-      if (relations.size() > 0) {
-         writer.beginArray("relations");
-         for (Relation relation : relations) {
-            writer.beginObject();
-            writer.writeKeyValue("type", relation.getType());
-            writer.writeKeyValue("value", relation.getValue());
-            writer.writeKeyValue("target", relation.getTarget());
-            writer.endObject();
-         }
-         writer.endArray();
-      }
-
-      writer.endObject();
    }
 
 }//END OF Annotation

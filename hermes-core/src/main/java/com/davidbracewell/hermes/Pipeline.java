@@ -25,16 +25,17 @@ import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.data.DatasetType;
 import com.davidbracewell.concurrent.Broker;
 import com.davidbracewell.concurrent.IterableProducer;
+import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.base.Stopwatch;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
-import com.davidbracewell.io.AsyncWriter;
+import com.davidbracewell.io.MultiFileWriter;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.base.Throwables;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
@@ -76,8 +77,8 @@ public final class Pipeline implements Serializable {
       Preconditions.checkArgument(queueSize > 0, "Queue size must be > 0");
       this.queueSize = queueSize;
       this.annotationTypes = Preconditions
-            .checkNotNull(annotationTypes)
-            .toArray(new AnnotatableType[annotationTypes.size()]);
+                                .checkNotNull(annotationTypes)
+                                .toArray(new AnnotatableType[annotationTypes.size()]);
       this.numberOfThreads = numberOfThreads;
       this.onComplete = Preconditions.checkNotNull(onComplete);
    }
@@ -106,8 +107,8 @@ public final class Pipeline implements Serializable {
          annotator.annotate(document);
          for (AnnotatableType type : annotator.satisfies()) {
             document
-                  .getAnnotationSet()
-                  .setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
+               .getAnnotationSet()
+               .setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
          }
       }
    }
@@ -154,8 +155,8 @@ public final class Pipeline implements Serializable {
          annotator.annotate(textDocument);
          for (AnnotatableType type : annotator.satisfies()) {
             textDocument
-                  .getAnnotationSet()
-                  .setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
+               .getAnnotationSet()
+               .setIsCompleted(type, true, annotator.getClass().getName() + "::" + annotator.getVersion());
          }
 
       }
@@ -188,18 +189,19 @@ public final class Pipeline implements Serializable {
     * @param documents the source of documents to be annotated
     */
    @SneakyThrows
-   public Corpus process(Corpus documents) {
+   public Corpus process(@NonNull Corpus documents) {
       timer.start();
 
       Broker.Builder<Document> builder = Broker.<Document>builder()
-            .addProducer(new IterableProducer<>(documents))
-            .bufferSize(queueSize);
+                                            .addProducer(new IterableProducer<>(documents))
+                                            .bufferSize(queueSize);
 
       Corpus corpus = documents;
       if (returnCorpus && corpus.getDataSetType() == DatasetType.OffHeap) {
-         Resource tempFile = Resources.temporaryFile();
+         Resource tempFile = Resources.temporaryDirectory();
          tempFile.deleteOnExit();
-         try (AsyncWriter writer = new AsyncWriter(tempFile.writer())) {
+         try (MultiFileWriter writer = new MultiFileWriter(tempFile, "part-", Config.get("files.partition")
+                                                                                    .asIntegerValue(numberOfThreads))) {
             builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer),
                                 numberOfThreads)
                    .build()
@@ -335,9 +337,9 @@ public final class Pipeline implements Serializable {
       private final AnnotatableType[] annotationTypes;
       private final java.util.function.Consumer<Document> onComplete;
       private final AtomicLong counter;
-      private final AsyncWriter writer;
+      private final MultiFileWriter writer;
 
-      private AnnotateConsumer(AnnotatableType[] annotationTypes, Consumer<Document> onComplete, AtomicLong counter, AsyncWriter writer) {
+      private AnnotateConsumer(AnnotatableType[] annotationTypes, Consumer<Document> onComplete, AtomicLong counter, MultiFileWriter writer) {
          this.annotationTypes = annotationTypes;
          this.onComplete = onComplete;
          this.counter = counter;

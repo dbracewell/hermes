@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.tokenization;
 
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
-import com.google.common.collect.Sets;
+import com.davidbracewell.guava.common.collect.Sets;
 import lombok.NonNull;
 
 import java.util.Collection;
@@ -35,11 +35,12 @@ import java.util.Set;
  */
 public final class TokenType extends EnumValue implements Comparable<TokenType> {
    private static final long serialVersionUID = 1L;
+   public static final String CANONICAL_NAME = TokenType.class.getCanonicalName();
 
    private static final Set<TokenType> values = Sets.newConcurrentHashSet();
 
    private TokenType(String name) {
-      super(name);
+      super(CANONICAL_NAME, name);
    }
 
    /**

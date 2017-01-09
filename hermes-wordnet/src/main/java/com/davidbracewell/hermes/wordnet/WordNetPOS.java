@@ -21,8 +21,8 @@
 
 package com.davidbracewell.hermes.wordnet;
 
-import com.davidbracewell.hermes.attribute.POS;
-import com.google.common.base.Preconditions;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.hermes.POS;
 
 /**
  * The enum Word net pOS.

@@ -23,19 +23,19 @@ package com.davidbracewell.hermes.morphology;
 
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.collection.Trie;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.guava.common.base.Function;
+import com.davidbracewell.guava.common.base.Strings;
+import com.davidbracewell.guava.common.base.Throwables;
+import com.davidbracewell.guava.common.collect.ArrayListMultimap;
+import com.davidbracewell.guava.common.collect.LinkedHashMultimap;
+import com.davidbracewell.guava.common.collect.Maps;
+import com.davidbracewell.guava.common.collect.Multimap;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.CSVReader;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
-import com.google.common.base.Function;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import lombok.NonNull;
 
 import java.io.IOException;

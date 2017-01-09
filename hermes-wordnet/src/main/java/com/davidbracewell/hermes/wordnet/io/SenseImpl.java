@@ -22,9 +22,9 @@
 package com.davidbracewell.hermes.wordnet.io;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.guava.common.collect.HashMultimap;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.wordnet.*;
-import com.google.common.collect.HashMultimap;
 
 import java.io.Serializable;
 import java.util.*;

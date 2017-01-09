@@ -23,16 +23,16 @@ package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
+import com.davidbracewell.guava.common.base.Joiner;
+import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.collect.HashMultimap;
+import com.davidbracewell.guava.common.collect.Sets;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconEntry;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.lexicon.LexiconMatch;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Sets;
 import lombok.NonNull;
 
 import java.util.Arrays;

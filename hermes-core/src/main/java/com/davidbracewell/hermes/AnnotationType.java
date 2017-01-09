@@ -26,8 +26,8 @@ import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.HierarchicalEnumValue;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
+import com.davidbracewell.guava.common.collect.Sets;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.collect.Sets;
 import lombok.NonNull;
 
 import java.util.Collection;
@@ -37,25 +37,37 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * <p> An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The
- * definition
+ * <p> An <code>AnnotationType</code> serves to define the structure and source of a specific annotation. The definition
  * provided by the type facilitates the portability of the annotation between different modules. An annotation type
- * defines the type name, parent type, and optionally a set of attributes that are expected to be associated with an
- * annotation of this type. </p> <p> Annotation types are hierarchical and all types have a parent defined. If no
- * parent
- * is explicitly declared, its parent is resolved to the <code>ROOT</code> type. Annotation types inherit their
- * parent's
- * attributes. Attribute information on the type serves as documentation and is not type checked. Additionally, a "tag"
- * can be defined for a type using the <code>tag</code> property, which defines the attribute to return on calls to
- * <code>getTag()</code>. </p> <p>Type information is defined via configuration. An Example is as follows:</pre> {@code
- * Annotation{ ENTITY { attributes = ENTITY_TYPE, CONFIDENCE tag = ENTITY_TYPE } REGEX_ENTITY { parent = ENTITY
- * annotator = @{DEFAULT_ENTITY_REGEX} annotator { ENGLISH = @{ENGLISH_ENTITY_REGEX} JAPANESE = }}}}</pre>
+ * defines the type name, parent type, annotator, and the tag type. </p>
+ *
+ * <p> Annotation types are hierarchical and all types have a parent defined. If no parent is explicitly declared, its
+ * parent is resolved to the <code>ROOT</code> type. Annotation types inherit their parent's tag attribute. A tag can be
+ * defined for a type during creation or by using the <code>tag</code> (e.g. <code>TypeName.tag=AttributeType</code>)
+ * property, which defines the attribute to return on calls to <code>getTag()</code>. Children will inherit the tag type
+ * of their parent unless explicitly specified.</p>
+ *
+ * <p>Type information can be defined during creation or via configuration. An Example is as follows:
+ * <pre> {@code
+ * Annotation {
+ *       ENTITY {
+ *          tag = ENTITY_TYPE
+ *       }
+ *
+ *       REGEX_ENTITY {
+ *          parent = ENTITY
+ *          annotator = @{DEFAULT_ENTITY_REGEX}
+ *       }
+ * }
+ * }
+ * </pre>
+ * </p>
  */
 public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> implements Comparable<AnnotationType>, AnnotatableType {
    private static final long serialVersionUID = 1L;
+   public static final String CANONICAL_NAME = AnnotationType.class.getCanonicalName();
    private static final String typeName = "Annotation";
    private volatile transient AttributeType tagAttributeType = null;
-   private volatile transient Set<AttributeType> definedAttributeTypes = null;
    private static final Set<AnnotationType> values = Sets.newConcurrentHashSet();
 
    /**
@@ -65,7 +77,7 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
 
 
    private AnnotationType(String name, AnnotationType parent) {
-      super(name, parent);
+      super(CANONICAL_NAME, name, parent);
    }
 
 
@@ -83,9 +95,28 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
     * @throws IllegalArgumentException name is invalid, or annotation type already exists with different parent
     */
    public static AnnotationType create(String name, AnnotationType parent) {
+      return create(name, parent, null);
+   }
+
+   /**
+    * Creates a new Annotation Type or retrieves an already existing one for a given name
+    *
+    * @param name             the name
+    * @param parent           the parent
+    * @param tagAttributeType The attribute used as this annotations tag
+    * @return the annotation type
+    * @throws IllegalArgumentException name is invalid, or annotation type already exists with different parent
+    */
+   public static AnnotationType create(String name, AnnotationType parent, AttributeType tagAttributeType) {
       AnnotationType toReturn = DynamicEnum.register(new AnnotationType(name, parent));
       if (toReturn.setParentIfAbsent(parent)) {
          Config.setProperty(typeName + "." + toReturn.name() + ".parent", parent.name());
+      }
+      if (tagAttributeType != null && toReturn.tagAttributeType == null) {
+         toReturn.tagAttributeType = tagAttributeType;
+         Config.setProperty(typeName + "." + toReturn.name() + ".tag", tagAttributeType.name());
+      } else if (tagAttributeType != null && !toReturn.tagAttributeType.equals(tagAttributeType)) {
+         throw new IllegalArgumentException("Attempting to change tag of " + name + " from " + toReturn.tagAttributeType + " to " + tagAttributeType);
       }
       values.add(toReturn);
       return toReturn;
@@ -138,7 +169,6 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
       return Cast.as(Config.get(typeName, name(), "parent").as(getClass(), null));
    }
 
-
    /**
     * <p>Checks if this type is an instance of another type. Type B is an instance of Type A if A == B, B is the gold
     * standard version of A, or A is in B's parent tree.</p>
@@ -165,17 +195,17 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
    }
 
    /**
-    * Gets tag attribute.
+    * Gets the attribute associated with the tag of this annotation.
     *
     * @return the tag attribute
     */
-   public AttributeType getTagAttributeType() {
+   public AttributeType getTagAttribute() {
       if (tagAttributeType == null) {
          synchronized (this) {
             if (tagAttributeType == null) {
                String attribute = Config.get(typeName, name(), "tag").asString();
                if (StringUtils.isNullOrBlank(attribute) && !AnnotationType.ROOT.equals(getParent())) {
-                  tagAttributeType = getParent().getTagAttributeType();
+                  tagAttributeType = getParent().getTagAttribute();
                } else if (StringUtils.isNullOrBlank(attribute)) {
                   tagAttributeType = Types.TAG;
                } else {

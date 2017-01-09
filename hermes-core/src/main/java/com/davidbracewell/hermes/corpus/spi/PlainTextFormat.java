@@ -37,26 +37,32 @@ import java.util.Collections;
  */
 @MetaInfServices(CorpusFormat.class)
 public class PlainTextFormat extends FileBasedFormat {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  @Override
-  public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
-    return Collections.singleton(documentFactory.create(resource.readToString().trim()));
-  }
+   @Override
+   public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
+      return Collections.singleton(documentFactory.create(resource.readToString().trim()));
+   }
 
-  @Override
-  public void write(Resource resource, Document document) throws IOException {
-    resource.write(document.toString());
-  }
+//  @Override
+//  public void write(Resource resource, Document document) throws IOException {
+//    resource.write(document.toString());
+//  }
 
-  @Override
-  public String name() {
-    return "TEXT";
-  }
 
-  @Override
-  public String extension() {
-    return "txt";
-  }
+   @Override
+   public String toString(Document document) {
+      return document.toString();
+   }
+
+   @Override
+   public String name() {
+      return "TEXT";
+   }
+
+   @Override
+   public String extension() {
+      return "txt";
+   }
 
 }//END OF PlainTextFormat

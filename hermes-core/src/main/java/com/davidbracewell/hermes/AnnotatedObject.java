@@ -59,17 +59,14 @@ public interface AnnotatedObject {
     * @return the forst token annotation
     */
    default Annotation firstToken() {
-      if (tokenLength() > 0) {
-         return tokenAt(0);
-      }
-      return Fragments.detachedEmptyAnnotation();
+      return tokenAt(0);
    }
 
    /**
-    * For each.
+    * Convenience method for processing annotations of a given type.
     *
-    * @param type     the type
-    * @param consumer the consumer
+    * @param type     the annotation type
+    * @param consumer the consumer to use for processing annotations
     */
    default void forEach(@NonNull AnnotationType type, @NonNull Consumer<? super Annotation> consumer) {
       get(type).forEach(consumer);
@@ -125,10 +122,7 @@ public interface AnnotatedObject {
     * @return the last token annotation
     */
    default Annotation lastToken() {
-      if (tokenLength() > 0) {
-         return tokenAt(tokenLength() - 1);
-      }
-      return Fragments.detachedEmptyAnnotation();
+      return tokenAt(tokenLength() - 1);
    }
 
    /**
@@ -145,7 +139,7 @@ public interface AnnotatedObject {
     *
     * @return the stream
     */
-   default Stream<Annotation> sentenceStream(){
+   default Stream<Annotation> sentenceStream() {
       return stream(Types.SENTENCE);
    }
 
@@ -154,7 +148,7 @@ public interface AnnotatedObject {
     *
     * @return the stream
     */
-   default Stream<Annotation> tokenStream(){
+   default Stream<Annotation> tokenStream() {
       return stream(Types.TOKEN);
    }
 
@@ -169,7 +163,7 @@ public interface AnnotatedObject {
    }
 
    /**
-    * <p> Gits the token at the given token index which is a relative offset from this object. For example, given the
+    * <p> Gets the token at the given token index which is a relative offset from this object. For example, given the
     * document with the following tokens: <code>["the", "quick", "brown", "fox", "jumps", "over", "the", "lazy",
     * "dog"]</code> and this annotated object spanning <code>["quick", "brown", "fox"]</code> "quick" would have a
     * relative offset in this object of 0 and document offset of 1. </p>

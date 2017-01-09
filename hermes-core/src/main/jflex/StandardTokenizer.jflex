@@ -48,6 +48,7 @@ private Tokenizer.Token attachToken(TokenType type){
 }
 
 
+
 %}
 
 //===================================================================================================================
@@ -55,7 +56,7 @@ private Tokenizer.Token attachToken(TokenType type){
 //===================================================================================================================
 HYPHEN= \p{Pd}
 APOS=['\0092\u2019\u0091\u2018\u201B]|&apos;
-PUNCTUATION=!(![\p{P}]|{HYPHEN})
+PUNCTUATION=!(![\p{P}\~]|{HYPHEN})
 
 //===================================================================================================================
 // Alpha Numeric
@@ -85,11 +86,13 @@ COMPANY = {ALPHANUM} ("&"|"@") {ALPHANUM}
 
 NUMBER=[:digit:]+([\.,][:digit:]+)*("st"|"th"|"rd")?
 
-HASHTAG="#" ({ALPHA}|[:digit:])*
+HASHTAG="#" ({ALPHA}|[:digit:])+
 
-REPLY = "@" [^ \t\n]+
+REPLY = "@" [a-zA-Z0-9_]{1,15}
 
-TIME = [:digit:]+ ":" [:digit:]+ ([AaPp][mM])?
+TIME = [:digit:]+ ":" [:digit:]+ {AMPM}?
+
+AMPM = ([AaPp]"."?[mM]"."?)
 
 //===================================================================================================================
 // Internet Related
@@ -99,7 +102,7 @@ TIME = [:digit:]+ ":" [:digit:]+ ([AaPp][mM])?
 EMAIL={ALPHANUM}(("."|"-"|"_"){ALPHANUM})*"@"{ALPHANUM}(("."|"-"){ALPHANUM})+
 
 // Absolute URI (Partial BNF from RFC3986) https://github.com/rdelbru/lucene-uri-preserving-standard-tokenizer
-URI=({ALPHA}+"://"?({USERINFO}"@")?)?{AUTHORITY}{PATH}("?"{QUERY})?("#"{FRAGMENT})?
+URI=(("http" "s"?|{ALPHA}+)"://"?({USERINFO}"@")?)?{AUTHORITY}{PATH}("?"{QUERY})?("#"{FRAGMENT})?
 AUTHORITY={HOST}(":"{PORT})?
 QUERY=({SEGMENT}|"/"|"?")*
 FRAGMENT=({SEGMENT}|"/"|"?")*
@@ -107,7 +110,7 @@ USERINFO={USERNAME}(":"{PASSWD})?
 USERNAME={UNRESERVED}+
 PASSWD=({UNRESERVED}|":"|{SUBDELIMS})+
 HOST={DOMAINLABEL}("."{DOMAINLABEL})*"."{TLD}
-TLD = [a-zA-z]{2,4}
+TLD = [a-zA-Z]{2,4}
 DOMAINLABEL={ALPHANUM}(("-"|{ALPHANUM})*{ALPHANUM})?
 PORT=[:digit:]+
 PATH=("/"{SEGMENT})*
@@ -117,9 +120,6 @@ SUBDELIMS=("!"|"$"|"&"|"'"|"("|")"|"*"|"+"|","|";"|"=")
 PCT_ENCODED="%"{HEXDIG}{HEXDIG}
 HEXDIG=([:digit:]|"A"|"B"|"C"|"D"|"E"|"F"|"a"|"b"|"c"|"d"|"e"|"f")
 
-//#SGML = "<" [A-Za-z][^>]+ ">"
-
-
 //===================================================================================================================
 // Misc
 //===================================================================================================================
@@ -127,6 +127,9 @@ HEXDIG=([:digit:]|"A"|"B"|"C"|"D"|"E"|"F"|"a"|"b"|"c"|"d"|"e"|"f")
 CURRENCY = [$\u00A2\u00A3\u00A5\u20A0-\u20CF]
 
 WHITESPACE = [\p{Z}\t\f\r\n\p{C}]
+MATH=[\u2200-\u22ff]
+EMOTICON=[\u219d\u2300-\u2800\ud800-\uddff\ude00-\ue079\ue200-\ue263\ue3ff-\ue466\ue503-\uefff\uf03d-\uf296\ufe00-\ufe0f]+
+
 
 
 %%
@@ -134,6 +137,7 @@ WHITESPACE = [\p{Z}\t\f\r\n\p{C}]
  {HASHTAG}              {return attachToken(TokenType.HASH_TAG);}
  {REPLY}                {return attachToken(TokenType.REPLY);}
  {TIME}                {return attachToken(TokenType.TIME);}
+ {AMPM}                {return attachToken(TokenType.TIME);}
  {NUMBER}               {return attachToken(TokenType.NUMBER);}
  {ALPHANUM}({HYPHEN}{ALPHANUM})+ {return attachToken(TokenType.ALPHA_NUMERIC);}
  {HYPHEN}               {return attachToken(TokenType.HYPHEN);}
@@ -150,11 +154,12 @@ WHITESPACE = [\p{Z}\t\f\r\n\p{C}]
  {ALPHANUM}/{PUNCTUATION}{PERSON_TITLE} {return attachToken(TokenType.ALPHA_NUMERIC);}
  {URI}/{WHITESPACE}|{PUNCTUATION}  {return attachToken(TokenType.URL);}
  {ACRONYM}              {return attachToken(TokenType.ACRONYM);}
-// {SGML}                 {return attachToken(TokenType.SGML);}
  {COMPANY}              {return attachToken(TokenType.COMPANY);}
  {UNDERSCORE}           {return attachToken(TokenType.ALPHA_NUMERIC);}
  {URI}                  {return attachToken(TokenType.URL);}
+ {EMOTICON}             {return attachToken(TokenType.EMOTICON);}
+ {MATH}                 {return attachToken(TokenType.UNKNOWN);}
  {WHITESPACE}           {}
 }
 
-  [^]                   {return attachToken(TokenType.UNKNOWN);}
+[^]                   {return attachToken(TokenType.UNKNOWN);}

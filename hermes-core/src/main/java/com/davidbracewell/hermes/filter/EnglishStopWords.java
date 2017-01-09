@@ -22,15 +22,16 @@
 package com.davidbracewell.hermes.filter;
 
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.CharMatcher;
+import com.davidbracewell.guava.common.base.Strings;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.logging.Logger;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -80,6 +81,28 @@ public class EnglishStopWords extends StopWords {
 
   @Override
   protected boolean isTokenStopWord(Annotation token) {
+    TokenType tokenType = token.get(Types.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN);
+    if( tokenType.equals(TokenType.CHINESE_JAPANESE)){
+      return true;
+    }
+    if (tokenType.equals(TokenType.URL)) {
+      return true;
+    }
+    if (tokenType.equals(TokenType.EMOTICON)) {
+      return true;
+    }
+    if (tokenType.equals(TokenType.EMAIL)) {
+      return true;
+    }
+    if (tokenType.equals(TokenType.PUNCTUATION)) {
+      return true;
+    }
+    if (tokenType.equals(TokenType.SGML)) {
+      return true;
+    }
+    if (tokenType.equals(TokenType.PROTOCOL)) {
+      return true;
+    }
     if (token.contains(Types.PART_OF_SPEECH)) {
       POS tag = token.get(Types.PART_OF_SPEECH).as(POS.class);
       if (tag != null) {

@@ -23,7 +23,7 @@ package com.davidbracewell.hermes.ml.pos;
 
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.sequence.SequenceValidator;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.string.StringPredicates;
 import com.davidbracewell.string.StringUtils;
 
@@ -31,81 +31,103 @@ import com.davidbracewell.string.StringUtils;
  * @author David B. Bracewell
  */
 public class POSValidator implements SequenceValidator {
-  private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 1L;
 
-  @Override
-  public boolean isValid(String label, String previousLabel, Instance instance) {
-    String word = instance.getFeatures().stream().filter(f -> f.getName().startsWith("w[0]=")).map(f -> f.getName().substring(5)).findFirst().orElse(StringUtils.EMPTY);
-    if (StringUtils.isNullOrBlank(word)) {
-      return true;
-    }
-    POS pos = POS.fromString(label);
-    if (pos == null) {
-      return true;
-    }
+   @Override
+   public boolean isValid(String label, String previousLabel, Instance instance) {
+      String word = instance.getFeatures().stream().filter(f -> f.getName().startsWith("w[0]=")).map(
+         f -> f.getName().substring(5)).findFirst().orElse(StringUtils.EMPTY);
+      if (StringUtils.isNullOrBlank(word)) {
+         return true;
+      }
+      POS pos = POS.fromString(label);
+      if (pos == null) {
+         return true;
+      }
 
-    switch (word) {
-      case "\"":
-      case "``":
-      case "''":
-      case "\"\"":
-      case "`":
-        return pos.isTag(POS.QUOTE);
-      case "'":
-        return pos.isTag(POS.QUOTE, POS.POS, POS.COLON);
-      case "#":
-        return pos.isTag(POS.HASH);
-      case ",":
-        return pos.isTag(POS.COMMA);
-      case ":":
-      case ";":
-      case "...":
-      case "--":
-      case "::":
-      case "-":
-        return pos.isTag(POS.COLON);
-      case "$":
-        return pos.isTag(POS.DOLLAR);
-      case ".":
-      case "!":
-      case "?":
-        return pos.isTag(POS.PERIOD, POS.COLON);
-      case "{":
-        return pos.isTag(POS.LCB);
-      case "}":
-        return pos.isTag(POS.RCB);
-      case "[":
-        return pos.isTag(POS.LSB);
-      case "]":
-        return pos.isTag(POS.RSB);
-      case "(":
-        return pos.isTag(POS.LRB);
-      case ")":
-        return pos.isTag(POS.RRB);
-      case "&":
-        return pos.isTag(POS.CC, POS.SYM);
-    }
+      switch (word.toLowerCase()) {
+         case "\"":
+         case "``":
+         case "''":
+         case "\"\"":
+         case "`":
+            return pos.isTag(POS.QUOTE);
+         case "'":
+            return pos.isTag(POS.QUOTE, POS.POS, POS.COLON);
+         case "#":
+            return pos.isTag(POS.HASH);
+         case ",":
+            return pos.isTag(POS.COMMA);
+         case ":":
+         case ";":
+         case "...":
+         case "--":
+         case "::":
+         case "-":
+            return pos.isTag(POS.COLON);
+         case "$":
+            return pos.isTag(POS.DOLLAR);
+         case ".":
+         case "!":
+         case "?":
+            return pos.isTag(POS.PERIOD, POS.COLON);
+         case "{":
+            return pos.isTag(POS.LCB);
+         case "}":
+            return pos.isTag(POS.RCB);
+         case "[":
+            return pos.isTag(POS.LSB);
+         case "]":
+            return pos.isTag(POS.RSB);
+         case "(":
+            return pos.isTag(POS.LRB);
+         case ")":
+            return pos.isTag(POS.RRB);
+         case "&":
+            return pos.isTag(POS.CC, POS.SYM);
+         case "i":
+            return pos.isTag(POS.PRP, POS.CD);
+         case "me":
+         case "myself":
+         case "you":
+         case "yourself":
+         case "he":
+         case "him":
+         case "himself":
+         case "she":
+         case "we":
+         case "us":
+         case "they":
+            return pos.isTag(POS.PRP);
+         case "my":
+         case "mine":
+         case "your":
+         case "yours":
+         case "his":
+         case "their":
+         case "our":
+            return pos.isTag(POS.PRP$);
+      }
 
-    boolean hasLetterOrDigit = StringPredicates.HAS_LETTER_OR_DIGIT.test(word);
-    if (!hasLetterOrDigit && word.endsWith("-")) {
-      return pos.isTag(POS.COLON);
-    }
 
-    if (word.contains("$")) {
-      return pos.isTag(POS.SYM, POS.CD, POS.DOLLAR);
-    }
+      boolean hasLetterOrDigit = StringPredicates.HAS_LETTER_OR_DIGIT.test(word);
+      if (!hasLetterOrDigit && word.endsWith("-")) {
+         return pos.isTag(POS.COLON);
+      }
 
-    if (word.equals("%")) {
-      return pos.isTag(POS.SYM);
-    }
+      if (word.contains("$")) {
+         return pos.isTag(POS.SYM, POS.CD, POS.DOLLAR);
+      }
 
-    if (!hasLetterOrDigit) {
-      return pos.isTag(POS.SYM, POS.CD);
-    }
+      if (word.equals("%")) {
+         return pos.isTag(POS.SYM);
+      }
 
-    return !pos.isTag(
-      POS.QUOTE, POS.HASH, POS.COMMA, POS.COLON, POS.DOLLAR, POS.PERIOD,
-      POS.LCB, POS.RCB, POS.LSB, POS.RSB, POS.LRB, POS.RRB
-    );
-  }
+      if (!hasLetterOrDigit) {
+         return pos.isTag(POS.SYM, POS.CD);
+      }
+
+      return !pos.isTag(POS.QUOTE, POS.HASH, POS.COMMA, POS.COLON, POS.DOLLAR, POS.PERIOD, POS.LCB, POS.RCB, POS.LSB,
+                        POS.RSB, POS.LRB, POS.RRB);
+   }
 }//END OF POSValidator

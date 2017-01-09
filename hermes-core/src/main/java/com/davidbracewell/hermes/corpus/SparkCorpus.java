@@ -8,12 +8,10 @@ import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Hermes;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.io.resource.StringResource;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.SparkStream;
 import com.davidbracewell.stream.SparkStreamingContext;
 import com.davidbracewell.stream.StreamingContext;
-import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
@@ -146,21 +144,15 @@ public class SparkCorpus implements Corpus, Serializable {
          stream.saveAsTextFile(resource);
       } else {
          stream.getSource().map(json -> {
-            Document document = Document.fromJson(json);
-            Resource tmp = new StringResource();
-            try {
-               outFormat.write(tmp, document);
-               return tmp.readToString().trim();
-            } catch (IOException e) {
-               e.printStackTrace();
-               return StringUtils.EMPTY;
+            if (outFormat.name().equals("JSON_OPL")) {
+               return json;
             }
-         })
-               .saveAsTextFile(resource);
+            Document document = Document.fromJson(json);
+            return outFormat.toString(document);
+         }).saveAsTextFile(resource);
       }
       return this;
    }
-
 
    @Override
    public boolean isDistributed() {

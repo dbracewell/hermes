@@ -37,192 +37,192 @@ import java.util.function.Predicate;
  *
  * @author David B. Bracewell
  */
-public interface Lexicon extends Predicate<HString>, Iterable<String> {
+public interface Lexicon extends Predicate<HString>, WordList {
 
-  /**
-   * The number of lexical items in the lexicon
-   *
-   * @return the number of lexical items in the lexicon
-   */
-  int size();
+   /**
+    * The number of lexical items in the lexicon
+    *
+    * @return the number of lexical items in the lexicon
+    */
+   int size();
 
-  /**
-   * Gets match.
-   *
-   * @param hString the h string
-   * @return the match
-   */
-  default Optional<String> getMatch(@NonNull HString hString) {
-    return getEntries(hString)
-      .stream()
-      .map(LexiconEntry::getLemma)
-      .findFirst();
-  }
+   /**
+    * Gets match.
+    *
+    * @param hString the h string
+    * @return the match
+    */
+   default Optional<String> getMatch(@NonNull HString hString) {
+      return getEntries(hString)
+                .stream()
+                .map(LexiconEntry::getLemma)
+                .findFirst();
+   }
 
-  @Override
-  default boolean test(HString hString) {
-    return getMatch(hString).isPresent();
-  }
+   @Override
+   default boolean test(HString hString) {
+      return getMatch(hString).isPresent();
+   }
 
-  /**
-   * Gets probability.
-   *
-   * @param hString the h string
-   * @return the probability
-   */
-  default double getProbability(@NonNull HString hString) {
-    return getEntries(hString).stream()
-      .mapToDouble(LexiconEntry::getProbability)
-      .max()
-      .orElseGet(() -> 0d);
-  }
+   /**
+    * Gets probability.
+    *
+    * @param hString the h string
+    * @return the probability
+    */
+   default double getProbability(@NonNull HString hString) {
+      return getEntries(hString).stream()
+                                .mapToDouble(LexiconEntry::getProbability)
+                                .max()
+                                .orElseGet(() -> 0d);
+   }
 
-  /**
-   * Gets tag attribute.
-   *
-   * @return the tag attribute
-   */
-  AttributeType getTagAttributeType();
+   /**
+    * Gets tag attribute.
+    *
+    * @return the tag attribute
+    */
+   AttributeType getTagAttributeType();
 
-  /**
-   * Gets probability.
-   *
-   * @param lemma the lemma
-   * @return the probability
-   */
-  default double getProbability(@NonNull String lemma) {
-    return getProbability(Fragments.string(lemma));
-  }
+   /**
+    * Gets probability.
+    *
+    * @param lemma the lemma
+    * @return the probability
+    */
+   default double getProbability(@NonNull String lemma) {
+      return getProbability(Fragments.string(lemma));
+   }
 
-  /**
-   * Gets tag.
-   *
-   * @param lemma the lemma
-   * @return the tag
-   */
-  default Optional<Tag> getTag(@NonNull String lemma) {
-    return getTag(Fragments.string(lemma));
-  }
+   /**
+    * Gets tag.
+    *
+    * @param lemma the lemma
+    * @return the tag
+    */
+   default Optional<Tag> getTag(@NonNull String lemma) {
+      return getTag(Fragments.string(lemma));
+   }
 
-  /**
-   * Gets tag.
-   *
-   * @param hString the h string
-   * @return the tag
-   */
-  default Optional<Tag> getTag(@NonNull HString hString) {
-    return getEntries(hString).stream()
-      .filter(e -> e.getTag() != null)
-      .map(LexiconEntry::getTag).findFirst();
-  }
+   /**
+    * Gets tag.
+    *
+    * @param hString the h string
+    * @return the tag
+    */
+   default Optional<Tag> getTag(@NonNull HString hString) {
+      return getEntries(hString).stream()
+                                .filter(e -> e.getTag() != null)
+                                .map(LexiconEntry::getTag).findFirst();
+   }
 
-  /**
-   * Gets probability.
-   *
-   * @param hString the h string
-   * @param tag     the tag
-   * @return the probability
-   */
-  default double getProbability(@NonNull HString hString, @NonNull Tag tag) {
-    return getEntries(hString).stream()
-      .filter(le -> le.getTag() != null && le.getTag().isInstance(tag))
-      .mapToDouble(LexiconEntry::getProbability)
-      .max()
-      .orElse(0d);
-  }
+   /**
+    * Gets probability.
+    *
+    * @param hString the h string
+    * @param tag     the tag
+    * @return the probability
+    */
+   default double getProbability(@NonNull HString hString, @NonNull Tag tag) {
+      return getEntries(hString).stream()
+                                .filter(le -> le.getTag() != null && le.getTag().isInstance(tag))
+                                .mapToDouble(LexiconEntry::getProbability)
+                                .max()
+                                .orElse(0d);
+   }
 
-  default double getProbability(@NonNull String string, @NonNull Tag tag) {
-    return getProbability(Fragments.string(string), tag);
-  }
+   default double getProbability(@NonNull String string, @NonNull Tag tag) {
+      return getProbability(Fragments.string(string), tag);
+   }
 
-  /**
-   * Gets max token length.
-   *
-   * @return the max token length
-   */
-  int getMaxTokenLength();
+   /**
+    * Gets max token length.
+    *
+    * @return the max token length
+    */
+   int getMaxTokenLength();
 
-  /**
-   * Is case sensitive boolean.
-   *
-   * @return the boolean
-   */
-  boolean isCaseSensitive();
+   /**
+    * Is case sensitive boolean.
+    *
+    * @return the boolean
+    */
+   boolean isCaseSensitive();
 
-  /**
-   * Add.
-   *
-   * @param lemma the lemma
-   */
-  default void add(@NonNull String lemma) {
-    add(new LexiconEntry(lemma, 1.0, null, null));
-  }
+   /**
+    * Add.
+    *
+    * @param lemma the lemma
+    */
+   default void add(@NonNull String lemma) {
+      add(new LexiconEntry(lemma, 1.0, null, null));
+   }
 
-  /**
-   * Add.
-   *
-   * @param lemma the lemma
-   * @param tag   the tag
-   */
-  default void add(@NonNull String lemma, @NonNull Tag tag) {
-    add(new LexiconEntry(lemma, 1.0, null, tag));
-  }
+   /**
+    * Add.
+    *
+    * @param lemma the lemma
+    * @param tag   the tag
+    */
+   default void add(@NonNull String lemma, @NonNull Tag tag) {
+      add(new LexiconEntry(lemma, 1.0, null, tag));
+   }
 
-  /**
-   * Add.
-   *
-   * @param lemma       the lemma
-   * @param probability the probability
-   * @param tag         the tag
-   */
-  default void add(@NonNull String lemma, double probability, @NonNull Tag tag) {
-    add(new LexiconEntry(lemma, probability, null, tag));
-  }
+   /**
+    * Add.
+    *
+    * @param lemma       the lemma
+    * @param probability the probability
+    * @param tag         the tag
+    */
+   default void add(@NonNull String lemma, double probability, @NonNull Tag tag) {
+      add(new LexiconEntry(lemma, probability, null, tag));
+   }
 
-  /**
-   * Add.
-   *
-   * @param lemma       the lemma
-   * @param probability the probability
-   */
-  default void add(@NonNull String lemma, double probability) {
-    add(new LexiconEntry(lemma, probability, null, null));
-  }
+   /**
+    * Add.
+    *
+    * @param lemma       the lemma
+    * @param probability the probability
+    */
+   default void add(@NonNull String lemma, double probability) {
+      add(new LexiconEntry(lemma, probability, null, null));
+   }
 
-  /**
-   * Add.
-   *
-   * @param entry the entry
-   */
-  void add(LexiconEntry entry);
+   /**
+    * Add.
+    *
+    * @param entry the entry
+    */
+   void add(LexiconEntry entry);
 
-  /**
-   * Add all.
-   *
-   * @param entries the entries
-   */
-  default void addAll(Iterable<LexiconEntry> entries) {
-    if (entries != null) {
-      entries.forEach(this::add);
-    }
-  }
+   /**
+    * Add all.
+    *
+    * @param entries the entries
+    */
+   default void addAll(Iterable<LexiconEntry> entries) {
+      if (entries != null) {
+         entries.forEach(this::add);
+      }
+   }
+
+   /**
+    * Find list.
+    *
+    * @param source the source
+    * @return the list
+    */
+   List<HString> match(HString source);
 
 
-  /**
-   * Find list.
-   *
-   * @param source the source
-   * @return the list
-   */
-  List<HString> match(HString source);
+   /**
+    * Gets entries.
+    *
+    * @param hString the h string
+    * @return the entries
+    */
+   List<LexiconEntry> getEntries(HString hString);
 
-
-  /**
-   * Gets entries.
-   *
-   * @param hString the h string
-   * @return the entries
-   */
-  List<LexiconEntry> getEntries(HString hString);
 
 }//END OF Lexicon

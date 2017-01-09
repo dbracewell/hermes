@@ -7,4 +7,5 @@ public enum Mode {
    TRAIN,
    TEST,
    SPLIT,
+   LABEL
 }//END OF Mode

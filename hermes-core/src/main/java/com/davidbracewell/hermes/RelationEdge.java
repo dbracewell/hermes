@@ -22,55 +22,40 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.atlas.Edge;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Objects;
+import lombok.ToString;
 
 /**
+ * A specialized annotation graph edge that stores relation type and value.
+ *
  * @author David B. Bracewell
  */
+@EqualsAndHashCode(callSuper = true)
+@ToString(includeFieldNames = true)
 public class RelationEdge extends Edge<Annotation> {
-  private static final long serialVersionUID = 1L;
-  @Getter
-  @Setter
-  public String relation;
-  @Getter
-  @Setter
-  public RelationType relationType;
+   private static final long serialVersionUID = 1L;
+   @Getter
+   @Setter
+   private String relation;
+   @Getter
+   @Setter
+   private RelationType relationType;
 
-  public RelationEdge(Annotation vertex1, Annotation vertex2) {
-    super(vertex1, vertex2);
-  }
+   /**
+    * Instantiates a new Relation edge.
+    *
+    * @param source the source vertex
+    * @param target the target vertex
+    */
+   public RelationEdge(Annotation source, Annotation target) {
+      super(source, target);
+   }
 
-  @Override
-  public boolean isDirected() {
-    return true;
-  }
+   @Override
+   public boolean isDirected() {
+      return true;
+   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof RelationEdge)) return false;
-    RelationEdge edge = (RelationEdge) o;
-    return Objects.equals(relation, edge.relation) &&
-      Objects.equals(relationType, edge.relationType) &&
-      Objects.equals(getFirstVertex(), edge.getFirstVertex()) &&
-      Objects.equals(getSecondVertex(), edge.getSecondVertex());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(relation, relationType, getFirstVertex(), getSecondVertex());
-  }
-
-  @Override
-  public String toString() {
-    return "RelationEdge{" +
-      "source='" + getFirstVertex() + "', " +
-      "target='" + getSecondVertex() + "', " +
-      "relation='" + relation + '\'' +
-      ", relationType=" + relationType +
-      '}';
-  }
 }//END OF RelationEdge

@@ -22,56 +22,58 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.DynamicEnum;
+import com.davidbracewell.annotation.Preload;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 /**
- * <p>Common Annotation Types</p>
+ * <p>Common Annotation Types. The predefined types are pre-loaded on initialization.</p>
  *
  * @author David B. Bracewell
  */
+@Preload
 public interface Types {
 
    /**
     * Document author
     */
-   AttributeType AUTHOR = AttributeType.create("AUTHOR");
+   AttributeType AUTHOR = AttributeType.create("AUTHOR", AttributeValueType.STRING);
    /**
     * Document CATEGORY
     */
-   AttributeType CATEGORY = AttributeType.create("CATEGORY");
+   AttributeType CATEGORY = AttributeType.create("CATEGORY", AttributeValueType.STRING);
    /**
     * Confidence value associated with an annotation
     */
-   AttributeType CONFIDENCE = AttributeType.create("CONFIDENCE");
+   AttributeType CONFIDENCE = AttributeType.create("CONFIDENCE", AttributeValueType.DOUBLE);
    /**
     * The constant DEPENDENCY.
     */
    RelationType DEPENDENCY = RelationType.create("DEPENDENCY");
    /**
-    * Entity annotation type
-    */
-   AnnotationType ENTITY = AnnotationType.create("ENTITY");
-   /**
     * The constant ENTITY_TYPE.
     */
-   AttributeType ENTITY_TYPE = AttributeType.create("ENTITY_TYPE");
+   AttributeType ENTITY_TYPE = AttributeType.create("ENTITY_TYPE", AttributeValueType.ENTITY_TYPE);
+   /**
+    * Entity annotation type
+    */
+   AnnotationType ENTITY = AnnotationType.create("ENTITY", AnnotationType.ROOT, ENTITY_TYPE);
    /**
     * File used to create the document
     */
-   AttributeType FILE = AttributeType.create("FILE");
+   AttributeType FILE = AttributeType.create("FILE", AttributeValueType.STRING);
    /**
     * The index of a span with regards to a document
     */
-   AttributeType INDEX = AttributeType.create("INDEX");
+   AttributeType INDEX = AttributeType.create("INDEX", AttributeValueType.INTEGER);
    /**
     * The Language associated with a span
     */
-   AttributeType LANGUAGE = AttributeType.create("LANGUAGE");
+   AttributeType LANGUAGE = AttributeType.create("LANGUAGE", AttributeValueType.LANGUAGE);
    /**
     * The lemma version of a span
     */
-   AttributeType LEMMA = AttributeType.create("LEMMA");
+   AttributeType LEMMA = AttributeType.create("LEMMA", AttributeValueType.STRING);
    /**
     * lexicon match annotation type
     */
@@ -79,23 +81,27 @@ public interface Types {
    /**
     * The constant CADUCEUS_RULE.
     */
-   AttributeType CADUCEUS_RULE = AttributeType.create("CADUCEUS_RULE");
+   AttributeType CADUCEUS_RULE = AttributeType.create("CADUCEUS_RULE", AttributeValueType.STRING);
    /**
     * The constant MATCHED_STRING.
     */
-   AttributeType MATCHED_STRING = AttributeType.create("MATCHED_STRING");
+   AttributeType MATCHED_STRING = AttributeType.create("MATCHED_STRING", AttributeValueType.STRING);
    /**
     * The part-of-speech assocaited with a span
     */
-   AttributeType PART_OF_SPEECH = AttributeType.create("PART_OF_SPEECH");
+   AttributeType PART_OF_SPEECH = AttributeType.create("PART_OF_SPEECH", AttributeValueType.PART_OF_SPEECH);
    /**
     * phrase chunk annotation type
     */
-   AnnotationType PHRASE_CHUNK = AnnotationType.create("PHRASE_CHUNK");
+   AnnotationType PHRASE_CHUNK = AnnotationType.create("PHRASE_CHUNK", AnnotationType.ROOT, PART_OF_SPEECH);
+   /**
+    * Date content was published
+    */
+   AttributeType PUBLICATION_DATE = AttributeType.create("PUBLICATION_DATE", AttributeValueType.DATE);
    /**
     * The constant SENSE.
     */
-   AttributeType SENSE = AttributeType.create("SENSE");
+   AttributeType SENSE = AttributeType.create("SENSE", AttributeValueType.STRING);
    /**
     * sentence annotation type
     */
@@ -103,27 +109,27 @@ public interface Types {
    /**
     * Document source
     */
-   AttributeType SOURCE = AttributeType.create("SOURCE");
+   AttributeType SOURCE = AttributeType.create("SOURCE", AttributeValueType.STRING);
    /**
     * The STEM.
     */
-   AttributeType STEM = AttributeType.create("STEM");
+   AttributeType STEM = AttributeType.create("STEM", AttributeValueType.STRING);
    /**
     * The tag associated with a span
     */
-   AttributeType TAG = AttributeType.create("TAG");
+   AttributeType TAG = AttributeType.create("TAG", AttributeValueType.STRING_TAG);
    /**
     * Document title
     */
-   AttributeType TITLE = AttributeType.create("TITLE");
+   AttributeType TITLE = AttributeType.create("TITLE", AttributeValueType.STRING);
    /**
     * token annotation type
     */
-   AnnotationType TOKEN = AnnotationType.create("TOKEN");
+   AnnotationType TOKEN = AnnotationType.create("TOKEN", AnnotationType.ROOT, PART_OF_SPEECH);
    /**
     * The type of token
     */
-   AttributeType TOKEN_TYPE = AttributeType.create("TOKEN_TYPE");
+   AttributeType TOKEN_TYPE = AttributeType.create("TOKEN_TYPE", AttributeValueType.TOKEN_TYPE);
    /**
     * The constant TOKEN_TYPE_ENTITY.
     */
@@ -131,12 +137,14 @@ public interface Types {
    /**
     * The TRANSLITERATION.
     */
-   AttributeType TRANSLITERATION = AttributeType.create("TRANSLITERATION");
+   AttributeType TRANSLITERATION = AttributeType.create("TRANSLITERATION", AttributeValueType.STRING);
    /**
     * The constant WORD_SENSE.
     */
-   AnnotationType WORD_SENSE = AnnotationType.create("WORD_SENSE");
-
+   AnnotationType WORD_SENSE = AnnotationType.create("WORD_SENSE", AnnotationType.ROOT, PART_OF_SPEECH);
+   /**
+    * The constant ML_ENTITY.
+    */
    AnnotationType ML_ENTITY = AnnotationType.create("ML_ENTITY", ENTITY);
 
    /**

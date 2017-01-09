@@ -39,51 +39,51 @@ import java.util.function.Predicate;
  * @author David B. Bracewell
  */
 class Fragment extends HString {
-  private static final long serialVersionUID = 1L;
-  private final Map<AttributeType, Val> attributes = new HashMap<>(5);
-  private final Document owner;
+   private static final long serialVersionUID = 1L;
+   private final Map<AttributeType, Val> attributes = new HashMap<>(5);
+   private final Document owner;
 
-  Fragment(Document owner, int start, int end) {
-    super(start, end);
-    this.owner = owner;
-  }
+   Fragment(Document owner, int start, int end) {
+      super(start, end);
+      this.owner = owner;
+   }
 
-  Fragment(@NonNull HString string) {
-    super(string.start(), string.end());
-    this.owner = string.document();
-  }
+   Fragment(@NonNull HString string) {
+      super(string.start(), string.end());
+      this.owner = string.document();
+   }
 
-  Fragment() {
-    super(0, 0);
-    this.owner = null;
-  }
+   Fragment() {
+      super(0, 0);
+      this.owner = null;
+   }
 
-  @Override
-  public Set<AttributeType> attributes() {
-    return attributes.keySet();
-  }
+   @Override
+   public Set<AttributeType> attributeTypeSet() {
+      return attributes.keySet();
+   }
 
-  @Override
-  public char charAt(int index) {
-    return owner.charAt(start() + index);
-  }
+   @Override
+   public char charAt(int index) {
+      return owner.charAt(start() + index);
+   }
 
-  @Override
-  public Document document() {
-    return owner;
-  }
+   @Override
+   public Document document() {
+      return owner;
+   }
 
-  @Override
-  protected Map<AttributeType, Val> getAttributeMap() {
-    return attributes;
-  }
+   @Override
+   protected Map<AttributeType, Val> getAttributeMap() {
+      return attributes;
+   }
 
-  @Override
-  public List<Annotation> get(AnnotationType type, @NonNull Predicate<? super Annotation> filter) {
-    if (document() == null) {
-      return Collections.emptyList();
-    }
-    return document().get(type, this, filter);
-  }
+   @Override
+   public List<Annotation> get(AnnotationType type, @NonNull Predicate<? super Annotation> filter) {
+      if (document() == null) {
+         return Collections.emptyList();
+      }
+      return document().get(type, this, filter);
+   }
 
 }//END OF Fragment

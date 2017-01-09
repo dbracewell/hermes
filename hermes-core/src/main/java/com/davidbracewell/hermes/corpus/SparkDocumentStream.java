@@ -24,14 +24,14 @@ package com.davidbracewell.hermes.corpus;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.*;
+import com.davidbracewell.guava.common.collect.Iterables;
+import com.davidbracewell.guava.common.collect.Iterators;
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.Hermes;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.stream.*;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import lombok.NonNull;
 import org.apache.spark.broadcast.Broadcast;
 

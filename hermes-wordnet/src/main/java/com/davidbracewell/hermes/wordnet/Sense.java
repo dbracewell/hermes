@@ -22,8 +22,8 @@
 package com.davidbracewell.hermes.wordnet;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.hermes.attribute.POS;
-import com.google.common.collect.HashMultimap;
+import com.davidbracewell.guava.common.collect.HashMultimap;
+import com.davidbracewell.hermes.POS;
 
 import java.util.List;
 import java.util.Set;

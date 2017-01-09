@@ -21,13 +21,13 @@
 
 package com.davidbracewell.hermes.wordnet.io.properties;
 
+import com.davidbracewell.guava.common.base.Strings;
 import com.davidbracewell.hermes.wordnet.Synset;
 import com.davidbracewell.hermes.wordnet.io.WordNetDB;
 import com.davidbracewell.hermes.wordnet.properties.PropertyName;
 import com.davidbracewell.hermes.wordnet.properties.SumoConcept;
 import com.davidbracewell.hermes.wordnet.properties.SumoRelation;
 import com.davidbracewell.io.resource.Resource;
-import com.google.common.base.Strings;
 
 import java.util.List;
 

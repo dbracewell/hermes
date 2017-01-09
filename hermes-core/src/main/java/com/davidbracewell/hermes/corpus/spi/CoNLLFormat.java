@@ -24,11 +24,7 @@ package com.davidbracewell.hermes.corpus.spi;
 import com.davidbracewell.SystemInfo;
 import com.davidbracewell.collection.map.Maps;
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
@@ -200,8 +196,32 @@ public class CoNLLFormat extends FileBasedFormat {
       return "CONLL";
    }
 
+//   @Override
+//   public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
+//      StringBuilder builder = new StringBuilder();
+//      List<CoNLLColumnProcessor> processors = getProcessors();
+//      String fieldSep = Config.get(FS_PROPERTY).asString("\\s+").replaceFirst("[\\*\\+]$", "");
+//      if (fieldSep.equals("\\s")) {
+//         fieldSep = " ";
+//      }
+//      for (Annotation sentence : document.sentences()) {
+//         for (int i = 0; i < sentence.tokenLength(); i++) {
+//            for (int p = 0; p < processors.size(); p++) {
+//               if (p > 0) {
+//                  builder.append(fieldSep);
+//               }
+//               builder.append(processors.get(p).processOutput(sentence, sentence.tokenAt(i), i));
+//            }
+//            builder.append(SystemInfo.LINE_SEPARATOR);
+//         }
+//         builder.append(SystemInfo.LINE_SEPARATOR);
+//      }
+//      resource.write(builder.toString());
+//   }
+
+
    @Override
-   public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
+   public String toString(Document document) {
       StringBuilder builder = new StringBuilder();
       List<CoNLLColumnProcessor> processors = getProcessors();
       String fieldSep = Config.get(FS_PROPERTY).asString("\\s+").replaceFirst("[\\*\\+]$", "");
@@ -220,7 +240,7 @@ public class CoNLLFormat extends FileBasedFormat {
          }
          builder.append(SystemInfo.LINE_SEPARATOR);
       }
-      resource.write(builder.toString());
+      return builder.toString();
    }
 
 }//END OF CoNLLFormat

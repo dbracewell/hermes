@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.ml.chunker;
 
 import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.sequence.ContextualIterator;
+import com.davidbracewell.apollo.ml.sequence.Context;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.cache.Cached;
@@ -39,7 +39,7 @@ public class PhraseChunkFeaturizer implements SequenceFeaturizer<Annotation> {
 
   @Override
   @Cached
-  public Set<Feature> apply(ContextualIterator<Annotation> itr) {
+  public Set<Feature> apply(Context<Annotation> itr) {
     Set<Feature> features = new HashSet<>();
 
 

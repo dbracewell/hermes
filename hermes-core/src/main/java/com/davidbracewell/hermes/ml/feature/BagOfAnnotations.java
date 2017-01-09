@@ -26,6 +26,7 @@ import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.cache.Cached;
 import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.extraction.AbstractExtractor;
 import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.StreamingContext;
 
@@ -41,14 +42,14 @@ public class BagOfAnnotations implements Featurizer<HString> {
   /**
    * The Feature spec.
    */
-  final AbstractFeatureSpec<?> featureSpec;
+  final AbstractExtractor<?> featureSpec;
 
   /**
    * Instantiates a new Bag of annotations.
    *
    * @param featureSpec the feature spec
    */
-  public BagOfAnnotations(AbstractFeatureSpec featureSpec) {
+  public BagOfAnnotations(AbstractExtractor featureSpec) {
     this.featureSpec = featureSpec;
   }
 
@@ -77,7 +78,7 @@ public class BagOfAnnotations implements Featurizer<HString> {
   /**
    * The type Builder.
    */
-  public static class Builder extends AbstractFeatureSpec<Builder> {
+  public static class Builder extends AbstractExtractor<Builder> {
     private static final long serialVersionUID = 1L;
 
     /**

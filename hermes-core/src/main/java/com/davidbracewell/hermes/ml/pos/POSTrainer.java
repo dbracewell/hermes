@@ -1,5 +1,6 @@
 package com.davidbracewell.hermes.ml.pos;
 
+import com.davidbracewell.apollo.ml.TrainTestSet;
 import com.davidbracewell.apollo.ml.classification.AveragedPerceptronLearner;
 import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.data.DatasetType;
@@ -9,8 +10,8 @@ import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.Mode;
 import com.davidbracewell.io.resource.Resource;
@@ -48,9 +49,22 @@ public class POSTrainer extends CommandLineApplication {
    protected void programLogic() throws Exception {
       if (mode == Mode.TRAIN) {
          train();
-      } else {
+      } else if (mode == Mode.TEST) {
          test();
+      } else {
+         TrainTestSet<Sequence> trainTestSplits = loadDataset().shuffle().split(0.8);
+         if (minFeatureCount > 1) {
+            trainTestSplits.preprocess(() ->
+                                          PreprocessorList.create(
+                                             new MinCountFilter(minFeatureCount).asSequenceProcessor()));
+         }
+         trainTestSplits.evaluate(getLearner(), PerInstanceEvaluation::new).output(System.out);
       }
+   }
+
+   @Override
+   public void setup() throws Exception {
+      LibraryLoader.INSTANCE.load();
    }
 
    protected Dataset<Sequence> loadDataset() throws Exception {
@@ -76,7 +90,17 @@ public class POSTrainer extends CommandLineApplication {
                                 return featurizer.extractSequence(input.iterator());
                              })
                              .filter(Objects::nonNull)
-                           ).build();
+                           );
+   }
+
+   private SequenceLabelerLearner getLearner() {
+      SequenceLabelerLearner learner = new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
+      learner.setValidator(new POSValidator());
+      learner.setParameter("maxIterations", 200);
+      learner.setParameter("tolerance", 1E-4);
+      learner.setParameter("verbose", true);
+      learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
+      return learner;
    }
 
    protected void train() throws Exception {
@@ -84,13 +108,7 @@ public class POSTrainer extends CommandLineApplication {
       if (minFeatureCount > 1) {
          train = train.preprocess(PreprocessorList.create(new MinCountFilter(minFeatureCount).asSequenceProcessor()));
       }
-      SequenceLabelerLearner learner = new WindowedLearner(new AveragedPerceptronLearner().oneVsRest());
-      learner.setValidator(new POSValidator());
-      learner.setParameter("maxIterations", 200);
-      learner.setParameter("tolerance", 1E-4);
-      learner.setParameter("verbose", true);
-      learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
-      SequenceLabeler labeler = learner.train(train);
+      SequenceLabeler labeler = getLearner().train(train);
       POSTagger tagger = new POSTagger(featurizer, labeler);
       tagger.write(model);
    }
