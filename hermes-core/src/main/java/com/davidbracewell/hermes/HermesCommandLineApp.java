@@ -51,7 +51,7 @@ public abstract class HermesCommandLineApp extends CommandLineApplication {
    /**
     * The Corpus.
     */
-   @Option(description = "The location of the corpus to process.", required = true, aliases = {"i"})
+   @Option(description = "The location of the corpus to process.", required = true, aliases = {"i", "corpus"})
    Resource input;
 
    /**
@@ -63,7 +63,7 @@ public abstract class HermesCommandLineApp extends CommandLineApplication {
    /**
     * The Corpus.
     */
-   @Option(description = "The location to save the output of the processing.", defaultValue = "stdout:", aliases = {"o"})
+   @Option(description = "The location to save the output of the processing.", aliases = {"o"})
    Resource output;
 
    /**
