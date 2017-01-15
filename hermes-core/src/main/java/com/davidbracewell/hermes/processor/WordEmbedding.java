@@ -34,11 +34,16 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
+ * The type Word embedding.
+ *
  * @author David B. Bracewell
  */
 public class WordEmbedding implements CorpusProcessor, Serializable {
    private static final long serialVersionUID = 1L;
-   public final static String PROPERTY_PREFIX = "TokenEmbedding";
+   /**
+    * The constant PROPERTY_PREFIX.
+    */
+   public final static String PROPERTY_PREFIX = "WordEmbedding";
    @Getter
    @Setter
    private int dimension = 300;
