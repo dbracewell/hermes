@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.processor;
+package com.davidbracewell.hermes.corpus.processing;
 
 import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.apollo.ml.embedding.SparkWord2Vec;
@@ -38,12 +38,12 @@ import java.util.Arrays;
  *
  * @author David B. Bracewell
  */
-public class WordEmbedding implements CorpusProcessor, Serializable {
+public class Word2VecProcessor implements ProcessingModule, Serializable {
    private static final long serialVersionUID = 1L;
    /**
-    * The constant PROPERTY_PREFIX.
+    * Property name used when storing the embedding results to the context
     */
-   public final static String PROPERTY_PREFIX = "WordEmbedding";
+   public final static String PROPERTY_PREFIX = Word2VecProcessor.class.getSimpleName();
    @Getter
    @Setter
    private int dimension = 300;
@@ -86,4 +86,4 @@ public class WordEmbedding implements CorpusProcessor, Serializable {
       return corpus;
    }
 
-}//END OF WordEmbedding
+}//END OF Word2VecProcessor

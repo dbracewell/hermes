@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.processor;
+package com.davidbracewell.hermes.corpus.processing;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
