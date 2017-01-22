@@ -51,8 +51,12 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    }
 
    @Override
-   public Iterator<String> iterator() {
-      return trie.keySet().iterator();
+   public void add(@NonNull LexiconEntry entry) {
+      if (!trie.containsKey(entry.getLemma())) {
+         trie.put(entry.getLemma(), new LinkedList<>());
+      }
+      ensureLongestLemma(entry.getLemma());
+      trie.get(entry.getLemma()).add(entry);
    }
 
    @Override
@@ -61,11 +65,6 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
          return trie.containsKey(string);
       }
       return trie.containsKey(string.toLowerCase());
-   }
-
-   @Override
-   public int size() {
-      return trie.size();
    }
 
    @Override
@@ -88,17 +87,18 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    }
 
    @Override
-   public void add(@NonNull LexiconEntry entry) {
-      if (!trie.containsKey(entry.getLemma())) {
-         trie.put(entry.getLemma(), new LinkedList<>());
-      }
-      ensureLongestLemma(entry.getLemma());
-      trie.get(entry.getLemma()).add(entry);
+   public boolean isPrefixMatch(@NonNull HString hString) {
+      return trie.prefix(normalize(hString)).size() > 0 || trie.prefix(normalize(hString.getLemma())).size() > 0;
    }
 
    @Override
-   public boolean isPrefixMatch(@NonNull HString hString) {
-      return trie.prefix(normalize(hString)).size() > 0 || trie.prefix(normalize(hString.getLemma())).size() > 0;
+   public boolean isPrefixMatch(String string) {
+      return trie.prefix(normalize(string)).size() > 0;
+   }
+
+   @Override
+   public Iterator<String> iterator() {
+      return trie.keySet().iterator();
    }
 
    @Override
@@ -107,8 +107,20 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    }
 
    @Override
-   public boolean isPrefixMatch(String string) {
-      return trie.prefix(normalize(string)).size() > 0;
+   public int size() {
+      return trie.size();
+   }
+
+   public Map<String, Integer> suggest(@NonNull String element) {
+      return trie.suggest(element);
+   }
+
+   public Map<String, Integer> suggest(@NonNull String element, int maxCost) {
+      return trie.suggest(element, maxCost);
+   }
+
+   public Map<String, Integer> suggest(@NonNull String element, int maxCost, int substitutionCost) {
+      return trie.suggest(element, maxCost, substitutionCost);
    }
 
 }//END OF BaseTrieLexicon
