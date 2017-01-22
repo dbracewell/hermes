@@ -47,6 +47,8 @@ import com.davidbracewell.function.Unchecked;
 import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.corpus.processing.CorpusProcessor;
+import com.davidbracewell.hermes.corpus.processing.ProcessorContext;
 import com.davidbracewell.hermes.extraction.NGramExtractor;
 import com.davidbracewell.hermes.extraction.TermExtractor;
 import com.davidbracewell.hermes.filter.StopWords;
@@ -221,6 +223,18 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     */
    default Dataset<Sequence> asEmbeddingDataset() {
       return asEmbeddingDataset(Types.TOKEN);
+   }
+
+
+   /**
+    * Process corpus.
+    *
+    * @param processor the processor
+    * @return the corpus
+    * @throws Exception the exception
+    */
+   default Corpus process(@NonNull CorpusProcessor processor) throws Exception {
+      return processor.process(this, new ProcessorContext());
    }
 
    /**

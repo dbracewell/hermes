@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.processor;
+package com.davidbracewell.hermes.corpus.processing;
 
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.config.Config;
@@ -27,23 +27,26 @@ import com.davidbracewell.hermes.HermesCommandLineApp;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.io.resource.Resource;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Singular;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>Entry point to sequentially processing a corpus via one ore more {@link CorpusProcessor}s. The list of processors
+ * <p>Entry point to sequentially processing a corpus via one ore more {@link ProcessingModule}s. The list of processors
  * can be defined either via the <code>--processors</code> command line argument (which expects a comma separated list
  * of processor class names) or via the <code>--desc</code> argument, which specifies the processing description file to
  * load.</p>
  *
- * <p>Description files are in Mango's <code>Config</code> format. Individual {@link CorpusProcessor}s are implemented
+ * <p>Description files are in Mango's <code>Config</code> format. Individual {@link ProcessingModule}s are implemented
  * as beans, which can have their options set via configuration using Mango's capability to parameterize objects.</p>
  *
  * @author David B. Bracewell
  */
-public final class Controller extends HermesCommandLineApp implements Serializable {
+public final class CorpusProcessor extends HermesCommandLineApp implements Serializable {
    private static final long serialVersionUID = 1L;
    /**
     * Name of the context parameter for the location of the input corpus
@@ -55,7 +58,7 @@ public final class Controller extends HermesCommandLineApp implements Serializab
    public static final String OUTPUT_LOCATION = "OUTPUT_LOCATION";
 
    @Option(description = "List of corpus processors to run")
-   private List<CorpusProcessor> processors = new ArrayList<>();
+   private List<ProcessingModule> processors = new ArrayList<>();
 
    @Option(name = "desc", description = "Description file defining processors")
    private Resource processorDescription = null;
@@ -64,10 +67,21 @@ public final class Controller extends HermesCommandLineApp implements Serializab
    /**
     * Instantiates a new Controller.
     */
-   private Controller() {
-      super("Controller", "com.davidbracewell.hermes");
+   private CorpusProcessor() {
+      super("CorpusProcessor", "com.davidbracewell.hermes");
    }
 
+
+   /**
+    * Instantiates a new Corpus processor.
+    *
+    * @param processors the processors
+    */
+   @Builder
+   public CorpusProcessor(@Singular @NonNull List<ProcessingModule> processors) {
+      super("CorpusProcessor", "com.davidbracewell.hermes");
+      this.processors = processors;
+   }
 
    /**
     * The entry point of application.
@@ -76,7 +90,24 @@ public final class Controller extends HermesCommandLineApp implements Serializab
     * @throws Exception the exception
     */
    public static void main(String[] args) throws Exception {
-      new Controller().run(args);
+      new CorpusProcessor().run(args);
+   }
+
+
+   /**
+    * Process corpus.
+    *
+    * @param input   the input
+    * @param context the context
+    * @return the corpus
+    * @throws Exception the exception
+    */
+   public Corpus process(@NonNull Corpus input, @NonNull ProcessorContext context) throws Exception {
+      Corpus corpus = input;
+      for (ProcessingModule processor : processors) {
+         corpus = processor.process(corpus, context);
+      }
+      return corpus;
    }
 
    @Override
@@ -92,14 +123,10 @@ public final class Controller extends HermesCommandLineApp implements Serializab
          }
          Config.loadConfig(processorDescription);
          Config.setAllCommandLine(getAllArguments());
-         processors = Config.get("processors").asList(CorpusProcessor.class);
+         processors = Config.get("processors").asList(ProcessingModule.class);
       }
 
-      Corpus corpus = getCorpus();
-      for (CorpusProcessor processor : processors) {
-         corpus = processor.process(corpus, context);
-      }
-
+      Corpus corpus = process(getCorpus(), context);
       if (getOutputLocation() != null) {
          corpus.write(CorpusFormats.JSON_OPL, getOutputLocation());
       }

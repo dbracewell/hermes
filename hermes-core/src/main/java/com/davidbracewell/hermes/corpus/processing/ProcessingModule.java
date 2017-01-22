@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.processor;
+package com.davidbracewell.hermes.corpus.processing;
 
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.logging.Loggable;
@@ -31,7 +31,7 @@ import java.io.Serializable;
  *
  * @author David B. Bracewell
  */
-public interface CorpusProcessor extends Serializable, Loggable {
+public interface ProcessingModule extends Serializable, Loggable {
 
    /**
     * Process corpus.

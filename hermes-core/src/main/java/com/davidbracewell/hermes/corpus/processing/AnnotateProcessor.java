@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.processor;
+package com.davidbracewell.hermes.corpus.processing;
 
 import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Types;
@@ -33,7 +33,7 @@ import java.util.Arrays;
  *
  * @author David B. Bracewell
  */
-public class AnnotateProcessor implements CorpusProcessor {
+public class AnnotateProcessor implements ProcessingModule {
    private static final long serialVersionUID = 1L;
    private AnnotatableType[] types = {Types.SENTENCE, Types.LEMMA, Types.PHRASE_CHUNK, Types.DEPENDENCY, Types.ENTITY};
 
