@@ -105,7 +105,9 @@ public final class CorpusProcessor extends HermesCommandLineApp implements Seria
    public Corpus process(@NonNull Corpus input, @NonNull ProcessorContext context) throws Exception {
       Corpus corpus = input;
       for (ProcessingModule processor : processors) {
-         corpus = processor.process(corpus, context);
+         if (!processor.loadPreviousState(corpus, context)) {
+            corpus = processor.process(corpus, context);
+         }
       }
       return corpus;
    }
