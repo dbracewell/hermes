@@ -22,6 +22,9 @@
 package com.davidbracewell.hermes.lexicon.generation;
 
 import com.davidbracewell.Tag;
+import com.davidbracewell.apollo.affinity.Similarity;
+import com.davidbracewell.apollo.linalg.DenseVector;
+import com.davidbracewell.apollo.linalg.Vector;
 import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.collection.counter.MultiCounter;
 import com.davidbracewell.collection.counter.MultiCounters;
@@ -34,6 +37,9 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.eclipse.collections.api.multimap.Multimap;
 import org.eclipse.collections.impl.multimap.set.UnifiedSetMultimap;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The type Distributional lexicon generator.
@@ -51,6 +57,7 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
    @Setter
    private int maximumTermCount = 100;
    private final UnifiedSetMultimap<T, String> seedTerms = UnifiedSetMultimap.newMultimap();
+   private final UnifiedSetMultimap<T, String> negativeSeedTerms = UnifiedSetMultimap.newMultimap();
 
    /**
     * Instantiates a new Distributional lexicon generator.
@@ -89,18 +96,41 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
    public Multimap<T, String> generate() {
       UnifiedSetMultimap<T, String> lexicon = UnifiedSetMultimap.newMultimap();
       if (seedTerms.size() > 0) {
+         Map<T, Vector> vectors = new HashMap<>();
+         Map<T, Vector> negVectors = new HashMap<>();
+         seedTerms.keySet().forEach(tag -> {
+            Vector v = new DenseVector(wordEmbeddings.getDimension());
+            seedTerms.get(tag).stream()
+                     .filter(wordEmbeddings::contains)
+                     .forEach(s -> v.addSelf(wordEmbeddings.getVector(s)));
+            v.mapDivideSelf(seedTerms.size());
+            vectors.put(tag, v);
+
+            Vector negV = new DenseVector(wordEmbeddings.getDimension());
+            negativeSeedTerms.get(tag)
+                             .stream()
+                             .filter(wordEmbeddings::contains)
+                             .forEach(s -> negV.addSelf(wordEmbeddings.getVector(s)));
+            negVectors.put(tag, negV);
+         });
          lexicon.putAll(seedTerms);
          MultiCounter<String, T> scores = MultiCounters.newMultiCounter();
-         seedTerms.forEachKeyValue((k, v) -> {
-            if (wordEmbeddings.contains(v)) {
-               wordEmbeddings.nearest(v, Integer.MAX_VALUE - 1, threshold)
-                             .forEach(slv -> scores.increment(slv.getLabel(), k, slv.getScore()));
-            }
+         vectors.forEach((tag, vector) -> {
+            wordEmbeddings.nearest(vector, maximumTermCount * 10)
+                          .stream()
+                          .filter(slv -> !seedTerms.containsValue(slv.getLabel()))
+                          .forEach(slv -> {
+                             double neg = 0;
+                             if (negVectors.get(tag).magnitude() > 0) {
+                                neg = Similarity.Cosine.calculate(negVectors.get(tag), slv);
+                             }
+                             scores.set(slv.getLabel(), tag, slv.getScore() - neg);
+                          });
          });
          MultiCounter<T, String> selection = MultiCounters.newMultiCounter();
          scores.firstKeys().forEach(k -> {
             if (!seedTerms.containsValue(k)) {
-               T best = scores.get(k).max();
+               T best = scores.get(k).filterByValue(d -> d >= threshold).max();
                selection.set(best, k, scores.get(k, best));
             }
          });
@@ -119,18 +149,29 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
       return true;
    }
 
+   public boolean addNegativeSeed(@NonNull T tag, String phrase) {
+      Preconditions.checkArgument(StringUtils.isNotNullOrBlank(phrase), "Phrase must not be null or blank");
+      negativeSeedTerms.put(tag, phrase);
+      return true;
+   }
+
    public static void main(String[] args) throws Exception {
       DistributionalLexiconGenerator<StringTag> dlg
          = new DistributionalLexiconGenerator<>(
                                                   Resources.fromFile("/home/ik/prj/o360-hermes/w2v.bin").readObject()
       );
-      dlg.setThreshold(0.6);
+      dlg.setThreshold(0.3);
 
       dlg.addSeed(new StringTag("POSITIVE"), "good");
       dlg.addSeed(new StringTag("POSITIVE"), "great");
+      dlg.addNegativeSeed(new StringTag("POSITIVE"), "bad");
+      dlg.addNegativeSeed(new StringTag("POSITIVE"), "terrible");
 
       dlg.addSeed(new StringTag("NEGATIVE"), "bad");
       dlg.addSeed(new StringTag("NEGATIVE"), "terrible");
+      dlg.addNegativeSeed(new StringTag("NEGATIVE"), "good");
+      dlg.addNegativeSeed(new StringTag("NEGATIVE"), "great");
+
 
       dlg.addSeed(new StringTag("SCENT"), "scent");
       dlg.addSeed(new StringTag("SCENT"), "smell");
@@ -146,9 +187,11 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
       dlg.addSeed(new StringTag("FAMILY"), "sister");
       dlg.addSeed(new StringTag("FAMILY"), "brother");
 
+      dlg.addSeed(new StringTag("CHEST"), "chest");
+      dlg.addSeed(new StringTag("CHEST"), "breast");
+
       Multimap<StringTag, String> r = dlg.generate();
       r.forEachKey(k -> System.out.println(k + " : " + r.get(k)));
-
    }
 
 
