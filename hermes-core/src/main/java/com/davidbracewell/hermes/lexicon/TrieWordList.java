@@ -34,7 +34,6 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * The type Simple word list.
@@ -60,14 +59,14 @@ public class TrieWordList implements WordList, PrefixSearchable, Serializable {
 
    public static TrieWordList read(@NonNull Resource resource, boolean lowerCase) throws IOException {
       TrieWordList twl = new TrieWordList();
-      try(MStream<String> lines = resource.lines()){
+      try (MStream<String> lines = resource.lines()) {
          lines.forEach(line -> {
             line = line.trim();
-            if(!line.startsWith("#")){
+            if (!line.startsWith("#")) {
                if (lowerCase) {
-                  twl.words.put(line.toLowerCase(),true);
+                  twl.words.put(line.toLowerCase(), true);
                } else {
-                  twl.words.put(line,true);
+                  twl.words.put(line, true);
                }
             }
          });
@@ -75,15 +74,6 @@ public class TrieWordList implements WordList, PrefixSearchable, Serializable {
          throw new IOException(e);
       }
       return twl;
-//      return new TrieWordList(resource.readLines().stream()
-//                                      .filter(line -> !line.startsWith("#"))
-//                                      .map(line -> {
-//                                         if (lowerCase) {
-//                                            return line.trim().toLowerCase();
-//                                         }
-//                                         return line.trim();
-//                                      })
-//                                      .collect(Collectors.toSet()));
    }
 
    @Override
@@ -114,6 +104,11 @@ public class TrieWordList implements WordList, PrefixSearchable, Serializable {
    @Override
    public int size() {
       return words.size();
+   }
+
+   @Override
+   public void merge(@NonNull WordList other) {
+      other.forEach(a -> words.put(a, true));
    }
 
    public Map<String, Integer> suggest(@NonNull String element) {

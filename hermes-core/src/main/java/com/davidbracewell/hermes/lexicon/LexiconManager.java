@@ -114,6 +114,11 @@ public final class LexiconManager implements Serializable {
 
 
       @Override
+      public void merge(@NonNull WordList other) {
+         throw new UnsupportedOperationException();
+      }
+
+      @Override
       public List<HString> match(HString source) {
          return Collections.emptyList();
       }

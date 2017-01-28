@@ -19,44 +19,39 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lexicon;
+package com.davidbracewell.hermes.corpus.processing;
 
-import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.corpus.Corpus;
 import lombok.NonNull;
 
+import java.io.Serializable;
+
 /**
- * The interface L.
- *
  * @author David B. Bracewell
  */
-public interface WordList extends Iterable<String> {
+public class ProcessingState implements Serializable {
+   private static final long serialVersionUID = 1L;
 
-   /**
-    * Contains boolean.
-    *
-    * @param string the string
-    * @return the boolean
-    */
-   boolean contains(String string);
+   private final Corpus corpus;
 
-   /**
-    * Contains boolean.
-    *
-    * @param string the string
-    * @return the boolean
-    */
-   default boolean contains(@NonNull HString string) {
-      return contains(string.toString());
+   private ProcessingState(Corpus corpus) {
+      this.corpus = corpus;
    }
 
-   /**
-    * Size int.
-    *
-    * @return the int
-    */
-   int size();
+   public static ProcessingState LOADED(@NonNull Corpus corpus) {
+      return new ProcessingState(corpus);
+   }
 
+   public static ProcessingState NOT_LOADED() {
+      return new ProcessingState(null);
+   }
 
-   void merge(WordList other);
+   public boolean isLoaded() {
+      return corpus != null;
+   }
 
-}//END OF WordList
+   public Corpus getCorpus() {
+      return corpus;
+   }
+
+}//END OF ProcessingState

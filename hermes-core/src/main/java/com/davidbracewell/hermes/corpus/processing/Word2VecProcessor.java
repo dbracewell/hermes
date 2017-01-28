@@ -27,10 +27,10 @@ import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.logging.Loggable;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -38,12 +38,12 @@ import java.util.Arrays;
  *
  * @author David B. Bracewell
  */
-public class Word2VecProcessor implements ProcessingModule, Serializable {
+public class Word2VecProcessor implements ProcessingModule, Loggable {
    private static final long serialVersionUID = 1L;
    /**
     * Property name used when storing the embedding results to the context
     */
-   public final static String PROPERTY_PREFIX = Word2VecProcessor.class.getSimpleName();
+   public final static String EMBEDDING = Word2VecProcessor.class.getSimpleName();
    @Getter
    @Setter
    private int dimension = 300;
@@ -76,14 +76,28 @@ public class Word2VecProcessor implements ProcessingModule, Serializable {
       } else {
          embedding = word2Vec.train(corpus.asEmbeddingDataset(annotations[0]));
       }
-      context.property(PROPERTY_PREFIX, embedding);
+      context.property(EMBEDDING, embedding);
 
       if (output != null) {
          output.getParent().mkdirs();
          embedding.write(output);
       }
-
       return corpus;
    }
 
+   @Override
+   public ProcessingState loadPreviousState(Corpus corpus, ProcessorContext context) {
+      if (output != null && output.exists()) {
+         try {
+            Embedding embedding = output.readObject();
+            logInfo("Loaded embedding with vocab size = {0} and dimension = {1}", embedding.getVocab().size(),
+                    embedding.getDimension());
+            context.property(EMBEDDING, embedding);
+            return ProcessingState.LOADED(corpus);
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+      }
+      return ProcessingState.NOT_LOADED();
+   }
 }//END OF Word2VecProcessor

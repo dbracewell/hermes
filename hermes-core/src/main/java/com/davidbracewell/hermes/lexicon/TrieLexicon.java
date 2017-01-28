@@ -68,6 +68,11 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    }
 
    @Override
+   public void merge(@NonNull WordList other) {
+      other.forEach(this::add);
+   }
+
+   @Override
    public List<LexiconEntry> getEntries(@NonNull HString hString) {
       String str = normalize(hString);
       if (trie.containsKey(str)) {

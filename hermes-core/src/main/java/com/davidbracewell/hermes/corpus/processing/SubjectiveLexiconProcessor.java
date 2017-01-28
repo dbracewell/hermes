@@ -19,44 +19,24 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.lexicon;
+package com.davidbracewell.hermes.corpus.processing;
 
-import com.davidbracewell.hermes.HString;
-import lombok.NonNull;
+import com.davidbracewell.Language;
+import com.davidbracewell.hermes.LanguageData;
+import com.davidbracewell.hermes.Types;
+import com.davidbracewell.hermes.corpus.Corpus;
+import com.davidbracewell.hermes.lexicon.Lexicon;
 
 /**
- * The interface L.
- *
  * @author David B. Bracewell
  */
-public interface WordList extends Iterable<String> {
+public class SubjectiveLexiconProcessor implements ProcessingModule {
+   private static final long serialVersionUID = 1L;
 
-   /**
-    * Contains boolean.
-    *
-    * @param string the string
-    * @return the boolean
-    */
-   boolean contains(String string);
-
-   /**
-    * Contains boolean.
-    *
-    * @param string the string
-    * @return the boolean
-    */
-   default boolean contains(@NonNull HString string) {
-      return contains(string.toString());
+   @Override
+   public Corpus process(Corpus corpus, ProcessorContext context) throws Exception {
+      Lexicon subjective = LanguageData.loadSubjectiveLexicon(Language.ENGLISH);
+      return corpus.applyLexicon(subjective, Types.annotation("SENTIMENT"));
    }
 
-   /**
-    * Size int.
-    *
-    * @return the int
-    */
-   int size();
-
-
-   void merge(WordList other);
-
-}//END OF WordList
+}//END OF SubjectiveLexiconProcessor

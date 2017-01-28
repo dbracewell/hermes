@@ -44,8 +44,8 @@ public interface ProcessingModule extends Serializable, Loggable {
    Corpus process(Corpus corpus, ProcessorContext context) throws Exception;
 
 
-   default boolean loadPreviousState(Corpus corpus, ProcessorContext context) {
-      return false;
+   default ProcessingState loadPreviousState(Corpus corpus, ProcessorContext context) {
+      return ProcessingState.NOT_LOADED();
    }
 
 

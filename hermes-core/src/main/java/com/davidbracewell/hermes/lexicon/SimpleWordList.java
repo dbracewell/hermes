@@ -64,6 +64,11 @@ public class SimpleWordList implements WordList, Serializable {
       return words.size();
    }
 
+   @Override
+   public void merge(@NonNull WordList other) {
+      other.forEach(words::add);
+   }
+
    public static WordList read(@NonNull Resource resource, boolean lowerCase) throws IOException {
       return new SimpleWordList(resource.readLines().stream()
                                         .map(line -> {
