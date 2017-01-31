@@ -42,6 +42,7 @@ import java.util.function.Supplier;
  */
 public final class Hermes {
 
+   private static final String HERMES_PACKAGE = "com.davidbracewell.hermes";
 
    private Hermes() {
       throw new IllegalAccessError();
@@ -65,10 +66,17 @@ public final class Hermes {
     * @param args        the args
     * @return the string [ ]
     */
-   public static String[] initializeApplication(String programName, String[] args) {
+   public static String[] initializeApplication(String programName, String[] args, String... packages) {
       String[] leftOver = Config.initialize(programName, args);
       //Ensure that the core hermes config is loaded
-      Config.loadPackageConfig("com.davidbracewell.hermes");
+      Config.loadPackageConfig(HERMES_PACKAGE);
+      if (packages != null) {
+         for (String aPackage : packages) {
+            if (!HERMES_PACKAGE.equals(aPackage)) {
+               Config.loadPackageConfig(aPackage);
+            }
+         }
+      }
       return leftOver;
    }
 
@@ -81,14 +89,16 @@ public final class Hermes {
    public static String[] initializeApplication(String[] args) {
       StackTraceElement[] elements = Thread.currentThread().getStackTrace();
       String programName = "";
+      String packageName = null;
       for (int i = 0; i < elements.length && StringUtils.isNullOrBlank(programName); i++) {
          String className = elements[i].getClassName();
-         if (!className.equals(Hermes.class.getName()) && !className.contains("java")) {
+         if (!className.equals(Hermes.class.getName()) && !className.startsWith("java")) {
             int idx = className.lastIndexOf('.');
             programName = className.substring(idx + 1);
+            packageName = className.substring(0, idx);
          }
       }
-      return initializeApplication(programName, args);
+      return initializeApplication(programName, args, packageName);
    }
 
    /**
