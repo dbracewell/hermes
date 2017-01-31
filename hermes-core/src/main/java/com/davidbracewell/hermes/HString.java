@@ -125,6 +125,15 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return new Fragment(owner, start, end);
    }
 
+   @Override
+   public Collection<Relation> allRelations(boolean includeSubAnnotations) {
+      return getAllAnnotations().stream()
+                                .flatMap(a -> a.allRelations(includeSubAnnotations).stream())
+                                .filter(r -> !overlaps(r.getTarget(this).get()))
+                                .distinct()
+                                .collect(Collectors.toList());
+   }
+
    /**
     * Annotation graph relation graph.
     *
@@ -145,7 +154,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
          for (Relation relation : relations) {
             if (relationTypeList.contains(relation.getType())) {
                relation.getTarget(document()).ifPresent(target -> {
-                  target = g.containsVertex(target) ? target : target.stream(AnnotationType.ROOT).filter(g::containsVertex).findFirst().orElse(null);
+                  target = g.containsVertex(target) ? target : target.stream(AnnotationType.ROOT).filter(
+                     g::containsVertex).findFirst().orElse(null);
                   if (target != null) {
                      if (!g.containsEdge(source, target)) {
                         RelationEdge edge = g.addEdge(source, target);
@@ -251,6 +261,15 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    @Override
+   public List<Annotation> children() {
+      return getAllAnnotations().stream()
+                                .flatMap(a -> a.children().stream())
+                                .filter(a -> !overlaps(a))
+                                .distinct()
+                                .collect(Collectors.toList());
+   }
+
+   @Override
    public boolean contains(AttributeType attributeType) {
       return attributeType != null && getAttributeMap().containsKey(attributeType);
    }
@@ -303,6 +322,14 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    public RelationGraph dependencyGraph(AnnotationType type1, AnnotationType... other) {
       return annotationGraph($(Types.DEPENDENCY), type1, other);
+   }
+
+   @Override
+   public Optional<Tuple2<String, Annotation>> dependencyRelation() {
+      if (phraseHead().isAnnotation()) {
+         return phraseHead().asAnnotation().get().dependencyRelation();
+      }
+      return Optional.empty();
    }
 
    /**
@@ -461,19 +488,20 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    @Override
+   public List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
+      return getAllAnnotations().stream()
+                                .flatMap(a -> a.get(relationType, includeSubAnnotations).stream())
+                                .filter(r -> !overlaps(r.getTarget(this).get()))
+                                .distinct()
+                                .collect(Collectors.toList());
+   }
+
+   @Override
    public List<Annotation> getAllAnnotations() {
       if (document() == null) {
          return Collections.emptyList();
       }
       return document().get(AnnotationType.ROOT, this);
-   }
-
-   @Override
-   public Optional<Tuple2<String, Annotation>> dependencyRelation() {
-      if (phraseHead().asAnnotation().isPresent()) {
-         return phraseHead().asAnnotation().get().dependencyRelation();
-      }
-      return Optional.empty();
    }
 
    /**
@@ -482,23 +510,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @return The attribute names and values as a map
     */
    protected abstract Map<AttributeType, Val> getAttributeMap();
-
-   /**
-    * Gets head.
-    *
-    * @return the head
-    */
-   public HString phraseHead() {
-      return tokens().stream()
-                     .filter(t -> t.parent().isEmpty())
-                     .map(Cast::<HString>as)
-                     .findFirst()
-                     .orElseGet(() -> tokens().stream()
-                                              .filter(t -> !this.overlaps(t.parent()))
-                                              .map(Cast::<HString>as)
-                                              .findFirst()
-                                              .orElse(this));
-   }
 
    /**
     * Gets the language of the HString. If no language is set for this HString, the language of document will be
@@ -542,7 +553,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                      .map(HString::getLemma)
                      .collect(Collectors.joining(
                         getLanguage().usesWhitespace() ? " " : ""
-                                                ));
+                     ));
    }
 
    /**
@@ -578,7 +589,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                      .map(HString::getStem)
                      .collect(Collectors.joining(
                         getLanguage().usesWhitespace() ? " " : ""
-                                                ));
+                     ));
    }
 
    @Override
@@ -730,6 +741,23 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                 super.overlaps(other);
    }
 
+   /**
+    * Gets head.
+    *
+    * @return the head
+    */
+   public HString phraseHead() {
+      return tokens().stream()
+                     .filter(t -> t.parent().isEmpty())
+                     .map(Cast::<HString>as)
+                     .findFirst()
+                     .orElseGet(() -> tokens().stream()
+                                              .filter(t -> !this.overlaps(t.parent()))
+                                              .map(Cast::<HString>as)
+                                              .findFirst()
+                                              .orElse(this));
+   }
+
    @Override
    public Val put(AttributeType attributeType, Object value) {
       if (attributeType != null) {
@@ -784,6 +812,25 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    public String replaceFirst(String regex, String replacement) {
       return toString().replaceFirst(regex, replacement);
+   }
+
+   @Override
+   public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
+      return getAllAnnotations().stream()
+                                .flatMap(a -> a.sources(type, includeSubAnnotations).stream())
+                                .filter(a -> !overlaps(a))
+                                .distinct()
+                                .collect(Collectors.toList());
+   }
+
+   @Override
+   public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+      return getAllAnnotations()
+                .stream()
+                .flatMap(a -> a.sources(type, value, includeSubAnnotations).stream())
+                .filter(a -> !overlaps(a))
+                .distinct()
+                .collect(Collectors.toList());
    }
 
    /**
@@ -864,6 +911,24 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
          }
       });
       return builder.toString();
+   }
+
+   @Override
+   public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
+      return getAllAnnotations().stream()
+                                .flatMap(a -> a.targets(type, includeSubAnnotations).stream())
+                                .filter(a -> !overlaps(a))
+                                .distinct()
+                                .collect(Collectors.toList());
+   }
+
+   @Override
+   public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+      return getAllAnnotations().stream()
+                                .flatMap(a -> a.targets(type, value, includeSubAnnotations).stream())
+                                .filter(a -> !overlaps(a))
+                                .distinct()
+                                .collect(Collectors.toList());
    }
 
    /**
@@ -986,87 +1051,5 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return HString.union(this, other, evenMore);
    }
 
-   @Override
-   public List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
-      if( isAnnotation() ){
-         Annotation annotation = asAnnotation().get();
-         return annotation.get(relationType,includeSubAnnotations);
-      }
-      return tokens().stream()
-                     .flatMap(a -> a.get(relationType,includeSubAnnotations).stream())
-                     .filter(r -> !overlaps(r.getTarget(this).get()))
-                     .collect(Collectors.toList());
-   }
 
-   @Override
-   public Collection<Relation> allRelations(boolean includeSubAnnotations) {
-      if( isAnnotation() ){
-         Annotation annotation = asAnnotation().get();
-         return annotation.allRelations(includeSubAnnotations);
-      }
-      return tokens().stream()
-                     .flatMap(a -> a.allRelations(includeSubAnnotations).stream())
-                     .filter(r -> !overlaps(r.getTarget(this).get()))
-                     .collect(Collectors.toList());
-   }
-
-   @Override
-   public List<Annotation> children() {
-      if( isAnnotation() ){
-         Annotation annotation = asAnnotation().get();
-         return annotation.children();
-      }
-      return tokens().stream()
-                     .flatMap(a -> a.children().stream())
-                     .filter(a -> !overlaps(a))
-                     .collect(Collectors.toList());
-   }
-
-   @Override
-   public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
-      if( isAnnotation() ){
-         Annotation annotation = asAnnotation().get();
-         return annotation.sources(type,includeSubAnnotations);
-      }
-      return tokens().stream()
-                     .flatMap(a -> a.sources(type,includeSubAnnotations).stream())
-                     .filter(a -> !overlaps(a))
-                     .collect(Collectors.toList());
-   }
-
-   @Override
-   public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-      if( isAnnotation() ){
-         Annotation annotation = asAnnotation().get();
-         return annotation.sources(type,value,includeSubAnnotations);
-      }
-      return tokens().stream()
-                     .flatMap(a -> a.sources(type,value,includeSubAnnotations).stream())
-                     .filter(a -> !overlaps(a))
-                     .collect(Collectors.toList());
-   }
-
-   @Override
-   public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
-      if( isAnnotation() ){
-         Annotation annotation = asAnnotation().get();
-         return annotation.targets(type,includeSubAnnotations);
-      }
-      return tokens().stream()
-                     .flatMap(a -> a.targets(type,includeSubAnnotations).stream())
-                     .filter(a -> !overlaps(a))
-                     .collect(Collectors.toList());
-   }
-
-   @Override
-   public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-      if( isAnnotation() ){
-         Annotation annotation = asAnnotation().get();
-         return annotation.targets(type,value,includeSubAnnotations);
-      }
-      return tokens().stream()
-                     .flatMap(a -> a.targets(type,value,includeSubAnnotations).stream())
-                     .filter(a -> !overlaps(a))
-                     .collect(Collectors.toList());
-   }
 }//END OF HString

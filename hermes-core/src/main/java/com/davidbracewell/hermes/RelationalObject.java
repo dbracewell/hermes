@@ -25,7 +25,6 @@ import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,14 +37,6 @@ import java.util.stream.Collectors;
 public interface RelationalObject {
 
    /**
-    * Add all relations.
-    *
-    * @param relations the relations
-    */
-   default void addAll(@NonNull Collection<Relation> relations) {
-   }
-
-   /**
     * Add relation.
     *
     * @param relation the relation
@@ -54,24 +45,11 @@ public interface RelationalObject {
    }
 
    /**
-    * Gets relations.
+    * Add all relations.
     *
-    * @param relationType the relation type
-    * @return the relations
+    * @param relations the relations
     */
-   default List<Relation> get(@NonNull RelationType relationType) {
-      return get(relationType, true);
-   }
-
-   /**
-    * Get list.
-    *
-    * @param relationType          the relation type
-    * @param includeSubAnnotations the include sub annotations
-    * @return the list
-    */
-   default List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
-      return Collections.emptyList();
+   default void addAll(@NonNull Collection<Relation> relations) {
    }
 
    /**
@@ -89,19 +67,14 @@ public interface RelationalObject {
     * @param includeSubAnnotations the include sub annotations
     * @return the all relations
     */
-   default Collection<Relation> allRelations(boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+   Collection<Relation> allRelations(boolean includeSubAnnotations);
 
    /**
     * Gets children.
     *
     * @return the children
     */
-   default List<Annotation> children() {
-      return Collections.emptyList();
-   }
-
+   List<Annotation> children();
 
    /**
     * Children list.
@@ -120,9 +93,26 @@ public interface RelationalObject {
     *
     * @return the optional
     */
-   default Optional<Tuple2<String, Annotation>> dependencyRelation() {
-      return Optional.empty();
+   Optional<Tuple2<String, Annotation>> dependencyRelation();
+
+   /**
+    * Gets relations.
+    *
+    * @param relationType the relation type
+    * @return the relations
+    */
+   default List<Relation> get(@NonNull RelationType relationType) {
+      return get(relationType, true);
    }
+
+   /**
+    * Get list.
+    *
+    * @param relationType          the relation type
+    * @param includeSubAnnotations the include sub annotations
+    * @return the list
+    */
+   List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations);
 
    /**
     * Gets parent.
@@ -131,6 +121,16 @@ public interface RelationalObject {
     */
    default Annotation parent() {
       return dependencyRelation().map(Tuple2::getValue).orElse(Fragments.detachedEmptyAnnotation());
+   }
+
+   /**
+    * Remove relation.
+    *
+    * @param relation the relation
+    */
+   default void remove(@NonNull Relation relation) {
+
+
    }
 
    /**
@@ -152,9 +152,7 @@ public interface RelationalObject {
     * @param includeSubAnnotations the include sub annotations
     * @return the sources
     */
-   default List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+   List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations);
 
    /**
     * Gets sources.
@@ -173,9 +171,7 @@ public interface RelationalObject {
     * @param includeSubAnnotations the include sub annotations
     * @return the sources
     */
-   default List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+   List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations);
 
    /**
     * Gets targets.
@@ -194,9 +190,7 @@ public interface RelationalObject {
     * @param includeSubAnnotations the include sub annotations
     * @return the targets
     */
-   default List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+   List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations);
 
    /**
     * Gets targets.
@@ -217,18 +211,6 @@ public interface RelationalObject {
     * @param includeSubAnnotations the include sub annotations
     * @return the targets
     */
-   default List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
-
-   /**
-    * Remove relation.
-    *
-    * @param relation the relation
-    */
-   default void remove(@NonNull Relation relation) {
-
-
-   }
+   List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations);
 
 }//END OF RelationalObject
