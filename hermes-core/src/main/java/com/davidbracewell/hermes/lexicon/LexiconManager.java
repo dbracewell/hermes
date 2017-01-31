@@ -36,6 +36,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The type Lexicon manager.
@@ -118,6 +119,8 @@ public final class LexiconManager implements Serializable {
          throw new UnsupportedOperationException();
       }
 
+
+
       @Override
       public List<HString> match(HString source) {
          return Collections.emptyList();
@@ -126,6 +129,11 @@ public final class LexiconManager implements Serializable {
       @Override
       public List<LexiconEntry> getEntries(HString hString) {
          return Collections.emptyList();
+      }
+
+      @Override
+      public Set<LexiconEntry> entries() {
+         return Collections.emptySet();
       }
 
       @Override

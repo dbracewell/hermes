@@ -34,6 +34,7 @@ import com.davidbracewell.hermes.extraction.regex.TokenRegex;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple;
+import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
 
 import java.util.*;
@@ -135,11 +136,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    public RelationGraph annotationGraph(Tuple relationTypes, AnnotationType type, AnnotationType... annotationTypes) {
       RelationGraph g = new RelationGraph();
       List<Annotation> vertices = interleaved(type, annotationTypes);
-      Set<RelationType> relationTypeList = Streams.asStream(relationTypes.iterator()).filter(
-         r -> r instanceof RelationType)
+      Set<RelationType> relationTypeList = Streams.asStream(relationTypes.iterator())
+                                                  .filter(r -> r instanceof RelationType)
                                                   .map(Cast::<RelationType>as).collect(Collectors.toSet());
       g.addVertices(vertices);
-
       for (Annotation source : vertices) {
          Collection<Relation> relations = source.allRelations(true);
          for (Relation relation : relations) {
@@ -461,7 +461,18 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
 
    @Override
    public List<Annotation> getAllAnnotations() {
+      if (document() == null) {
+         return Collections.emptyList();
+      }
       return document().get(AnnotationType.ROOT, this);
+   }
+
+   @Override
+   public Optional<Tuple2<String, Annotation>> dependencyRelation() {
+      if (phraseHead().asAnnotation().isPresent()) {
+         return phraseHead().asAnnotation().get().dependencyRelation();
+      }
+      return Optional.empty();
    }
 
    /**
@@ -476,13 +487,13 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     *
     * @return the head
     */
-   public HString getHead() {
+   public HString phraseHead() {
       return tokens().stream()
-                     .filter(t -> !t.parent().isPresent())
+                     .filter(t -> t.parent().isEmpty())
                      .map(Cast::<HString>as)
                      .findFirst()
                      .orElseGet(() -> tokens().stream()
-                                              .filter(t -> !this.overlaps(t.parent().get()))
+                                              .filter(t -> !this.overlaps(t.parent()))
                                               .map(Cast::<HString>as)
                                               .findFirst()
                                               .orElse(this));
@@ -530,7 +541,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                      .map(HString::getLemma)
                      .collect(Collectors.joining(
                         getLanguage().usesWhitespace() ? " " : ""
-                     ));
+                                                ));
    }
 
    /**
@@ -566,7 +577,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                      .map(HString::getStem)
                      .collect(Collectors.joining(
                         getLanguage().usesWhitespace() ? " " : ""
-                     ));
+                                                ));
    }
 
    @Override

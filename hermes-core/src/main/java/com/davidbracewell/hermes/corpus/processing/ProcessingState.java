@@ -27,6 +27,8 @@ import lombok.NonNull;
 import java.io.Serializable;
 
 /**
+ * The type Processing state.
+ *
  * @author David B. Bracewell
  */
 public class ProcessingState implements Serializable {
@@ -38,18 +40,39 @@ public class ProcessingState implements Serializable {
       this.corpus = corpus;
    }
 
+   /**
+    * Loaded processing state.
+    *
+    * @param corpus the corpus
+    * @return the processing state
+    */
    public static ProcessingState LOADED(@NonNull Corpus corpus) {
       return new ProcessingState(corpus);
    }
 
+   /**
+    * Not loaded processing state.
+    *
+    * @return the processing state
+    */
    public static ProcessingState NOT_LOADED() {
       return new ProcessingState(null);
    }
 
+   /**
+    * Is loaded boolean.
+    *
+    * @return the boolean
+    */
    public boolean isLoaded() {
       return corpus != null;
    }
 
+   /**
+    * Gets corpus.
+    *
+    * @return the corpus
+    */
    public Corpus getCorpus() {
       return corpus;
    }

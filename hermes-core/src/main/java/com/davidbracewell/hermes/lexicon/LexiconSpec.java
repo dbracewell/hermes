@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.Tag;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.primitives.Doubles;
@@ -52,6 +53,7 @@ public class LexiconSpec implements Serializable {
    private boolean hasConstraints;
    private boolean caseSensitive;
    private AttributeType tagAttribute;
+   private Object tag;
    private boolean useResourceNameAsTag;
    private Resource resource;
 
@@ -59,7 +61,7 @@ public class LexiconSpec implements Serializable {
     * Instantiates a new Lexicon spec.
     */
    public LexiconSpec() {
-      this(false, false, false, null, null, false);
+      this(false, false, false, null, null, false, null);
    }
 
    /**
@@ -73,13 +75,14 @@ public class LexiconSpec implements Serializable {
     * @param useResourceNameAsTag the use resource name as tag
     */
    @Builder
-   public LexiconSpec(boolean caseSensitive, boolean hasConstraints, boolean probabilistic, Resource resource, AttributeType tagAttribute, boolean useResourceNameAsTag) {
+   public LexiconSpec(boolean caseSensitive, boolean hasConstraints, boolean probabilistic, Resource resource, AttributeType tagAttribute, boolean useResourceNameAsTag, Object tag) {
       this.caseSensitive = caseSensitive;
       this.hasConstraints = hasConstraints;
       this.probabilistic = probabilistic;
       this.resource = resource;
       this.tagAttribute = tagAttribute;
       this.useResourceNameAsTag = useResourceNameAsTag;
+      this.tag = tag;
    }
 
    /**
@@ -101,16 +104,20 @@ public class LexiconSpec implements Serializable {
                   SerializablePredicate<HString> constraint = null;
 
                   int nc = 1;
-                  if (row.size() > nc && tagAttribute != null && !useResourceNameAsTag) {
+
+                  if (tagAttribute != null && this.tag != null) {
+                     tag = Cast.as(this.tag);
+                  } else if (row.size() > nc && tagAttribute != null && !useResourceNameAsTag) {
                      tag = tagAttribute.getValueType().decode(row.get(nc));
                      if (tag == null) {
                         log.warn("{0} is an invalid {1}, skipping entry {2}.", row.get(nc), tagAttribute.name(), row);
                         return;
                      }
                      nc++;
-                  } else if (row.size() > nc && tagAttribute != null) {
+                  } else if (tagAttribute != null) {
+                     System.err.println(tagAttribute.getValueType());
                      tag = tagAttribute.getValueType().decode(base);
-                     Preconditions.checkNotNull(tag, row.get(nc) + " is an invalid tag.");
+                     Preconditions.checkNotNull(tag, base + " is an invalid tag.");
                   }
 
                   if (probabilistic && row.size() > nc && Doubles.tryParse(row.get(nc)) != null) {

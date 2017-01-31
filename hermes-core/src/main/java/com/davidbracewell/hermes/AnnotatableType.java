@@ -61,7 +61,6 @@ public interface AnnotatableType {
    default Annotator getAnnotator(@NonNull Language language) {
       //Step 1: Check for a config override
       String key = Config.closestKey(type(), language, name(), "annotator");
-
       Annotator annotator = null;
 
       if (StringUtils.isNotNullOrBlank(key)) {
@@ -84,12 +83,13 @@ public interface AnnotatableType {
                                 .getClassForNameQuietly(ANNOTATOR_PACKAGE + ".Default" + typeName + "Annotator");
          }
 
-         try {
-            annotator = Reflect.onClass(annotatorClass).create().get();
-         } catch (ReflectionException e) {
-            annotator = null;
+         if( annotatorClass != null) {
+            try {
+               annotator = Reflect.onClass(annotatorClass).create().get();
+            } catch (ReflectionException e) {
+               annotator = null;
+            }
          }
-
       }
 
       if (annotator == null) {

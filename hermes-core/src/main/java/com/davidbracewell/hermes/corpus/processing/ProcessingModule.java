@@ -21,6 +21,7 @@
 
 package com.davidbracewell.hermes.corpus.processing;
 
+import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.logging.Loggable;
 
@@ -44,6 +45,27 @@ public interface ProcessingModule extends Serializable, Loggable {
    Corpus process(Corpus corpus, ProcessorContext context) throws Exception;
 
 
+   /**
+    * Gets the override status for this processing module, which can be defined using configuration in the form
+    * <code>fully.qualified.class.name.override=true</code> or all processing can be reperformed using
+    * <code>processing.override.all=true</code>. By default, the status is false, which means try to load the previous
+    * state.
+    *
+    * @return True force reprocessing, False try to load the previous state.
+    */
+   default boolean getOverrideStatus() {
+      return Config.get("processing.override.all")
+                   .asBooleanValue(Config.get(this.getClass(), "override")
+                                         .asBooleanValue(false));
+   }
+
+   /**
+    * Loads from a previous processing state.
+    *
+    * @param corpus  the corpus being processed
+    * @param context the context of the processor
+    * @return the processing state (NOT_LOADED by default meaning there is no previous state).
+    */
    default ProcessingState loadPreviousState(Corpus corpus, ProcessorContext context) {
       return ProcessingState.NOT_LOADED();
    }

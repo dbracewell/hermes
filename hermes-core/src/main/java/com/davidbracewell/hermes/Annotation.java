@@ -144,7 +144,10 @@ public final class Annotation extends Fragment implements Serializable {
       myTokens.add(this);
       return tokens.stream()
                    .filter(t -> !t.overlaps(this))
-                   .filter(t -> t.parent().filter(myTokens::contains).isPresent())
+                   .filter(t -> {
+                      Annotation parent = t.parent();
+                      return !parent.isEmpty() && myTokens.contains(parent);
+                   })
                    .collect(Collectors.toList());
    }
 

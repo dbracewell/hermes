@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.collection.Trie;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
 import lombok.NonNull;
@@ -69,7 +70,12 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
 
    @Override
    public void merge(@NonNull WordList other) {
-      other.forEach(this::add);
+      if (other instanceof Lexicon) {
+         Lexicon lother = Cast.as(other);
+         lother.entries().forEach(this::add);
+      } else {
+         other.forEach(this::add);
+      }
    }
 
    @Override
@@ -89,6 +95,44 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
                     .collect(Collectors.toList());
       }
       return Collections.emptyList();
+   }
+
+   @Override
+   public Set<LexiconEntry> entries() {
+      return new AbstractSet<LexiconEntry>() {
+         @Override
+         public Iterator<LexiconEntry> iterator() {
+            return new Iterator<LexiconEntry>() {
+               Iterator<List<LexiconEntry>> itr = trie.values().iterator();
+               Iterator<LexiconEntry> subItr = null;
+
+
+               private boolean advance() {
+                  while (itr.hasNext() && (subItr == null || !subItr.hasNext())) {
+                     subItr = itr.next().iterator();
+                  }
+                  return subItr != null && subItr.hasNext();
+               }
+
+
+               @Override
+               public boolean hasNext() {
+                  return advance();
+               }
+
+               @Override
+               public LexiconEntry next() {
+                  advance();
+                  return subItr.next();
+               }
+            };
+         }
+
+         @Override
+         public int size() {
+            return TrieLexicon.this.size();
+         }
+      };
    }
 
    @Override

@@ -106,13 +106,18 @@ public final class CorpusProcessor extends HermesCommandLineApp implements Seria
       Corpus corpus = input;
       for (ProcessingModule processor : processors) {
          logInfo("Running {0}...", processor.getClass().getSimpleName());
-         ProcessingState temp = processor.loadPreviousState(corpus, context);
-         if (temp.isLoaded()) {
-            logInfo("\tComplete [Loaded]");
-            corpus = temp.getCorpus();
-         } else {
+         if( processor.getOverrideStatus() ){
             corpus = processor.process(corpus, context);
-            logInfo("\tComplete [Computed]");
+            logInfo("\tComplete [Recomputed]");
+         } else {
+            ProcessingState temp = processor.loadPreviousState(corpus, context);
+            if (temp.isLoaded()) {
+               logInfo("\tComplete [Loaded]");
+               corpus = temp.getCorpus();
+            } else {
+               corpus = processor.process(corpus, context);
+               logInfo("\tComplete [Computed]");
+            }
          }
       }
       return corpus;
