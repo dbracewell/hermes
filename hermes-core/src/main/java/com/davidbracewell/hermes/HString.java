@@ -144,8 +144,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
          Collection<Relation> relations = source.allRelations(true);
          for (Relation relation : relations) {
             if (relationTypeList.contains(relation.getType())) {
-               relation.getTarget(this).ifPresent(target -> {
-                  if (g.containsVertex(target)) {
+               relation.getTarget(document()).ifPresent(target -> {
+                  target = g.containsVertex(target) ? target : target.stream(AnnotationType.ROOT).filter(g::containsVertex).findFirst().orElse(null);
+                  if (target != null) {
                      if (!g.containsEdge(source, target)) {
                         RelationEdge edge = g.addEdge(source, target);
                         edge.setRelation(relation.getValue());
