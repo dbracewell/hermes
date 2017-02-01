@@ -134,6 +134,41 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                                 .collect(Collectors.toList());
    }
 
+   public String inSentence() {
+      StringBuilder builder = new StringBuilder();
+      Annotation sentence = first(Types.SENTENCE);
+      if (!sentence.isEmpty()) {
+         int ss = sentence.start();
+         int se = sentence.end();
+
+         int as = Math.max(0, start() - ss);
+         int ae = Math.min(se, end() - ss);
+
+
+         if (as > ss) {
+            builder.append(sentence.subSequence(0, as));
+         }
+
+         String openTag = "[";
+         String closeTag = "]";
+
+         if (isAnnotation() && asAnnotation().filter(a -> a.getTag().isPresent()).isPresent()) {
+            String tag = asAnnotation().get().getTag().get().name();
+            openTag = "<" + tag + ">";
+            closeTag = "</" + tag + ">";
+         }
+
+
+         builder.append(openTag).append(toString()).append(closeTag);
+
+         if (ae < se) {
+            builder.append(sentence.subSequence(ae, se - ss));
+         }
+
+      }
+      return builder.toString();
+   }
+
    /**
     * Annotation graph relation graph.
     *
@@ -553,7 +588,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                      .map(HString::getLemma)
                      .collect(Collectors.joining(
                         getLanguage().usesWhitespace() ? " " : ""
-                     ));
+                                                ));
    }
 
    /**
@@ -589,7 +624,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                      .map(HString::getStem)
                      .collect(Collectors.joining(
                         getLanguage().usesWhitespace() ? " " : ""
-                     ));
+                                                ));
    }
 
    @Override
