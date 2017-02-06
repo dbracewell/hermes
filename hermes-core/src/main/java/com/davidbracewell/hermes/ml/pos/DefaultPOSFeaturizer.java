@@ -58,8 +58,9 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
          next = Sequence.EOS;
       }
 
+
       String prev = null, prevPrev = null;
-      if (iterator.getContext(-11).isPresent()) {
+      if (iterator.getContext(-1).isPresent()) {
          prev = iterator.getContext(-1).get().toString();
          if (iterator.getContext(-2).isPresent()) {
             prevPrev = iterator.getContext(-2).get().toString();
@@ -81,17 +82,13 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
       affixes(word, 0, 3, features);
 
       features.add(Feature.TRUE("w[-1]=" + prev));
-//    affixes(prev, -1, 3, features);
 
       if (prevPrev != null) {
-//      affixes(prevPrev, -2, 3, features);
          features.add(Feature.TRUE("w[-2]=" + prevPrev));
       }
 
       features.add(Feature.TRUE("w[+1]=" + next));
-//    affixes(next, +1, 3, features);
       if (nextNext != null) {
-//      affixes(nextNext, +2, 3, features);
          features.add(Feature.TRUE("w[+2]=" + nextNext));
       }
 

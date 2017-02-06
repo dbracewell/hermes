@@ -34,6 +34,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.davidbracewell.tuple.Tuples.$;
+
 /**
  * <p> Annotations are specialized {@link HString}s representing linguistic overlays on a document that associate a
  * type, e.g. token, sentence, named entity, and a set of attributes, e.g. part of speech and entity type, to  a
@@ -153,13 +155,14 @@ public final class Annotation extends Fragment implements Serializable {
 
 
    @Override
-   public Optional<Tuple2<String, Annotation>> dependencyRelation() {
+   public Tuple2<String, Annotation> dependencyRelation() {
       return getRelationStream(true)
                 .filter(r -> r.getType() == Types.DEPENDENCY)
                 .filter(r -> r.getTarget(this).isPresent())
                 .filter(r -> !this.overlaps(r.getTarget(this).orElse(null)))
                 .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).orElse(null)))
-                .findFirst();
+                .findFirst()
+                .orElse($(StringUtils.EMPTY, new Annotation(document(), Types.SENTENCE, 0, 0)));
    }
 
    @Override

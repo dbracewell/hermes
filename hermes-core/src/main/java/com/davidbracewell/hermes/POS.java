@@ -37,574 +37,574 @@ import java.util.Map;
  */
 public enum POS implements Tag {
 
-  ANY(null, "UNKNOWN") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-
-  /**
-   * Universal Tag Set
-   */
-  VERB(ANY, "VERB") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  NOUN(ANY, "NOUN") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  PRONOUN(ANY, "PRON") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  ADJECTIVE(ANY, "ADJ") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  ADVERB(ANY, "ADV") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  ADPOSITION(ANY, "ADP") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  CONJUNCTION(ANY, "CONJ") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  DETERMINER(ANY, "DET") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  NUMBER(ANY, "NUM") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  PARTICLE(ANY, "PRT") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  OTHER(ANY, "X") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-  PUNCTUATION(ANY, "PUNCTUATION") {
-    @Override
-    public boolean isUniversal() {
-      return true;
-    }
-  },
-
-  /**
-   * Phrase Tags
-   */
-  VP(VERB, "VP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-  NP(NOUN, "NP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-  ADJP(ADJECTIVE, "ADJP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-  PP(ADPOSITION, "PP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-  ADVP(ADVERB, "ADVP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-  SBAR(OTHER, "SBAR") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-  CONJP(CONJUNCTION, "CONJP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-  PRT(PARTICLE, "PRT") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-  INTJ(OTHER, "INTJ") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-  LST(OTHER, "LST") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-  UCP(OTHER, "UCP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-
-
-  /**
-   * Penn Treebank Part of Speech Tags
-   */
-  CC(CONJUNCTION, "CC"), // Coordinating conjunction
-  CD(NUMBER, "CD"), //Cardinal number
-  DT(DETERMINER, "DT"), //Determiner
-  EX(DETERMINER, "EX"), //Existential there
-  FW(OTHER, "FW"), //Foreign word
-  IN(ADPOSITION, "IN"), //Preposition or subordinating conjunction
-  JJ(ADJECTIVE, "JJ"), // Adjective
-  JJR(ADJECTIVE, "JJR"), //Adjective, comparative
-  JJS(ADJECTIVE, "JJS"), //Adjective, superlative
-  LS(OTHER, "LS"), //List item marker
-  MD(VERB, "MD"), //Modal
-  NN(NOUN, "NN"), //Noun, singular or mass
-  NNS(NOUN, "NNS"), //Noun, plural
-  NNP(NOUN, "NNP"), //Proper noun, singular
-  NNPS(NOUN, "NNPS"), //Proper noun, plural
-  PDT(DETERMINER, "PDT"), //Predeterminer
-  POS(PARTICLE, "POS"), //Possessive ending
-  PRP(PRONOUN, "PRP"), //Personal pronoun
-  PRP$(PRONOUN, "PRP$"), //Possessive pronoun
-  RB(ADVERB, "RB"), //Adverb
-  RBR(ADVERB, "RBR"), //Adverb, comparative
-  RBS(ADVERB, "RBS"), //Adverb, superlative
-  RP(PARTICLE, "RP"), //Particle
-  SYM(OTHER, "SYM"), //Symbol
-  TO(PARTICLE, "TO"), //to
-  UH(OTHER, "UH"), //Interjection
-  VB(VERB, "VB"), //Verb, base form
-  VBD(VERB, "VBD"), //Verb, past tense
-  VBG(VERB, "VBG"),//Verb, gerund or present participle
-  VBN(VERB, "VBN"),//Verb, past participle
-  VBP(VERB, "VBP"),//Verb, non-3rd person singular present
-  VBZ(VERB, "VBZ"),//Verb, 3rd person singular present
-  WDT(DETERMINER, "WDT"),//Wh-determiner
-  WP(PRONOUN, "WP"), //Wh-pronoun
-  WP$(PRONOUN, "WP$"), //Possessive wh-pronoun
-  WRB(ADVERB, "WRB"), //Wh-adverb
-  PERIOD(PUNCTUATION, "."),
-  HASH(PUNCTUATION, "#"),
-  QUOTE(PUNCTUATION, "\""),
-  DOLLAR(PUNCTUATION, "$"),
-  LRB(PUNCTUATION, "-LRB-"),
-  RRB(PUNCTUATION, "-RRB-"),
-  LCB(PUNCTUATION, "-LCB-"),
-  RCB(PUNCTUATION, "-RCB-"),
-  RSB(PUNCTUATION, "-RSB-"),
-  LSB(PUNCTUATION, "-LSB-"),
-  COMMA(PUNCTUATION, ","),
-  COLON(PUNCTUATION, ":"),
-  ADD(OTHER,"ADD"),
-  AFX(ADPOSITION,"AFX"),
-  NFP(PUNCTUATION, "NFP"),
-
-  /**
-   * Special Japanese Part of Speech Tags
-   */
-  ADN(ADJECTIVE, "ADN"),
-  AUX(VERB, "AUX"),
-  LOC(NOUN, "LOC"), // Noun Location
-  ORG(NOUN, "ORG"), //Noun Organization
-  PER(NOUN, "PER"), // Noun Person
-  RPC(PARTICLE, "RPC"), //Case Particle
-
-
-  /**
-   * Special CHINESE Part of Speech Tags
-   */
-  AD(ADVERB, "AD"),
-  AS(PARTICLE, "AS"),
-  BA(OTHER, "BA"),
-  CS(CONJUNCTION, "CS"),
-  DEC(PARTICLE, "DEC"),
-  DEG(PARTICLE, "DEG"),
-  DER(PARTICLE, "DER"),
-  DEV(PARTICLE, "DEV"),
-  ETC(PARTICLE, "PRT"),
-  IJ(OTHER, "IJ"),
-  LB(OTHER, "LB"),
-  LC(PARTICLE, "LC"),
-  M(NUMBER, "M"),
-  MSP(PARTICLE, "MSP"),
-  NR(NOUN, "NR"),
-  NT(NOUN, "NT"),
-  OD(NUMBER, "OD"),
-  ON(OTHER, "ON"),
-  P(ADPOSITION, "P"),
-  PN(PRONOUN, "PN"),
-  PU(PUNCTUATION, "PU"),
-  SB(OTHER, "SB"),
-  SP(PARTICLE, "SP"),
-  VA(VERB, "VA"),
-  VC(VERB, "VC"),
-  VE(VERB, "VE"),
-  VV(VERB, "VV"),
-  X(OTHER, "X"),
-
-  CLP(OTHER, "CLP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-
-  CP(OTHER, "CP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-
-  DNP(OTHER, "DNP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-
-  DP(DETERMINER, "DP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-
-  DVP(OTHER, "DVP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-
-  FRAG(OTHER, "FRAG") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-
-  IP(OTHER, "IP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-
-  LCP(OTHER, "LCP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-
-  PRN(OTHER, "PRN") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  },
-
-  QP(OTHER, "QP") {
-    @Override
-    public boolean isPhraseTag() {
-      return true;
-    }
-  };
-
-  static Map<String, POS> index = new HashMap<>();
-  private final String tag;
-  private final com.davidbracewell.hermes.POS parentType;
-
-  POS(com.davidbracewell.hermes.POS parentType, String tag) {
-    this.parentType = parentType;
-    this.tag = tag;
-  }
-
-  static {
-    for (POS pos : values()) {
-      index.put(pos.asString().toUpperCase(), pos);
-      index.put(pos.toString().toUpperCase(), pos);
-    }
-  }
-
-  /**
-   * Parses a String converting the tag (its Enum-String or treebank string) into the appropriate enum value
-   *
-   * @param tag The tag to parts
-   * @return The <code>PartOfSpeech</code>
-   */
-  public static com.davidbracewell.hermes.POS fromString(String tag) {
-    if (StringUtils.isNullOrBlank(tag)) {
-      return null;
-    } else if (index.containsKey(tag.toUpperCase())) {
-      return index.get(tag.toUpperCase());
-    } else if (tag.equals(";") || tag.equals("...") || tag.equals("-") || tag.equals("--")) {
-      return COLON;
-    } else if (tag.equals("?") || tag.equals("!")) {
-      return PERIOD;
-    } else if (tag.equals("``") || tag.equals("''") || tag.equals("\"\"") || tag.equals("'") || tag.equals("\"")) {
-      return QUOTE;
-    } else if (tag.equals("UH`")) {
-      return UH;
-    } else if (tag.endsWith("{")) {
-      return LCB;
-    } else if (tag.endsWith("}")) {
-      return RCB;
-    } else if (tag.endsWith("[")) {
-      return LSB;
-    } else if (tag.endsWith("]")) {
-      return RSB;
-    } else if (tag.endsWith("(")) {
-      return LRB;
-    } else if (tag.endsWith(")")) {
-      return RRB;
-    } else if (!StringPredicates.HAS_LETTER.test(tag)) {
-      return SYM;
-    }
-    throw new IllegalArgumentException(tag + " is not a known PartOfSpeech");
-  }
-
-  /**
-   * Determines the best fundamental POS (NOUN, VERB, ADJECTIVE, or ADVERB) for a text.
-   *
-   * @param text The text
-   * @return The part of speech
-   */
-  public static com.davidbracewell.hermes.POS forText(HString text) {
-    Preconditions.checkNotNull(text);
-
-    if (text.contains(Types.PART_OF_SPEECH)) {
-      return text.get(Types.PART_OF_SPEECH).cast();
-    }
-    if (text.isInstance(Types.TOKEN)) {
-      return null;
-    }
-
-    com.davidbracewell.hermes.POS tag = ANY;
-    for (Annotation token : text.tokens()) {
-      Tag temp = token.get(Types.PART_OF_SPEECH).cast();
-      if (temp != null) {
-        if (temp.isInstance(VERB)) {
-          return VERB;
-        } else if (temp.isInstance(NOUN)) {
-          tag = NOUN;
-        } else if (temp.isInstance(ADJECTIVE) && tag != NOUN) {
-          tag = ADJECTIVE;
-        } else if (temp.isInstance(ADVERB) && tag != NOUN) {
-          tag = ADVERB;
-        }
+   ANY(null, "UNKNOWN") {
+      @Override
+      public boolean isUniversal() {
+         return true;
       }
-    }
+   },
 
-    return tag;
-  }
-
-  /**
-   * @return True if the pos is a noun form
-   */
-  public boolean isNoun() {
-    return getUniversalTag() == NOUN;
-  }
-
-  /**
-   * @return True if the pos is a verb form
-   */
-  public boolean isVerb() {
-    return getUniversalTag() == VERB;
-  }
-
-  /**
-   * @return True if the pos is an adjective form
-   */
-  public boolean isAdjective() {
-    return getUniversalTag() == ADJECTIVE;
-  }
-
-  /**
-   * @return True if the pos is an adverb form
-   */
-  public boolean isAdverb() {
-    return getUniversalTag() == ADVERB;
-  }
-
-  /**
-   * @return True if the pos is a pronoun form
-   */
-  public boolean isPronoun() {
-    return getUniversalTag() == PRONOUN;
-  }
-
-  /**
-   * @return True if this is a number
-   */
-  public boolean isNumber() {
-    return getUniversalTag() == NUMBER;
-  }
-
-  /**
-   * @return True if this is an adposition
-   */
-  public boolean isAdposition() {
-    return getUniversalTag() == ADPOSITION;
-  }
-
-  /**
-   * @return True if this is a conjunction
-   */
-  public boolean isConjunction() {
-    return getUniversalTag() == CONJUNCTION;
-  }
-
-  /**
-   * @return True if this is a determiner
-   */
-  public boolean isDeterminer() {
-    return getUniversalTag() == DETERMINER;
-  }
-
-  /**
-   * @return True if this is a particle
-   */
-  public boolean isParticle() {
-    return getUniversalTag() == PARTICLE;
-  }
-
-  /**
-   * @return True if this is punctuation
-   */
-  public boolean isPunctuation() {
-    return getUniversalTag() == PUNCTUATION;
-  }
-
-  /**
-   * @return True if this is an other
-   */
-  public boolean isOther() {
-    return getUniversalTag() == OTHER;
-  }
-
-  /**
-   * @return True if the tag is at the phrase level
-   */
-  public boolean isPhraseTag() {
-    return false;
-  }
-
-  /**
-   * @return true if the tag is one of the universal tags
-   */
-  public boolean isUniversal() {
-    return false;
-  }
-
-  /**
-   * @return The treebank string representation
-   */
-  public String asString() {
-    return tag;
-  }
-
-  /**
-   * @return The parent part of speech or itself if it is a top level pos
-   */
-  public com.davidbracewell.hermes.POS getParentType() {
-    return parentType == null ? this : parentType;
-  }
-
-  /**
-   * @return The universal tag
-   */
-  public com.davidbracewell.hermes.POS getUniversalTag() {
-    if (this == ANY) {
-      return ANY;
-    }
-    com.davidbracewell.hermes.POS tag = this;
-    while (tag != null && tag.getParentType() != ANY && !tag.isUniversal()) {
-      tag = tag.getParentType();
-    }
-    return tag;
-  }
-
-  public boolean isTag(@NonNull Tag... tags) {
-    for (Tag t : tags) {
-      if (t == this) {
-        return true;
+   /**
+    * Universal Tag Set
+    */
+   VERB(ANY, "VERB") {
+      @Override
+      public boolean isUniversal() {
+         return true;
       }
-    }
-    return false;
-  }
+   },
+   NOUN(ANY, "NOUN") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
+   PRONOUN(ANY, "PRON") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
+   ADJECTIVE(ANY, "ADJ") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
+   ADVERB(ANY, "ADV") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
+   ADPOSITION(ANY, "ADP") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
+   CONJUNCTION(ANY, "CONJ") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
+   DETERMINER(ANY, "DET") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
+   NUMBER(ANY, "NUM") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
+   PARTICLE(ANY, "PRT") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
+   OTHER(ANY, "X") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
+   PUNCTUATION(ANY, "PUNCTUATION") {
+      @Override
+      public boolean isUniversal() {
+         return true;
+      }
+   },
 
-  @Override
-  public boolean isInstance(Tag tag) {
-    if (tag == null) {
+   /**
+    * Phrase Tags
+    */
+   VP(VERB, "VP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+   NP(NOUN, "NP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+   ADJP(ADJECTIVE, "ADJP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+   PP(ADPOSITION, "PP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+   ADVP(ADVERB, "ADVP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+   SBAR(OTHER, "SBAR") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+   CONJP(CONJUNCTION, "CONJP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+   PRT(PARTICLE, "PRT") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+   INTJ(OTHER, "INTJ") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+   LST(OTHER, "LST") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+   UCP(OTHER, "UCP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+
+
+   /**
+    * Penn Treebank Part of Speech Tags
+    */
+   CC(CONJUNCTION, "CC"), // Coordinating conjunction
+   CD(NUMBER, "CD"), //Cardinal number
+   DT(DETERMINER, "DT"), //Determiner
+   EX(DETERMINER, "EX"), //Existential there
+   FW(OTHER, "FW"), //Foreign word
+   IN(ADPOSITION, "IN"), //Preposition or subordinating conjunction
+   JJ(ADJECTIVE, "JJ"), // Adjective
+   JJR(ADJECTIVE, "JJR"), //Adjective, comparative
+   JJS(ADJECTIVE, "JJS"), //Adjective, superlative
+   LS(OTHER, "LS"), //List item marker
+   MD(VERB, "MD"), //Modal
+   NN(NOUN, "NN"), //Noun, singular or mass
+   NNS(NOUN, "NNS"), //Noun, plural
+   NNP(NOUN, "NNP"), //Proper noun, singular
+   NNPS(NOUN, "NNPS"), //Proper noun, plural
+   PDT(DETERMINER, "PDT"), //Predeterminer
+   POS(PARTICLE, "POS"), //Possessive ending
+   PRP(PRONOUN, "PRP"), //Personal pronoun
+   PRP$(PRONOUN, "PRP$"), //Possessive pronoun
+   RB(ADVERB, "RB"), //Adverb
+   RBR(ADVERB, "RBR"), //Adverb, comparative
+   RBS(ADVERB, "RBS"), //Adverb, superlative
+   RP(PARTICLE, "RP"), //Particle
+   SYM(OTHER, "SYM"), //Symbol
+   TO(PARTICLE, "TO"), //to
+   UH(OTHER, "UH"), //Interjection
+   VB(VERB, "VB"), //Verb, base form
+   VBD(VERB, "VBD"), //Verb, past tense
+   VBG(VERB, "VBG"),//Verb, gerund or present participle
+   VBN(VERB, "VBN"),//Verb, past participle
+   VBP(VERB, "VBP"),//Verb, non-3rd person singular present
+   VBZ(VERB, "VBZ"),//Verb, 3rd person singular present
+   WDT(DETERMINER, "WDT"),//Wh-determiner
+   WP(PRONOUN, "WP"), //Wh-pronoun
+   WP$(PRONOUN, "WP$"), //Possessive wh-pronoun
+   WRB(ADVERB, "WRB"), //Wh-adverb
+   PERIOD(PUNCTUATION, "."),
+   HASH(PUNCTUATION, "#"),
+   QUOTE(PUNCTUATION, "\""),
+   DOLLAR(PUNCTUATION, "$"),
+   LRB(PUNCTUATION, "-LRB-"),
+   RRB(PUNCTUATION, "-RRB-"),
+   LCB(PUNCTUATION, "-LCB-"),
+   RCB(PUNCTUATION, "-RCB-"),
+   RSB(PUNCTUATION, "-RSB-"),
+   LSB(PUNCTUATION, "-LSB-"),
+   COMMA(PUNCTUATION, ","),
+   COLON(PUNCTUATION, ":"),
+   ADD(OTHER, "ADD"),
+   AFX(ADPOSITION, "AFX"),
+   NFP(PUNCTUATION, "NFP"),
+
+   /**
+    * Special Japanese Part of Speech Tags
+    */
+   ADN(ADJECTIVE, "ADN"),
+   AUX(VERB, "AUX"),
+   LOC(NOUN, "LOC"), // Noun Location
+   ORG(NOUN, "ORG"), //Noun Organization
+   PER(NOUN, "PER"), // Noun Person
+   RPC(PARTICLE, "RPC"), //Case Particle
+
+
+   /**
+    * Special CHINESE Part of Speech Tags
+    */
+   AD(ADVERB, "AD"),
+   AS(PARTICLE, "AS"),
+   BA(OTHER, "BA"),
+   CS(CONJUNCTION, "CS"),
+   DEC(PARTICLE, "DEC"),
+   DEG(PARTICLE, "DEG"),
+   DER(PARTICLE, "DER"),
+   DEV(PARTICLE, "DEV"),
+   ETC(PARTICLE, "PRT"),
+   IJ(OTHER, "IJ"),
+   LB(OTHER, "LB"),
+   LC(PARTICLE, "LC"),
+   M(NUMBER, "M"),
+   MSP(PARTICLE, "MSP"),
+   NR(NOUN, "NR"),
+   NT(NOUN, "NT"),
+   OD(NUMBER, "OD"),
+   ON(OTHER, "ON"),
+   P(ADPOSITION, "P"),
+   PN(PRONOUN, "PN"),
+   PU(PUNCTUATION, "PU"),
+   SB(OTHER, "SB"),
+   SP(PARTICLE, "SP"),
+   VA(VERB, "VA"),
+   VC(VERB, "VC"),
+   VE(VERB, "VE"),
+   VV(VERB, "VV"),
+   X(OTHER, "X"),
+
+   CLP(OTHER, "CLP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+
+   CP(OTHER, "CP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+
+   DNP(OTHER, "DNP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+
+   DP(DETERMINER, "DP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+
+   DVP(OTHER, "DVP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+
+   FRAG(OTHER, "FRAG") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+
+   IP(OTHER, "IP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+
+   LCP(OTHER, "LCP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+
+   PRN(OTHER, "PRN") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   },
+
+   QP(OTHER, "QP") {
+      @Override
+      public boolean isPhraseTag() {
+         return true;
+      }
+   };
+
+   static Map<String, POS> index = new HashMap<>();
+   private final String tag;
+   private final com.davidbracewell.hermes.POS parentType;
+
+   POS(com.davidbracewell.hermes.POS parentType, String tag) {
+      this.parentType = parentType;
+      this.tag = tag;
+   }
+
+   static {
+      for (POS pos : values()) {
+         index.put(pos.asString().toUpperCase(), pos);
+         index.put(pos.toString().toUpperCase(), pos);
+      }
+   }
+
+   /**
+    * Parses a String converting the tag (its Enum-String or treebank string) into the appropriate enum value
+    *
+    * @param tag The tag to parts
+    * @return The <code>PartOfSpeech</code>
+    */
+   public static com.davidbracewell.hermes.POS fromString(String tag) {
+      if (StringUtils.isNullOrBlank(tag)) {
+         return null;
+      } else if (index.containsKey(tag.toUpperCase())) {
+         return index.get(tag.toUpperCase());
+      } else if (tag.equals(";") || tag.equals("...") || tag.equals("-") || tag.equals("--")) {
+         return COLON;
+      } else if (tag.equals("?") || tag.equals("!")) {
+         return PERIOD;
+      } else if (tag.equals("``") || tag.equals("''") || tag.equals("\"\"") || tag.equals("'") || tag.equals("\"")) {
+         return QUOTE;
+      } else if (tag.equals("UH`")) {
+         return UH;
+      } else if (tag.endsWith("{")) {
+         return LCB;
+      } else if (tag.endsWith("}")) {
+         return RCB;
+      } else if (tag.endsWith("[")) {
+         return LSB;
+      } else if (tag.endsWith("]")) {
+         return RSB;
+      } else if (tag.endsWith("(")) {
+         return LRB;
+      } else if (tag.endsWith(")")) {
+         return RRB;
+      } else if (!StringPredicates.HAS_LETTER.test(tag)) {
+         return SYM;
+      }
+      throw new IllegalArgumentException(tag + " is not a known PartOfSpeech");
+   }
+
+   /**
+    * Determines the best fundamental POS (NOUN, VERB, ADJECTIVE, or ADVERB) for a text.
+    *
+    * @param text The text
+    * @return The part of speech
+    */
+   public static com.davidbracewell.hermes.POS forText(HString text) {
+      Preconditions.checkNotNull(text);
+
+      if (text.contains(Types.PART_OF_SPEECH)) {
+         return text.getAsTag(Types.PART_OF_SPEECH);
+      }
+      if (text.tokenLength() == 1) {
+         return text.tokenAt(0).getAsTag(Types.PART_OF_SPEECH);
+      }
+
+      com.davidbracewell.hermes.POS tag = ANY;
+      for (Annotation token : text.tokens()) {
+         Tag temp = token.get(Types.PART_OF_SPEECH).cast();
+         if (temp != null) {
+            if (temp.isInstance(VERB)) {
+               return VERB;
+            } else if (temp.isInstance(NOUN)) {
+               tag = NOUN;
+            } else if (temp.isInstance(ADJECTIVE) && tag != NOUN) {
+               tag = ADJECTIVE;
+            } else if (temp.isInstance(ADVERB) && tag != NOUN) {
+               tag = ADVERB;
+            }
+         }
+      }
+
+      return tag;
+   }
+
+   /**
+    * @return True if the pos is a noun form
+    */
+   public boolean isNoun() {
+      return getUniversalTag() == NOUN;
+   }
+
+   /**
+    * @return True if the pos is a verb form
+    */
+   public boolean isVerb() {
+      return getUniversalTag() == VERB;
+   }
+
+   /**
+    * @return True if the pos is an adjective form
+    */
+   public boolean isAdjective() {
+      return getUniversalTag() == ADJECTIVE;
+   }
+
+   /**
+    * @return True if the pos is an adverb form
+    */
+   public boolean isAdverb() {
+      return getUniversalTag() == ADVERB;
+   }
+
+   /**
+    * @return True if the pos is a pronoun form
+    */
+   public boolean isPronoun() {
+      return getUniversalTag() == PRONOUN;
+   }
+
+   /**
+    * @return True if this is a number
+    */
+   public boolean isNumber() {
+      return getUniversalTag() == NUMBER;
+   }
+
+   /**
+    * @return True if this is an adposition
+    */
+   public boolean isAdposition() {
+      return getUniversalTag() == ADPOSITION;
+   }
+
+   /**
+    * @return True if this is a conjunction
+    */
+   public boolean isConjunction() {
+      return getUniversalTag() == CONJUNCTION;
+   }
+
+   /**
+    * @return True if this is a determiner
+    */
+   public boolean isDeterminer() {
+      return getUniversalTag() == DETERMINER;
+   }
+
+   /**
+    * @return True if this is a particle
+    */
+   public boolean isParticle() {
+      return getUniversalTag() == PARTICLE;
+   }
+
+   /**
+    * @return True if this is punctuation
+    */
+   public boolean isPunctuation() {
+      return getUniversalTag() == PUNCTUATION;
+   }
+
+   /**
+    * @return True if this is an other
+    */
+   public boolean isOther() {
+      return getUniversalTag() == OTHER;
+   }
+
+   /**
+    * @return True if the tag is at the phrase level
+    */
+   public boolean isPhraseTag() {
       return false;
-    }
-    if (tag == com.davidbracewell.hermes.POS.ANY) {
-      return true;
-    }
-    if (tag instanceof com.davidbracewell.hermes.POS) {
-      com.davidbracewell.hermes.POS other = (com.davidbracewell.hermes.POS) tag;
-      com.davidbracewell.hermes.POS check = this;
-      while (check != null) {
-        if (check == other) {
-          return true;
-        }
-        if (check == check.getParentType()) {
-          return false;
-        }
-        check = check.getParentType();
+   }
+
+   /**
+    * @return true if the tag is one of the universal tags
+    */
+   public boolean isUniversal() {
+      return false;
+   }
+
+   /**
+    * @return The treebank string representation
+    */
+   public String asString() {
+      return tag;
+   }
+
+   /**
+    * @return The parent part of speech or itself if it is a top level pos
+    */
+   public com.davidbracewell.hermes.POS getParentType() {
+      return parentType == null ? this : parentType;
+   }
+
+   /**
+    * @return The universal tag
+    */
+   public com.davidbracewell.hermes.POS getUniversalTag() {
+      if (this == ANY) {
+         return ANY;
+      }
+      com.davidbracewell.hermes.POS tag = this;
+      while (tag != null && tag.getParentType() != ANY && !tag.isUniversal()) {
+         tag = tag.getParentType();
+      }
+      return tag;
+   }
+
+   public boolean isTag(@NonNull Tag... tags) {
+      for (Tag t : tags) {
+         if (t == this) {
+            return true;
+         }
       }
       return false;
-    }
-    return false;
-  }
+   }
+
+   @Override
+   public boolean isInstance(Tag tag) {
+      if (tag == null) {
+         return false;
+      }
+      if (tag == com.davidbracewell.hermes.POS.ANY) {
+         return true;
+      }
+      if (tag instanceof com.davidbracewell.hermes.POS) {
+         com.davidbracewell.hermes.POS other = (com.davidbracewell.hermes.POS) tag;
+         com.davidbracewell.hermes.POS check = this;
+         while (check != null) {
+            if (check == other) {
+               return true;
+            }
+            if (check == check.getParentType()) {
+               return false;
+            }
+            check = check.getParentType();
+         }
+         return false;
+      }
+      return false;
+   }
 
 }// END OF PartOfSpeech

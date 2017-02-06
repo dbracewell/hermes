@@ -25,6 +25,7 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.corpus.spi.CoNLLColumnProcessor;
 import com.davidbracewell.hermes.corpus.spi.CoNLLRow;
+import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import org.kohsuke.MetaInfServices;
 
@@ -39,19 +40,20 @@ import static com.davidbracewell.hermes.corpus.spi.CoNLLFormat.EMPTY_FIELD;
 @MetaInfServices
 public class DependencyRelationProcessor implements CoNLLColumnProcessor {
 
-  @Override
-  public void processInput(Document document, List<CoNLLRow> documentRows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
+   @Override
+   public void processInput(Document document, List<CoNLLRow> documentRows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
 
-  }
+   }
 
-  @Override
-  public String processOutput(Annotation document, Annotation token, int index) {
-    return token.dependencyRelation().map(Tuple2::getV1).orElse(EMPTY_FIELD);
-  }
+   @Override
+   public String processOutput(Annotation document, Annotation token, int index) {
+      String rel = token.dependencyRelation().v1;
+      return StringUtils.isNullOrBlank(rel) ? EMPTY_FIELD : rel;
+   }
 
-  @Override
-  public String getFieldName() {
-    return "DEPENDENCY_RELATION";
-  }
+   @Override
+   public String getFieldName() {
+      return "DEPENDENCY_RELATION";
+   }
 
 }//END OF DependencyLinkProcessor

@@ -26,8 +26,6 @@ import com.davidbracewell.hermes.corpus.CorpusFormats;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.tuple.Tuple2;
 
-import java.util.Optional;
-
 import static com.davidbracewell.hermes.Types.DEPENDENCY;
 import static com.davidbracewell.hermes.Types.PHRASE_CHUNK;
 
@@ -61,9 +59,9 @@ public class DependencyParseExample {
           //Dependency relations are stored as relations on the tokens.
           //For convenience there is a method to get the first (which should be the only) dependency relation associated
           //with a token. It returns an optional in case there is no relation (e.g. the root of the tree)
-          Optional<Tuple2<String, Annotation>> depRel = token.dependencyRelation();
-          if (depRel.isPresent()) {
-            System.out.println(depRel.get().v1 + "(" + token + ", " + depRel.get().v2 + ")");
+          Tuple2<String, Annotation> depRel = token.dependencyRelation();
+          if (!depRel.v2.isEmpty()) {
+            System.out.println(depRel.v1 + "(" + token + ", " + depRel.v2 + ")");
           } else {
             System.out.println("root(" + token + ")");
           }
@@ -74,9 +72,9 @@ public class DependencyParseExample {
         //Here we will loop over phrase chunks and get the dependency relation.
         //Note the target of the dependency relation is still at the token level, which is why we use first(PHRASE_CHUNK)
         sentence.get(PHRASE_CHUNK).forEach(chunk -> {
-          Optional<Tuple2<String, Annotation>> depRel = chunk.dependencyRelation();
-          if (depRel.isPresent()) {
-            System.out.println(depRel.get().v1 + "(" + chunk + ", " + depRel.get().v2.first(PHRASE_CHUNK) + ")");
+          Tuple2<String, Annotation> depRel = chunk.dependencyRelation();
+          if (!depRel.v2.isEmpty()) {
+            System.out.println(depRel.v1 + "(" + chunk + ", " + depRel.v2.first(PHRASE_CHUNK) + ")");
           } else {
             System.out.println("root(" + chunk + ")");
           }

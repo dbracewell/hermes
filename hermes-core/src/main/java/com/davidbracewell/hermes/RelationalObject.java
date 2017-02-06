@@ -26,7 +26,6 @@ import lombok.NonNull;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -84,8 +83,7 @@ public interface RelationalObject {
     */
    default List<Annotation> children(@NonNull String relation) {
       return children().stream().filter(
-         a -> a.dependencyRelation().filter(r -> r.v1.equalsIgnoreCase(relation)).isPresent()).collect(
-         Collectors.toList());
+         a -> a.dependencyRelation().v1.equalsIgnoreCase(relation)).collect(Collectors.toList());
    }
 
    /**
@@ -93,7 +91,7 @@ public interface RelationalObject {
     *
     * @return the optional
     */
-   Optional<Tuple2<String, Annotation>> dependencyRelation();
+   Tuple2<String, Annotation> dependencyRelation();
 
    /**
     * Gets relations.
@@ -120,7 +118,7 @@ public interface RelationalObject {
     * @return the parent
     */
    default Annotation parent() {
-      return dependencyRelation().map(Tuple2::getValue).orElse(Fragments.detachedEmptyAnnotation());
+      return dependencyRelation().v2;
    }
 
    /**

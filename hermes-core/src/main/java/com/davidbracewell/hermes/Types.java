@@ -147,6 +147,8 @@ public interface Types {
     */
    AnnotationType ML_ENTITY = AnnotationType.create("ML_ENTITY", ENTITY);
 
+   AnnotationType MWE = AnnotationType.create("MWE", null, TAG);
+
    /**
     * Annotation annotation type.
     *

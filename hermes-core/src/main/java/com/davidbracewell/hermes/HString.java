@@ -360,11 +360,11 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    @Override
-   public Optional<Tuple2<String, Annotation>> dependencyRelation() {
+   public Tuple2<String, Annotation> dependencyRelation() {
       if (phraseHead().isAnnotation()) {
          return phraseHead().asAnnotation().get().dependencyRelation();
       }
-      return Optional.empty();
+      return $(StringUtils.EMPTY, new Annotation(document(), Types.SENTENCE, 0, 0));
    }
 
    /**
