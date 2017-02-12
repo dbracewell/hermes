@@ -30,7 +30,7 @@ import com.davidbracewell.string.StringUtils;
 /**
  * @author David B. Bracewell
  */
-public class POSValidator implements SequenceValidator {
+public class EnglishPOSValidator implements SequenceValidator {
    private static final long serialVersionUID = 1L;
 
    @Override
@@ -130,4 +130,4 @@ public class POSValidator implements SequenceValidator {
       return !pos.isTag(POS.QUOTE, POS.HASH, POS.COMMA, POS.COLON, POS.DOLLAR, POS.PERIOD, POS.LCB, POS.RCB, POS.LSB,
                         POS.RSB, POS.LRB, POS.RRB);
    }
-}//END OF POSValidator
+}//END OF EnglishPOSValidator
