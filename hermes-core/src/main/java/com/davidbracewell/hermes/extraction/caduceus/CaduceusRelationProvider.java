@@ -36,37 +36,38 @@ import java.util.Map;
 @Value
 @Builder
 public class CaduceusRelationProvider implements Serializable {
-  private static final long serialVersionUID = 1L;
-  private final String name;
-  private final String requires;
-  private final RelationType relationType;
-  private final String relationValue;
-  private final CaduceusRelationPoint source;
-  private final CaduceusRelationPoint target;
-  private final boolean isReciprocal;
+   private static final long serialVersionUID = 1L;
+   private final String name;
+   private final String requires;
+   private final RelationType relationType;
+   private final String relationValue;
+   private final CaduceusRelationPoint source;
+   private final CaduceusRelationPoint target;
+   private final boolean isReciprocal;
 
 
-  static CaduceusRelationProvider fromMap(Map<String, Object> groupMap) throws IOException {
-    if (!groupMap.containsKey("type")) {
-      throw new IOException("No type given for: " + groupMap);
-    }
-    if (!groupMap.containsKey("value")) {
-      throw new IOException("No value given for: " + groupMap);
-    }
-    if (!groupMap.containsKey("name")) {
-      throw new IOException("No name given for: " + groupMap);
-    }
-    Map<String, Object> sourceMap = CaduceusProgram.ensureMap(groupMap.get("source"), "Source should be a map");
-    Map<String, Object> targetMap = CaduceusProgram.ensureMap(groupMap.get("target"), "Target should be a map");
-    return CaduceusRelationProvider.builder()
-      .name(groupMap.get("name").toString())
-      .requires(groupMap.containsKey("requires") ? groupMap.get("requires").toString() : null)
-      .relationType(RelationType.create(groupMap.get("type").toString()))
-      .relationValue(groupMap.get("value").toString())
-      .isReciprocal(Val.of(groupMap.get("reciprocal")).asBooleanValue(false))
-      .source(CaduceusRelationPoint.fromMap(sourceMap))
-      .target(CaduceusRelationPoint.fromMap(targetMap))
-      .build();
-  }
+   static CaduceusRelationProvider fromMap(Map<String, Object> groupMap) throws IOException {
+      if (!groupMap.containsKey("type")) {
+         throw new IOException("No type given for: " + groupMap);
+      }
+      if (!groupMap.containsKey("value")) {
+         throw new IOException("No value given for: " + groupMap);
+      }
+      if (!groupMap.containsKey("name")) {
+         throw new IOException("No name given for: " + groupMap);
+      }
+      Map<String, Object> sourceMap = CaduceusProgram.ensureMap(groupMap.get("source"), "Source should be a map");
+      Map<String, Object> targetMap = CaduceusProgram.ensureMap(groupMap.get("target"), "Target should be a map");
+      return CaduceusRelationProvider.builder()
+                                     .name(groupMap.get("name").toString())
+                                     .requires(
+                                        groupMap.containsKey("requires") ? groupMap.get("requires").toString() : null)
+                                     .relationType(RelationType.create(groupMap.get("type").toString()))
+                                     .relationValue(groupMap.get("value").toString())
+                                     .isReciprocal(Val.of(groupMap.get("reciprocal")).asBooleanValue(false))
+                                     .source(CaduceusRelationPoint.fromMap(sourceMap))
+                                     .target(CaduceusRelationPoint.fromMap(targetMap))
+                                     .build();
+   }
 
 }//END OF CaduceusRelationProvider

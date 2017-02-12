@@ -284,6 +284,11 @@ public class Document extends HString {
    }
 
    @Override
+   public List<Annotation> children(@NonNull String relation) {
+      return getAllAnnotations();
+   }
+
+   @Override
    public List<Annotation> tokens() {
       if (tokens == null) {
          synchronized (this) {
