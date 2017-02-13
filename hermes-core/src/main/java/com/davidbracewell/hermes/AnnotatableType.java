@@ -33,16 +33,14 @@ import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 /**
- * <p>
- * An annotatable type is one that can be added to a document through the use of a {@link Pipeline}. The interface
- * exists to unify {@link AnnotationType}s, {@link AttributeType}s, and {@link RelationType}s.
- * </p>
+ * <p> An annotatable type is one that can be added to a document through the use of a {@link Pipeline}. The interface
+ * exists to unify {@link AnnotationType}s, {@link AttributeType}s, and {@link RelationType}s.</p>
  *
  * @author David B. Bracewell
  */
 public interface AnnotatableType {
    /**
-    * The constant ANNOTATOR_PACKAGE.
+    * Package to look for default annotator implementations.
     */
    String ANNOTATOR_PACKAGE = "com.davidbracewell.hermes.annotator";
 
@@ -83,7 +81,7 @@ public interface AnnotatableType {
                                 .getClassForNameQuietly(ANNOTATOR_PACKAGE + ".Default" + typeName + "Annotator");
          }
 
-         if( annotatorClass != null) {
+         if (annotatorClass != null) {
             try {
                annotator = Reflect.onClass(annotatorClass).create().get();
             } catch (ReflectionException e) {

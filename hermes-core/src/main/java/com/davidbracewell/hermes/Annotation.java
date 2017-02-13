@@ -118,9 +118,7 @@ public final class Annotation extends Fragment implements Serializable {
 
    @Override
    public void add(@NonNull Relation relation) {
-      if (!relations.contains(relation)) {
-         relations.add(relation);
-      }
+      relations.add(relation);
    }
 
    @Override
@@ -162,7 +160,7 @@ public final class Annotation extends Fragment implements Serializable {
                 .filter(r -> !this.overlaps(r.getTarget(this).orElse(null)))
                 .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).orElse(null)))
                 .findFirst()
-                .orElse($(StringUtils.EMPTY, new Annotation(document(), Types.SENTENCE, 0, 0)));
+                .orElse($(StringUtils.EMPTY, Fragments.emptyAnnotation(document())));
    }
 
    @Override

@@ -364,7 +364,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       if (phraseHead().isAnnotation()) {
          return phraseHead().asAnnotation().get().dependencyRelation();
       }
-      return $(StringUtils.EMPTY, new Annotation(document(), Types.SENTENCE, 0, 0));
+      return $(StringUtils.EMPTY, Fragments.emptyAnnotation(document()));
    }
 
    /**

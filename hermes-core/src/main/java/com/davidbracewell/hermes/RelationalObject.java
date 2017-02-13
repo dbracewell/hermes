@@ -110,7 +110,12 @@ public interface RelationalObject {
     * @param includeSubAnnotations the include sub annotations
     * @return the list
     */
-   List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations);
+   List<Relation> get(RelationType relationType, boolean includeSubAnnotations);
+
+   default Relation get(@NonNull RelationType relationType, @NonNull Annotation target) {
+      return get(relationType).stream().filter(r -> r.getTarget() == target.getId()).findFirst()
+                              .orElse(null);
+   }
 
    /**
     * Gets parent.

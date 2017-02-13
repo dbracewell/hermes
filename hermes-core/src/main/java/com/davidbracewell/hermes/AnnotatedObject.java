@@ -49,7 +49,7 @@ public interface AnnotatedObject {
     * @return the first annotation of the given type overlapping this object or a detached empty annotation if there is
     * none.
     */
-   default Annotation first(AnnotationType type) {
+   default Annotation first(@NonNull AnnotationType type) {
       return get(type).stream().findFirst().orElseGet(Fragments::detachedEmptyAnnotation);
    }
 

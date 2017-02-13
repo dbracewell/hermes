@@ -79,18 +79,8 @@ public final class Fragments {
     * @param end   the end of the span
     * @return the annotation
     */
-   public static Annotation detachedAnnotation(AnnotationType type, int start, int end) {
+   public static Annotation detachedAnnotation(@NonNull AnnotationType type, int start, int end) {
       return new Annotation(type, start, end);
-   }
-
-   /**
-    * Creates a new HString that has content, but no document associated with it
-    *
-    * @param content the content of the string
-    * @return the new HString
-    */
-   public static HString string(@NonNull String content) {
-      return new HStringImpl(content);
    }
 
    /**
@@ -119,6 +109,26 @@ public final class Fragments {
     */
    public static HString empty(Document document) {
       return new Fragment(document, 0, 0);
+   }
+
+   /**
+    * Creates an empty annotation associated with the given document.
+    *
+    * @param document The document the annotation is associated with
+    * @return The empty annotation
+    */
+   public static Annotation emptyAnnotation(@NonNull Document document) {
+      return new Annotation(document, AnnotationType.ROOT, -1, -1);
+   }
+
+   /**
+    * Creates a new HString that has content, but no document associated with it
+    *
+    * @param content the content of the string
+    * @return the new HString
+    */
+   public static HString string(@NonNull String content) {
+      return new HStringImpl(content);
    }
 
    private static class HStringImpl extends HString {
@@ -163,6 +173,11 @@ public final class Fragments {
       }
 
       @Override
+      public List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter) {
+         return Collections.emptyList();
+      }
+
+      @Override
       protected Map<AttributeType, Val> getAttributeMap() {
          return attributes;
       }
@@ -175,11 +190,6 @@ public final class Fragments {
       @Override
       public HString substring(int relativeStart, int relativeEnd) {
          return new HStringImpl(content.substring(relativeStart, relativeEnd));
-      }
-
-      @Override
-      public List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter) {
-         return Collections.emptyList();
       }
 
       @Override

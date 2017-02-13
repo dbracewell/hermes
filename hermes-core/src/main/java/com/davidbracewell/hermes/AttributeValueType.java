@@ -45,6 +45,11 @@ public enum AttributeValueType {
     */
    STRING {
       @Override
+      protected Class<?> getType() {
+         return String.class;
+      }
+
+      @Override
       @SuppressWarnings("unchecked")
       protected String decodeImpl(Object value) {
          return value.toString();
@@ -59,6 +64,11 @@ public enum AttributeValueType {
     * Integer value
     */
    INTEGER {
+      @Override
+      protected Class<?> getType() {
+         return Integer.class;
+      }
+
       @Override
       @SuppressWarnings("unchecked")
       protected Integer decodeImpl(Object value) {
@@ -75,6 +85,11 @@ public enum AttributeValueType {
     */
    LONG {
       @Override
+      protected Class<?> getType() {
+         return Long.class;
+      }
+
+      @Override
       @SuppressWarnings("unchecked")
       protected Long decodeImpl(Object value) {
          return value instanceof Number ? Cast.<Number>as(value).longValue() : Convert.convert(value, Long.class);
@@ -89,6 +104,11 @@ public enum AttributeValueType {
     * Double value
     */
    DOUBLE {
+      @Override
+      protected Class<?> getType() {
+         return Double.class;
+      }
+
       @Override
       @SuppressWarnings("unchecked")
       protected Double decodeImpl(Object value) {
@@ -106,6 +126,11 @@ public enum AttributeValueType {
     */
    BOOLEAN {
       @Override
+      protected Class<?> getType() {
+         return Boolean.class;
+      }
+
+      @Override
       @SuppressWarnings("unchecked")
       protected Boolean decodeImpl(Object value) {
          return value instanceof Boolean ? Cast.<Boolean>as(value) : Convert.convert(value, Boolean.class);
@@ -120,6 +145,11 @@ public enum AttributeValueType {
     * Value type for {@link Language}
     */
    LANGUAGE {
+      @Override
+      protected Class<?> getType() {
+         return Language.class;
+      }
+
       @Override
       @SuppressWarnings("unchecked")
       protected Language decodeImpl(Object value) {
@@ -136,6 +166,11 @@ public enum AttributeValueType {
     */
    PART_OF_SPEECH {
       @Override
+      protected Class<?> getType() {
+         return POS.class;
+      }
+
+      @Override
       @SuppressWarnings("unchecked")
       protected POS decodeImpl(Object value) {
          return value instanceof POS ? Cast.as(value) : POS.fromString(value.toString());
@@ -150,6 +185,11 @@ public enum AttributeValueType {
     * Value type for {@link EntityType}
     */
    ENTITY_TYPE {
+      @Override
+      protected Class<?> getType() {
+         return EntityType.class;
+      }
+
       @Override
       @SuppressWarnings("unchecked")
       protected EntityType decodeImpl(Object value) {
@@ -170,6 +210,11 @@ public enum AttributeValueType {
     */
    TOKEN_TYPE {
       @Override
+      protected Class<?> getType() {
+         return TokenType.class;
+      }
+
+      @Override
       @SuppressWarnings("unchecked")
       protected TokenType decodeImpl(Object value) {
          return value instanceof TokenType ? Cast.as(value) : TokenType.valueOf(value.toString());
@@ -184,6 +229,11 @@ public enum AttributeValueType {
     * Value type for Dates
     */
    DATE {
+      @Override
+      protected Class<?> getType() {
+         return Date.class;
+      }
+
       @Override
       @SuppressWarnings("unchecked")
       protected Date decodeImpl(Object value) {
@@ -202,6 +252,11 @@ public enum AttributeValueType {
       private final NewObjectConverter<EnumValue> converter = new NewObjectConverter<>(EnumValue.class);
 
       @Override
+      protected Class<?> getType() {
+         return EnumValue.class;
+      }
+
+      @Override
       protected <T> T decodeImpl(Object value) {
          return Cast.as(converter.apply(value));
       }
@@ -216,6 +271,11 @@ public enum AttributeValueType {
     */
    ENUM {
       private final NewObjectConverter<Enum> converter = new NewObjectConverter<>(Enum.class);
+
+      @Override
+      protected Class<?> getType() {
+         return Enum.class;
+      }
 
       @Override
       protected <T> T decodeImpl(Object value) {
@@ -233,6 +293,11 @@ public enum AttributeValueType {
     */
    URL {
       @Override
+      protected Class<?> getType() {
+         return java.net.URL.class;
+      }
+
+      @Override
       @SuppressWarnings("unchecked")
       protected java.net.URL decodeImpl(Object value) {
          return value instanceof java.net.URL
@@ -248,6 +313,11 @@ public enum AttributeValueType {
     * Value type for {@link StringTag}s
     */
    STRING_TAG {
+      @Override
+      protected Class<?> getType() {
+         return StringTag.class;
+      }
+
       @Override
       @SuppressWarnings("unchecked")
       protected StringTag decodeImpl(Object value) {
@@ -270,6 +340,11 @@ public enum AttributeValueType {
       @Override
       protected Object encodeImpl(Object value) {
          return Convert.convert(value, String.class);
+      }
+
+      @Override
+      protected Class<?> getType() {
+         return String.class;
       }
    };
 
@@ -364,5 +439,7 @@ public enum AttributeValueType {
     */
    protected abstract <T> T decodeImpl(Object value);
 
+
+   protected abstract Class<?> getType();
 
 }//END OF AttributeValueType
