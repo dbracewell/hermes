@@ -52,13 +52,32 @@ public class HStringTest {
       assertEquals(5, bigrams.size());
       List<HString> trigrams = hString.charNGrams(3);
       assertEquals(4, trigrams.size());
+   }
 
-//    unigrams = hString.charNGrams(1, c -> c != 'a');
-//    assertEquals(5, unigrams.size());
-//    bigrams = hString.charNGrams(2, c -> c != 'a');
-//    assertEquals(4, bigrams.size());
-//    trigrams = hString.charNGrams(3, c -> c != 'a');
-//    assertEquals(3, trigrams.size());
+   @Test
+   public void testCounts() {
+      Document document = DocumentFactory.getInstance().create(
+         "Once upon a time there lived a princess who was stuck in time.");
+      Pipeline.process(document, Types.TOKEN);
+
+      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(
+         Collectors.toList());
+      assertEquals(2, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEqual("a time"));
+      assertTrue(patterns.get(1).contentEqual("a princess"));
+
+      patterns = document.findAll("a time").collect(Collectors.toList());
+      assertEquals(1, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEqual("a time"));
+
+      assertTrue(document.find("z").isEmpty());
+      assertTrue(document.find("c").start() == 0);
+
+      assertTrue(document.tokenAt(0).isAnnotation());
+      assertTrue(document.tokenAt(0).matches("(?i)once"));
+      assertTrue(document.tokenAt(0).asAnnotation().isPresent());
+
+      assertTrue(document.isDocument());
    }
 
    @Test
@@ -100,29 +119,17 @@ public class HStringTest {
    }
 
    @Test
-   public void testCounts() {
+   public void testTokenNgrams() {
       Document document = DocumentFactory.getInstance().create(
          "Once upon a time there lived a princess who was stuck in time.");
       Pipeline.process(document, Types.TOKEN);
 
-      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(Collectors.toList());
-      assertEquals(2, patterns.size(), 0d);
-      System.err.println(patterns);
-      assertTrue(patterns.get(0).contentEqual("a time"));
-      assertTrue(patterns.get(1).contentEqual("a princess"));
 
-      patterns = document.findAll("a time").collect(Collectors.toList());
-      assertEquals(1, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a time"));
+      List<HString> ngrams = NGramExtractor.unigrams().collectHString(document);
+      assertEquals(14, ngrams.size());
 
-      assertTrue(document.find("z").isEmpty());
-      assertTrue(document.find("c").start() == 0);
-
-      assertTrue(document.tokenAt(0).isAnnotation());
-      assertTrue(document.tokenAt(0).matches("(?i)once"));
-      assertTrue(document.tokenAt(0).asAnnotation().isPresent());
-
-      assertTrue(document.isDocument());
+      ngrams = NGramExtractor.bigrams().annotationType(Types.TOKEN).collectHString(document);
+      assertEquals(13, ngrams.size());
    }
 
    @Test
@@ -130,7 +137,8 @@ public class HStringTest {
       Document document = DocumentFactory.getInstance().create(
          "Once upon a time there lived a princess who was stuck in time.");
       Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
-      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(Collectors.toList());
+      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(
+         Collectors.toList());
       assertEquals(2, patterns.size(), 0d);
       assertTrue(patterns.get(0).contentEqual("a time"));
       assertTrue(patterns.get(1).contentEqual("a princess"));
@@ -153,20 +161,6 @@ public class HStringTest {
       assertTrue(document.tokenAt(0).asAnnotation().isPresent());
 
       assertTrue(document.isDocument());
-   }
-
-   @Test
-   public void testTokenNgrams() {
-      Document document = DocumentFactory.getInstance().create(
-         "Once upon a time there lived a princess who was stuck in time.");
-      Pipeline.process(document, Types.TOKEN);
-
-
-      List<HString> ngrams = NGramExtractor.unigrams().collectHString(document);
-      assertEquals(14, ngrams.size());
-
-      ngrams = NGramExtractor.bigrams().annotationType(Types.TOKEN).collectHString(document);
-      assertEquals(13, ngrams.size());
    }
 
 

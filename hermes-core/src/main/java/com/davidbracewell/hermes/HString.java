@@ -430,9 +430,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       if (pos == -1) {
          return Fragments.empty(document());
       }
-      if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
-         return union(substring(pos, pos + text.length()).tokens());
-      }
       return substring(pos, pos + text.length());
    }
 
@@ -467,11 +464,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
             int n = pos;
             pos = null;
             start = n + 1;
-            if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
-               return union(substring(n, n + text.length()).tokens());
-            } else {
-               return substring(n, n + text.length());
-            }
+            return substring(n, n + text.length());
          }
       });
    }
