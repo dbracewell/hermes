@@ -107,6 +107,7 @@ public class HStringTest {
 
       List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(Collectors.toList());
       assertEquals(2, patterns.size(), 0d);
+      System.err.println(patterns);
       assertTrue(patterns.get(0).contentEqual("a time"));
       assertTrue(patterns.get(1).contentEqual("a princess"));
 

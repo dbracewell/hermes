@@ -468,9 +468,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
             pos = null;
             start = n + 1;
             if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
-               return union(substring(pos, pos + text.length()).tokens());
+               return union(substring(n, n + text.length()).tokens());
             } else {
-               return substring(pos, pos + text.length());
+               return substring(n, n + text.length());
             }
          }
       });
@@ -531,19 +531,22 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    public Stream<HString> findAllPatterns(@NonNull Pattern regex) {
       return Streams.asStream(new Iterator<HString>() {
          Matcher m = regex.matcher(HString.this);
-         boolean dirty = true;
-         boolean hasNext = false;
+         int start = -1;
+         int end = -1;
 
          private boolean advance() {
-            if (dirty) {
-               hasNext = m.find();
+            if (start == -1) {
+               if (m.find()) {
+                  start = m.start();
+                  end = m.end();
+               }
             }
-            return hasNext;
+            return start != -1;
          }
 
          @Override
          public boolean hasNext() {
-            return hasNext;
+            return advance();
          }
 
          @Override
@@ -551,13 +554,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
             if (!advance()) {
                throw new NoSuchElementException();
             }
-            dirty = true;
-            hasNext = false;
-            if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
-               return union(substring(m.start(), m.end()).tokens());
-            } else {
-               return substring(m.start(), m.end());
-            }
+            HString sub = substring(start, end);
+            start = -1;
+            end = -1;
+            return sub;
          }
       });
    }
