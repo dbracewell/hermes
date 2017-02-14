@@ -29,6 +29,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -76,12 +77,12 @@ public class HStringTest {
       assertTrue(m.find());
       assertEquals("a", m.group());
 
-      List<HString> patterns = hString.findAllPatterns(Pattern.compile("[aieou]"));
+      List<HString> patterns = hString.findAllPatterns(Pattern.compile("[aieou]")).collect(Collectors.toList());
       assertEquals(2, patterns.size(), 0d);
       assertTrue(patterns.get(0).contentEqual("a"));
       assertTrue(patterns.get(1).contentEqual("e"));
 
-      patterns = hString.findAll("a");
+      patterns = hString.findAll("a").collect(Collectors.toList());
       assertEquals(1, patterns.size(), 0d);
       assertTrue(patterns.get(0).contentEqual("a"));
 
@@ -104,12 +105,12 @@ public class HStringTest {
          "Once upon a time there lived a princess who was stuck in time.");
       Pipeline.process(document, Types.TOKEN);
 
-      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b"));
+      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(Collectors.toList());
       assertEquals(2, patterns.size(), 0d);
       assertTrue(patterns.get(0).contentEqual("a time"));
       assertTrue(patterns.get(1).contentEqual("a princess"));
 
-      patterns = document.findAll("a time");
+      patterns = document.findAll("a time").collect(Collectors.toList());
       assertEquals(1, patterns.size(), 0d);
       assertTrue(patterns.get(0).contentEqual("a time"));
 
@@ -128,12 +129,12 @@ public class HStringTest {
       Document document = DocumentFactory.getInstance().create(
          "Once upon a time there lived a princess who was stuck in time.");
       Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
-      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b"));
+      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(Collectors.toList());
       assertEquals(2, patterns.size(), 0d);
       assertTrue(patterns.get(0).contentEqual("a time"));
       assertTrue(patterns.get(1).contentEqual("a princess"));
 
-      patterns = document.findAll("a time");
+      patterns = document.findAll("a time").collect(Collectors.toList());
       assertEquals(1, patterns.size(), 0d);
       assertTrue(patterns.get(0).contentEqual("a time"));
 

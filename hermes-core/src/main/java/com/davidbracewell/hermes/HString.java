@@ -43,6 +43,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.davidbracewell.tuple.Tuples.$;
 
@@ -101,10 +102,12 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Union h string.
+    * Creates a new string by performing a union over the spans of two or more HStrings. The new HString will have a
+    * span that starts at the minimum starting position of the given strings and end at the maximum ending position of
+    * the given strings.
     *
-    * @param strings the strings
-    * @return the h string
+    * @param strings the HStrings to union
+    * @return A new HString representing the union over the spans of the given HStrings.
     */
    public static HString union(@NonNull Iterable<? extends HString> strings) {
       int start = Integer.MAX_VALUE;
@@ -134,17 +137,21 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                                 .collect(Collectors.toList());
    }
 
+   /**
+    * Creates a string representation where this HString is tagged inside its sentence. For non-annotations the
+    * representation is as follows: <code>The [quick] brown fox...</code>. For annotations with a valid <code>Tag</code>
+    * the representation is as follows: <code>The &lt;SPEED&gt;quick&lt;/SPEED&gt; brown fox...</code>
+    *
+    * @return A string representing this HString tagged inside its sentence, Empty string if there is no sentence.
+    */
    public String inSentence() {
       StringBuilder builder = new StringBuilder();
       Annotation sentence = first(Types.SENTENCE);
       if (!sentence.isEmpty()) {
          int ss = sentence.start();
          int se = sentence.end();
-
          int as = Math.max(0, start() - ss);
          int ae = Math.min(se, end() - ss);
-
-
          if (as > ss) {
             builder.append(sentence.subSequence(0, as));
          }
@@ -170,14 +177,17 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Annotation graph relation graph.
+    * <p>Constructs a relation graph with the given relation types as the edges and the given annotation types as the
+    * vertices (the {@link #interleaved(AnnotationType, AnnotationType...)} method is used to get the annotations).
+    * Relations will be determine for annotations by including the relations of their sub-annotations (i.e. sub-spans).
+    * This allows, for example, a dependency graph to be built over other annotation types, e.g. phrase chunks.</p>
     *
-    * @param relationTypes   the relation types
-    * @param type            the type
-    * @param annotationTypes the annotation types
+    * @param relationTypes   the relation types making up the edges
+    * @param type            the primary annotation type making up the vertices
+    * @param annotationTypes secondary annotation types making up the vertices
     * @return the relation graph
     */
-   public RelationGraph annotationGraph(Tuple relationTypes, AnnotationType type, AnnotationType... annotationTypes) {
+   public RelationGraph annotationGraph(@NonNull Tuple relationTypes, @NonNull AnnotationType type, AnnotationType... annotationTypes) {
       RelationGraph g = new RelationGraph();
       List<Annotation> vertices = interleaved(type, annotationTypes);
       Set<RelationType> relationTypeList = Streams.asStream(relationTypes.iterator())
@@ -206,9 +216,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * As annotation optional.
+    * Gets this HString as an annotation
     *
-    * @return the optional
+    * @return An optional that is empty if the HString is not an annotation.
     */
    public Optional<Annotation> asAnnotation() {
       if (this instanceof Annotation) {
@@ -432,16 +442,38 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param text the text to search for
     * @return A list of HString that are matches to the given string
     */
-   public List<HString> findAll(@NonNull String text) {
-      List<HString> matches = new ArrayList<>();
-      for (int pos = indexOf(text, 0); pos < length() && pos != -1; pos = indexOf(text, pos + 1)) {
-         if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
-            matches.add(union(substring(pos, pos + text.length()).tokens()));
-         } else {
-            matches.add(substring(pos, pos + text.length()));
+   public Stream<HString> findAll(@NonNull String text) {
+      return Streams.asStream(new Iterator<HString>() {
+         Integer pos = null;
+         int start = 0;
+
+         private boolean advance() {
+            if (pos == null) {
+               pos = indexOf(text, start);
+            }
+            return pos != -1;
          }
-      }
-      return matches;
+
+         @Override
+         public boolean hasNext() {
+            return advance();
+         }
+
+         @Override
+         public HString next() {
+            if (!advance()) {
+               throw new NoSuchElementException();
+            }
+            int n = pos;
+            pos = null;
+            start = n + 1;
+            if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
+               return union(substring(pos, pos + text.length()).tokens());
+            } else {
+               return substring(pos, pos + text.length());
+            }
+         }
+      });
    }
 
    /**
@@ -450,17 +482,44 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param regex the regular expression to search for
     * @return A list of HString that are matches to the given regular expression
     */
-   public List<HString> findAllPatterns(@NonNull String regex) {
+   public Stream<HString> findAllPatterns(@NonNull String regex) {
       return findAllPatterns(Pattern.compile(regex));
    }
 
-   public List<HString> findAllPatterns(@NonNull TokenRegex regex) {
-      TokenMatcher matcher = regex.matcher(this);
-      List<HString> matches = new ArrayList<>();
-      while (matcher.find()) {
-         matches.add(matcher.group());
-      }
-      return matches;
+   /**
+    * Find all patterns list.
+    *
+    * @param regex the regex
+    * @return the list
+    */
+   public Stream<HString> findAllPatterns(@NonNull TokenRegex regex) {
+      return Streams.asStream(new Iterator<HString>() {
+         TokenMatcher m = regex.matcher(HString.this);
+         boolean dirty = true;
+         boolean hasNext = false;
+
+         private boolean advance() {
+            if (dirty) {
+               hasNext = m.find();
+            }
+            return hasNext;
+         }
+
+         @Override
+         public boolean hasNext() {
+            return hasNext;
+         }
+
+         @Override
+         public HString next() {
+            if (!advance()) {
+               throw new NoSuchElementException();
+            }
+            dirty = true;
+            hasNext = false;
+            return m.group();
+         }
+      });
    }
 
    /**
@@ -469,17 +528,38 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param regex the regular expression to search for
     * @return A list of HString that are matches to the given regular expression
     */
-   public List<HString> findAllPatterns(@NonNull Pattern regex) {
-      Matcher m = regex.matcher(this);
-      List<HString> matches = new ArrayList<>();
-      while (m.find()) {
-         if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
-            matches.add(union(substring(m.start(), m.end()).tokens()));
-         } else {
-            matches.add(substring(m.start(), m.end()));
+   public Stream<HString> findAllPatterns(@NonNull Pattern regex) {
+      return Streams.asStream(new Iterator<HString>() {
+         Matcher m = regex.matcher(HString.this);
+         boolean dirty = true;
+         boolean hasNext = false;
+
+         private boolean advance() {
+            if (dirty) {
+               hasNext = m.find();
+            }
+            return hasNext;
          }
-      }
-      return matches;
+
+         @Override
+         public boolean hasNext() {
+            return hasNext;
+         }
+
+         @Override
+         public HString next() {
+            if (!advance()) {
+               throw new NoSuchElementException();
+            }
+            dirty = true;
+            hasNext = false;
+            if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
+               return union(substring(m.start(), m.end()).tokens());
+            } else {
+               return substring(m.start(), m.end());
+            }
+         }
+      });
    }
 
    /**
@@ -637,7 +717,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     *
     * @param text the substring to search for.
     * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
-    * @see String#indexOf(String) String#indexOf(String)String#indexOf(String)String#indexOf(String)
+    * @see String#indexOf(String) String#indexOf(String)String#indexOf(String)String#indexOf(String)String#indexOf(String)
     */
    public int indexOf(String text) {
       return indexOf(text, 0);
@@ -649,7 +729,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param text  the substring to search for.
     * @param start the index to to start searching from
     * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
-    * @see String#indexOf(String, int) String#indexOf(String, int)String#indexOf(String, int)String#indexOf(String, int)
+    * @see String#indexOf(String, int) String#indexOf(String, int)String#indexOf(String, int)String#indexOf(String,
+    * int)String#indexOf(String, int)
     */
    public int indexOf(String text, int start) {
       return toString().indexOf(text, start);
@@ -755,7 +836,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     *
     * @param regex the regular expression
     * @return true if, and only if, this string matches the given regular expression
-    * @see String#matches(String) String#matches(String)String#matches(String)String#matches(String)
+    * @see String#matches(String) String#matches(String)String#matches(String)String#matches(String)String#matches(String)
     */
    public boolean matches(String regex) {
       return toString().matches(regex);
@@ -817,7 +898,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param newString the new string
     * @return the string
     * @see String#replace(CharSequence, CharSequence) String#replace(CharSequence, CharSequence)String#replace(CharSequence,
-    * CharSequence)String#replace(CharSequence, CharSequence)
+    * CharSequence)String#replace(CharSequence, CharSequence)String#replace(CharSequence, CharSequence)
     */
    public String replace(String oldString, String newString) {
       return toString().replace(oldString, newString);
@@ -830,7 +911,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param replacement the string to be substituted
     * @return the resulting string
     * @see String#replaceAll(String, String) String#replaceAll(String, String)String#replaceAll(String,
-    * String)String#replaceAll(String, String)
+    * String)String#replaceAll(String, String)String#replaceAll(String, String)
     */
    public String replaceAll(String regex, String replacement) {
       return toString().replaceAll(regex, replacement);
@@ -843,7 +924,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @param replacement the string to be substituted
     * @return the resulting string
     * @see String#replaceFirst(String, String) String#replaceFirst(String, String)String#replaceFirst(String,
-    * String)String#replaceFirst(String, String)
+    * String)String#replaceFirst(String, String)String#replaceFirst(String, String)
     */
    public String replaceFirst(String regex, String replacement) {
       return toString().replaceFirst(regex, replacement);
@@ -894,14 +975,15 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Tests if this string starts with the specified prefix.
+    * Tests if this HString starts with the specified prefix.
     *
     * @param prefix the prefix
     * @return true if the HString starts with the specified prefix
     */
-   public boolean startsWith(String prefix) {
+   public boolean startsWith(@NonNull String prefix) {
       return toString().startsWith(prefix);
    }
+
 
    @Override
    public CharSequence subSequence(int start, int end) {
@@ -980,7 +1062,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * To lower case.
     *
     * @return the string
-    * @see String#toLowerCase(Locale) String#toLowerCase(Locale)String#toLowerCase(Locale)String#toLowerCase(Locale)NOTE:
+    * @see String#toLowerCase(Locale) String#toLowerCase(Locale)String#toLowerCase(Locale)String#toLowerCase(Locale)String#toLowerCase(Locale)NOTE:
     * Uses locale associated with the HString's langauge
     */
    public String toLowerCase() {
@@ -1020,7 +1102,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * Converts the HString to upper case
     *
     * @return the upper case version of the HString
-    * @see String#toUpperCase(Locale) String#toUpperCase(Locale)String#toUpperCase(Locale)String#toUpperCase(Locale)NOTE:
+    * @see String#toUpperCase(Locale) String#toUpperCase(Locale)String#toUpperCase(Locale)String#toUpperCase(Locale)String#toUpperCase(Locale)NOTE:
     * Uses locale associated with the HString's langauge
     */
    public String toUpperCase() {
