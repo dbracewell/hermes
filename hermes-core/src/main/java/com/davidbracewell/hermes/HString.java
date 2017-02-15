@@ -408,7 +408,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Finds the given text in this HString starting from the beginning of this HString
+    * Finds the given text in this HString starting from the beginning of this HString. If the document is
+    * annotated with tokens, the match will extend to the token(s) covering the match.
     *
     * @param text the text to search for
     * @return the HString for the match or empty if no match is found.
@@ -418,7 +419,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Finds the given text in this HString starting from the given start index of this HString
+    * Finds the given text in this HString starting from the given start index of this HString. If the document is
+    * annotated with tokens, the match will extend to the token(s) covering the match.
     *
     * @param text  the text to search for
     * @param start the index to start the search from
@@ -430,6 +432,12 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       if (pos == -1) {
          return Fragments.empty(document());
       }
+
+      //If we have tokens expand the match to the overlaping tokens.
+      if( document() != null && document().isCompleted(Types.TOKEN) ){
+         return union(substring(pos, pos + text.length()).tokens());
+      }
+
       return substring(pos, pos + text.length());
    }
 
@@ -464,6 +472,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
             int n = pos;
             pos = null;
             start = n + 1;
+            //If we have tokens expand the match to the overlaping tokens.
+            if( document() != null && document().isCompleted(Types.TOKEN) ){
+               return union(substring(n, n + text.length()).tokens());
+            }
             return substring(n, n + text.length());
          }
       });
@@ -488,19 +500,18 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    public Stream<HString> findAllPatterns(@NonNull TokenRegex regex) {
       return Streams.asStream(new Iterator<HString>() {
          TokenMatcher m = regex.matcher(HString.this);
-         boolean dirty = true;
-         boolean hasNext = false;
+         HString nextMatch = null;
 
          private boolean advance() {
-            if (dirty) {
-               hasNext = m.find();
+            if (nextMatch == null && m.find()) {
+               nextMatch = m.group();
             }
-            return hasNext;
+            return nextMatch != null;
          }
 
          @Override
          public boolean hasNext() {
-            return hasNext;
+            return advance();
          }
 
          @Override
@@ -508,9 +519,9 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
             if (!advance()) {
                throw new NoSuchElementException();
             }
-            dirty = true;
-            hasNext = false;
-            return m.group();
+            HString toReturn = nextMatch;
+            nextMatch = null;
+            return toReturn;
          }
       });
    }
@@ -550,6 +561,10 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
             HString sub = substring(start, end);
             start = -1;
             end = -1;
+            //If we have tokens expand the match to the overlaping tokens.
+            if( document() != null && document().isCompleted(Types.TOKEN) ){
+               return union(sub.tokens());
+            }
             return sub;
          }
       });
