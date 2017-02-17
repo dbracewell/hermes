@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 import java.util.*;
@@ -37,34 +38,7 @@ import java.util.function.Predicate;
  */
 public final class Fragments {
 
-   private static final HString ORPHANED_EMPTY = new HString(0, 0) {
-      private static final long serialVersionUID = 1L;
-
-      @Override
-      public Set<AttributeType> attributeTypeSet() {
-         return Collections.emptySet();
-      }
-
-      @Override
-      public char charAt(int index) {
-         throw new IndexOutOfBoundsException();
-      }
-
-      @Override
-      public Document document() {
-         return null;
-      }
-
-      @Override
-      public List<Annotation> get(AnnotationType type, Predicate<? super Annotation> filter) {
-         return Collections.emptyList();
-      }
-
-      @Override
-      protected Map<AttributeType, Val> getAttributeMap() {
-         return Collections.emptyMap();
-      }
-   };
+   private static final HString ORPHANED_EMPTY = string(StringUtils.EMPTY);
 
 
    private Fragments() {
@@ -180,6 +154,41 @@ public final class Fragments {
       @Override
       protected Map<AttributeType, Val> getAttributeMap() {
          return attributes;
+      }
+
+      @Override
+      public Collection<Relation> relations(boolean includeSubAnnotations) {
+         return Collections.emptySet();
+      }
+
+      @Override
+      public List<Annotation> children() {
+         return Collections.emptyList();
+      }
+
+      @Override
+      public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+         return Collections.emptyList();
+      }
+
+      @Override
+      public List<Relation> get(RelationType relationType, boolean includeSubAnnotations) {
+         return Collections.emptyList();
+      }
+
+      @Override
+      public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
+         return Collections.emptyList();
+      }
+
+      @Override
+      public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+         return Collections.emptyList();
+      }
+
+      @Override
+      public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
+         return null;
       }
 
       @Override

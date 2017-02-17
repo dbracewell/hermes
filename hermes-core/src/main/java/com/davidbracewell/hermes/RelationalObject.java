@@ -29,44 +29,49 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * The interface Relational object.
+ * <p>An object that can has relations (edges) defined between itself and other objects. Convenience methods ({@link
+ * #parent()}, {@link #children()}, {@link #dependencyRelation()}) exist for dealing with dependency relations, which
+ * are the most common relation used in Hermes. Examples of other relations include, co-reference, lexical chains, and
+ * discourse structure.</p>
  *
  * @author David B. Bracewell
  */
 public interface RelationalObject {
 
    /**
-    * Add relation.
+    * Adds a relation to the object.
     *
-    * @param relation the relation
+    * @param relation the relation to add
     */
    default void add(@NonNull Relation relation) {
    }
 
    /**
-    * Add all relations.
+    * Adds multiple relations to the object.
     *
-    * @param relations the relations
+    * @param relations the relations to add
     */
    default void addAll(@NonNull Collection<Relation> relations) {
    }
 
    /**
-    * Gets relations.
+    * Gets all relations where this object is the <code>source</code>. The retrieved relations include relations across
+    * all sub annotations.
     *
-    * @return the relations
+    * @return the relations where this object is the source.
     */
-   default Collection<Relation> allRelations() {
-      return allRelations(false);
+   default Collection<Relation> relations() {
+      return relations(true);
    }
 
    /**
-    * Gets all relations.
+    * Gets all relations where this object is the <code>source</code>.
     *
-    * @param includeSubAnnotations the include sub annotations
-    * @return the all relations
+    * @param includeSubAnnotations True include relations found on sub annotations, false include only those relations
+    *                              explicitly associated with this object
+    * @return the relations where this object is the source.
     */
-   Collection<Relation> allRelations(boolean includeSubAnnotations);
+   Collection<Relation> relations(boolean includeSubAnnotations);
 
    /**
     * Gets children.

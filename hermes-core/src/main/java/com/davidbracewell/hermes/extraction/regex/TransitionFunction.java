@@ -151,7 +151,7 @@ interface TransitionFunction extends Serializable {
       @Override
       public int matches(HString input) {
          int max = 0;
-         for (Annotation a : input.getStartingHere(type)) {
+         for (Annotation a : input.startingHere(type)) {
             max = Math.max(child.matches(a), max);
          }
          return max;
@@ -160,7 +160,7 @@ interface TransitionFunction extends Serializable {
       @Override
       public int nonMatch(HString input) {
          int min = input.tokenLength();
-         for (Annotation a : input.getStartingHere(type)) {
+         for (Annotation a : input.startingHere(type)) {
             min = Math.min(child.nonMatch(a), min);
          }
          return min;

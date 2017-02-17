@@ -173,7 +173,7 @@ public final class QueryToPredicate {
             predicate = predicate.and(parse(mve.expressions.get(i)));
          }
          final SerializablePredicate<HString> fPredicate = predicate;
-         return hString -> hString.getStartingHere(mve.annotationType).stream().anyMatch(fPredicate);
+         return hString -> hString.startingHere(mve.annotationType).stream().anyMatch(fPredicate);
       } else if (exp.match(RegexTokenTypes.RELATIONGROUP)) {
          RelationGroupExpression ae = Cast.as(exp);
          Expression child = ae.expressions.get(0);

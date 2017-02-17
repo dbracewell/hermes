@@ -128,15 +128,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return new Fragment(owner, start, end);
    }
 
-   @Override
-   public Collection<Relation> allRelations(boolean includeSubAnnotations) {
-      return getAllAnnotations().stream()
-                                .flatMap(a -> a.allRelations(includeSubAnnotations).stream())
-                                .filter(r -> !overlaps(r.getTarget(this).get()))
-                                .distinct()
-                                .collect(Collectors.toList());
-   }
-
    /**
     * Creates a string representation where this HString is tagged inside its sentence. For non-annotations the
     * representation is as follows: <code>The [quick] brown fox...</code>. For annotations with a valid <code>Tag</code>
@@ -195,7 +186,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                                                   .map(Cast::<RelationType>as).collect(Collectors.toSet());
       g.addVertices(vertices);
       for (Annotation source : vertices) {
-         Collection<Relation> relations = source.allRelations(true);
+         Collection<Relation> relations = source.relations(true);
          for (Relation relation : relations) {
             if (relationTypeList.contains(relation.getType())) {
                relation.getTarget(document()).ifPresent(target -> {
@@ -305,14 +296,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return ngrams;
    }
 
-   @Override
-   public List<Annotation> children() {
-      return getAllAnnotations().stream()
-                                .flatMap(a -> a.children().stream())
-                                .filter(a -> !overlaps(a))
-                                .distinct()
-                                .collect(Collectors.toList());
-   }
+
 
    @Override
    public boolean contains(AttributeType attributeType) {
@@ -611,16 +595,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    @Override
-   public List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
-      return getAllAnnotations().stream()
-                                .flatMap(a -> a.get(relationType, includeSubAnnotations).stream())
-                                .filter(r -> !overlaps(r.getTarget(this).get()))
-                                .distinct()
-                                .collect(Collectors.toList());
-   }
-
-   @Override
-   public List<Annotation> getAllAnnotations() {
+   public List<Annotation> annotations() {
       if (document() == null) {
          return Collections.emptyList();
       }
@@ -689,7 +664,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    @Override
-   public final List<Annotation> getStartingHere(AnnotationType type) {
+   public final List<Annotation> startingHere(AnnotationType type) {
       if (type == null) {
          return Collections.emptyList();
       }
@@ -938,25 +913,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return toString().replaceFirst(regex, replacement);
    }
 
-   @Override
-   public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
-      return getAllAnnotations().stream()
-                                .flatMap(a -> a.sources(type, includeSubAnnotations).stream())
-                                .filter(a -> !overlaps(a))
-                                .distinct()
-                                .collect(Collectors.toList());
-   }
-
-   @Override
-   public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-      return getAllAnnotations()
-                .stream()
-                .flatMap(a -> a.sources(type, value, includeSubAnnotations).stream())
-                .filter(a -> !overlaps(a))
-                .distinct()
-                .collect(Collectors.toList());
-   }
-
    /**
     * Split list.
     *
@@ -1038,23 +994,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return builder.toString();
    }
 
-   @Override
-   public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
-      return getAllAnnotations().stream()
-                                .flatMap(a -> a.targets(type, includeSubAnnotations).stream())
-                                .filter(a -> !overlaps(a))
-                                .distinct()
-                                .collect(Collectors.toList());
-   }
-
-   @Override
-   public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-      return getAllAnnotations().stream()
-                                .flatMap(a -> a.targets(type, value, includeSubAnnotations).stream())
-                                .filter(a -> !overlaps(a))
-                                .distinct()
-                                .collect(Collectors.toList());
-   }
 
    /**
     * Converts this string to a new character array.

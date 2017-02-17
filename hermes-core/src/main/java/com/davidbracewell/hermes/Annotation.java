@@ -127,7 +127,7 @@ public final class Annotation extends Fragment implements Serializable {
    }
 
    @Override
-   public Collection<Relation> allRelations(boolean includeSubAnnotations) {
+   public Collection<Relation> relations(boolean includeSubAnnotations) {
       return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
    }
 
@@ -192,9 +192,9 @@ public final class Annotation extends Fragment implements Serializable {
       Stream<Relation> relationStream = relations.stream();
       if (this.getType() != Types.TOKEN && includeSubAnnotations) {
          relationStream = Stream.concat(relationStream,
-                                        getAllAnnotations().stream()
-                                                           .filter(a -> a != this)
-                                                           .flatMap(token -> token.allRelations(false).stream()))
+                                        annotations().stream()
+                                                     .filter(a -> a != this)
+                                                     .flatMap(token -> token.relations(false).stream()))
                                 .distinct();
       }
       return relationStream;
@@ -250,10 +250,11 @@ public final class Annotation extends Fragment implements Serializable {
    }
 
    /**
-    * Is instance of tag boolean.
+    * Determines if this annotation's tag is an instance of the given tag (String form). The string form the given tag
+    * will be decoded into the correct tag type.
     *
-    * @param tag the tag
-    * @return the boolean
+    * @param tag the string form of the tag to check
+    * @return True if this annotation's tag is an instance of the given tag.
     */
    public boolean isInstanceOfTag(String tag) {
       return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute()
@@ -262,10 +263,10 @@ public final class Annotation extends Fragment implements Serializable {
    }
 
    /**
-    * Is instance of tag boolean.
+    * Determines if this annotation's tag is an instance of the given tag.
     *
-    * @param tag the tag
-    * @return the boolean
+    * @param tag the string form of the tag to check
+    * @return True if this annotation's tag is an instance of the given tag.
     */
    public boolean isInstanceOfTag(Tag tag) {
       return tag != null && getTag().filter(t -> t.isInstance(tag)).isPresent();
@@ -317,9 +318,9 @@ public final class Annotation extends Fragment implements Serializable {
 
    @Override
    public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-      Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
+      Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(annotations()) : new HashSet<>();
       targets.add(this);
-      return document().getAllAnnotations().stream()
+      return document().annotations().stream()
                        .filter(a -> !a.overlaps(this))
                        .filter(a -> a.targets(type, value, false).stream().filter(targets::contains).count() > 0)
                        .collect(Collectors.toList());
@@ -327,9 +328,9 @@ public final class Annotation extends Fragment implements Serializable {
 
    @Override
    public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
-      Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
+      Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(annotations()) : new HashSet<>();
       targets.add(this);
-      return document().getAllAnnotations().stream()
+      return document().annotations().stream()
                        .filter(a -> !a.overlaps(this))
                        .filter(a -> a.targets(type, false).stream().filter(targets::contains).count() > 0)
                        .collect(Collectors.toList());

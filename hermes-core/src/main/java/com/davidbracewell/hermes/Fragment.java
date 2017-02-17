@@ -27,6 +27,7 @@ import lombok.NonNull;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -59,8 +60,90 @@ class Fragment extends HString {
    }
 
    @Override
+   public List<Annotation> children() {
+      return annotations().stream()
+                          .flatMap(a -> a.children().stream())
+                          .filter(a -> !overlaps(a))
+                          .distinct()
+                          .collect(Collectors.toList());
+   }
+
+   @Override
+   public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
+      if (includeSubAnnotations) {
+         return annotations().stream()
+                             .flatMap(a -> a.sources(type, includeSubAnnotations).stream())
+                             .filter(a -> !overlaps(a))
+                             .distinct()
+                             .collect(Collectors.toList());
+      }
+      return Collections.emptyList();
+   }
+
+   @Override
+   public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+      if (includeSubAnnotations) {
+         return annotations()
+                   .stream()
+                   .flatMap(a -> a.sources(type, value, includeSubAnnotations).stream())
+                   .filter(a -> !overlaps(a))
+                   .distinct()
+                   .collect(Collectors.toList());
+      }
+      return Collections.emptyList();
+   }
+
+   @Override
    public Set<AttributeType> attributeTypeSet() {
       return attributes.keySet();
+   }
+
+   @Override
+   public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
+      if (includeSubAnnotations) {
+         return annotations().stream()
+                             .flatMap(a -> a.targets(type, includeSubAnnotations).stream())
+                             .filter(a -> !overlaps(a))
+                             .distinct()
+                             .collect(Collectors.toList());
+      }
+      return Collections.emptyList();
+   }
+
+   @Override
+   public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+      if (includeSubAnnotations) {
+         return annotations().stream()
+                             .flatMap(a -> a.targets(type, value, includeSubAnnotations).stream())
+                             .filter(a -> !overlaps(a))
+                             .distinct()
+                             .collect(Collectors.toList());
+      }
+      return Collections.emptyList();
+   }
+
+   @Override
+   public List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
+      if( includeSubAnnotations ) {
+         return annotations().stream()
+                             .flatMap(a -> a.get(relationType, includeSubAnnotations).stream())
+                             .filter(r -> !overlaps(r.getTarget(this).get()))
+                             .distinct()
+                             .collect(Collectors.toList());
+      }
+      return Collections.emptyList();
+   }
+
+   @Override
+   public Collection<Relation> relations(boolean includeSubAnnotations) {
+      if (includeSubAnnotations) {
+         return annotations().stream()
+                             .flatMap(a -> a.relations(includeSubAnnotations).stream())
+                             .filter(r -> !overlaps(r.getTarget(this).get()))
+                             .distinct()
+                             .collect(Collectors.toList());
+      }
+      return Collections.emptySet();
    }
 
    @Override

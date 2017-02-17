@@ -284,8 +284,35 @@ public class Document extends HString {
    }
 
    @Override
+   public Collection<Relation> relations(boolean includeSubAnnotations) {
+      return Collections.emptySet();
+   }
+
+   @Override
+   public List<Annotation> children() {
+      return tokens();
+   }
+
+   @Override
+   public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+      return Collections.emptyList();
+   }
+
+
+
+   @Override
+   public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
+      return null;
+   }
+
+   @Override
    public List<Annotation> children(@NonNull String relation) {
-      return getAllAnnotations();
+      return annotations();
+   }
+
+   @Override
+   public List<Relation> get(RelationType relationType, boolean includeSubAnnotations) {
+      return Collections.emptyList();
    }
 
    @Override
@@ -473,7 +500,7 @@ public class Document extends HString {
    }
 
    @Override
-   public List<Annotation> getAllAnnotations() {
+   public List<Annotation> annotations() {
       return Streams.asStream(annotationSet.iterator()).collect(Collectors.toList());
    }
 
@@ -612,7 +639,7 @@ public class Document extends HString {
                   writer.endObject();
                }
 
-               Collection<Relation> relations = annotation.allRelations();
+               Collection<Relation> relations = annotation.relations();
                if (relations.size() > 0) {
                   writer.beginArray("relations");
                   for (Relation relation : relations) {
@@ -633,4 +660,13 @@ public class Document extends HString {
       }
    }
 
+   @Override
+   public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
+      return Collections.emptyList();
+   }
+
+   @Override
+   public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+      return Collections.emptyList();
+   }
 }//END OF Document

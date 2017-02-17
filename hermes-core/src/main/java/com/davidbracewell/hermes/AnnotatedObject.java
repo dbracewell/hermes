@@ -94,7 +94,7 @@ public interface AnnotatedObject {
     *
     * @return all annotations overlapping with this object.
     */
-   List<Annotation> getAllAnnotations();
+   List<Annotation> annotations();
 
    /**
     * Gets annotations of a given type that have the same starting offset as this object.
@@ -102,7 +102,7 @@ public interface AnnotatedObject {
     * @param type the type of annotation wanted
     * @return the list of annotations of given type have the same starting offset as this object.
     */
-   List<Annotation> getStartingHere(AnnotationType type);
+   List<Annotation> startingHere(AnnotationType type);
 
    /**
     * Gets the last annotation overlapping this object with the given annotation type.
@@ -126,6 +126,16 @@ public interface AnnotatedObject {
    }
 
    /**
+    * Assumes the object only overlaps with a single sentence and returns it. This is equivalent to calling {@link
+    * #first(AnnotationType)} with the annotation type set to <code>Types.SENTENCE</code>
+    *
+    * @return Returns the first, and possibly only, sentence this object overlaps with.
+    */
+   default Annotation sentence() {
+      return first(Types.SENTENCE);
+   }
+
+   /**
     * Gets the sentences overlapping this object
     *
     * @return the sentences overlapping this annotation.
@@ -135,28 +145,37 @@ public interface AnnotatedObject {
    }
 
    /**
-    * Sentence stream stream.
+    * Gets a java Stream over the sentences overlapping this object.
     *
-    * @return the stream
+    * @return the stream of sentences
     */
    default Stream<Annotation> sentenceStream() {
       return stream(Types.SENTENCE);
    }
 
    /**
-    * Token stream stream.
+    * Gets a java Stream over the tokens overlapping this object.
     *
-    * @return the stream
+    * @return the stream of tokens
     */
    default Stream<Annotation> tokenStream() {
       return stream(Types.TOKEN);
    }
 
    /**
-    * Stream stream.
+    * Gets a java Stream over all annotations overlapping this object.
     *
-    * @param type the type
-    * @return the stream
+    * @return the stream of annotations
+    */
+   default Stream<Annotation> annotationStream(){
+      return annotations().stream();
+   }
+
+   /**
+    * Gets a java Stream over annotations of the given type overlapping this object.
+    *
+    * @param type the type of annotation making up the stream
+    * @return the stream of given annotation type
     */
    default Stream<Annotation> stream(@NonNull AnnotationType type) {
       return get(type).stream();
