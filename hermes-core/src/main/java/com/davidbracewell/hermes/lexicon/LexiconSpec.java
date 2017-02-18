@@ -115,7 +115,6 @@ public class LexiconSpec implements Serializable {
                      }
                      nc++;
                   } else if (tagAttribute != null) {
-                     System.err.println(tagAttribute.getValueType());
                      tag = tagAttribute.getValueType().decode(base);
                      Preconditions.checkNotNull(tag, base + " is an invalid tag.");
                   }

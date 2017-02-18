@@ -19,7 +19,7 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
   private static final long serialVersionUID = 1L;
 
   private Annotation createAnnotation(Document document, Span span) {
-    Annotation annotation = document.createAnnotation(Types.WORD_SENSE, span);
+    Annotation annotation = document.annotationBuilder().type(Types.WORD_SENSE).bounds(span).createAttached();
     annotation.put(Types.SENSE,
                    WordNet.getInstance()
                           .getSenses(annotation.toString(), POS.forText(annotation), document.getLanguage())

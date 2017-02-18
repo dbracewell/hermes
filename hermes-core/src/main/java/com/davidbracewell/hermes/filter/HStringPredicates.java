@@ -144,16 +144,22 @@ public interface HStringPredicates {
     */
    static SerializablePredicate<HString> hasTagInstance(@NonNull final String target) {
       return hString -> {
+         POS pos = null;
+         try {
+            pos = POS.valueOf(target);
+         } catch (Exception e) {
+            //ignore;
+         }
          if (hString.isAnnotation()) {
             return hString.asAnnotation()
                           .filter(a -> a.isInstanceOfTag(target))
-                          .isPresent();
-         } else if( hString.tokenLength() == 1 ){
+                          .isPresent() || (pos != null && hString.getPOS().isInstance(pos));
+         } else if (hString.tokenLength() == 1) {
             return hString.tokenStream()
                           .filter(a -> a.isInstanceOfTag(target))
-                          .count() > 0;
+                          .count() > 0 || (pos != null && hString.getPOS().isInstance(pos));
          }
-         return hString.get(Types.TAG).equals(target);
+         return hString.get(Types.TAG).equals(target) || (pos != null && hString.getPOS().isInstance(pos));
       };
    }
 

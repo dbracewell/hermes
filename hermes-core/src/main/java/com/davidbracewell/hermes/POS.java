@@ -408,6 +408,8 @@ public enum POS implements Tag {
          return RRB;
       } else if (!StringPredicates.HAS_LETTER.test(tag)) {
          return SYM;
+      } else if( tag.equalsIgnoreCase("ANY")){
+         return ANY;
       }
       throw new IllegalArgumentException(tag + " is not a known PartOfSpeech");
    }
