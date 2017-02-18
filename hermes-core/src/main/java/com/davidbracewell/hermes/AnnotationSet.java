@@ -89,7 +89,7 @@ public interface AnnotationSet extends Iterable<Annotation> {
    String getAnnotationProvider(AnnotatableType type);
 
    /**
-    * Gets completed annotations.
+    * Gets the set of completed annotation types.
     *
     * @return Set of classes for completed annotations
     */
@@ -142,7 +142,7 @@ public interface AnnotationSet extends Iterable<Annotation> {
    void add(Annotation annotation);
 
    /**
-    * Gets the first annotation after a given one of the same type
+    * Gets the first annotation after a given one of the given type
     *
     * @param annotation The annotation we want the next for
     * @param type       the type of the next annotation wanted
@@ -151,7 +151,7 @@ public interface AnnotationSet extends Iterable<Annotation> {
    Annotation next(Annotation annotation, AnnotationType type);
 
    /**
-    * Gets the first annotation before a given one of the same type
+    * Gets the first annotation before a given one of the given type
     *
     * @param annotation The annotation we want the previous for
     * @param type       the type of the previous annotation wanted

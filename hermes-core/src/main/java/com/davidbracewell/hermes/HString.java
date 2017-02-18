@@ -755,14 +755,12 @@ public abstract class HString extends Span implements StringLike, AttributedObje
     * @param other The other HString
     * @return True of this one overlaps with the given other.
     */
-   @Override
-   public final boolean overlaps(Span other) {
-      if (other == null || !(other instanceof HString)) {
+   public final boolean overlaps(HString other) {
+      if (other == null) {
          return false;
       }
-      HString hString = Cast.as(other);
-      return (document() != null && hString.document() != null) &&
-                (document() == hString.document()) &&
+      return (document() != null && other.document() != null) &&
+                (document() == other.document()) &&
                 super.overlaps(other);
    }
 
