@@ -129,6 +129,31 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
+    * Tagged text string.
+    *
+    * @param type the type
+    * @return the string
+    */
+   public String taggedText(@NonNull AnnotationType type) {
+      StringBuilder builder = new StringBuilder();
+      interleaved(type, Types.TOKEN).forEach(annotation -> {
+         if (annotation.getType().equals(type)) {
+            builder.append("<")
+                   .append(annotation.getTag().map(Tag::name).orElse("?"))
+                   .append(">")
+                   .append(annotation)
+                   .append("</")
+                   .append(annotation.getTag().map(Tag::name).orElse("?"))
+                   .append(">")
+                   .append(" ");
+         } else {
+            builder.append(annotation).append(" ");
+         }
+      });
+      return builder.toString();
+   }
+
+   /**
     * Creates a string representation where this HString is tagged inside its sentence. For non-annotations the
     * representation is as follows: <code>The [quick] brown fox...</code>. For annotations with a valid <code>Tag</code>
     * the representation is as follows: <code>The &lt;SPEED&gt;quick&lt;/SPEED&gt; brown fox...</code>
@@ -297,12 +322,10 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
 
-
    @Override
    public boolean contains(AttributeType attributeType) {
       return attributeType != null && getAttributeMap().containsKey(attributeType);
    }
-
 
 
    /**
@@ -327,8 +350,8 @@ public abstract class HString extends Span implements StringLike, AttributedObje
 
    @Override
    public Tuple2<String, Annotation> dependencyRelation() {
-      if (phraseHead().isAnnotation()) {
-         return phraseHead().asAnnotation().get().dependencyRelation();
+      if (head().isAnnotation()) {
+         return head().asAnnotation().get().dependencyRelation();
       }
       return $(StringUtils.EMPTY, Fragments.emptyAnnotation(document()));
    }
@@ -381,7 +404,7 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       }
 
       //If we have tokens expand the match to the overlaping tokens.
-      if( document() != null && document().isCompleted(Types.TOKEN) ){
+      if (document() != null && document().isCompleted(Types.TOKEN)) {
          return union(substring(pos, pos + text.length()).tokens());
       }
 
@@ -420,7 +443,7 @@ public abstract class HString extends Span implements StringLike, AttributedObje
             pos = null;
             start = n + 1;
             //If we have tokens expand the match to the overlaping tokens.
-            if( document() != null && document().isCompleted(Types.TOKEN) ){
+            if (document() != null && document().isCompleted(Types.TOKEN)) {
                return union(substring(n, n + text.length()).tokens());
             }
             return substring(n, n + text.length());
@@ -509,7 +532,7 @@ public abstract class HString extends Span implements StringLike, AttributedObje
             start = -1;
             end = -1;
             //If we have tokens expand the match to the overlaping tokens.
-            if( document() != null && document().isCompleted(Types.TOKEN) ){
+            if (document() != null && document().isCompleted(Types.TOKEN)) {
                return union(sub.tokens());
             }
             return sub;
@@ -658,8 +681,8 @@ public abstract class HString extends Span implements StringLike, AttributedObje
     * method can effect the outcome.
     * </p>
     * <p>
-    * Examples where this is useful is when dealing with multiword expressions. Using the interleaved method you can
-    * retrieve all tokens and mutliword expressions to fully match the span of the string.
+    * Examples where this is useful is when dealing with multi-word expressions. Using the interleaved method you can
+    * retrieve all tokens and multi-word expressions to fully match the span of the string.
     * </p>
     *
     * @param type1  The first type (Must declare at leas one)
@@ -732,12 +755,14 @@ public abstract class HString extends Span implements StringLike, AttributedObje
     * @param other The other HString
     * @return True of this one overlaps with the given other.
     */
-   public final boolean overlaps(HString other) {
-      if (other == null) {
+   @Override
+   public final boolean overlaps(Span other) {
+      if (other == null || !(other instanceof HString)) {
          return false;
       }
-      return (document() != null && other.document() != null) &&
-                (document() == other.document()) &&
+      HString hString = Cast.as(other);
+      return (document() != null && hString.document() != null) &&
+                (document() == hString.document()) &&
                 super.overlaps(other);
    }
 
@@ -746,7 +771,7 @@ public abstract class HString extends Span implements StringLike, AttributedObje
     *
     * @return the head
     */
-   public HString phraseHead() {
+   public HString head() {
       return tokens().stream()
                      .filter(t -> t.parent().isEmpty())
                      .map(Cast::<HString>as)
@@ -815,33 +840,6 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
       return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
    }
-
-   /**
-    * Tagged text string.
-    *
-    * @param type the type
-    * @return the string
-    */
-   public String taggedText(@NonNull AnnotationType type) {
-      StringBuilder builder = new StringBuilder();
-      interleaved(type, Types.TOKEN).forEach(annotation -> {
-         if (annotation.getType().equals(type)) {
-            builder.append("<")
-                   .append(annotation.getTag().map(Tag::name).orElse("?"))
-                   .append(">")
-                   .append(annotation)
-                   .append("</")
-                   .append(annotation.getTag().map(Tag::name).orElse("?"))
-                   .append(">")
-                   .append(" ");
-         } else {
-            builder.append(annotation).append(" ");
-         }
-      });
-      return builder.toString();
-   }
-
-
 
 
    /**

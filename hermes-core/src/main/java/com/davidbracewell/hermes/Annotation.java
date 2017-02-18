@@ -244,6 +244,7 @@ public final class Annotation extends Fragment implements Serializable {
       return document() == null || id == DETACHED_ID;
    }
 
+
    @Override
    public boolean isInstance(AnnotationType type) {
       return this.annotationType.isInstance(type);
