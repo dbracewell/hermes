@@ -59,7 +59,7 @@ import static com.davidbracewell.tuple.Tuples.$;
  *
  * @author David B. Bracewell
  */
-public abstract class HString extends Span implements CharSequence, AttributedObject, AnnotatedObject, RelationalObject {
+public abstract class HString extends Span implements StringLike, AttributedObject, AnnotatedObject, RelationalObject {
    private static final long serialVersionUID = 1L;
 
    /**
@@ -303,35 +303,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return attributeType != null && getAttributeMap().containsKey(attributeType);
    }
 
-   /**
-    * Returns true if and only if this string contains the specified sequence of char values.
-    *
-    * @param string the sequence to search for
-    * @return true if this string contains s, false otherwise
-    */
-   public boolean contains(@NonNull String string) {
-      return toString().contains(string);
-   }
 
-   /**
-    * Determines if the content of this HString equals the given char sequence.
-    *
-    * @param content the content to check for equality
-    * @return True if equals, False otherwise
-    */
-   public boolean contentEqual(CharSequence content) {
-      return toString().contentEquals(content);
-   }
-
-   /**
-    * Determines if the content of this HString equals the given char sequence ignoring case.
-    *
-    * @param content the content to check for equality
-    * @return True if equals, False otherwise
-    */
-   public boolean contentEqualIgnoreCase(String content) {
-      return toString().equalsIgnoreCase(content);
-   }
 
    /**
     * Dependency graph relation graph.
@@ -376,15 +348,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                 && super.encloses(other);
    }
 
-   /**
-    * Determines if this HString ends with the given suffix.
-    *
-    * @param suffix the suffix to check
-    * @return True ends with the given suffix, False otherwise
-    */
-   public boolean endsWith(String suffix) {
-      return toString().endsWith(suffix);
-   }
 
    @Override
    public final boolean equals(Object other) {
@@ -609,12 +572,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    protected abstract Map<AttributeType, Val> getAttributeMap();
 
-   /**
-    * Gets the language of the HString. If no language is set for this HString, the language of document will be
-    * returned. In the event that this HString is not associated with a document, the default language will be returned.
-    *
-    * @return The language of the HString
-    */
+   @Override
    public Language getLanguage() {
       if (contains(Types.LANGUAGE)) {
          return get(Types.LANGUAGE).as(Language.class);
@@ -625,11 +583,8 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return document().getLanguage();
    }
 
-   /**
-    * Sets the language of the HString
-    *
-    * @param language The language of the HString.
-    */
+
+   @Override
    public void setLanguage(Language language) {
       put(Types.LANGUAGE, language);
    }
@@ -693,30 +648,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    @Override
    public final int hashCode() {
       return super.hashCode();
-   }
-
-   /**
-    * Returns the index within this string of the first occurrence of the specified substring.
-    *
-    * @param text the substring to search for.
-    * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
-    * @see String#indexOf(String) String#indexOf(String)String#indexOf(String)String#indexOf(String)String#indexOf(String)
-    */
-   public int indexOf(String text) {
-      return indexOf(text, 0);
-   }
-
-   /**
-    * Returns the index within this string of the first occurrence of the specified substring.
-    *
-    * @param text  the substring to search for.
-    * @param start the index to to start searching from
-    * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
-    * @see String#indexOf(String, int) String#indexOf(String, int)String#indexOf(String, int)String#indexOf(String,
-    * int)String#indexOf(String, int)
-    */
-   public int indexOf(String text, int start) {
-      return toString().indexOf(text, start);
    }
 
    /**
@@ -794,36 +725,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return false;
    }
 
-   /**
-    * Returns a regular expression matcher for the given pattern over this HString
-    *
-    * @param pattern the pattern to search for
-    * @return the matcher
-    */
-   public Matcher matcher(String pattern) {
-      return Pattern.compile(pattern).matcher(this);
-   }
-
-   /**
-    * Returns a regular expression matcher for the given pattern over this HString
-    *
-    * @param pattern the pattern to search for
-    * @return the matcher
-    */
-   public Matcher matcher(@NonNull Pattern pattern) {
-      return pattern.matcher(this);
-   }
-
-   /**
-    * Tells whether or not this string matches the given regular expression.
-    *
-    * @param regex the regular expression
-    * @return true if, and only if, this string matches the given regular expression
-    * @see String#matches(String) String#matches(String)String#matches(String)String#matches(String)String#matches(String)
-    */
-   public boolean matches(String regex) {
-      return toString().matches(regex);
-   }
 
    /**
     * Checks if this HString overlaps with the given other.
@@ -874,44 +775,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return getAttributeMap().remove(attributeType);
    }
 
-   /**
-    * Replaces all substrings of this string that matches the given string with the given replacement.
-    *
-    * @param oldString the old string
-    * @param newString the new string
-    * @return the string
-    * @see String#replace(CharSequence, CharSequence) String#replace(CharSequence, CharSequence)String#replace(CharSequence,
-    * CharSequence)String#replace(CharSequence, CharSequence)String#replace(CharSequence, CharSequence)
-    */
-   public String replace(String oldString, String newString) {
-      return toString().replace(oldString, newString);
-   }
-
-   /**
-    * Replaces all substrings of this string that matches the given regular expression with the given replacement.
-    *
-    * @param regex       the regular expression
-    * @param replacement the string to be substituted
-    * @return the resulting string
-    * @see String#replaceAll(String, String) String#replaceAll(String, String)String#replaceAll(String,
-    * String)String#replaceAll(String, String)String#replaceAll(String, String)
-    */
-   public String replaceAll(String regex, String replacement) {
-      return toString().replaceAll(regex, replacement);
-   }
-
-   /**
-    * Replaces the first substring of this string that matches the given regular expression with the given replacement.
-    *
-    * @param regex       the regular expression
-    * @param replacement the string to be substituted
-    * @return the resulting string
-    * @see String#replaceFirst(String, String) String#replaceFirst(String, String)String#replaceFirst(String,
-    * String)String#replaceFirst(String, String)String#replaceFirst(String, String)
-    */
-   public String replaceFirst(String regex, String replacement) {
-      return toString().replaceFirst(regex, replacement);
-   }
 
    /**
     * Split list.
@@ -936,22 +799,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
          result.add(tokenAt(start).union(tokenAt(tokenLength() - 1)));
       }
       return result;
-   }
-
-   /**
-    * Tests if this HString starts with the specified prefix.
-    *
-    * @param prefix the prefix
-    * @return true if the HString starts with the specified prefix
-    */
-   public boolean startsWith(@NonNull String prefix) {
-      return toString().startsWith(prefix);
-   }
-
-
-   @Override
-   public CharSequence subSequence(int start, int end) {
-      return toString().subSequence(start, end);
    }
 
    /**
@@ -995,26 +842,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
 
-   /**
-    * Converts this string to a new character array.
-    *
-    * @return a newly allocated character array whose length is the length of this string and whose contents are
-    * initialized to contain the character sequence represented by this string.
-    */
-   public char[] toCharArray() {
-      return toString().toCharArray();
-   }
 
-   /**
-    * To lower case.
-    *
-    * @return the string
-    * @see String#toLowerCase(Locale) String#toLowerCase(Locale)String#toLowerCase(Locale)String#toLowerCase(Locale)String#toLowerCase(Locale)NOTE:
-    * Uses locale associated with the HString's langauge
-    */
-   public String toLowerCase() {
-      return toString().toLowerCase(getLanguage().asLocale());
-   }
 
    /**
     * Converts the HString to a string with part-of-speech information attached using <code>_</code> as the delimiter
@@ -1045,16 +873,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return document().toString().substring(start(), end());
    }
 
-   /**
-    * Converts the HString to upper case
-    *
-    * @return the upper case version of the HString
-    * @see String#toUpperCase(Locale) String#toUpperCase(Locale)String#toUpperCase(Locale)String#toUpperCase(Locale)String#toUpperCase(Locale)NOTE:
-    * Uses locale associated with the HString's langauge
-    */
-   public String toUpperCase() {
-      return toString().toUpperCase(getLanguage().asLocale());
-   }
 
    /**
     * Trim h string.
