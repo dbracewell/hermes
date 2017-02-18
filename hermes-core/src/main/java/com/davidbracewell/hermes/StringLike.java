@@ -229,4 +229,9 @@ public interface StringLike extends CharSequence {
       return toString().toUpperCase(getLanguage().asLocale());
    }
 
+   @Override
+   default char charAt(int index) {
+      return toString().charAt(index);
+   }
+
 }//END OF StringLike

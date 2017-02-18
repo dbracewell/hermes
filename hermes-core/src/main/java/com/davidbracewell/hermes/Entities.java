@@ -25,13 +25,12 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.annotation.Preload;
 
 /**
- * The interface Entities.
+ * Predefined set of common entities.
  *
  * @author David B. Bracewell
  */
 @Preload
 public interface Entities {
-
    /**
     * The constant PERSON.
     */

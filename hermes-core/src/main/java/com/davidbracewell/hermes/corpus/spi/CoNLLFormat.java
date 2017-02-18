@@ -95,7 +95,8 @@ public class CoNLLFormat extends FileBasedFormat {
          if (lastSentenceStart == -1) {
             lastSentenceStart = token.getStart();
          }
-         token.setAnnotationID(document.createAnnotation(Types.TOKEN, token.getStart(), token.getEnd()).getId());
+         token.setAnnotationID(document.createAnnotation(Types.TOKEN, token.getStart(), token.getEnd(),
+                                                         Collections.emptyMap()).getId());
          sentenceIndexToIDMap.put($(token.getSentence(), token.getIndex()), token.getAnnotationID());
          if (!iterator.hasNext() || token.getSentence() != list.get(iterator.nextIndex()).getSentence()) {
             if (keepSentences) {

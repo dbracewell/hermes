@@ -42,7 +42,7 @@ public interface AnnotatableType {
    /**
     * Package to look for default annotator implementations.
     */
-   String ANNOTATOR_PACKAGE = "com.davidbracewell.hermes.annotator";
+   String ANNOTATOR_PACKAGE = Hermes.HERMES_PACKAGE + ".annotator";
 
    /**
     * Gets the annotator associated with this type for a given language. First, an annotator is checked for in the

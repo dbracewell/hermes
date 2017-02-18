@@ -94,7 +94,7 @@ public class FuzzyLexiconAnnotator extends ViterbiAnnotator {
   @Override
   protected void createAndAttachAnnotation(Document document, LexiconMatch match) {
     if (!StringUtils.isNullOrBlank(match.getMatchedString())) {
-      Annotation annotation = document.createAnnotation(type, match.getSpan());
+      Annotation annotation = document.annotationBuilder().type(type).bounds(match.getSpan()).createAttached();
       if (lexicon.getTagAttributeType() != null) {
         annotation.put(lexicon.getTagAttributeType(), match.getTag());
       }

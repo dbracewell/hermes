@@ -171,7 +171,11 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    default Corpus applyLexicon(@NonNull Lexicon lexicon, @NonNull AnnotationType type) {
       return map(doc -> {
          if (!doc.isCompleted(type)) {
-            lexicon.match(doc).forEach(match -> doc.createAnnotation(type, match));
+            lexicon.match(doc).forEach(match -> doc.annotationBuilder()
+                                                   .type(type)
+                                                   .bounds(match)
+                                                   .attributes(match)
+                                                   .createAttached());
          }
          return doc;
       });

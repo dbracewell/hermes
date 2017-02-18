@@ -42,7 +42,10 @@ import java.util.function.Supplier;
  */
 public final class Hermes {
 
-   private static final String HERMES_PACKAGE = "com.davidbracewell.hermes";
+   /**
+    * The Hermes package
+    */
+   public static final String HERMES_PACKAGE = "com.davidbracewell.hermes";
 
    private Hermes() {
       throw new IllegalAccessError();
@@ -64,6 +67,7 @@ public final class Hermes {
     *
     * @param programName the program name
     * @param args        the args
+    * @param packages    the packages
     * @return the string [ ]
     */
    public static String[] initializeApplication(String programName, String[] args, String... packages) {
@@ -111,6 +115,18 @@ public final class Hermes {
    }
 
 
+   /**
+    * Load model t.
+    *
+    * @param <T>            the type parameter
+    * @param lock           the lock
+    * @param language       the language
+    * @param configProperty the config property
+    * @param modelName      the model name
+    * @param modelGetter    the model getter
+    * @param modelSetter    the model setter
+    * @return the t
+    */
    public static <T> T loadModel(@NonNull Object lock, @NonNull Language language, @NonNull String configProperty, @NonNull String modelName, @NonNull Supplier<T> modelGetter, @NonNull Consumer<T> modelSetter) {
       if (modelGetter.get() == null) {
          synchronized (lock) {

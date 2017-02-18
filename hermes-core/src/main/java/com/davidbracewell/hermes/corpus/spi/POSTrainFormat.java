@@ -11,6 +11,7 @@ import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class POSTrainFormat extends FileBasedFormat {
             document.tokenAt(i).put(Types.PART_OF_SPEECH, p);
          }
       }
-      document.createAnnotation(Types.SENTENCE, 0, document.length());
+      document.createAnnotation(Types.SENTENCE, 0, document.length(), Collections.emptyMap());
       document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
       document.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
       document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, complete, "PROVIDED");

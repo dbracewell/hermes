@@ -124,7 +124,7 @@ class Fragment extends HString {
 
    @Override
    public List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
-      if( includeSubAnnotations ) {
+      if (includeSubAnnotations) {
          return annotations().stream()
                              .flatMap(a -> a.get(relationType, includeSubAnnotations).stream())
                              .filter(r -> !overlaps(r.getTarget(this).get()))

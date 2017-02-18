@@ -135,7 +135,12 @@ public final class CaduceusProgram implements Serializable {
       return document.substring(span.start(), span.end()).get(type).stream()
                      .filter(a -> a.getType().equals(type) && a.attributeEntrySet().equals(attributeValMap.entrySet()))
                      .findFirst()
-                     .orElseGet(() -> document.createAnnotation(type, span, attributeValMap));
+                     .orElseGet(() -> document
+                                         .annotationBuilder()
+                                         .type(type)
+                                         .bounds(span)
+                                         .attributes(attributeValMap)
+                                         .createAttached());
    }
 
    /**
