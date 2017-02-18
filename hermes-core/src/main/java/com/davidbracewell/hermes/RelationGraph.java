@@ -79,6 +79,13 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
       return gPrime;
    }
 
+   public void removeEdgeIf(@NonNull Predicate<RelationEdge> predicate) {
+      edges()
+         .parallelStream()
+         .filter(predicate)
+         .forEach(this::removeEdge);
+   }
+
    @Override
    @SuppressWarnings("unchecked")
    public RelationEdge addEdge(Annotation fromVertex, Annotation toVertex) {
@@ -231,7 +238,8 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
     */
    public Set<Annotation> getSubTreeNodes(@NonNull Annotation node, String... childRelations) {
       Set<Annotation> children = new HashSet<>();
-      Set<String> targetRel = childRelations == null ? Collections.emptySet() : Sets.asSet(Arrays.asList(childRelations));
+      Set<String> targetRel = childRelations == null ? Collections.emptySet() : Sets.asSet(
+         Arrays.asList(childRelations));
       Predicate<RelationEdge> keep = edge -> targetRel.size() == 0 || targetRel.contains(edge.getRelation());
 
       Queue<RelationEdge> queue = new LinkedList<>(getInEdges(node).stream().filter(keep).collect(Collectors.toList()));
