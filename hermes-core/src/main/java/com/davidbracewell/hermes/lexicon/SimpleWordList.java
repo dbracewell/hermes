@@ -21,9 +21,9 @@
 
 package com.davidbracewell.hermes.lexicon;
 
-import com.davidbracewell.guava.common.collect.ImmutableSet;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
+import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -46,7 +46,7 @@ public class SimpleWordList implements WordList, Serializable {
     * @param words the words
     */
    public SimpleWordList(@NonNull Set<String> words) {
-      this.words = ImmutableSet.copyOf(words);
+      this.words = new UnifiedSet<>(words);
    }
 
    @Override

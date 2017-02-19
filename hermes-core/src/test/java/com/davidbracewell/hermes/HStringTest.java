@@ -63,12 +63,12 @@ public class HStringTest {
       List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(
          Collectors.toList());
       assertEquals(2, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a time"));
-      assertTrue(patterns.get(1).contentEqual("a princess"));
+      assertTrue(patterns.get(0).contentEquals("a time"));
+      assertTrue(patterns.get(1).contentEquals("a princess"));
 
       patterns = document.findAll("a time").collect(Collectors.toList());
       assertEquals(1, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a time"));
+      assertTrue(patterns.get(0).contentEquals("a time"));
 
       assertTrue(document.find("z").isEmpty());
       assertTrue(document.find("c").start() == 0);
@@ -83,8 +83,8 @@ public class HStringTest {
    @Test
    public void testStringFunctions() {
       HString hString = Fragments.string("abcdef");
-      assertTrue(hString.contentEqual("abcdef"));
-      assertTrue(hString.contentEqualIgnoreCase("ABCDEF"));
+      assertTrue(hString.contentEquals("abcdef"));
+      assertTrue(hString.contentEqualsIgnoreCase("ABCDEF"));
 
       assertEquals("abcdef", hString.toLowerCase());
       assertEquals("ABCDEF", hString.toUpperCase());
@@ -98,12 +98,12 @@ public class HStringTest {
 
       List<HString> patterns = hString.findAllPatterns(Pattern.compile("[aieou]")).collect(Collectors.toList());
       assertEquals(2, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a"));
-      assertTrue(patterns.get(1).contentEqual("e"));
+      assertTrue(patterns.get(0).contentEquals("a"));
+      assertTrue(patterns.get(1).contentEquals("e"));
 
       patterns = hString.findAll("a").collect(Collectors.toList());
       assertEquals(1, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a"));
+      assertTrue(patterns.get(0).contentEquals("a"));
 
       assertTrue(hString.find("z").isEmpty());
       assertTrue(hString.find("a").start() == 0);
@@ -140,12 +140,12 @@ public class HStringTest {
       List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(
          Collectors.toList());
       assertEquals(2, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a time"));
-      assertTrue(patterns.get(1).contentEqual("a princess"));
+      assertTrue(patterns.get(0).contentEquals("a time"));
+      assertTrue(patterns.get(1).contentEquals("a princess"));
 
       patterns = document.findAll("a time").collect(Collectors.toList());
       assertEquals(1, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a time"));
+      assertTrue(patterns.get(0).contentEquals("a time"));
 
       assertTrue(document.find("z").isEmpty());
       assertTrue(document.find("c").start() == 0);

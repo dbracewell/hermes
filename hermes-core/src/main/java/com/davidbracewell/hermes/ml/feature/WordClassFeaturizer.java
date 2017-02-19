@@ -46,7 +46,7 @@ public class WordClassFeaturizer extends PredicateFeaturizer<HString> {
          return "CURRENCY";
       }
 
-      if (string.contentEqualIgnoreCase("'s")) {
+      if (string.contentEqualsIgnoreCase("'s")) {
          return "POSSESSIVE";
       }
 

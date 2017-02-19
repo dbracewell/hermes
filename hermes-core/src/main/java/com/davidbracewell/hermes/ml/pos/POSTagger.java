@@ -55,11 +55,11 @@ public class POSTagger extends AnnotationTagger {
       Labeling result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
       for (int i = 0; i < sentence.tokenLength(); i++) {
          if (sentence.tokenAt(i - 1).getPOS().isPronoun()
-                && sentence.tokenAt(i).contentEqualIgnoreCase("like")
+                && sentence.tokenAt(i).contentEqualsIgnoreCase("like")
             ) {
             sentence.tokenAt(i).put(Types.PART_OF_SPEECH, POS.VB);
          } else if (sentence.tokenAt(i - 1).getPOS().isVerb() &&
-                       sentence.tokenAt(i + 1).contentEqualIgnoreCase("to") &&
+                       sentence.tokenAt(i + 1).contentEqualsIgnoreCase("to") &&
                        sentence.tokenAt(i).toLowerCase().endsWith("ing")) {
             //Common error of MODAL + GERUND (where GERUND form is commonly a noun) + to => VBG
             sentence.tokenAt(i).put(Types.PART_OF_SPEECH, POS.VBG);

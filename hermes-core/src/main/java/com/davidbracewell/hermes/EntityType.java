@@ -34,8 +34,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Auto generated using enumGen.py
- * The type EntityType.
+ * <p>Tag type associated with Entity annotations. Entities are defined in a hierarchy, e.g. <code>Location ->
+ * Country</code></p>
  */
 public final class EntityType extends HierarchicalEnumValue<EntityType> implements Comparable<EntityType> {
    private static final long serialVersionUID = 1L;

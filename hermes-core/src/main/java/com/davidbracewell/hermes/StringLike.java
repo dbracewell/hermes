@@ -49,7 +49,10 @@ public interface StringLike extends CharSequence {
     * @param content the content to check for equality
     * @return True if equals, False otherwise
     */
-   default boolean contentEqual(CharSequence content) {
+   default boolean contentEquals(CharSequence content) {
+      if( content == null){
+         return false;
+      }
       return toString().contentEquals(content);
    }
 
@@ -59,7 +62,10 @@ public interface StringLike extends CharSequence {
     * @param content the content to check for equality
     * @return True if equals, False otherwise
     */
-   default boolean contentEqualIgnoreCase(String content) {
+   default boolean contentEqualsIgnoreCase(String content) {
+      if (content == null) {
+         return false;
+      }
       return toString().equalsIgnoreCase(content);
    }
 

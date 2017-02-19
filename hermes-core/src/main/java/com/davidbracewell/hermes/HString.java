@@ -26,6 +26,7 @@ import com.davidbracewell.Tag;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Streams;
+import com.davidbracewell.collection.list.Lists;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
@@ -83,22 +84,7 @@ public abstract class HString extends Span implements StringLike, AttributedObje
     * @return A new HString representing the union over the spans of the given HStrings.
     */
    public static HString union(@NonNull HString first, @NonNull HString second, HString... others) {
-      Preconditions.checkArgument(first.document() == second.document(),
-                                  "Cannot union strings from different documents");
-      Document owner = first.document();
-      int start = Math.min(first.start(), second.start());
-      int end = Math.max(first.end(), second.end());
-      if (others != null) {
-         for (HString hString : others) {
-            Preconditions.checkArgument(owner == hString.document(), "Cannot union strings from different documents");
-            start = Math.min(start, hString.start());
-            end = Math.max(end, hString.end());
-         }
-      }
-      if (start < 0 || start >= end) {
-         return Fragments.empty(owner);
-      }
-      return new Fragment(owner, start, end);
+      return union(Lists.union(Arrays.asList(first, second), Arrays.asList(others)));
    }
 
    /**
@@ -114,13 +100,15 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       int end = Integer.MIN_VALUE;
       Document owner = null;
       for (HString hString : strings) {
-         if (owner == null && hString.document() != null) {
-            owner = hString.document();
-         } else if (hString.document() == null || owner != hString.document()) {
-            throw new IllegalArgumentException("Cannot union strings from different documents");
+         if (!hString.isEmpty()) {
+            if (owner == null && hString.document() != null) {
+               owner = hString.document();
+            } else if (hString.document() == null || owner != hString.document()) {
+               throw new IllegalArgumentException("Cannot union strings from different documents");
+            }
+            start = Math.min(start, hString.start());
+            end = Math.max(end, hString.end());
          }
-         start = Math.min(start, hString.start());
-         end = Math.max(end, hString.end());
       }
       if (start < 0 || start >= end) {
          return Fragments.empty(owner);
@@ -923,13 +911,64 @@ public abstract class HString extends Span implements StringLike, AttributedObje
     * HString will have a span that starts at the minimum starting position of the given strings and end at the maximum
     * ending position of the given strings.
     *
-    * @param other    the HString to union with
-    * @param evenMore the other HStrings to union
+    * @param other the HString to union with
     * @return A new HString representing the union over the spans of the given HStrings.
     */
-   public HString union(@NonNull HString other, HString... evenMore) {
-      return HString.union(this, other, evenMore);
+   public HString union(@NonNull HString other) {
+      return HString.union(this, other);
    }
 
+
+   public HString rightContext(int windowSize) {
+      return rightContext(Types.TOKEN, windowSize);
+   }
+
+   public HString rightContext(@NonNull AnnotationType type, int windowSize) {
+      windowSize = Math.abs(windowSize);
+      Preconditions.checkArgument(windowSize >= 0);
+      int sentenceEnd = sentence().end();
+      if (windowSize == 0 || end() >= sentenceEnd) {
+         return Fragments.detachedEmptyHString();
+      }
+      HString context = lastToken().next(type);
+      for (int i = 1; i < windowSize; i++) {
+         HString next = context.lastToken().next(type);
+         if (next.start() >= sentenceEnd) {
+            break;
+         }
+         context = context.union(next);
+      }
+      return context;
+   }
+
+   public HString leftContext(int windowSize) {
+      return leftContext(Types.TOKEN, windowSize);
+   }
+
+   public HString leftContext(@NonNull AnnotationType type, int windowSize) {
+      windowSize = Math.abs(windowSize);
+      Preconditions.checkArgument(windowSize >= 0);
+      int sentenceStart = sentence().start();
+      if (windowSize == 0 || start() <= sentenceStart) {
+         return Fragments.detachedEmptyHString();
+      }
+      HString context = firstToken().previous(type);
+      for (int i = 1; i < windowSize; i++) {
+         HString next = context.firstToken().previous(type);
+         if (next.end() <= sentenceStart) {
+            break;
+         }
+         context = context.union(next);
+      }
+      return context;
+   }
+
+   public HString context(int windowSize) {
+      return context(Types.TOKEN, windowSize);
+   }
+
+   public HString context(@NonNull AnnotationType type, int windowSize) {
+      return leftContext(type, windowSize).union(rightContext(type, windowSize));
+   }
 
 }//END OF HString

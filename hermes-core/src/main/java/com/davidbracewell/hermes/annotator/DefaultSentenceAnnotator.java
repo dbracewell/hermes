@@ -308,7 +308,7 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
 
 
    private boolean isCapitalized(Annotation token) {
-      if (token.length() == 1 && token.contentEqual("I")) {
+      if (token.length() == 1 && token.contentEquals("I")) {
          return true;
       } else if (token.length() > 1) {
          return !StringUtils.hasLetter(token)
@@ -331,7 +331,7 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
    }
 
    private boolean isListMarker(Annotation token) {
-      return token.contentEqual("*") || token.contentEqual("+") || token.contentEqual(">");
+      return token.contentEquals("*") || token.contentEquals("+") || token.contentEquals(">");
    }
 
    @Override
