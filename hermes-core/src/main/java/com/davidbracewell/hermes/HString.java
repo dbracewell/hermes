@@ -22,7 +22,6 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.Tag;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Streams;
@@ -117,83 +116,18 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
-    * Tagged text string.
-    *
-    * @param type the type
-    * @return the string
-    */
-   public String taggedText(@NonNull AnnotationType type) {
-      StringBuilder builder = new StringBuilder();
-      interleaved(type, Types.TOKEN).forEach(annotation -> {
-         if (annotation.getType().equals(type)) {
-            builder.append("<")
-                   .append(annotation.getTag().map(Tag::name).orElse("?"))
-                   .append(">")
-                   .append(annotation)
-                   .append("</")
-                   .append(annotation.getTag().map(Tag::name).orElse("?"))
-                   .append(">")
-                   .append(" ");
-         } else {
-            builder.append(annotation).append(" ");
-         }
-      });
-      return builder.toString();
-   }
-
-   /**
-    * Creates a string representation where this HString is tagged inside its sentence. For non-annotations the
-    * representation is as follows: <code>The [quick] brown fox...</code>. For annotations with a valid <code>Tag</code>
-    * the representation is as follows: <code>The &lt;SPEED&gt;quick&lt;/SPEED&gt; brown fox...</code>
-    *
-    * @return A string representing this HString tagged inside its sentence, Empty string if there is no sentence.
-    */
-   public String inSentence() {
-      StringBuilder builder = new StringBuilder();
-      Annotation sentence = first(Types.SENTENCE);
-      if (!sentence.isEmpty()) {
-         int ss = sentence.start();
-         int se = sentence.end();
-         int as = Math.max(0, start() - ss);
-         int ae = Math.min(se, end() - ss);
-         if (as > ss) {
-            builder.append(sentence.subSequence(0, as));
-         }
-
-         String openTag = "[";
-         String closeTag = "]";
-
-         if (isAnnotation() && asAnnotation().filter(a -> a.getTag().isPresent()).isPresent()) {
-            String tag = asAnnotation().get().getTag().get().name();
-            openTag = "<" + tag + ">";
-            closeTag = "</" + tag + ">";
-         }
-
-
-         builder.append(openTag).append(toString()).append(closeTag);
-
-         if (ae < se) {
-            builder.append(sentence.subSequence(ae, se - ss));
-         }
-
-      }
-      return builder.toString();
-   }
-
-   /**
     * <p>Constructs a relation graph with the given relation types as the edges and the given annotation types as the
-    * vertices (the {@link #interleaved(AnnotationType, AnnotationType...)} method is used to get the annotations).
+    * vertices (the {@link #interleaved(AnnotationType...)} method is used to get the annotations).
     * Relations will be determine for annotations by including the relations of their sub-annotations (i.e. sub-spans).
     * This allows, for example, a dependency graph to be built over other annotation types, e.g. phrase chunks.</p>
     *
     * @param relationTypes   the relation types making up the edges
-    * @param type            the primary annotation type making up the vertices
-    * @param annotationTypes secondary annotation types making up the vertices
+    * @param annotationTypes annotation types making up the vertices
     * @return the relation graph
     */
-   public RelationGraph annotationGraph(@NonNull Tuple relationTypes, @NonNull AnnotationType type, AnnotationType... annotationTypes) {
+   public RelationGraph annotationGraph(@NonNull Tuple relationTypes, @NonNull AnnotationType... annotationTypes) {
       RelationGraph g = new RelationGraph();
-      List<Annotation> vertices = interleaved(type, annotationTypes);
+      List<Annotation> vertices = interleaved(annotationTypes);
       Set<RelationType> relationTypeList = Streams.asStream(relationTypes.iterator())
                                                   .filter(r -> r instanceof RelationType)
                                                   .map(Cast::<RelationType>as).collect(Collectors.toSet());
@@ -222,31 +156,37 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
-    * Gets this HString as an annotation
+    * Gets this HString as an annotation. If the HString is already an annotation it is simply cast. Otherwise a
+    * detached annotation of type <code>AnnotationType.ROOT</code> is created.
     *
-    * @return An optional that is empty if the HString is not an annotation.
+    * @return An annotation.
     */
-   public Optional<Annotation> asAnnotation() {
+   public Annotation asAnnotation() {
       if (this instanceof Annotation) {
-         return Optional.of(Cast.as(this));
+         return Cast.as(this);
+      } else if (document() != null) {
+         return document().annotationBuilder().type(AnnotationType.ROOT).bounds(this).attributes(this).createDetached();
       }
-      return Optional.empty();
+      return Fragments.detachedAnnotation(AnnotationType.ROOT, start(), end());
    }
 
    /**
-    * As labeled data labeled datum.
+    * Creates a labeled data point from this HString applying the given label function to determine the label, i.e.
+    * class.
     *
-    * @param labelFunction the label function
+    * @param labelFunction the label function to determine the label (or class) of the data point (e.g. part-of-speech,
+    *                      sentiment, etc.)
     * @return the labeled datum
     */
-   public LabeledDatum<HString> asLabeledData(@NonNull Function<HString, ? extends Object> labelFunction) {
+   public LabeledDatum<HString> asLabeledData(@NonNull Function<HString, ?> labelFunction) {
       return LabeledDatum.of(labelFunction.apply(this), this);
    }
 
    /**
-    * As labeled data labeled datum.
+    * Creates a labeled data point from this HString using the value of the given attribute type as the label, i.e.
+    * class.
     *
-    * @param attributeTypeLabel the attribute type label
+    * @param attributeTypeLabel the attribute type whose value will become the label of the data point
     * @return the labeled datum
     */
    public LabeledDatum<HString> asLabeledData(@NonNull AttributeType attributeTypeLabel) {
@@ -254,7 +194,7 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
-    * As sequence sequence input.
+    * Creates an unlabeled {@link SequenceInput} of tokens from this HString.
     *
     * @return the sequence input
     */
@@ -263,9 +203,11 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
-    * As sequence sequence input.
+    * Creates a labeled {@link SequenceInput} of tokens from this HString applying the given label function to each
+    * token to determine its label, i.e. class..
     *
-    * @param labelFunction the label function
+    * @param labelFunction the label function to determine the label (or class) of the data point (e.g. part-of-speech,
+    *                      sentiment, etc.)
     * @return the sequence input
     */
    public SequenceInput<Annotation> asSequence(@NonNull Function<? super Annotation, String> labelFunction) {
@@ -282,21 +224,23 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
-    * Char n grams.
+    * Extracts character n-grams of the given order (e.g. 1=unigram, 2=bigram, etc.)
     *
-    * @param order the order
-    * @return the list
+    * @param order the order of the n-gram to extract
+    * @return the list of character n-grams of given order making up this HString
     */
    public List<HString> charNGrams(int order) {
       return charNGrams(order, order);
    }
 
    /**
-    * Char n grams.
+    * Extracts all character n-grams from the given minimum to given maximum order (e.g. 1=unigram, 2=bigram, etc.)
     *
-    * @param minOrder the min order
-    * @param maxOrder the max order
-    * @return the list
+    * @param minOrder the minimum order
+    * @param maxOrder the maximum order
+    * @return the list of character n-grams of order <code>minOrder</code> to <code>maxOrder</code> making up this
+    * HString
+    * @throws IllegalArgumentException If minOrder > maxOrder or minOrder <= 0
     */
    public List<HString> charNGrams(int minOrder, int maxOrder) {
       Preconditions.checkArgument(minOrder <= maxOrder,
@@ -317,31 +261,29 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       return attributeType != null && getAttributeMap().containsKey(attributeType);
    }
 
-
    /**
-    * Dependency graph relation graph.
+    * Creates a {@link RelationGraph} with dependency edges and token vertices.
     *
-    * @return the relation graph
+    * @return the dependency relation graph
     */
    public RelationGraph dependencyGraph() {
       return annotationGraph($(Types.DEPENDENCY), Types.TOKEN);
    }
 
    /**
-    * Dependency graph relation graph.
+    * Creates a {@link RelationGraph} with dependency edges and vertices made up of the given types.
     *
-    * @param type1 the type 1
-    * @param other the other
-    * @return the relation graph
+    * @param types The annotation types making up the vertices of the dependency relation graph.
+    * @return the dependency relation graph
     */
-   public RelationGraph dependencyGraph(AnnotationType type1, AnnotationType... other) {
-      return annotationGraph($(Types.DEPENDENCY), type1, other);
+   public RelationGraph dependencyGraph(@NonNull AnnotationType... types) {
+      return annotationGraph($(Types.DEPENDENCY), types);
    }
 
    @Override
    public Tuple2<String, Annotation> dependencyRelation() {
       if (head().isAnnotation()) {
-         return head().asAnnotation().get().dependencyRelation();
+         return head().asAnnotation().dependencyRelation();
       }
       return $(StringUtils.EMPTY, Fragments.emptyAnnotation(document()));
    }
@@ -452,10 +394,10 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
-    * Find all patterns list.
+    * Finds all matches to the given token regular expression in this HString.
     *
-    * @param regex the regex
-    * @return the list
+    * @param regex the token regex to match
+    * @return Stream of matches
     */
    public Stream<HString> findAllPatterns(@NonNull TokenRegex regex) {
       return Streams.asStream(new Iterator<HString>() {
@@ -653,9 +595,7 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       }
       return tokens().stream()
                      .map(HString::getStem)
-                     .collect(Collectors.joining(
-                        getLanguage().usesWhitespace() ? " " : ""
-                                                ));
+                     .collect(Collectors.joining(getLanguage().usesWhitespace() ? " " : ""));
    }
 
    @Override
@@ -675,24 +615,19 @@ public abstract class HString extends Span implements StringLike, AttributedObje
     * retrieve all tokens and multi-word expressions to fully match the span of the string.
     * </p>
     *
-    * @param type1  The first type (Must declare at leas one)
-    * @param others The other types to examine
+    * @param types The other types to examine
     * @return The list of interleaved annotations
     */
-   public List<Annotation> interleaved(@NonNull AnnotationType type1, AnnotationType... others) {
-      if (others == null || others.length == 0) {
-         return get(type1);
+   public List<Annotation> interleaved(@NonNull AnnotationType... types) {
+      if (types == null || types.length == 0) {
+         return Collections.emptyList();
       }
+
 
       List<Annotation> annotations = new ArrayList<>();
       for (int i = 0; i < tokenLength(); ) {
          Annotation annotation = Fragments.detachedEmptyAnnotation();
-         for (Annotation temp : tokenAt(i).get(type1)) {
-            if (temp.tokenLength() > annotation.tokenLength()) {
-               annotation = temp;
-            }
-         }
-         for (AnnotationType other : others) {
+         for (AnnotationType other : types) {
             for (Annotation temp : tokenAt(i).get(other)) {
                if (temp.tokenLength() > annotation.tokenLength()) {
                   annotation = temp;
@@ -790,10 +725,11 @@ public abstract class HString extends Span implements StringLike, AttributedObje
 
 
    /**
-    * Split list.
+    * Splits this HString using the given predicate to apply against tokens. An example of where this might be useful is
+    * when we want to split long phrases on different punctuation, e.g. commas or semicolons.
     *
-    * @param delimiterPredicate the delimiter predicate
-    * @return the list
+    * @param delimiterPredicate the predicate to use to determine if a token is a delimiter or not
+    * @return the list of split HString
     */
    public List<HString> split(@NonNull Predicate<? super Annotation> delimiterPredicate) {
       List<HString> result = new ArrayList<>();
@@ -822,7 +758,8 @@ public abstract class HString extends Span implements StringLike, AttributedObje
     * @param relativeEnd   the relative end within this HString
     * @return the specified substring.
     * @throws IndexOutOfBoundsException - if the relativeStart is negative, or relativeEnd is larger than the length of
-    *                                   this HString object, or relativeStart is larger than relativeEnd.
+    *                                                                    this HString object, or relativeStart is larger
+    *                                   than relativeEnd.
     */
    public HString substring(int relativeStart, int relativeEnd) {
       Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
@@ -853,7 +790,7 @@ public abstract class HString extends Span implements StringLike, AttributedObje
 
    @Override
    public String toString() {
-      if (document() == null) {
+      if (document() == null || isEmpty()) {
          return StringUtils.EMPTY;
       }
       return document().toString().substring(start(), end());
@@ -861,20 +798,22 @@ public abstract class HString extends Span implements StringLike, AttributedObje
 
 
    /**
-    * Trim h string.
+    * Trims tokens off the left and right of this HString that match the given predicate.
     *
-    * @param toTrimPredicate the to trim predicate
-    * @return the h string
+    * @param toTrimPredicate the predicate to use to determine if a token should be removed (evaulate to TRUE) or kept
+    *                        (evaluate to FALSE).
+    * @return the trimmed HString
     */
    public HString trim(@NonNull Predicate<? super Annotation> toTrimPredicate) {
       return trimRight(toTrimPredicate).trimLeft(toTrimPredicate);
    }
 
    /**
-    * Trim left h string.
+    * Trims tokens off the left of this HString that match the given predicate.
     *
-    * @param toTrimPredicate the to trim predicate
-    * @return the h string
+    * @param toTrimPredicate the predicate to use to determine if a token should be removed (evaulate to TRUE) or kept
+    *                        (evaluate to FALSE).
+    * @return the trimmed HString
     */
    public HString trimLeft(@NonNull Predicate<? super Annotation> toTrimPredicate) {
       int start = 0;
@@ -888,10 +827,11 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
-    * Trim right h string.
+    * Trims tokens off the right of this HString that match the given predicate.
     *
-    * @param toTrimPredicate the to trim predicate
-    * @return the h string
+    * @param toTrimPredicate the predicate to use to determine if a token should be removed (evaulate to TRUE) or kept
+    *                        (evaluate to FALSE).
+    * @return the trimmed HString
     */
    public HString trimRight(@NonNull Predicate<? super Annotation> toTrimPredicate) {
       int end = tokenLength() - 1;
@@ -919,10 +859,23 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
 
+   /**
+    * Right context h string.
+    *
+    * @param windowSize the window size
+    * @return the h string
+    */
    public HString rightContext(int windowSize) {
       return rightContext(Types.TOKEN, windowSize);
    }
 
+   /**
+    * Right context h string.
+    *
+    * @param type       the type
+    * @param windowSize the window size
+    * @return the h string
+    */
    public HString rightContext(@NonNull AnnotationType type, int windowSize) {
       windowSize = Math.abs(windowSize);
       Preconditions.checkArgument(windowSize >= 0);
@@ -941,10 +894,23 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       return context;
    }
 
+   /**
+    * Left context h string.
+    *
+    * @param windowSize the window size
+    * @return the h string
+    */
    public HString leftContext(int windowSize) {
       return leftContext(Types.TOKEN, windowSize);
    }
 
+   /**
+    * Left context h string.
+    *
+    * @param type       the type
+    * @param windowSize the window size
+    * @return the h string
+    */
    public HString leftContext(@NonNull AnnotationType type, int windowSize) {
       windowSize = Math.abs(windowSize);
       Preconditions.checkArgument(windowSize >= 0);
@@ -963,10 +929,23 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       return context;
    }
 
+   /**
+    * Context h string.
+    *
+    * @param windowSize the window size
+    * @return the h string
+    */
    public HString context(int windowSize) {
       return context(Types.TOKEN, windowSize);
    }
 
+   /**
+    * Context h string.
+    *
+    * @param type       the type
+    * @param windowSize the window size
+    * @return the h string
+    */
    public HString context(@NonNull AnnotationType type, int windowSize) {
       return leftContext(type, windowSize).union(rightContext(type, windowSize));
    }

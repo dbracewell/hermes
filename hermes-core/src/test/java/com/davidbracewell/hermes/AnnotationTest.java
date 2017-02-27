@@ -128,7 +128,6 @@ public class AnnotationTest {
       assertTrue(a.isInstance(ENTITY));
 
       assertTrue(a.isAnnotation());
-      assertNotNull(a.asAnnotation().orElse(null));
 
       assertTrue(a.isInstanceOfTag(Entities.INTERNET));
       assertTrue(a.isInstanceOfTag("INTERNET"));

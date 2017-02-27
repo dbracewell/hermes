@@ -139,8 +139,10 @@ public final class QueryToPredicate {
          SerializablePredicate<HString> child = parse(pe.right);
 
          if (exp.match(RegexTokenTypes.PARENT)) {
-            return hString -> hString.asAnnotation().map(a -> !a.parent().isEmpty() && child.test(a.parent())).orElse(
-               false);
+            return hString -> {
+               Annotation annotation = hString.asAnnotation();
+               return !annotation.parent().isEmpty() && child.test(annotation.parent());
+            };
          }
          if (exp.match(RegexTokenTypes.NOT)) {
             return child.negate();
@@ -261,12 +263,13 @@ public final class QueryToPredicate {
          List<String> parts = StringUtils.split(exp.toString().substring(1), ':');
          RelationType relation = RelationType.create(StringUtils.unescape(parts.get(0), '\\'));
          String value = parts.size() > 1 ? StringUtils.unescape(parts.get(1), '\\') : null;
-         return h -> h.asAnnotation().filter(a -> {
+         return h -> {
+            Annotation a = h.asAnnotation();
             if (value == null) {
                return a.targets(relation).size() > 0;
             }
             return a.targets(relation, value).size() > 0;
-         }).map(a -> true).orElse(false);
+         };
       }
 
       throw new ParseException("Unknown expression: " + exp.toString());

@@ -75,7 +75,6 @@ public class HStringTest {
 
       assertTrue(document.tokenAt(0).isAnnotation());
       assertTrue(document.tokenAt(0).matches("(?i)once"));
-      assertTrue(document.tokenAt(0).asAnnotation().isPresent());
 
       assertTrue(document.isDocument());
    }
@@ -113,7 +112,6 @@ public class HStringTest {
       assertEquals(-1, hString.indexOf("a", 1));
 
       assertFalse(hString.isAnnotation());
-      assertFalse(hString.asAnnotation().isPresent());
 
       assertFalse(hString.isDocument());
    }
@@ -158,7 +156,6 @@ public class HStringTest {
 
       assertTrue(document.tokenAt(0).isAnnotation());
       assertTrue(document.tokenAt(0).matches("(?i)once"));
-      assertTrue(document.tokenAt(0).asAnnotation().isPresent());
 
       assertTrue(document.isDocument());
    }

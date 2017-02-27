@@ -130,7 +130,7 @@ public interface HStringPredicates {
    static SerializablePredicate<HString> hasTagInstance(@NonNull final Tag target) {
       return hString -> {
          if (hString.isAnnotation()) {
-            return hString.asAnnotation().filter(a -> a.isInstanceOfTag(target)).isPresent();
+            return hString.asAnnotation().isInstanceOfTag(target);
          }
          return hString.get(Types.TAG).equals(target);
       };
@@ -150,10 +150,11 @@ public interface HStringPredicates {
          } catch (Exception e) {
             //ignore;
          }
+         if (hString == null) {
+            return false;
+         }
          if (hString.isAnnotation()) {
-            return hString.asAnnotation()
-                          .filter(a -> a.isInstanceOfTag(target))
-                          .isPresent() || (pos != null && hString.getPOS().isInstance(pos));
+            return hString.asAnnotation().isInstanceOfTag(target) || (pos != null && hString.getPOS().isInstance(pos));
          } else if (hString.tokenLength() == 1) {
             return hString.tokenStream()
                           .filter(a -> a.isInstanceOfTag(target))

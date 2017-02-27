@@ -24,6 +24,7 @@ package com.davidbracewell.hermes.extraction;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
+import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
@@ -31,8 +32,11 @@ import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.ml.feature.ValueCalculator;
 import lombok.NonNull;
 import lombok.ToString;
+import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import java.io.Serializable;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * The type Feature spec.
@@ -44,7 +48,7 @@ import java.io.Serializable;
 public abstract class AbstractExtractor<T extends AbstractExtractor> implements Serializable {
    private static final long serialVersionUID = 1L;
 
-   private AnnotationType annotationType = Types.TOKEN;
+   private Set<AnnotationType> annotationType = new UnifiedSet<>();
    private SerializableFunction<HString, HString> trimFunction = h -> h;
    private SerializableFunction<HString, String> toStringFunction = HString::toString;
    private SerializablePredicate<? super HString> filter = hString -> true;
@@ -97,7 +101,7 @@ public abstract class AbstractExtractor<T extends AbstractExtractor> implements 
     * @return the t
     */
    public T annotationType(@NonNull AnnotationType annotationType) {
-      this.annotationType = annotationType;
+      this.annotationType.add(annotationType);
       return Cast.as(this);
    }
 
@@ -118,7 +122,27 @@ public abstract class AbstractExtractor<T extends AbstractExtractor> implements 
     * @return the annotation type
     */
    public AnnotationType getAnnotationType() {
-      return annotationType;
+      if (annotationType.isEmpty()) {
+         return Types.TOKEN;
+      }
+      return annotationType.iterator().next();
+   }
+
+
+   public boolean hasMultipleTypes() {
+      return annotationType.size() > 1;
+   }
+
+   /**
+    * Gets annotation type.
+    *
+    * @return the annotation type
+    */
+   public AnnotationType[] getAnnotationTypes() {
+      if (annotationType.isEmpty()) {
+         return new AnnotationType[]{Types.TOKEN};
+      }
+      return annotationType.toArray(new AnnotationType[annotationType.size()]);
    }
 
    /**
@@ -199,6 +223,21 @@ public abstract class AbstractExtractor<T extends AbstractExtractor> implements 
    public T trimFunction(@NonNull SerializableFunction<HString, HString> trimFunction) {
       this.trimFunction = trimFunction;
       return Cast.as(this);
+   }
+
+   protected Stream<Annotation> annotationStream(HString hString) {
+      Stream<Annotation> stream;
+      boolean includeTokens = Stream.of(getAnnotationTypes()).anyMatch(type -> type == Types.TOKEN);
+      if (hasMultipleTypes()) {
+         stream = hString.interleaved(getAnnotationTypes()).stream();
+         if (!includeTokens) {
+            stream = stream.filter(a -> !a.isInstance(Types.TOKEN));
+         }
+      } else {
+         stream = hString.stream(getAnnotationType());
+      }
+
+      return stream;
    }
 
 }// END OF AbstractFeatureSpec

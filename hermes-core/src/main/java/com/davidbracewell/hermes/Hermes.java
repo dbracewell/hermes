@@ -63,12 +63,13 @@ public final class Hermes {
    }
 
    /**
-    * Initialize application string [ ].
+    * Initializes an application using Hermes with a given program name, command line arguments, and config packages to
+    * load. Note: that the hermes package is always loaded.
     *
     * @param programName the program name
-    * @param args        the args
-    * @param packages    the packages
-    * @return the string [ ]
+    * @param args        the command line arguments
+    * @param packages    extra config packages to load
+    * @return the non-named command line arguments
     */
    public static String[] initializeApplication(String programName, String[] args, String... packages) {
       String[] leftOver = Config.initialize(programName, args);
@@ -85,10 +86,12 @@ public final class Hermes {
    }
 
    /**
-    * Initialize application string [ ].
+    * Initializes an application using Hermes with the given command line arguments. Determines the program name from
+    * the calling class and also any config package associated with the calling class. Note: that the hermes package is
+    * always loaded.
     *
-    * @param args the args
-    * @return the string [ ]
+    * @param args the command line arguments
+    * @return the non-named command line arguments
     */
    public static String[] initializeApplication(String[] args) {
       StackTraceElement[] elements = Thread.currentThread().getStackTrace();
@@ -116,16 +119,30 @@ public final class Hermes {
 
 
    /**
-    * Load model t.
+    * <p>Common method for loading a model using java deserialization. The method uses the double-checked locking where
+    * it synchronizes on the given <code>lock</code> object. The <code>modelGetter</code> is used to check if the model
+    * is already loaded and the <code>modelSetter</code> is used to set the model. </p>
     *
-    * @param <T>            the type parameter
-    * @param lock           the lock
-    * @param language       the language
-    * @param configProperty the config property
-    * @param modelName      the model name
-    * @param modelGetter    the model getter
-    * @param modelSetter    the model setter
-    * @return the t
+    * <p>The method will look in the following locations in order for the mode:
+    * <ol>
+    *    <li>configProperty.language.model</li>
+    *    <li>classpath:hermes/language/model/modelName</li>
+    *    <li>modelDir/language/model/modelName</li>
+    *    <li>configProperty.model</li>
+    *    <li>classpath:hermes/model/modelName</li>
+    *    <li>modelDir/model/modelName</li>
+    * </ol>
+    * where <code>language</code> is the two-letter (lowercased) language code.
+    * </p>
+    *
+    * @param <T>            the type of model being loaded
+    * @param lock           the lock to synchronize on
+    * @param language       the language of the model
+    * @param configProperty the config property to use for locating the model location
+    * @param modelName      the name of the model to load
+    * @param modelGetter    supplier to use to check if the model is already loaded
+    * @param modelSetter    consumer to use to set the model object
+    * @return the loaded model
     */
    public static <T> T loadModel(@NonNull Object lock, @NonNull Language language, @NonNull String configProperty, @NonNull String modelName, @NonNull Supplier<T> modelGetter, @NonNull Consumer<T> modelSetter) {
       if (modelGetter.get() == null) {

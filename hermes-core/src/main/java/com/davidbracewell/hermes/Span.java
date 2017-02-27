@@ -83,7 +83,7 @@ public class Span implements Serializable, Comparable<Span> {
     * @return True if the span is empty, False if not
     */
    public boolean isEmpty() {
-      return length() == 0;
+      return length() == 0 || start() < 0 || end() < 0;
    }
 
    /**

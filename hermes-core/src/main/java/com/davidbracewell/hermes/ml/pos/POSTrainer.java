@@ -144,8 +144,8 @@ public class POSTrainer extends CommandLineApplication {
       } else {
          learner.setValidator(new EnglishPOSValidator());
       }
-      learner.setParameter("maxIterations", 200);
-      learner.setParameter("tolerance", 1E-4);
+      learner.setParameter("maxIterations", 25);
+      learner.setParameter("tolerance", 1E-5);
       learner.setParameter("verbose", true);
       learner.setTransitionFeatures(TransitionFeatures.SECOND_ORDER);
       return learner;

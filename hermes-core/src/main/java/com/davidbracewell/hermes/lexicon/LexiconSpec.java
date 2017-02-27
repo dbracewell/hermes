@@ -105,6 +105,7 @@ public class LexiconSpec implements Serializable {
 
                   int nc = 1;
 
+
                   if (tagAttribute != null && this.tag != null) {
                      tag = Cast.as(this.tag);
                   } else if (row.size() > nc && tagAttribute != null && !useResourceNameAsTag) {

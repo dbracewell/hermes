@@ -244,11 +244,10 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    /**
     * As embedding dataset dataset.
     *
-    * @param type1 the type 1
     * @param types the types
     * @return the dataset
     */
-   default Dataset<Sequence> asEmbeddingDataset(AnnotationType type1, AnnotationType... types) {
+   default Dataset<Sequence> asEmbeddingDataset(@NonNull AnnotationType... types) {
       return Dataset.embedding(getDataSetType(),
                                stream().parallel()
                                        .flatMap(document -> {
@@ -256,7 +255,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
                                           document.sentences()
                                                   .forEach(sentence ->
                                                               sentences.add(
-                                                                 sentence.interleaved(type1, types)
+                                                                 sentence.interleaved(types)
                                                                          .stream()
                                                                          .filter(StopWords.isNotStopWord())
                                                                          .map(HString::getLemma)

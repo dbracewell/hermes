@@ -426,7 +426,7 @@ public enum POS implements Tag {
       if (text.contains(Types.PART_OF_SPEECH)) {
          return text.getAsTag(Types.PART_OF_SPEECH);
       }
-      if (text.tokenLength() == 1) {
+      if (text.tokenLength() == 1 && text.tokenAt(0).contains(Types.PART_OF_SPEECH)) {
          return text.tokenAt(0).getAsTag(Types.PART_OF_SPEECH);
       }
 

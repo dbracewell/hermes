@@ -22,7 +22,10 @@
 package com.davidbracewell.hermes.extraction.regex;
 
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.HString;
+import com.davidbracewell.hermes.RelationType;
 import com.davidbracewell.string.StringUtils;
 
 import java.io.Serializable;
@@ -107,7 +110,7 @@ interface TransitionFunction extends Serializable {
 
       @Override
       public int matches(HString input) {
-         Annotation parent = input.asAnnotation().map(Annotation::parent).orElse(Fragments.detachedEmptyAnnotation());
+         Annotation parent = input.asAnnotation().parent();
          if (!parent.isEmpty()) {
             return child.matches(parent);
          }
@@ -116,7 +119,7 @@ interface TransitionFunction extends Serializable {
 
       @Override
       public int nonMatch(HString input) {
-         Annotation parent = input.asAnnotation().map(Annotation::parent).orElse(Fragments.detachedEmptyAnnotation());
+         Annotation parent = input.asAnnotation().parent();
          if (!parent.isEmpty()) {
             if (child.matches(parent) > 0) {
                return 0;
@@ -208,9 +211,9 @@ interface TransitionFunction extends Serializable {
             return Collections.emptyList();
          }
          if (StringUtils.isNullOrBlank(value)) {
-            return input.asAnnotation().get().targets(type);
+            return input.asAnnotation().targets(type);
          }
-         return input.asAnnotation().get().targets(type, value);
+         return input.asAnnotation().targets(type, value);
       }
 
       @Override

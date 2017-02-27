@@ -159,6 +159,18 @@ public interface AttributedObject {
    }
 
    /**
+    * Gets the value of the given attribute type as a tag
+    *
+    * @param <T>           the tag type
+    * @param attributeType the attribute type
+    * @param tClass        Class of tag
+    * @return the attribute value as a tag
+    */
+   default <T extends Tag> T getAsTag(@NonNull AttributeType attributeType, @NonNull Class<T> tClass) {
+      return get(attributeType).as(tClass);
+   }
+
+   /**
     * Gets the value of the given attribute type as a set
     *
     * @param <T>           the list element type

@@ -210,16 +210,24 @@ public final class Annotation extends Fragment implements Serializable {
     * @return An optional containing the tag if present
     */
    public Optional<Tag> getTag() {
-      if (isInstance(Types.TOKEN)) {
-         return Optional.ofNullable(getPOS());
-      } else if (isInstance(Types.ENTITY)) {
-         return Optional.ofNullable(get(Types.ENTITY_TYPE).as(EntityType.class));
-      }
       AttributeType tagAttributeType = annotationType.getTagAttribute();
       if (tagAttributeType == null) {
          return Optional.ofNullable(get(Types.TAG).as(Tag.class));
       }
       return Optional.ofNullable(get(tagAttributeType).as(Tag.class));
+   }
+
+   /**
+    * <p> Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type
+    * using the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
+    * Tags must implement the <code>Tag</code> interface. If no tag type is defined, the <code>Attrs.TAG</code>
+    * attribute will be retrieved. </p>
+    *
+    * @param tClass Class information for desired tag
+    * @return An optional containing the tag if present
+    */
+   public <T extends Tag> Optional<T> getTag(@NonNull Class<T> tClass) {
+      return getTag().filter(tClass::isInstance).map(Cast::<T>as);
    }
 
    /**
