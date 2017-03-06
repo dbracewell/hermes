@@ -21,32 +21,44 @@
 
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.EnumValue;
 import com.davidbracewell.Language;
+import com.davidbracewell.annotation.Preload;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
-import com.davidbracewell.conversion.NewObjectConverter;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.string.StringUtils;
+import lombok.NonNull;
 
 import java.text.DateFormat;
 import java.util.*;
 
 /**
- * <p> Acceptable types for attribute values. Other types may be assigned, but only these are supported. Each type can
- * be used inside a collection or as the value in a map whose keys are strings. </p>
- *
- * @author David B. Bracewell
+ * Auto generated using enumGen.py
+ * The type AttributeValueType2.
  */
-public enum AttributeValueType {
+@Preload
+public abstract class AttributeValueType extends EnumValue implements Comparable<AttributeValueType> {
+   public static final String CANONICAL_NAME = AttributeValueType.class.getCanonicalName();
+   private static final long serialVersionUID = 1L;
+   private static final Set<AttributeValueType> values = com.davidbracewell.guava.common.collect.Sets.newConcurrentHashSet();
+
    /**
     * String value
     */
-   STRING {
+   public final static AttributeValueType STRING = new AttributeValueType("STRING") {
+      private static final long serialVersionUID = 1L;
+
       @Override
-      protected Class<?> getType() {
+      public Class<?> getType() {
          return String.class;
+      }
+
+      @Override
+      protected Object encodeImpl(Object value) {
+         return value.toString();
       }
 
       @Override
@@ -54,19 +66,22 @@ public enum AttributeValueType {
       protected String decodeImpl(Object value) {
          return value.toString();
       }
+   };
+
+   /**
+    * Integer value
+    */
+   public final static AttributeValueType INTEGER = new AttributeValueType("INTEGER") {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public Class<?> getType() {
+         return Integer.class;
+      }
 
       @Override
       protected Object encodeImpl(Object value) {
          return value;
-      }
-   },
-   /**
-    * Integer value
-    */
-   INTEGER {
-      @Override
-      protected Class<?> getType() {
-         return Integer.class;
       }
 
       @Override
@@ -74,19 +89,23 @@ public enum AttributeValueType {
       protected Integer decodeImpl(Object value) {
          return value instanceof Number ? Cast.<Number>as(value).intValue() : Convert.convert(value, Integer.class);
       }
+   };
+
+
+   /**
+    * Long value
+    */
+   public final static AttributeValueType LONG = new AttributeValueType("LONG") {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public Class<?> getType() {
+         return Integer.class;
+      }
 
       @Override
       protected Object encodeImpl(Object value) {
          return value;
-      }
-   },
-   /**
-    * Long value
-    */
-   LONG {
-      @Override
-      protected Class<?> getType() {
-         return Long.class;
       }
 
       @Override
@@ -94,19 +113,23 @@ public enum AttributeValueType {
       protected Long decodeImpl(Object value) {
          return value instanceof Number ? Cast.<Number>as(value).longValue() : Convert.convert(value, Long.class);
       }
+   };
+
+
+   /**
+    * Double value
+    */
+   public final static AttributeValueType DOUBLE = new AttributeValueType("DOUBLE") {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public Class<?> getType() {
+         return Integer.class;
+      }
 
       @Override
       protected Object encodeImpl(Object value) {
          return value;
-      }
-   },
-   /**
-    * Double value
-    */
-   DOUBLE {
-      @Override
-      protected Class<?> getType() {
-         return Double.class;
       }
 
       @Override
@@ -114,20 +137,22 @@ public enum AttributeValueType {
       protected Double decodeImpl(Object value) {
          return value instanceof Number ? Cast.<Number>as(value).doubleValue() : Convert.convert(value, Double.class);
       }
+   };
 
-      @Override
-      protected Object encodeImpl(Object value) {
-         return value;
-      }
-
-   },
    /**
     * Boolean value
     */
-   BOOLEAN {
+   public final static AttributeValueType BOOLEAN = new AttributeValueType("BOOLEAN") {
+      private static final long serialVersionUID = 1L;
+
       @Override
-      protected Class<?> getType() {
-         return Boolean.class;
+      public Class<?> getType() {
+         return String.class;
+      }
+
+      @Override
+      protected Object encodeImpl(Object value) {
+         return value.toString();
       }
 
       @Override
@@ -135,19 +160,23 @@ public enum AttributeValueType {
       protected Boolean decodeImpl(Object value) {
          return value instanceof Boolean ? Cast.<Boolean>as(value) : Convert.convert(value, Boolean.class);
       }
+   };
+
+
+   /**
+    * Language value
+    */
+   public final static AttributeValueType LANGUAGE = new AttributeValueType("LANGUAGE") {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public Class<?> getType() {
+         return String.class;
+      }
 
       @Override
       protected Object encodeImpl(Object value) {
-         return Cast.<Boolean>as(value).toString();
-      }
-   },
-   /**
-    * Value type for {@link Language}
-    */
-   LANGUAGE {
-      @Override
-      protected Class<?> getType() {
-         return Language.class;
+         return value.toString();
       }
 
       @Override
@@ -155,19 +184,22 @@ public enum AttributeValueType {
       protected Language decodeImpl(Object value) {
          return value instanceof Language ? Cast.as(value) : Language.fromString(value.toString());
       }
+   };
 
-      @Override
-      protected Object encodeImpl(Object value) {
-         return Cast.<Language>as(value).toString();
-      }
-   },
    /**
     * Value type for {@link POS}
     */
-   PART_OF_SPEECH {
+   public final static AttributeValueType PART_OF_SPEECH = new AttributeValueType("PART_OF_SPEECH") {
+      private static final long serialVersionUID = 1L;
+
       @Override
-      protected Class<?> getType() {
-         return POS.class;
+      public Class<?> getType() {
+         return String.class;
+      }
+
+      @Override
+      protected Object encodeImpl(Object value) {
+         return value.toString();
       }
 
       @Override
@@ -175,18 +207,16 @@ public enum AttributeValueType {
       protected POS decodeImpl(Object value) {
          return value instanceof POS ? Cast.as(value) : POS.fromString(value.toString());
       }
+   };
 
-      @Override
-      protected Object encodeImpl(Object value) {
-         return Cast.<POS>as(value).toString();
-      }
-   },
    /**
     * Value type for {@link EntityType}
     */
-   ENTITY_TYPE {
+   public final static AttributeValueType ENTITY_TYPE = new AttributeValueType("ENTITY_TYPE") {
+      private static final long serialVersionUID = 1L;
+
       @Override
-      protected Class<?> getType() {
+      public Class<?> getType() {
          return EntityType.class;
       }
 
@@ -203,34 +233,16 @@ public enum AttributeValueType {
       protected Object encodeImpl(Object value) {
          return Cast.<EntityType>as(value).name();
       }
+   };
 
-   },
-   /**
-    * Value type for {@link TokenType}
-    */
-   TOKEN_TYPE {
-      @Override
-      protected Class<?> getType() {
-         return TokenType.class;
-      }
-
-      @Override
-      @SuppressWarnings("unchecked")
-      protected TokenType decodeImpl(Object value) {
-         return value instanceof TokenType ? Cast.as(value) : TokenType.valueOf(value.toString());
-      }
-
-      @Override
-      protected Object encodeImpl(Object value) {
-         return Cast.<TokenType>as(value).name();
-      }
-   },
    /**
     * Value type for Dates
     */
-   DATE {
+   public final static AttributeValueType DATE = new AttributeValueType("DATE") {
+      private static final long serialVersionUID = 1L;
+
       @Override
-      protected Class<?> getType() {
+      public Class<?> getType() {
          return Date.class;
       }
 
@@ -244,56 +256,41 @@ public enum AttributeValueType {
       protected Object encodeImpl(Object value) {
          return DateFormat.getDateInstance(DateFormat.FULL).format(Cast.as(value));
       }
-   },
+   };
+
+
    /**
-    * Value type for generic {@link EnumValue}s requiring the fully qualified name.
+    * Value type for {@link TokenType}
     */
-   DYNAMIC_ENUM {
-      private final NewObjectConverter<EnumValue> converter = new NewObjectConverter<>(EnumValue.class);
+   public final static AttributeValueType TOKEN_TYPE = new AttributeValueType("TOKEN_TYPE") {
+      private static final long serialVersionUID = 1L;
 
       @Override
-      protected Class<?> getType() {
-         return EnumValue.class;
+      public Class<?> getType() {
+         return TokenType.class;
       }
 
       @Override
-      protected <T> T decodeImpl(Object value) {
-         return Cast.as(converter.apply(value));
+      @SuppressWarnings("unchecked")
+      protected TokenType decodeImpl(Object value) {
+         return value instanceof TokenType ? Cast.as(value) : TokenType.valueOf(value.toString());
       }
 
       @Override
       protected Object encodeImpl(Object value) {
-         return Cast.<EnumValue>as(value).canonicalName();
+         return Cast.<TokenType>as(value).name();
       }
-   },
-   /**
-    * Value type for generic enums requiring the fully qualified name.
-    */
-   ENUM {
-      private final NewObjectConverter<Enum> converter = new NewObjectConverter<>(Enum.class);
+   };
 
-      @Override
-      protected Class<?> getType() {
-         return Enum.class;
-      }
 
-      @Override
-      protected <T> T decodeImpl(Object value) {
-         return Cast.as(converter.apply(value));
-      }
-
-      @Override
-      protected Object encodeImpl(Object value) {
-         Enum<?> e = Cast.as(value);
-         return e.getDeclaringClass().getCanonicalName() + "." + e.toString();
-      }
-   },
    /**
     * Value type for URLs
     */
-   URL {
+   public final static AttributeValueType URL = new AttributeValueType("URL") {
+      private static final long serialVersionUID = 1L;
+
       @Override
-      protected Class<?> getType() {
+      public Class<?> getType() {
          return java.net.URL.class;
       }
 
@@ -308,13 +305,17 @@ public enum AttributeValueType {
       protected Object encodeImpl(Object value) {
          return Cast.<java.net.URL>as(value).toString();
       }
-   },
+   };
+
+
    /**
     * Value type for {@link StringTag}s
     */
-   STRING_TAG {
+   public final static AttributeValueType STRING_TAG = new AttributeValueType("STRING_TAG") {
+      private static final long serialVersionUID = 1L;
+
       @Override
-      protected Class<?> getType() {
+      public Class<?> getType() {
          return StringTag.class;
       }
 
@@ -329,24 +330,38 @@ public enum AttributeValueType {
       protected Object encodeImpl(Object value) {
          return Cast.<StringTag>as(value).name();
       }
-   },
-   DEFAULT {
+   };
+
+
+   /**
+    * Default Value Type
+    */
+   public final static AttributeValueType DEFAULT = new AttributeValueType("DEFAULT") {
+      private static final long serialVersionUID = 1L;
+
       @Override
-      @SuppressWarnings("unchecked")
-      protected String decodeImpl(Object value) {
-         return value.toString();
+      public Class<?> getType() {
+         throw new UnsupportedOperationException();
+      }
+
+      @Override
+      protected <T> T decodeImpl(Object value) {
+         throw new UnsupportedOperationException();
       }
 
       @Override
       protected Object encodeImpl(Object value) {
-         return Convert.convert(value, String.class);
-      }
-
-      @Override
-      protected Class<?> getType() {
-         return String.class;
+         throw new UnsupportedOperationException();
       }
    };
+
+
+   protected AttributeValueType(String name) {
+      super(CANONICAL_NAME, name);
+   }
+
+
+   public abstract Class<?> getType();
 
    /**
     * Converts a {@link Val} object to desired type
@@ -440,6 +455,29 @@ public enum AttributeValueType {
    protected abstract <T> T decodeImpl(Object value);
 
 
-   protected abstract Class<?> getType();
+   /**
+    * <p>Retrieves all currently known values of AttributeValueType2.</p>
+    *
+    * @return An unmodifiable collection of currently known values for AttributeValueType2.
+    */
+   public static Collection<AttributeValueType> values() {
+      return Collections.unmodifiableSet(values);
+   }
 
-}//END OF AttributeValueType
+   /**
+    * <p>Returns the constant of AttributeValueType2 with the specified name.The normalized version of the specified
+    * name will be matched allowing for case and space variations.</p>
+    *
+    * @return The constant of AttributeValueType2 with the specified name
+    * @throws IllegalArgumentException if the specified name is not a member of AttributeValueType2.
+    */
+   public static AttributeValueType valueOf(@NonNull String name) {
+      return DynamicEnum.valueOf(AttributeValueType.class, name);
+   }
+
+   @Override
+   public int compareTo(@NonNull AttributeValueType o) {
+      return this.canonicalName().compareTo(o.canonicalName());
+   }
+
+}//END OF AttributeValueType2
