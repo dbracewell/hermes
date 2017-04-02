@@ -27,6 +27,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.annotation.Preload;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
+import com.davidbracewell.conversion.NewObjectConverter;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.string.StringUtils;
@@ -44,6 +45,64 @@ public abstract class AttributeValueType extends EnumValue implements Comparable
    public static final String CANONICAL_NAME = AttributeValueType.class.getCanonicalName();
    private static final long serialVersionUID = 1L;
    private static final Set<AttributeValueType> values = com.davidbracewell.guava.common.collect.Sets.newConcurrentHashSet();
+   private static final NewObjectConverter<Enum> converter = new NewObjectConverter<>(Enum.class);
+
+   public abstract static class DYNAMIC_ENUM_TYPE extends AttributeValueType {
+      private final NewObjectConverter<EnumValue> converter = new NewObjectConverter<>(EnumValue.class);
+      private static final long serialVersionUID = 1L;
+
+      protected DYNAMIC_ENUM_TYPE(String name) {
+         super(name);
+      }
+
+      @Override
+      public Class<?> getType() {
+         return EnumValue.class;
+      }
+
+      @Override
+      protected <T> T decodeImpl(Object value) {
+         return Cast.as(converter.apply(value));
+      }
+
+      @Override
+      protected Object encodeImpl(Object value) {
+         return Cast.<EnumValue>as(value).canonicalName();
+      }
+   }
+
+   public abstract static class ENUM_TYPE extends AttributeValueType {
+      private static final long serialVersionUID = 1L;
+
+      protected ENUM_TYPE(String name) {
+         super(name);
+      }
+
+      @Override
+      public Class<?> getType() {
+         return null;
+      }
+
+      @Override
+      protected <T> T decodeImpl(Object value) {
+         return Cast.as(converter.apply(value));
+      }
+
+      @Override
+      protected Object encodeImpl(Object value) {
+         Enum<?> e = Cast.as(value);
+         return e.getDeclaringClass().getCanonicalName() + "." + e.toString();
+      }
+
+   }
+
+   public static AttributeValueType GENERIC_ENUM = new ENUM_TYPE("ENUM") {
+      private static final long serialVersionUID = 1L;
+   };
+
+   public static AttributeValueType GENERIC_DYNAMIC_ENUM = new DYNAMIC_ENUM_TYPE("DYNAMIC_ENUM") {
+      private static final long serialVersionUID = 1L;
+   };
 
    /**
     * String value
@@ -58,7 +117,7 @@ public abstract class AttributeValueType extends EnumValue implements Comparable
 
       @Override
       protected Object encodeImpl(Object value) {
-         return value.toString();
+         return Convert.convert(value, String.class);
       }
 
       @Override
