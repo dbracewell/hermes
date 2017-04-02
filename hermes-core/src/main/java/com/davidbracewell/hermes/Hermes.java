@@ -28,9 +28,12 @@ import com.davidbracewell.config.Configurator;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
+import com.davidbracewell.io.resource.StringResource;
+import com.davidbracewell.io.structured.json.JSONWriter;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
+import java.io.IOException;
 import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -49,6 +52,56 @@ public final class Hermes {
 
    private Hermes() {
       throw new IllegalAccessError();
+   }
+
+
+   /**
+    * Exports the currently loaded Hermes type system in JSON.
+    *
+    * @return Json representing the type system.
+    */
+   public static String exportTypeSystem() {
+      Resource out = new StringResource();
+      try {
+         exportTypeSystem(out);
+         return out.readToString().trim();
+      } catch (IOException e) {
+         throw Throwables.propagate(e);
+      }
+   }
+
+   /**
+    * Exports the currently loaded Hermes type system in JSON.
+    *
+    * @param output The resource to output the json representation of the type system.
+    */
+   public static void exportTypeSystem(@NonNull Resource output) throws IOException {
+      try (JSONWriter writer = new JSONWriter(output)) {
+         writer.beginDocument(true);
+         for (AnnotationType atv : AnnotationType.values()) {
+            writer.beginObject();
+            writer.writeKeyValue("name", atv.name());
+            writer.writeKeyValue("type", atv.type());
+            writer.writeKeyValue("parent", atv.getParent().name());
+            writer.writeKeyValue("tagType", atv.getTagAttribute().name());
+            writer.endObject();
+         }
+         for (AttributeType atv : AttributeType.values()) {
+            writer.beginObject();
+            writer.writeKeyValue("name", atv.name());
+            writer.writeKeyValue("type", atv.type());
+            writer.writeKeyValue("valueType", atv.getValueType());
+            writer.endObject();
+         }
+         for (RelationType rtv : RelationType.values()) {
+            writer.beginObject();
+            writer.writeKeyValue("name", rtv.name());
+            writer.writeKeyValue("type", rtv.type());
+            writer.endObject();
+         }
+         writer.endDocument();
+      }
+
    }
 
 
@@ -125,12 +178,12 @@ public final class Hermes {
     *
     * <p>The method will look in the following locations in order for the mode:
     * <ol>
-    *    <li>configProperty.language.model</li>
-    *    <li>classpath:hermes/language/model/modelName</li>
-    *    <li>modelDir/language/model/modelName</li>
-    *    <li>configProperty.model</li>
-    *    <li>classpath:hermes/model/modelName</li>
-    *    <li>modelDir/model/modelName</li>
+    * <li>configProperty.language.model</li>
+    * <li>classpath:hermes/language/model/modelName</li>
+    * <li>modelDir/language/model/modelName</li>
+    * <li>configProperty.model</li>
+    * <li>classpath:hermes/model/modelName</li>
+    * <li>modelDir/model/modelName</li>
     * </ol>
     * where <code>language</code> is the two-letter (lowercased) language code.
     * </p>
