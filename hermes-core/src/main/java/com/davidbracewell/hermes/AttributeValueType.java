@@ -42,15 +42,26 @@ import java.util.*;
  */
 @Preload
 public abstract class AttributeValueType extends EnumValue implements Comparable<AttributeValueType> {
+   /**
+    * The constant CANONICAL_NAME.
+    */
    public static final String CANONICAL_NAME = AttributeValueType.class.getCanonicalName();
    private static final long serialVersionUID = 1L;
    private static final Set<AttributeValueType> values = com.davidbracewell.guava.common.collect.Sets.newConcurrentHashSet();
    private static final NewObjectConverter<Enum> converter = new NewObjectConverter<>(Enum.class);
 
+   /**
+    * The type Dynamic enum type.
+    */
    public abstract static class DYNAMIC_ENUM_TYPE extends AttributeValueType {
       private final NewObjectConverter<EnumValue> converter = new NewObjectConverter<>(EnumValue.class);
       private static final long serialVersionUID = 1L;
 
+      /**
+       * Instantiates a new Dynamic enum type.
+       *
+       * @param name the name
+       */
       protected DYNAMIC_ENUM_TYPE(String name) {
          super(name);
       }
@@ -71,9 +82,17 @@ public abstract class AttributeValueType extends EnumValue implements Comparable
       }
    }
 
+   /**
+    * The type Enum type.
+    */
    public abstract static class ENUM_TYPE extends AttributeValueType {
       private static final long serialVersionUID = 1L;
 
+      /**
+       * Instantiates a new Enum type.
+       *
+       * @param name the name
+       */
       protected ENUM_TYPE(String name) {
          super(name);
       }
@@ -96,10 +115,16 @@ public abstract class AttributeValueType extends EnumValue implements Comparable
 
    }
 
+   /**
+    * The constant GENERIC_ENUM.
+    */
    public static AttributeValueType GENERIC_ENUM = new ENUM_TYPE("ENUM") {
       private static final long serialVersionUID = 1L;
    };
 
+   /**
+    * The constant GENERIC_DYNAMIC_ENUM.
+    */
    public static AttributeValueType GENERIC_DYNAMIC_ENUM = new DYNAMIC_ENUM_TYPE("DYNAMIC_ENUM") {
       private static final long serialVersionUID = 1L;
    };
@@ -415,11 +440,21 @@ public abstract class AttributeValueType extends EnumValue implements Comparable
    };
 
 
+   /**
+    * Instantiates a new Attribute value type.
+    *
+    * @param name the name
+    */
    protected AttributeValueType(String name) {
       super(CANONICAL_NAME, name);
    }
 
 
+   /**
+    * Gets type.
+    *
+    * @return the type
+    */
    public abstract Class<?> getType();
 
    /**
@@ -527,6 +562,7 @@ public abstract class AttributeValueType extends EnumValue implements Comparable
     * <p>Returns the constant of AttributeValueType2 with the specified name.The normalized version of the specified
     * name will be matched allowing for case and space variations.</p>
     *
+    * @param name the name
     * @return The constant of AttributeValueType2 with the specified name
     * @throws IllegalArgumentException if the specified name is not a member of AttributeValueType2.
     */
