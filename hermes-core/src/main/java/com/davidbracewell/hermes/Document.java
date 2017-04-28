@@ -22,8 +22,10 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.collection.Sets;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.base.Throwables;
@@ -32,11 +34,14 @@ import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.io.structured.StructuredFormat;
 import com.davidbracewell.io.structured.StructuredWriter;
 import com.davidbracewell.string.StringUtils;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -203,16 +208,20 @@ public class Document extends HString {
     * @throws IOException something went wrong reading the file
     */
    public static Document read(@NonNull Resource resource) throws IOException {
+      Type mapType = new TypeToken<Map<String, Object>>() {
+      }.getType();
+      Gson gson = new Gson();
       //Load the document to a map
-      Map<String, Val> json = StructuredFormat.JSON.loads(resource.readToString());
+      Map<String, Object> json = gson.fromJson(resource.readToString(), mapType);
 
       //Create the initial document using raw content
-      Document doc = DocumentFactory.getInstance().createRaw(json.getOrDefault("id", Val.NULL).asString(),
-                                                             json.get("content").asString(""));
+      Document doc = DocumentFactory.getInstance().createRaw(json.getOrDefault("id", Val.NULL).toString(),
+                                                             json.getOrDefault("content", "").toString());
 
       //Add document attributes
       if (json.containsKey("attributes")) {
-         json.get("attributes").<Map<String, Val>>cast().forEach((k, av) -> {
+         Map<String, Object> attributes = Cast.as(json.get("attributes"));
+         attributes.forEach((k, av) -> {
             AttributeType attrType = Types.attribute(k);
             Object val = attrType.getValueType().decode(av);
             if (val != null) {
@@ -223,33 +232,35 @@ public class Document extends HString {
 
       //Set completed annotations
       if (json.containsKey("completed")) {
-         json.get("completed").<Map<String, Val>>cast()
+         Map<String, Object> completed = Cast.as(json.get("completed"));
+         completed
             .forEach((k, av) -> {
                AnnotatableType type = Types.from(k);
-               doc.getAnnotationSet().setIsCompleted(type, true, av.asString());
+               doc.getAnnotationSet().setIsCompleted(type, true, av.toString());
             });
       }
 
       //Create the annotations
       AtomicLong maxAnnotationId = new AtomicLong(-1);
       if (json.containsKey("annotations")) {
-         json.get("annotations").<List<Val>>cast()
+         List<Object> annotations = Cast.as(json.get("annotations"));
+         annotations
             .forEach(v -> {
-               Map<String, Val> vv = v.cast();
+               Map<String, Object> vv = Cast.as(v);
 
                //Create new annotation
                Annotation annotation = doc.annotationBuilder()
-                                          .type(AnnotationType.create(vv.get("type").cast()))
-                                          .start(vv.get("start").<Integer>cast())
-                                          .end(vv.get("end").<Integer>cast())
+                                          .type(AnnotationType.create(vv.get("type").toString()))
+                                          .start(((Number) vv.get("start")).intValue())
+                                          .end(((Number) vv.get("end")).intValue())
                                           .createAttached();
 
                //Read in and set id and update max id value
-               annotation.setId(vv.get("id").asLongValue());
+               annotation.setId(((Number) vv.get("id")).longValue());
                maxAnnotationId.getAndUpdate(old -> old < annotation.getId() ? annotation.getId() : old);
 
                //Read in the attributes (map of types and values)
-               vv.getOrDefault("attributes", Val.of(Collections.emptyMap())).<Map<String, Val>>cast().forEach(
+               Cast.<Map<String, Object>>as(vv.getOrDefault("attributes", Collections.emptyMap())).forEach(
                   (k, av) -> {
                      AttributeType attrType = Types.attribute(k);
                      Object val = attrType.getValueType().decode(av);
@@ -260,12 +271,12 @@ public class Document extends HString {
 
                if (vv.containsKey("relations")) {
                   //Read in the relations (a list of maps containing type, value, and target)
-                  vv.get("relations").<List<Val>>cast()
+                  Cast.<List<Object>>as(vv.get("relations"))
                      .stream()
-                     .map(val -> val.asMap(HashMap.class, String.class, Val.class))
-                     .forEach(rel -> annotation.add(new Relation(RelationType.create(rel.get("type").asString()),
-                                                                 rel.get("value").asString(),
-                                                                 rel.get("target").asLongValue())));
+                     .map(Cast::<Map<String, Object>>as)
+                     .forEach(rel -> annotation.add(new Relation(RelationType.create(rel.get("type").toString()),
+                                                                 rel.get("value").toString(),
+                                                                 ((Number) rel.get("target")).longValue())));
                }
             });
 
@@ -292,6 +303,21 @@ public class Document extends HString {
     */
    public AnnotationBuilder annotationBuilder() {
       return new AnnotationBuilder(this);
+   }
+
+   public static boolean hasAnnotations(@NonNull String json, @NonNull AnnotatableType... types) {
+      if (types.length == 0) {
+         return true;
+      }
+      Set<AnnotatableType> target = Sets.asLinkedHashSet(Arrays.asList(types));
+      Map<String, Val> rawDoc = StructuredFormat.JSON.loads(json);
+      if (rawDoc.containsKey("completed")) {
+         return rawDoc.get("completed").<Map<String, Val>>cast()
+                   .keySet().stream().map(Types::from)
+                   .collect(Collectors.toSet())
+                   .containsAll(target);
+      }
+      return false;
    }
 
    @Override
