@@ -29,7 +29,7 @@ import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.io.resource.StringResource;
-import com.davidbracewell.io.structured.json.JSONWriter;
+import com.davidbracewell.json.JsonWriter;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
@@ -76,27 +76,27 @@ public final class Hermes {
     * @param output The resource to output the json representation of the type system.
     */
    public static void exportTypeSystem(@NonNull Resource output) throws IOException {
-      try (JSONWriter writer = new JSONWriter(output)) {
+      try (JsonWriter writer = new JsonWriter(output)) {
          writer.beginDocument(true);
          for (AnnotationType atv : AnnotationType.values()) {
             writer.beginObject();
-            writer.writeKeyValue("name", atv.name());
-            writer.writeKeyValue("type", atv.type());
-            writer.writeKeyValue("parent", atv.getParent().name());
-            writer.writeKeyValue("tagType", atv.getTagAttribute().name());
+            writer.property("name", atv.name());
+            writer.property("type", atv.type());
+            writer.property("parent", atv.getParent().name());
+            writer.property("tagType", atv.getTagAttribute().name());
             writer.endObject();
          }
          for (AttributeType atv : AttributeType.values()) {
             writer.beginObject();
-            writer.writeKeyValue("name", atv.name());
-            writer.writeKeyValue("type", atv.type());
-            writer.writeKeyValue("valueType", atv.getValueType());
+            writer.property("name", atv.name());
+            writer.property("type", atv.type());
+            writer.property("valueType", atv.getValueType());
             writer.endObject();
          }
          for (RelationType rtv : RelationType.values()) {
             writer.beginObject();
-            writer.writeKeyValue("name", rtv.name());
-            writer.writeKeyValue("type", rtv.type());
+            writer.property("name", rtv.name());
+            writer.property("type", rtv.type());
             writer.endObject();
          }
          writer.endDocument();

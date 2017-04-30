@@ -31,8 +31,8 @@ import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.io.structured.StructuredFormat;
-import com.davidbracewell.io.structured.StructuredWriter;
+import com.davidbracewell.json.Json;
+import com.davidbracewell.json.JsonWriter;
 import com.davidbracewell.string.StringUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -310,7 +310,7 @@ public class Document extends HString {
          return true;
       }
       Set<AnnotatableType> target = Sets.asLinkedHashSet(Arrays.asList(types));
-      Map<String, Val> rawDoc = StructuredFormat.JSON.loads(json);
+      Map<String, Val> rawDoc = Json.loads(json);
       if (rawDoc.containsKey("completed")) {
          return rawDoc.get("completed").<Map<String, Val>>cast()
                    .keySet().stream().map(Types::from)
@@ -567,15 +567,15 @@ public class Document extends HString {
     * @throws IOException something went wrong writing
     */
    public void write(@NonNull Resource resource) throws IOException {
-      try (StructuredWriter writer = StructuredFormat.JSON.createWriter(resource)) {
+      try (JsonWriter writer = Json.createWriter(resource)) {
          writer.beginDocument();
-         writer.writeKeyValue("id", getId());
-         writer.writeKeyValue("content", toString());
+         writer.property("id", getId());
+         writer.property("content", toString());
 
          if (attributes.size() > 0) {
             writer.beginObject("attributes");
             for (Map.Entry<AttributeType, Val> entry : attributeEntrySet()) {
-               writer.writeKeyValue(entry.getKey().name(), entry.getKey().getValueType().encode(entry.getValue()));
+               writer.property(entry.getKey().name(), entry.getKey().getValueType().encode(entry.getValue()));
             }
             writer.endObject();
          }
@@ -583,26 +583,26 @@ public class Document extends HString {
          if (annotationSet.size() > 0) {
             writer.beginObject("completed");
             for (AnnotatableType type : getAnnotationSet().getCompleted()) {
-               writer.writeKeyValue(type.canonicalName(), getAnnotationSet().getAnnotationProvider(type));
+               writer.property(type.canonicalName(), getAnnotationSet().getAnnotationProvider(type));
             }
             writer.endObject();
 
             writer.beginArray("annotations");
             for (Annotation annotation : annotationSet) {
                writer.beginObject();
-               writer.writeKeyValue("type", annotation.getType().name());
-               writer.writeKeyValue("start", annotation.start());
-               writer.writeKeyValue("end", annotation.end());
-               writer.writeKeyValue("id", annotation.getId());
+               writer.property("type", annotation.getType().name());
+               writer.property("start", annotation.start());
+               writer.property("end", annotation.end());
+               writer.property("id", annotation.getId());
                if (Config.get("Annotation.writeContent").asBooleanValue(false)) {
-                  writer.writeKeyValue("content", annotation.toString());
+                  writer.property("content", annotation.toString());
                }
 
                if (annotation.getAttributeMap().size() > 0) {
                   writer.beginObject("attributes");
                   for (Map.Entry<AttributeType, Val> entry : annotation.attributeEntrySet()) {
-                     writer.writeKeyValue(entry.getKey().name(),
-                                          entry.getKey().getValueType().encode(entry.getValue()));
+                     writer.property(entry.getKey().name(),
+                                     entry.getKey().getValueType().encode(entry.getValue()));
 
                   }
                   writer.endObject();
@@ -613,9 +613,9 @@ public class Document extends HString {
                   writer.beginArray("relations");
                   for (Relation relation : relations) {
                      writer.beginObject();
-                     writer.writeKeyValue("type", relation.getType());
-                     writer.writeKeyValue("value", relation.getValue());
-                     writer.writeKeyValue("target", relation.getTarget());
+                     writer.property("type", relation.getType());
+                     writer.property("value", relation.getValue());
+                     writer.property("target", relation.getTarget());
                      writer.endObject();
                   }
                   writer.endArray();
