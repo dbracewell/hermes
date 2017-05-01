@@ -54,6 +54,7 @@ public final class LanguageData {
       return language.getCode().toLowerCase();
    }
 
+
    public static Lexicon loadSubjectiveLexicon(@NonNull Language language) {
       try {
          return lexicons.get(language.getCode() + "::Sentiment",
