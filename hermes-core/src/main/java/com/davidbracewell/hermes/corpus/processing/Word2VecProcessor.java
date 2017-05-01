@@ -71,8 +71,7 @@ public class Word2VecProcessor implements ProcessingModule, Loggable {
 
       Embedding embedding;
       if (annotations.length > 1) {
-         embedding = word2Vec.train(
-            corpus.asEmbeddingDataset(annotations));
+         embedding = word2Vec.train(corpus.asEmbeddingDataset(annotations));
       } else {
          embedding = word2Vec.train(corpus.asEmbeddingDataset(annotations[0]));
       }
