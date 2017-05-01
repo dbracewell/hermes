@@ -310,14 +310,16 @@ public class Document extends HString {
          return true;
       }
       Set<AnnotatableType> target = Sets.asLinkedHashSet(Arrays.asList(types));
-      Map<String, Val> rawDoc = Json.loads(json);
-      if (rawDoc.containsKey("completed")) {
-         return rawDoc.get("completed").<Map<String, Val>>cast()
-                   .keySet().stream().map(Types::from)
-                   .collect(Collectors.toSet())
-                   .containsAll(target);
-      }
-      return false;
+      Type mapType = new TypeToken<Map<String, Object>>() {
+      }.getType();
+      Gson gson = new Gson();
+      Map<String, Object> rawDoc = gson.fromJson(json, mapType);
+      return rawDoc.containsKey("completed") && Cast.<Map<String, Object>>as(rawDoc.get("completed"))
+                                                   .keySet()
+                                                   .stream()
+                                                   .map(Types::from)
+                                                   .collect(Collectors.toSet())
+                                                   .containsAll(target);
    }
 
    @Override

@@ -71,7 +71,6 @@ public interface AnnotatableType {
          String typeName = StringUtils.toTitleCase(name().replaceAll("[^a-zA-Z]", " ")
                                                          .trim()
                                                          .toLowerCase()).replaceAll("\\s+", "");
-
          String languageName = StringUtils.toTitleCase(language.name().toLowerCase());
          Class<?> annotatorClass = ReflectionUtils.getClassForNameQuietly(
             ANNOTATOR_PACKAGE + ".Default" + languageName + typeName + "Annotator");

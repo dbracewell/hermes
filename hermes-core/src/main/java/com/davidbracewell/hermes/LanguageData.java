@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.guava.common.cache.Cache;
 import com.davidbracewell.guava.common.cache.CacheBuilder;
@@ -46,8 +47,8 @@ public final class LanguageData {
 
    private static final Logger log = Logger.getLogger(LanguageData.class);
    private static final Resource baseClasspath = Resources.fromClasspath("hermes/");
-   private static final Cache<String, Lexicon> lexicons = CacheBuilder.from("maximumSize=500")
-                                                                      .build();
+   private static final Cache<String, Lexicon> lexicons = CacheBuilder.from("maximumSize=500").build();
+   private static final Cache<String, Embedding> embeddingCache = CacheBuilder.from("maximumSize=25").build();
 
    private static String lng2Folder(Language language) {
       return language.getCode().toLowerCase();

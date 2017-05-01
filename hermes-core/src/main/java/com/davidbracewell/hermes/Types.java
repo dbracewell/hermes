@@ -131,6 +131,10 @@ public interface Types {
     */
    AttributeType TOKEN_TYPE = AttributeType.create("TOKEN_TYPE", AttributeValueType.TOKEN_TYPE);
    /**
+    * The type of token
+    */
+   AttributeType SPELLING_CORRECTION = AttributeType.create("SPELLING", AttributeValueType.STRING);
+   /**
     * The constant TOKEN_TYPE_ENTITY.
     */
    AnnotationType TOKEN_TYPE_ENTITY = AnnotationType.create("TOKEN_TYPE_ENTITY", ENTITY);
