@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.corpus.processing;
 
 import com.davidbracewell.apollo.ml.embedding.Embedding;
+import com.davidbracewell.apollo.ml.embedding.Retrofitting;
 import com.davidbracewell.apollo.ml.embedding.SparkWord2Vec;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Types;
@@ -56,7 +57,9 @@ public class Word2VecProcessor implements ProcessingModule, Loggable {
    @Getter
    @Setter
    private AnnotationType[] annotations = {Types.TOKEN};
-
+   @Getter
+   @Setter
+   Retrofitting retrofitting = null;
 
    @Override
    public Corpus process(Corpus corpus, ProcessorContext context) throws Exception {
@@ -75,6 +78,12 @@ public class Word2VecProcessor implements ProcessingModule, Loggable {
       } else {
          embedding = word2Vec.train(corpus.asEmbeddingDataset(annotations[0]));
       }
+
+      if (retrofitting != null) {
+         embedding = retrofitting.process(embedding);
+      }
+
+
       context.property(EMBEDDING, embedding);
 
       if (output != null) {

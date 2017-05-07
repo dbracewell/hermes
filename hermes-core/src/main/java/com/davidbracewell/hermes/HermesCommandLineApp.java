@@ -135,6 +135,14 @@ public abstract class HermesCommandLineApp extends CommandLineApplication {
       return distributed;
    }
 
+
+   /**
+    * Instantiates a new Hermes command line app.
+    */
+   protected HermesCommandLineApp() {
+      super();
+   }
+
    /**
     * Instantiates a new Hermes command line app.
     *
