@@ -6,7 +6,7 @@ import com.davidbracewell.cli.Option;
 import com.davidbracewell.hermes.HermesCommandLineApp;
 import com.davidbracewell.io.resource.Resource;
 
-import java.util.Scanner;
+import java.io.Console;
 
 /**
  * @author David B. Bracewell
@@ -20,25 +20,24 @@ public class EmbeddingQuery extends HermesCommandLineApp {
    protected void programLogic() throws Exception {
       Embedding embedding = Model.read(model);
 
+
+      Console console = System.console();
       String line;
-      Scanner scanner = new Scanner(System.in);
       do {
-         System.out.print("query:> ");
-         line = scanner.nextLine();
-         switch (line) {
-            case "?q":
-               System.exit(0);
-            case "?help":
-               System.out.println("Help");
-               break;
-            default:
-               if (embedding.contains(line)) {
-                  embedding.nearest(line.toLowerCase(), 10).forEach(
-                     slv -> System.out.println("  " + slv.getLabel() + " : " + slv.getScore()));
-                  System.out.println();
-               } else {
-                  System.out.println("!! " + line + " is not in the dictionary");
-               }
+         line = console.readLine("query:> ");
+         if (line.equals("?quit") || line.equals("?q")) {
+            System.exit(0);
+         } else if (line.startsWith("?search") || line.startsWith("?s")) {
+            String search = line.substring(line.indexOf(' ')).trim();
+            embedding.getVocab().parallelStream()
+                     .filter(term -> term.startsWith(search))
+                     .forEach(term -> System.out.println("  " + term));
+         } else if (embedding.contains(line)) {
+            embedding.nearest(line.toLowerCase(), 10).forEach(
+               slv -> System.out.println("  " + slv.getLabel() + " : " + slv.getScore()));
+            System.out.println();
+         } else {
+            System.out.println("!! " + line + " is not in the dictionary");
          }
 
       } while (!line.equals("q!"));
