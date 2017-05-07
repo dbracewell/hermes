@@ -29,8 +29,6 @@ import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.collection.counter.MultiCounter;
 import com.davidbracewell.collection.counter.MultiCounters;
 import com.davidbracewell.guava.common.base.Preconditions;
-import com.davidbracewell.hermes.StringTag;
-import com.davidbracewell.io.Resources;
 import com.davidbracewell.string.StringUtils;
 import lombok.Getter;
 import lombok.NonNull;
@@ -154,45 +152,5 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
       negativeSeedTerms.put(tag, phrase);
       return true;
    }
-
-   public static void main(String[] args) throws Exception {
-      DistributionalLexiconGenerator<StringTag> dlg
-         = new DistributionalLexiconGenerator<>(
-                                                  Resources.fromFile("/home/ik/prj/o360-hermes/w2v.bin").readObject()
-      );
-      dlg.setThreshold(0.3);
-
-      dlg.addSeed(new StringTag("POSITIVE"), "good");
-      dlg.addSeed(new StringTag("POSITIVE"), "great");
-      dlg.addNegativeSeed(new StringTag("POSITIVE"), "bad");
-      dlg.addNegativeSeed(new StringTag("POSITIVE"), "terrible");
-
-      dlg.addSeed(new StringTag("NEGATIVE"), "bad");
-      dlg.addSeed(new StringTag("NEGATIVE"), "terrible");
-      dlg.addNegativeSeed(new StringTag("NEGATIVE"), "good");
-      dlg.addNegativeSeed(new StringTag("NEGATIVE"), "great");
-
-
-      dlg.addSeed(new StringTag("SCENT"), "scent");
-      dlg.addSeed(new StringTag("SCENT"), "smell");
-      dlg.addSeed(new StringTag("SCENT"), "aroma");
-      dlg.addSeed(new StringTag("SCENT"), "fragrance");
-
-      dlg.addSeed(new StringTag("FAMILY"), "family");
-      dlg.addSeed(new StringTag("FAMILY"), "wife");
-      dlg.addSeed(new StringTag("FAMILY"), "son");
-      dlg.addSeed(new StringTag("FAMILY"), "father");
-      dlg.addSeed(new StringTag("FAMILY"), "husband");
-      dlg.addSeed(new StringTag("FAMILY"), "daughter");
-      dlg.addSeed(new StringTag("FAMILY"), "sister");
-      dlg.addSeed(new StringTag("FAMILY"), "brother");
-
-      dlg.addSeed(new StringTag("CHEST"), "chest");
-      dlg.addSeed(new StringTag("CHEST"), "breast");
-
-      Multimap<StringTag, String> r = dlg.generate();
-      r.forEachKey(k -> System.out.println(k + " : " + r.get(k)));
-   }
-
 
 }//END OF DistributionalLexiconGenerator

@@ -50,7 +50,7 @@ public class AnnotateProcessor implements ProcessingModule {
     * @return the string [ ]
     */
    public String[] getTypes() {
-      return null;
+      return Arrays.stream(types).map(AnnotatableType::canonicalName).toArray(String[]::new);
    }
 
    /**
