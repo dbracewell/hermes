@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.reflection.BeanUtils;
@@ -31,6 +32,8 @@ import com.davidbracewell.reflection.ReflectionException;
 import com.davidbracewell.reflection.ReflectionUtils;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
+
+import java.util.Optional;
 
 /**
  * <p> An annotatable type is one that can be added to a document through the use of a {@link Pipeline}. The interface
@@ -72,13 +75,10 @@ public interface AnnotatableType {
                                                          .trim()
                                                          .toLowerCase()).replaceAll("\\s+", "");
          String languageName = StringUtils.toTitleCase(language.name().toLowerCase());
-         Class<?> annotatorClass = ReflectionUtils.getClassForNameQuietly(
-            ANNOTATOR_PACKAGE + ".Default" + languageName + typeName + "Annotator");
 
-         if (annotatorClass == null) {
-            annotatorClass = ReflectionUtils
-                                .getClassForNameQuietly(ANNOTATOR_PACKAGE + ".Default" + typeName + "Annotator");
-         }
+         Class<?> annotatorClass = Optional
+             .ofNullable(ReflectionUtils.getClassForNameQuietly(ANNOTATOR_PACKAGE + ".Default" + languageName + typeName + "Annotator"))
+             .orElse(Cast.as(ReflectionUtils.getClassForNameQuietly(ANNOTATOR_PACKAGE + ".Default" + typeName + "Annotator")));
 
          if (annotatorClass != null) {
             try {
