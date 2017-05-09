@@ -102,11 +102,12 @@ public class WordNetAnnotator extends SentenceLevelAnnotator {
                                     .type(Types.WORD_SENSE)
                                     .bounds(span)
                                     .createAttached();
-        annotation.put(Types.SENSE,
-                       WordNet
-                           .getInstance()
-                           .getSenses(annotation.toString(), POS.forText(annotation), document.getLanguage())
-        );
+        annotation.put(Types.LEMMA, WordNet
+                                        .getInstance()
+                                        .getSenses(annotation.toString(), POS.forText(annotation),
+                                                   document.getLanguage())
+                                        .get(0)
+                                        .getLemma());
         return annotation;
     }
 
