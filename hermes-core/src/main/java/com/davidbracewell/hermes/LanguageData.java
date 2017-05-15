@@ -32,54 +32,72 @@ import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.logging.Logger;
+import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
 import java.util.concurrent.ExecutionException;
 
 /**
+ * The type Language data.
+ *
  * @author David B. Bracewell
  */
 public final class LanguageData {
 
-   private LanguageData() {
-      throw new IllegalAccessError();
-   }
+    private static final Resource baseClasspath = Resources.fromClasspath("hermes/");
+    private static final Cache<String, Embedding> embeddingCache = CacheBuilder
+                                                                       .from("maximumSize=25")
+                                                                       .build();
+    private static final Cache<String, Lexicon> lexicons = CacheBuilder
+                                                               .from("maximumSize=500")
+                                                               .build();
+    private static final Logger log = Logger.getLogger(LanguageData.class);
 
-   private static final Logger log = Logger.getLogger(LanguageData.class);
-   private static final Resource baseClasspath = Resources.fromClasspath("hermes/");
-   private static final Cache<String, Lexicon> lexicons = CacheBuilder.from("maximumSize=500").build();
-   private static final Cache<String, Embedding> embeddingCache = CacheBuilder.from("maximumSize=25").build();
+    private LanguageData() {
+        throw new IllegalAccessError();
+    }
 
-   private static String lng2Folder(Language language) {
-      return language.getCode().toLowerCase();
-   }
+    private static String lng2Folder(Language language) {
+        if (language == Language.UNKNOWN) {
+            return StringUtils.EMPTY;
+        }
+        return language
+                   .getCode()
+                   .toLowerCase();
+    }
 
-
-   public static Lexicon loadSubjectiveLexicon(@NonNull Language language) {
-      try {
-         return lexicons.get(language.getCode() + "::Sentiment",
-                             () -> {
-                                try {
-                                   return LexiconSpec
-                                             .builder()
-                                             .caseSensitive(false)
-                                             .tagAttribute(Types.TAG)
-                                             .hasConstraints(true)
-                                             .resource(
-                                                baseClasspath.getChild(lng2Folder(language))
-                                                             .getChild("lexicon")
-                                                             .getChild("subjective.dict"))
-                                             .build()
-                                             .create();
-                                } catch (Exception e) {
-                                   log.severe("Error Loading Sentiment lexicon: {0}", e);
-                                   return new TrieLexicon(false, false, Types.TAG);
-                                }
-                             });
-      } catch (ExecutionException e) {
-         throw Throwables.propagate(e);
-      }
-   }
+    /**
+     * Load subjective lexicon lexicon.
+     *
+     * @param language the language
+     * @return the lexicon
+     */
+    public static Lexicon loadSubjectiveLexicon(@NonNull Language language) {
+        try {
+            return lexicons.get(language.getCode() + "::Sentiment",
+                                () -> {
+                                    try {
+                                        return LexiconSpec
+                                                   .builder()
+                                                   .caseSensitive(false)
+                                                   .tagAttribute(Types.TAG)
+                                                   .hasConstraints(true)
+                                                   .resource(
+                                                       baseClasspath
+                                                           .getChild(lng2Folder(language))
+                                                           .getChild("lexicon")
+                                                           .getChild("subjective.dict"))
+                                                   .build()
+                                                   .create();
+                                    } catch (Exception e) {
+                                        log.severe("Error Loading Sentiment lexicon: {0}", e);
+                                        return new TrieLexicon(false, false, Types.TAG);
+                                    }
+                                });
+        } catch (ExecutionException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 
 
 }//END OF LanguageData
