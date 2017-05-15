@@ -581,3 +581,11 @@ zero
 ’s
 ’ve
 ’m
+n’t
+n't
+'m
+'ve
+'s
+'re
+'ll
+'d
