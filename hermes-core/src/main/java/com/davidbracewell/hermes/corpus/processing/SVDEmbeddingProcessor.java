@@ -21,9 +21,14 @@
 
 package com.davidbracewell.hermes.corpus.processing;
 
+import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.apollo.ml.embedding.Retrofitting;
-import com.davidbracewell.apollo.ml.embedding.SparkWord2Vec;
+import com.davidbracewell.apollo.ml.embedding.SVDEmbedding;
+import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
+import com.davidbracewell.apollo.ml.preprocess.filter.MinCountFilter;
+import com.davidbracewell.apollo.ml.preprocess.filter.TopNFilter;
+import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.Corpus;
@@ -39,15 +44,18 @@ import java.util.Arrays;
  *
  * @author David B. Bracewell
  */
-public class Word2VecProcessor implements ProcessingModule, Loggable {
+public class SVDEmbeddingProcessor implements ProcessingModule, Loggable {
    private static final long serialVersionUID = 1L;
    /**
     * Property name used when storing the embedding results to the context
     */
-   public final static String EMBEDDING = Word2VecProcessor.class.getSimpleName();
+   public final static String EMBEDDING = SVDEmbeddingProcessor.class.getSimpleName();
    @Getter
    @Setter
    private int dimension = 300;
+   @Getter
+   @Setter
+   private int maxVocabulary = Integer.MAX_VALUE;
    @Getter
    @Setter
    private int minCount = 5;
@@ -63,22 +71,30 @@ public class Word2VecProcessor implements ProcessingModule, Loggable {
 
    @Override
    public Corpus process(Corpus corpus, ProcessorContext context) throws Exception {
-      SparkWord2Vec word2Vec = new SparkWord2Vec();
-      word2Vec.setDimension(dimension);
-      word2Vec.setMinCount(minCount);
+      SVDEmbedding svdEmbedding = new SVDEmbedding();
+      svdEmbedding.setDimension(dimension);
 
-      logInfo("Word2Vec dimension={0}, minCount={1}, annotations={2}",
-              word2Vec.getDimension(),
-              word2Vec.getMinCount(),
+      logInfo("SVDEmbedding dimension={0}, minCount={1}, annotations={2}",
+              svdEmbedding.getDimension(),
+              minCount,
               Arrays.toString(annotations));
 
-
-      Embedding embedding;
+      Dataset<Sequence> dataset;
       if (annotations.length > 1) {
-         embedding = word2Vec.train(corpus.asEmbeddingDataset(annotations));
+         dataset = corpus.asEmbeddingDataset(annotations);
       } else {
-         embedding = word2Vec.train(corpus.asEmbeddingDataset(annotations[0]));
+         dataset = corpus.asEmbeddingDataset(annotations[0]);
       }
+
+      if (maxVocabulary > 0 && maxVocabulary < Integer.MAX_VALUE) {
+         dataset = dataset.preprocess(PreprocessorList.create(new MinCountFilter(minCount).asSequenceProcessor(),
+                                                              new TopNFilter(maxVocabulary).asSequenceProcessor()));
+      } else {
+         dataset = dataset.preprocess(PreprocessorList.create(new MinCountFilter(minCount).asSequenceProcessor()));
+      }
+
+
+      Embedding embedding = svdEmbedding.train(dataset);
 
       if (retrofitting != null) {
          embedding = retrofitting.process(embedding);
@@ -109,4 +125,5 @@ public class Word2VecProcessor implements ProcessingModule, Loggable {
       }
       return ProcessingState.NOT_LOADED();
    }
+
 }//END OF Word2VecProcessor
