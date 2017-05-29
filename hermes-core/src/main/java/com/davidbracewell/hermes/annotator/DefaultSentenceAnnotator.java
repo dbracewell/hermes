@@ -28,10 +28,7 @@ import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.string.StringUtils;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * <p> A <code>BreakIterator</code> backed sentence annotator that has limited knowledge of abbreviations. </p>
@@ -300,10 +297,9 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
 
    private boolean isAbbreviation(Annotation token) {
       TokenType type = token.get(Types.TOKEN_TYPE).cast();
-      return type != null &&
-                (type.equals(TokenType.ACRONYM)
-                    || (type.equals(TokenType.TIME) && (token.next().isEmpty()
-                                                           || Character.isUpperCase(token.next().charAt(0)))));
+      return type != null && (type.equals(TokenType.ACRONYM)
+                                 || (type.equals(TokenType.TIME)
+                                        && (token.next().isEmpty() || Character.isUpperCase(token.next().charAt(0)))));
    }
 
 
@@ -311,8 +307,7 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
       if (token.length() == 1 && token.contentEquals("I")) {
          return true;
       } else if (token.length() > 1) {
-         return !StringUtils.hasLetter(token)
-                   || Character.isUpperCase(token.charAt(0));
+         return !StringUtils.hasLetter(token) || Character.isUpperCase(token.charAt(0));
       }
       return false;
    }
@@ -341,6 +336,8 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
       int sentenceIndex = 0;
       int lastEnd = -1;
 
+      Deque<String> stack = new LinkedList<>();
+
       for (int ti = 0; ti < tokens.size(); ti++) {
          Annotation cToken = tokens.get(ti);
          Annotation nToken = getToken(tokens, ti + 1);
@@ -351,6 +348,7 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
          boolean isAbbreviation = isAbbreviation(cToken);
 
          TokenType cTokenType = cToken.get(Types.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN);
+
 
          if ((isAbbreviation && isCapitalized(nToken))
                 || (!isAbbreviation && !cTokenType.isInstance(TokenType.PERSON_TITLE) && isEndOfSentenceMark(cToken))

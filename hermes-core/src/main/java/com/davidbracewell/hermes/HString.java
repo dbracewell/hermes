@@ -210,6 +210,33 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       return document().get(AnnotationType.ROOT, this);
    }
 
+   public String tag(@NonNull AnnotationType type, String defaultTag) {
+      Preconditions.checkArgument(StringUtils.isNotNullOrBlank(defaultTag), "Default tag must not be null or blank.");
+      List<Annotation> annotations = get(type);
+      if (annotations.size() == 0) {
+         return toString();
+      }
+      int modStart = start();
+      StringBuilder builder = new StringBuilder();
+      int lastEnd = 0;
+      for (Annotation a : annotations) {
+         String tag = a.getTag().map(Tag::name).orElse(defaultTag);
+         String taggedAnnotation = "<" + tag + ">" + a + "</" + tag + ">";
+         int start = a.start() - modStart;
+         int end = a.end() - modStart;
+         if (start > lastEnd) {
+            builder.append(substring(lastEnd, start));
+         }
+         builder.append(taggedAnnotation);
+         lastEnd = end;
+      }
+      if (lastEnd < length()) {
+         builder.append(substring(lastEnd, length()));
+      }
+      return builder.toString();
+   }
+
+
    /**
     * Gets this HString as an annotation. If the HString is already an annotation it is simply cast. Otherwise a
     * detached annotation of type <code>AnnotationType.ROOT</code> is created.
