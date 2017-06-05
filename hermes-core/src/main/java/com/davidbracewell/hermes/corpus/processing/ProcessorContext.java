@@ -23,10 +23,10 @@ package com.davidbracewell.hermes.corpus.processing;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
-import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -38,7 +38,7 @@ import java.util.Map;
  */
 public class ProcessorContext implements Serializable {
    private static final long serialVersionUID = 1L;
-   private final Map<String, Object> properties = new UnifiedMap<>();
+   private final Map<String, Object> properties = new Object2ObjectOpenHashMap<>();
 
 
    /**

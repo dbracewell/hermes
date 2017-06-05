@@ -29,12 +29,12 @@ import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.collection.counter.MultiCounter;
 import com.davidbracewell.collection.counter.MultiCounters;
 import com.davidbracewell.guava.common.base.Preconditions;
+import com.davidbracewell.guava.common.collect.HashMultimap;
+import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.string.StringUtils;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.eclipse.collections.api.multimap.Multimap;
-import org.eclipse.collections.impl.multimap.set.UnifiedSetMultimap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,8 +54,8 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
    @Getter
    @Setter
    private int maximumTermCount = 100;
-   private final UnifiedSetMultimap<T, String> seedTerms = UnifiedSetMultimap.newMultimap();
-   private final UnifiedSetMultimap<T, String> negativeSeedTerms = UnifiedSetMultimap.newMultimap();
+   private final HashMultimap<T, String> seedTerms = HashMultimap.create();
+   private final HashMultimap<T, String> negativeSeedTerms = HashMultimap.create();
 
    /**
     * Instantiates a new Distributional lexicon generator.
@@ -92,7 +92,7 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
 
    @Override
    public Multimap<T, String> generate() {
-      UnifiedSetMultimap<T, String> lexicon = UnifiedSetMultimap.newMultimap();
+      HashMultimap<T, String> lexicon = HashMultimap.create();
       if (seedTerms.size() > 0) {
          Map<T, Vector> vectors = new HashMap<>();
          Map<T, Vector> negVectors = new HashMap<>();

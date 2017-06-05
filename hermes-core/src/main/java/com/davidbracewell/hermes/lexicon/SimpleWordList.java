@@ -22,8 +22,8 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.io.resource.Resource;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import lombok.NonNull;
-import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -46,7 +46,7 @@ public class SimpleWordList implements WordList, Serializable {
     * @param words the words
     */
    public SimpleWordList(@NonNull Set<String> words) {
-      this.words = new UnifiedSet<>(words);
+      this.words = new ObjectOpenHashSet<>(words);
    }
 
    @Override

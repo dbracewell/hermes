@@ -26,8 +26,8 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import lombok.NonNull;
-import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import java.io.Serializable;
 import java.util.*;
@@ -65,7 +65,7 @@ public final class Annotation extends Fragment implements Serializable {
     */
    public static long DETACHED_ID = Long.MIN_VALUE;
    private final AnnotationType annotationType;
-   private final Set<Relation> relations = new UnifiedSet<>();
+   private final Set<Relation> relations = new ObjectOpenHashSet<>();
    private long id = DETACHED_ID;
    private volatile transient Annotation[] tokens;
 

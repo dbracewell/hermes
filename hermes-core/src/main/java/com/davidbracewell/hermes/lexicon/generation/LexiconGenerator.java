@@ -22,7 +22,7 @@
 package com.davidbracewell.hermes.lexicon.generation;
 
 import com.davidbracewell.Tag;
-import org.eclipse.collections.api.multimap.Multimap;
+import com.davidbracewell.guava.common.collect.Multimap;
 
 /**
  * @author David B. Bracewell
