@@ -782,7 +782,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
                                                               Config.get("files.partition").asIntegerValue(10))) {
                Broker.<Document>builder()
                   .addProducer(new IterableProducer<>(this))
-                  .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document))),
+                  .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document).trim() + "\n")),
                                SystemInfo.NUMBER_OF_PROCESSORS - 1)
                   .build().run();
             } catch (RuntimeException re) {
@@ -795,7 +795,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
             try (AsyncWriter writer = new AsyncWriter(resource.writer())) {
                Broker.<Document>builder()
                   .addProducer(new IterableProducer<>(this))
-                  .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document))),
+                  .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document).trim() + "\n")),
                                SystemInfo.NUMBER_OF_PROCESSORS - 1)
                   .build().run();
             } catch (RuntimeException re) {
