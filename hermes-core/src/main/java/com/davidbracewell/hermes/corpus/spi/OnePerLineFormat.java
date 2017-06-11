@@ -34,7 +34,6 @@ import lombok.NonNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -60,13 +59,32 @@ public class OnePerLineFormat extends FileBasedFormat {
    }
 
    @Override
-   public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
-      return Collect.asIterable(new LineIterator(resource, subFormat, documentFactory));
+   public String extension() {
+      return subFormat.extension() + "_opl";
+   }
+
+   @Override
+   public boolean isOnePerLine() {
+      return true;
    }
 
    @Override
    public String name() {
       return "OPL";
+   }
+
+   @Override
+   public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
+      return Collect.asIterable(new LineIterator(resource, subFormat, documentFactory));
+   }
+
+   @Override
+   public String toString(Document document) {
+      String output = subFormat.toString(document);
+      if (subFormat.isOnePerLine()) {
+         return output.trim() + "\n";
+      }
+      return output.replaceAll("\n", "\\n") + "\n";
    }
 
    private static class LineIterator implements Iterator<Document> {
@@ -139,74 +157,6 @@ public class OnePerLineFormat extends FileBasedFormat {
       public void remove() {
          throw new UnsupportedOperationException();
       }
-   }
-
-   private void write(Writer writer, Iterable<Document> documents) throws IOException {
-//      try {
-//         Broker.<Document>builder()
-//            .addProducer(new IterableProducer<>(documents))
-//            .addConsumer(document -> {
-//               try {
-//                  Resource stringResource = new StringResource();
-//                  subFormat.write(stringResource, document);
-//                  String string = stringResource.readToString().trim();
-//                  if (!subFormat.isOnePerLine()) {
-//                     string = string.replace("\n", "\\n");
-//                  }
-//                  writer.write(string + "\n");
-//               } catch (IOException ioe) {
-//                  ioe.printStackTrace();
-//                  throw new RuntimeException(ioe);
-//               }
-//            }, 10).build().run();
-//      } catch (RuntimeException re) {
-//         throw new IOException(re.getCause());
-//      }
-//      for (Document document : documents) {
-//         Resource stringResource = new StringResource();
-//         subFormat.write(stringResource, document);
-//         String string = stringResource.readToString().trim();
-//         if (!subFormat.isOnePerLine()) {
-//            string = string.replace("\n", "\\n");
-//         }
-//         writer.write(string);
-//         writer.write("\n");
-//      }
-   }
-
-//   @Override
-//   public void write(@NonNull Resource resource, @NonNull Iterable<Document> documents) throws IOException {
-////      if ((resource.exists() && resource.isDirectory()) || (!resource.exists() && !resource.path().contains("."))) {
-////         try (MultiFileWriter writer = new MultiFileWriter(resource, "part-",
-////                                                           Config.get("file.splits").asIntegerValue(20))) {
-////            write(writer, documents);
-////         }
-////      } else {
-//         try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
-//            write(writer, documents);
-//         }
-////      }
-//   }
-
-//   @Override
-//   public void write(Resource resource, Document document) throws IOException {
-//      subFormat.write(resource, document);
-//   }
-
-
-   @Override
-   public String toString(Document document) {
-      return subFormat.toString(document).replaceAll("\n", "\\n") + "\n";
-   }
-
-   @Override
-   public String extension() {
-      return subFormat.extension() + "_opl";
-   }
-
-   @Override
-   public boolean isOnePerLine() {
-      return true;
    }
 
 }//END OF OnePerLineFormat

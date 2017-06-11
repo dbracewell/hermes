@@ -176,7 +176,7 @@ public class FileCorpus implements Corpus, Serializable {
    @Override
    public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
       CorpusFormat corpusFormat = CorpusFormats.forName(format);
-      if (corpusFormat.name().equals(this.corpusFormat.name())) {
+      if (corpusFormat.equals(this.corpusFormat)) {
          if ((resource.exists() && resource.isDirectory()) || (!resource.exists() && !resource.path().contains("."))) {
             this.resource.copy(resource);
          } else {
