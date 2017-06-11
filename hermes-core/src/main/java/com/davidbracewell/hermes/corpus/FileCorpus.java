@@ -31,6 +31,7 @@ import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Document;
 import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Pipeline;
+import com.davidbracewell.io.AsyncWriter;
 import com.davidbracewell.io.MultiFileWriter;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
@@ -57,9 +58,8 @@ import java.util.stream.StreamSupport;
  * @author David B. Bracewell
  */
 public class FileCorpus implements Corpus, Serializable {
-   private static final long serialVersionUID = 1L;
    private static final Logger log = Logger.getLogger(FileCorpus.class);
-
+   private static final long serialVersionUID = 1L;
    private final CorpusFormat corpusFormat;
    private final Resource resource;
    private final DocumentFactory documentFactory;
@@ -79,13 +79,13 @@ public class FileCorpus implements Corpus, Serializable {
    }
 
    @Override
-   public void close() throws Exception {
-
+   public Corpus annotate(@NonNull AnnotatableType... types) {
+      return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
    }
 
    @Override
-   public CorpusType getCorpusType() {
-      return CorpusType.OFF_HEAP;
+   public void close() throws Exception {
+
    }
 
 //   @Override
@@ -93,6 +93,110 @@ public class FileCorpus implements Corpus, Serializable {
 //      StreamSupport.stream(spliterator(),true).forEach(consumer);
 //   }
 
+   @Override
+   public CorpusType getCorpusType() {
+      return CorpusType.OFF_HEAP;
+   }
+
+   @Override
+   public DocumentFactory getDocumentFactory() {
+      return documentFactory;
+   }
+
+   @Override
+   public boolean isOffHeap() {
+      return true;
+   }
+
+   @Override
+   public Iterator<Document> iterator() {
+      return new RecursiveDocumentIterator(resource, documentFactory, ((resource1, documentFactory1) -> {
+         try {
+            return corpusFormat.read(resource1, documentFactory1);
+         } catch (IOException e) {
+            log.warn("Error reading {0} : {1}", resource1, e);
+            return Collections.emptyList();
+         }
+      }
+      ));
+   }
+
+   @Override
+   public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+      Resource tmpDirectory = Resources.temporaryDirectory();
+      tmpDirectory.deleteOnExit();
+      FileCorpus newCorpus = new FileCorpus(CorpusFormats.forName(CorpusFormats.JSON_OPL), tmpDirectory,
+                                            documentFactory);
+      try (MultiFileWriter writer = new MultiFileWriter(tmpDirectory, "part-", Config.get("files.partition")
+                                                                                     .asIntegerValue(
+                                                                                        SystemInfo.NUMBER_OF_PROCESSORS * 2))) {
+         forEachParallel(Unchecked.consumer(document -> writer.write(function.apply(document).toJson() + "\n")));
+      } catch (RuntimeException e) {
+         e.printStackTrace();
+         throw e;
+      } catch (Exception e) {
+         throw Throwables.propagate(e);
+      }
+      return newCorpus;
+   }
+
+   @Override
+   public long size() {
+      if (size == -1) {
+         if (corpusFormat.isOnePerLine()) {
+            Iterator<Resource> itr = resource.isDirectory() ?
+                                     resource.childIterator(true) :
+                                     Collections.singleton(resource).iterator();
+            AtomicInteger sz = new AtomicInteger(0);
+            Streams.asParallelStream(itr).forEach(r -> {
+               try (MStream<String> lineStream = r.lines()) {
+                  lineStream.forEach(l -> sz.addAndGet(1));
+               } catch (Exception e) {
+                  throw Throwables.propagate(e);
+               }
+            });
+            size = sz.get();
+         } else {
+            size = stream().count();
+         }
+      }
+      return size;
+   }
+
+   @Override
+   public Spliterator<Document> spliterator() {
+      return new RSI(resource);
+   }
+
+   @Override
+   public MStream<Document> stream() {
+      return getStreamingContext().stream(StreamSupport.stream(spliterator(), true));
+   }
+
+   @Override
+   public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
+      CorpusFormat corpusFormat = CorpusFormats.forName(format);
+      if (corpusFormat.name().equals(this.corpusFormat.name())) {
+         if ((resource.exists() && resource.isDirectory()) || (!resource.exists() && !resource.path().contains("."))) {
+            this.resource.copy(resource);
+         } else {
+            try (AsyncWriter writer = new AsyncWriter(resource.writer())) {
+               for (Resource child : this.resource.getChildren()) {
+                  try (MStream<String> lines = child.lines()) {
+                     lines.forEach(Unchecked.consumer(line -> writer.write(line.trim() + "\n")));
+                  } catch (RuntimeException re) {
+                     throw new IOException(re.getCause());
+                  } catch (Exception e) {
+                     throw new IOException(e);
+                  }
+               }
+            }
+         }
+         return Corpus.builder().source(resource).format(corpusFormat).build();
+      } else {
+         return Corpus.super.write(format, resource);
+      }
+   }
 
    private class RSI implements Spliterator<Document> {
       List<Resource> resources;
@@ -114,6 +218,16 @@ public class FileCorpus implements Corpus, Serializable {
          this.resources = r;
          this.start = start;
          this.end = end;
+      }
+
+      @Override
+      public int characteristics() {
+         return NONNULL;
+      }
+
+      @Override
+      public long estimateSize() {
+         return (long) (end - start);
       }
 
       @Override
@@ -153,122 +267,5 @@ public class FileCorpus implements Corpus, Serializable {
          }
          return null;
       }
-
-      @Override
-      public long estimateSize() {
-         return (long) (end - start);
-      }
-
-      @Override
-      public int characteristics() {
-         return NONNULL;
-      }
-   }
-
-   @Override
-   public Spliterator<Document> spliterator() {
-      return new RSI(resource);
-   }
-
-   @Override
-   public Iterator<Document> iterator() {
-      return new RecursiveDocumentIterator(resource, documentFactory, ((resource1, documentFactory1) -> {
-         try {
-            return corpusFormat.read(resource1, documentFactory1);
-         } catch (IOException e) {
-            log.warn("Error reading {0} : {1}", resource1, e);
-            return Collections.emptyList();
-         }
-      }
-      ));
-   }
-
-   @Override
-   public Corpus write(@NonNull String format, @NonNull Resource resource) throws IOException {
-      CorpusFormat corpusFormat = CorpusFormats.forName(format);
-      //TODO DEBUG THIS
-//      if (corpusFormat.name().equals(this.corpusFormat.name())) {
-////         if ((resource.exists() && resource.isDirectory()) || (!resource.exists() && !resource.path().contains("."))) {
-////            this.resource.copy(resource);
-////         } else {
-////            try (AsyncWriter writer = new AsyncWriter(resource.writer())) {
-////               for (Resource child : this.resource.getChildren()) {
-////                  try (MStream<String> lines = child.lines()) {
-////                     lines.forEach(Unchecked.consumer(writer::write));
-////                  } catch (RuntimeException re) {
-////                     throw new IOException(re.getCause());
-////                  } catch (Exception e) {
-////                     throw new IOException(e);
-////                  }
-////               }
-////            }
-////         }
-//         return Corpus.builder().source(resource).format(corpusFormat).build();
-//      } else {
-         return Corpus.super.write(format, resource);
-//      }
-   }
-
-
-   @Override
-   public MStream<Document> stream() {
-      return getStreamingContext().stream(StreamSupport.stream(spliterator(), true));
-   }
-
-   @Override
-   public Corpus annotate(@NonNull AnnotatableType... types) {
-      return Pipeline.builder().addAnnotations(types).returnCorpus(true).build().process(this);
-   }
-
-   @Override
-   public DocumentFactory getDocumentFactory() {
-      return documentFactory;
-   }
-
-   @Override
-   public long size() {
-      if (size == -1) {
-         if (corpusFormat.isOnePerLine()) {
-            Iterator<Resource> itr = resource.isDirectory() ?
-                                     resource.childIterator(true) :
-                                     Collections.singleton(resource).iterator();
-            AtomicInteger sz = new AtomicInteger(0);
-            Streams.asParallelStream(itr).forEach(r -> {
-               try (MStream<String> lineStream = r.lines()) {
-                  lineStream.forEach(l -> sz.addAndGet(1));
-               } catch (Exception e) {
-                  throw Throwables.propagate(e);
-               }
-            });
-            size = sz.get();
-         } else {
-            size = stream().count();
-         }
-      }
-      return size;
-   }
-
-   @Override
-   public boolean isOffHeap() {
-      return true;
-   }
-
-   @Override
-   public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
-      Resource tmpDirectory = Resources.temporaryDirectory();
-      tmpDirectory.deleteOnExit();
-      FileCorpus newCorpus = new FileCorpus(CorpusFormats.forName(CorpusFormats.JSON_OPL), tmpDirectory,
-                                            documentFactory);
-      try (MultiFileWriter writer = new MultiFileWriter(tmpDirectory, "part-", Config.get("files.partition")
-                                                                                     .asIntegerValue(
-                                                                                        SystemInfo.NUMBER_OF_PROCESSORS * 2))) {
-         forEachParallel(Unchecked.consumer(document -> writer.write(function.apply(document).toJson() + "\n")));
-      } catch (RuntimeException e) {
-         e.printStackTrace();
-         throw e;
-      } catch (Exception e) {
-         throw Throwables.propagate(e);
-      }
-      return newCorpus;
    }
 }//END OF FileCorpus
