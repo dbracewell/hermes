@@ -37,13 +37,6 @@ public class AnnotateProcessor implements ProcessingModule {
    private static final long serialVersionUID = 1L;
    private AnnotatableType[] types = {Types.SENTENCE, Types.LEMMA, Types.PHRASE_CHUNK, Types.DEPENDENCY, Types.ENTITY};
 
-   @Override
-   public Corpus process(Corpus corpus, ProcessorContext context) throws Exception {
-      logInfo("Annotating corpus for {0}", Arrays.toString(types));
-      return corpus.annotate(types);
-   }
-
-
    /**
     * Get types string [ ].
     *
@@ -62,6 +55,12 @@ public class AnnotateProcessor implements ProcessingModule {
       this.types = Arrays.stream(types)
                          .map(Types::from)
                          .toArray(AnnotatableType[]::new);
+   }
+
+   @Override
+   public Corpus process(Corpus corpus, ProcessorContext context) throws Exception {
+      logInfo("Annotating corpus for {0}", Arrays.toString(types));
+      return corpus.annotate(types);
    }
 
 }//END OF AnnotateProcessor
