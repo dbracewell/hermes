@@ -54,20 +54,14 @@ public final class Hermes {
       throw new IllegalAccessError();
    }
 
-
    /**
-    * Exports the currently loaded Hermes type system in JSON.
+    * Get the default language. The default language is specified using <code>hermes.DefaultLanguage</code>. If the
+    * configuration option is not set, it will default to the language matching the system locale.
     *
-    * @return Json representing the type system.
+    * @return the default language
     */
-   public static String exportTypeSystem() {
-      Resource out = new StringResource();
-      try {
-         exportTypeSystem(out);
-         return out.readToString().trim();
-      } catch (IOException e) {
-         throw Throwables.propagate(e);
-      }
+   public static Language defaultLanguage() {
+      return Config.get("hermes.DefaultLanguage").as(Language.class, Language.fromLocale(Locale.getDefault()));
    }
 
    /**
@@ -104,38 +98,38 @@ public final class Hermes {
 
    }
 
-
    /**
-    * Get the default language. The default language is specified using <code>hermes.DefaultLanguage</code>. If the
-    * configuration option is not set, it will default to the language matching the system locale.
+    * Exports the currently loaded Hermes type system in JSON.
     *
-    * @return the default language
+    * @return Json representing the type system.
     */
-   public static Language defaultLanguage() {
-      return Config.get("hermes.DefaultLanguage").as(Language.class, Language.fromLocale(Locale.getDefault()));
+   public static String exportTypeSystem() {
+      Resource out = new StringResource();
+      try {
+         exportTypeSystem(out);
+         return out.readToString().trim();
+      } catch (IOException e) {
+         throw Throwables.propagate(e);
+      }
    }
 
-   /**
-    * Initializes an application using Hermes with a given program name, command line arguments, and config packages to
-    * load. Note: that the hermes package is always loaded.
-    *
-    * @param programName the program name
-    * @param args        the command line arguments
-    * @param packages    extra config packages to load
-    * @return the non-named command line arguments
-    */
-   public static String[] initializeApplication(String programName, String[] args, String... packages) {
-      String[] leftOver = Config.initialize(programName, args);
-      //Ensure that the core hermes config is loaded
-      Config.loadPackageConfig(HERMES_PACKAGE);
-      if (packages != null) {
-         for (String aPackage : packages) {
-            if (!HERMES_PACKAGE.equals(aPackage)) {
-               Config.loadPackageConfig(aPackage);
-            }
+   public static Resource findModel(@NonNull Language language, @NonNull String configProperty, @NonNull String modelName) {
+      String langCode = language.getCode().toLowerCase();
+      Resource modelDir = Config.get("models.dir").asResource(Resources.from(SystemInfo.USER_HOME));
+      Resource classpathDir = Resources.fromClasspath("hermes/");
+      for (Resource r : new Resource[]{
+         Config.get(configProperty, language, "model").asResource(),
+         classpathDir.getChild(langCode).getChild("model").getChild(modelName),
+         modelDir.getChild(langCode).getChild(modelName),
+         Config.get(configProperty, "model").asResource(),
+         classpathDir.getChild("model").getChild(modelName),
+         modelDir.getChild(modelName)
+      }) {
+         if (r.exists()) {
+            return r;
          }
       }
-      return leftOver;
+      return null;
    }
 
    /**
@@ -162,6 +156,29 @@ public final class Hermes {
    }
 
    /**
+    * Initializes an application using Hermes with a given program name, command line arguments, and config packages to
+    * load. Note: that the hermes package is always loaded.
+    *
+    * @param programName the program name
+    * @param args        the command line arguments
+    * @param packages    extra config packages to load
+    * @return the non-named command line arguments
+    */
+   public static String[] initializeApplication(String programName, String[] args, String... packages) {
+      String[] leftOver = Config.initialize(programName, args);
+      //Ensure that the core hermes config is loaded
+      Config.loadPackageConfig(HERMES_PACKAGE);
+      if (packages != null) {
+         for (String aPackage : packages) {
+            if (!HERMES_PACKAGE.equals(aPackage)) {
+               Config.loadPackageConfig(aPackage);
+            }
+         }
+      }
+      return leftOver;
+   }
+
+   /**
     * Initialize worker.
     *
     * @param config the config
@@ -169,7 +186,6 @@ public final class Hermes {
    public static void initializeWorker(Config config) {
       Configurator.INSTANCE.configure(config);
    }
-
 
    /**
     * <p>Common method for loading a model using java deserialization. The method uses the double-checked locking where
@@ -200,37 +216,21 @@ public final class Hermes {
    public static <T> T loadModel(@NonNull Object lock, @NonNull Language language, @NonNull String configProperty, @NonNull String modelName, @NonNull Supplier<T> modelGetter, @NonNull Consumer<T> modelSetter) {
       if (modelGetter.get() == null) {
          synchronized (lock) {
-            String langCode = language.getCode().toLowerCase();
-            Resource modelDir = Config.get("models.dir").asResource(Resources.from(SystemInfo.USER_HOME));
-            Resource classpathDir = Resources.fromClasspath("hermes/");
             if (modelGetter.get() == null) {
                Exception thrownException = null;
-
-               for (Resource r : new Resource[]{
-                  Config.get(configProperty, language, "model").asResource(),
-                  classpathDir.getChild(langCode).getChild("model").getChild(modelName),
-                  modelDir.getChild(langCode).getChild(modelName),
-                  Config.get(configProperty, "model").asResource(),
-                  classpathDir.getChild("model").getChild(modelName),
-                  modelDir.getChild(modelName)
-               }) {
-                  if (r != null && r.exists()) {
-                     try {
-                        T model = r.readObject();
-                        modelSetter.accept(model);
-                        return model;
-                     } catch (Exception e) {
-                        thrownException = e;
-                     }
+               Resource modelFile = findModel(language, configProperty, modelName);
+               if (modelFile == null) {
+                  thrownException = new RuntimeException(modelName + " does not exist");
+               } else {
+                  try {
+                     T model = modelFile.readObject();
+                     modelSetter.accept(model);
+                     return model;
+                  } catch (Exception e) {
+                     thrownException = e;
                   }
                }
-
-               if (thrownException == null) {
-                  throw new RuntimeException(modelName + " does not exist");
-               } else {
-                  throw Throwables.propagate(thrownException);
-               }
-
+               throw Throwables.propagate(thrownException);
             }
          }
       }

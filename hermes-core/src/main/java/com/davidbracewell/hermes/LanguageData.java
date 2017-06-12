@@ -22,6 +22,11 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.apollo.affinity.Similarity;
+import com.davidbracewell.apollo.linalg.store.DefaultVectorStore;
+import com.davidbracewell.apollo.ml.EncoderPair;
+import com.davidbracewell.apollo.ml.NoOptEncoder;
+import com.davidbracewell.apollo.ml.NoOptLabelEncoder;
 import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.guava.common.cache.Cache;
@@ -44,60 +49,81 @@ import java.util.concurrent.ExecutionException;
  */
 public final class LanguageData {
 
-    private static final Resource baseClasspath = Resources.fromClasspath("hermes/");
-    private static final Cache<String, Embedding> embeddingCache = CacheBuilder
+   private static final Resource baseClasspath = Resources.fromClasspath("hermes/");
+   private static final Cache<Language, Embedding> embeddingCache = CacheBuilder
                                                                        .from("maximumSize=25")
                                                                        .build();
-    private static final Cache<String, Lexicon> lexicons = CacheBuilder
-                                                               .from("maximumSize=500")
-                                                               .build();
-    private static final Logger log = Logger.getLogger(LanguageData.class);
+   private static final Cache<String, Lexicon> lexicons = CacheBuilder
+                                                             .from("maximumSize=500")
+                                                             .build();
+   private static final Logger log = Logger.getLogger(LanguageData.class);
 
-    private LanguageData() {
-        throw new IllegalAccessError();
-    }
+   private LanguageData() {
+      throw new IllegalAccessError();
+   }
 
-    private static String lng2Folder(Language language) {
-        if (language == Language.UNKNOWN) {
-            return StringUtils.EMPTY;
-        }
-        return language
-                   .getCode()
-                   .toLowerCase();
-    }
+   /**
+    * Gets default embedding model.
+    *
+    * @param language the language
+    * @return the default embedding model
+    */
+   public static Embedding getDefaultEmbeddingModel(@NonNull Language language) {
+      try {
+         return embeddingCache.get(language, () -> {
+            Resource loc = Hermes.findModel(language, "embedding", StringUtils.EMPTY);
+            if (loc != null && loc.exists()) {
+               return Embedding.read(loc);
+            }
+            return new Embedding(new EncoderPair(new NoOptLabelEncoder(), new NoOptEncoder()),
+                                 new DefaultVectorStore<>(100, Similarity.Cosine));
+         });
+      } catch (ExecutionException e) {
+         throw Throwables.propagate(e);
+      }
+   }
 
-    /**
-     * Load subjective lexicon lexicon.
-     *
-     * @param language the language
-     * @return the lexicon
-     */
-    public static Lexicon loadSubjectiveLexicon(@NonNull Language language) {
-        try {
-            return lexicons.get(language.getCode() + "::Sentiment",
-                                () -> {
-                                    try {
-                                        return LexiconSpec
-                                                   .builder()
-                                                   .caseSensitive(false)
-                                                   .tagAttribute(Types.TAG)
-                                                   .hasConstraints(true)
-                                                   .resource(
-                                                       baseClasspath
-                                                           .getChild(lng2Folder(language))
-                                                           .getChild("lexicon")
-                                                           .getChild("subjective.dict"))
-                                                   .build()
-                                                   .create();
-                                    } catch (Exception e) {
-                                        log.severe("Error Loading Sentiment lexicon: {0}", e);
-                                        return new TrieLexicon(false, false, Types.TAG);
-                                    }
-                                });
-        } catch (ExecutionException e) {
-            throw Throwables.propagate(e);
-        }
-    }
+   private static String lng2Folder(Language language) {
+      if (language == Language.UNKNOWN) {
+         return StringUtils.EMPTY;
+      }
+      return language
+                .getCode()
+                .toLowerCase();
+   }
+
+   /**
+    * Load subjective lexicon lexicon.
+    *
+    * @param language the language
+    * @return the lexicon
+    */
+   public static Lexicon loadSubjectiveLexicon(@NonNull Language language) {
+      try {
+         return lexicons.get(language.getCode() + "::Sentiment",
+                             () -> {
+                                try {
+                                   return LexiconSpec
+                                             .builder()
+                                             .caseSensitive(false)
+                                             .tagAttribute(Types.TAG)
+                                             .hasConstraints(true)
+                                             .resource(
+                                                baseClasspath
+                                                   .getChild(lng2Folder(language))
+                                                   .getChild("lexicon")
+                                                   .getChild("subjective.dict"))
+                                             .build()
+                                             .create();
+                                } catch (Exception e) {
+                                   log.severe("Error Loading Sentiment lexicon: {0}", e);
+                                   return new TrieLexicon(false, false, Types.TAG);
+                                }
+                             });
+      } catch (ExecutionException e) {
+         throw Throwables.propagate(e);
+      }
+   }
 
 
 }//END OF LanguageData
