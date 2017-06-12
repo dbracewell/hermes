@@ -40,24 +40,18 @@ public class JSONFormat extends FileBasedFormat {
    private static final long serialVersionUID = 1L;
 
    @Override
+   public String name() {
+      return "JSON";
+   }
+
+   @Override
    public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
       return Collections.singleton(Document.fromJson(resource.readToString()));
    }
 
-//  @Override
-//  public void write(Resource resource, Document document) throws IOException {
-//    document.write(resource);
-//  }
-
-
    @Override
    public String toString(Document document) {
       return document.toJson();
-   }
-
-   @Override
-   public String name() {
-      return "JSON";
    }
 
 

@@ -44,12 +44,20 @@ import static com.davidbracewell.tuple.Tuples.$;
  */
 @MetaInfServices(CorpusFormat.class)
 public class CoNLLFormat extends FileBasedFormat {
-   private static final long serialVersionUID = 1L;
+   public static final String DOC_PER_SENT_PROPERTY = "CONLL.docPerSent";
+   public static final String EMPTY_FIELD = "_";
    public static final String FIELDS_PROPERTY = "CONLL.fields";
    public static final String FS_PROPERTY = "CONLL.fs";
-   public static final String DOC_PER_SENT_PROPERTY = "CONLL.docPerSent";
    public static final String OVERRIDE_SENTENCES = "CONLL.overrideSentences";
-   public static final String EMPTY_FIELD = "_";
+   private static final long serialVersionUID = 1L;
+
+   public static void setFieldSeparator(@NonNull String fs) {
+      Config.setProperty(FS_PROPERTY, fs);
+   }
+
+   public static void setFields(@NonNull String... types) {
+      Config.setProperty(FIELDS_PROPERTY, Stream.of(types).map(String::toUpperCase).collect(Collectors.joining(",")));
+   }
 
    public static void setFields(@NonNull CoNLLColumnProcessor... types) {
       Config.setProperty(FIELDS_PROPERTY,
@@ -57,28 +65,12 @@ public class CoNLLFormat extends FileBasedFormat {
                         );
    }
 
-   public static void setFields(@NonNull String... types) {
-      Config.setProperty(FIELDS_PROPERTY, Stream.of(types).map(String::toUpperCase).collect(Collectors.joining(",")));
-   }
-
    public static void setOneDocumentPerSentence(boolean oneDocumentPerSentence) {
       Config.setProperty(DOC_PER_SENT_PROPERTY, Boolean.toString(oneDocumentPerSentence));
    }
 
-   public static void setFieldSeparator(@NonNull String fs) {
-      Config.setProperty(FS_PROPERTY, fs);
-   }
-
    public static void setOverrideSentences(boolean override) {
       Config.setProperty(OVERRIDE_SENTENCES, Boolean.toString(override));
-   }
-
-   private List<CoNLLColumnProcessor> getProcessors() {
-      List<String> fields = Config.get(FIELDS_PROPERTY).asList(String.class);
-      if (fields == null || fields.isEmpty()) {
-         fields = Arrays.asList("WORD", "POS", "CHUNK");
-      }
-      return CoNLLProcessors.get(fields);
    }
 
    private Document createDocument(String content, List<CoNLLRow> list, DocumentFactory documentFactory) {
@@ -120,6 +112,18 @@ public class CoNLLFormat extends FileBasedFormat {
       return document;
    }
 
+   private List<CoNLLColumnProcessor> getProcessors() {
+      List<String> fields = Config.get(FIELDS_PROPERTY).asList(String.class);
+      if (fields == null || fields.isEmpty()) {
+         fields = Arrays.asList("WORD", "POS", "CHUNK");
+      }
+      return CoNLLProcessors.get(fields);
+   }
+
+   @Override
+   public String name() {
+      return "CONLL";
+   }
 
    @Override
    public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
@@ -191,35 +195,6 @@ public class CoNLLFormat extends FileBasedFormat {
       }
       return documents;
    }
-
-   @Override
-   public String name() {
-      return "CONLL";
-   }
-
-//   @Override
-//   public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
-//      StringBuilder builder = new StringBuilder();
-//      List<CoNLLColumnProcessor> processors = getProcessors();
-//      String fieldSep = Config.get(FS_PROPERTY).asString("\\s+").replaceFirst("[\\*\\+]$", "");
-//      if (fieldSep.equals("\\s")) {
-//         fieldSep = " ";
-//      }
-//      for (Annotation sentence : document.sentences()) {
-//         for (int i = 0; i < sentence.tokenLength(); i++) {
-//            for (int p = 0; p < processors.size(); p++) {
-//               if (p > 0) {
-//                  builder.append(fieldSep);
-//               }
-//               builder.append(processors.get(p).processOutput(sentence, sentence.tokenAt(i), i));
-//            }
-//            builder.append(SystemInfo.LINE_SEPARATOR);
-//         }
-//         builder.append(SystemInfo.LINE_SEPARATOR);
-//      }
-//      resource.write(builder.toString());
-//   }
-
 
    @Override
    public String toString(Document document) {

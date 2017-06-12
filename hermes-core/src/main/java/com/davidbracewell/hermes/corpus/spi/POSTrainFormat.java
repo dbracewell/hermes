@@ -22,6 +22,16 @@ import java.util.List;
 public class POSTrainFormat extends FileBasedFormat {
    private static final long serialVersionUID = 1L;
 
+   @Override
+   public boolean isOnePerLine() {
+      return true;
+   }
+
+   @Override
+   public String name() {
+      return "POS";
+   }
+
    private Document processLine(String line, DocumentFactory documentFactory) {
       List<String> tokens = new LinkedList<>();
       List<String> pos = new ArrayList<>();
@@ -71,23 +81,6 @@ public class POSTrainFormat extends FileBasedFormat {
    }
 
    @Override
-   public String name() {
-      return "POS";
-   }
-
-//  @Override
-//  public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
-//    if( document.getAnnotationSet().isCompleted(Types.PART_OF_SPEECH)) {
-//      try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
-//        for (Annotation sentence : document.sentences()) {
-//          writer.write(sentence.toPOSString('_'));
-//          writer.write(SystemInfo.LINE_SEPARATOR);
-//        }
-//      }
-//    }
-//  }
-
-   @Override
    public String toString(@NonNull Document document) {
       StringBuilder builder = new StringBuilder();
       if (document.getAnnotationSet().isCompleted(Types.PART_OF_SPEECH)) {
@@ -97,10 +90,5 @@ public class POSTrainFormat extends FileBasedFormat {
          }
       }
       return builder.toString();
-   }
-
-   @Override
-   public boolean isOnePerLine() {
-      return true;
    }
 }// END OF POSTrainFormat

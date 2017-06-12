@@ -33,6 +33,11 @@ public class TaggedFormat extends FileBasedFormat {
    }
 
    @Override
+   public boolean isOnePerLine() {
+      return true;
+   }
+
+   @Override
    public String name() {
       return "TAGGED";
    }
@@ -79,10 +84,5 @@ public class TaggedFormat extends FileBasedFormat {
       return document.sentenceStream()
                      .map(s -> s.tag(annotationType, "UNKNOWN"))
                      .collect(Collectors.joining("\n"));
-   }
-
-   @Override
-   public boolean isOnePerLine() {
-      return true;
    }
 }// END OF TaggedFormat
