@@ -2,18 +2,21 @@ package com.davidbracewell.hermes.driver;
 
 import com.davidbracewell.Tag;
 import com.davidbracewell.application.SwingApplication;
+import com.davidbracewell.cli.Option;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.AttributeType;
-import com.davidbracewell.io.Resources;
+import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.json.Json;
 import com.davidbracewell.reflection.Reflect;
 import com.davidbracewell.reflection.ReflectionException;
+import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Throwables;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -32,6 +35,10 @@ public class AnnotationEditor extends SwingApplication {
    private Map<Tag, Color> types = new TreeMap<>();
    private AnnotationType annotationType;
    private AttributeType attributeType;
+   private String taskName;
+
+   @Option(description = "JSON file describing the annotation task.", defaultValue = "/home/dbb/prj/personal/hermes/hermes-core/config.json")
+   private Resource task;
 
    public static void main(String[] args) {
       new AnnotationEditor().run(args);
@@ -60,7 +67,8 @@ public class AnnotationEditor extends SwingApplication {
 
    private void loadConfig() {
       try {
-         Map<String, Object> map = Json.qloads(Resources.from("/home/dbb/prj/personal/hermes/hermes-core/config.json"));
+         Map<String, Object> map = Json.qloads(task);
+         taskName = map.getOrDefault("task", "").toString();
          annotationType = AnnotationType.valueOf(map.get("annotation").toString());
          attributeType = annotationType.getTagAttribute();
          final Reflect cReflect = Reflect.onClass(Color.class);
@@ -88,7 +96,11 @@ public class AnnotationEditor extends SwingApplication {
    @Override
    public void setup() throws Exception {
       loadConfig();
-      setTitle("Annotation Editor");
+      if (StringUtils.isNullOrBlank(taskName)) {
+         setTitle("Annotation Editor");
+      } else {
+         setTitle("Annotation Editor [" + taskName + "]");
+      }
       setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
       setLayout(new BorderLayout());
       setMinimumSize(new Dimension(800, 600));
@@ -122,6 +134,7 @@ public class AnnotationEditor extends SwingApplication {
       editorPane.setText("Now is the time for all good men to come to the aid of their country.");
       splitPane.add(editorPane, JSplitPane.TOP);
 
+
       this.types.forEach((t, c) -> {
          Style style = editorPane.addStyle(t.name(), null);
          StyleConstants.setForeground(style, Color.WHITE);
@@ -132,10 +145,10 @@ public class AnnotationEditor extends SwingApplication {
       JTable table = new JTable(new DataModel());
       JComboBox<Tag> typeCombobox = new JComboBox<>(this.types.keySet().toArray(new Tag[this.types.size()]));
       table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(typeCombobox));
-      table.getColumnModel().getColumn(0).setPreferredWidth(50);
-      table.getColumnModel().getColumn(1).setPreferredWidth(50);
-      table.getColumnModel().getColumn(2).setPreferredWidth(500);
-      table.getColumnModel().getColumn(3).setPreferredWidth(200);
+      table.getColumnModel().getColumn(0).setPreferredWidth(75);
+      table.getColumnModel().getColumn(1).setPreferredWidth(75);
+      table.getColumnModel().getColumn(2).setPreferredWidth(300);
+      table.getColumnModel().getColumn(3).setPreferredWidth(350);
       table.setShowGrid(true);
       JScrollPane tblContainer = new JScrollPane(table);
       table.setFillsViewportHeight(true);
@@ -143,6 +156,17 @@ public class AnnotationEditor extends SwingApplication {
       DataModel model = Cast.as(table.getModel());
       table.getTableHeader().setReorderingAllowed(false);
       table.setAutoCreateRowSorter(true);
+      table.getRowSorter().toggleSortOrder(0);
+      table.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+
+         @Override
+         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            setForeground(Color.WHITE);
+            setBackground(types.get(model.getValueAt(row, column)));
+            return this;
+         }
+      });
 
       table.addMouseListener(new MouseAdapter() {
          @Override
@@ -164,16 +188,19 @@ public class AnnotationEditor extends SwingApplication {
       deleteAnnotation.addMouseListener(new MouseAdapter() {
          @Override
          public void mouseReleased(MouseEvent e) {
-            int r = table.rowAtPoint(e.getPoint());
-            if (r >= 0 && r < table.getRowCount()) {
-               int start = model.getStart(r);
-               int end = model.getEnd(r);
-               model.removeRow(r);
-               editorPane.getStyledDocument()
-                         .setCharacterAttributes(start,
-                                                 end - start,
-                                                 editorPane.getStyle(StyleContext.DEFAULT_STYLE),
-                                                 true);
+            int[] rows = table.getSelectedRows();
+            for (int i = rows.length - 1; i >= 0; i--) {
+               int r = rows[i];
+               if (r >= 0 && r < table.getRowCount()) {
+                  int start = model.getStart(r);
+                  int end = model.getEnd(r);
+                  model.removeRow(r);
+                  editorPane.getStyledDocument()
+                            .setCharacterAttributes(start,
+                                                    end - start,
+                                                    editorPane.getStyle(StyleContext.DEFAULT_STYLE),
+                                                    true);
+               }
             }
          }
       });
@@ -191,16 +218,39 @@ public class AnnotationEditor extends SwingApplication {
          menuItem.addActionListener(a -> addTag(tag, model));
       }
 
+      editorPane.addMouseListener(new MouseAdapter() {
+         @Override
+         public void mouseClicked(MouseEvent e) {
+            int start = editorPane.getSelectionStart();
+            int end = editorPane.getSelectionEnd();
+            if (start >= 0 && start < end) {
+               int r = model.find(start, end);
+               if (r >= 0) {
+                  table.getSelectionModel().setSelectionInterval(r, r);
+               }
+            }
+            super.mouseClicked(e);
+         }
+      });
+
    }
 
    class DataModel extends AbstractTableModel {
       private java.util.List<Object[]> rows = new ArrayList<>();
       private int columns = 4;
 
-
       public void addRow(Object[] row) {
          rows.add(row);
          fireTableRowsInserted(rows.size() - 1, rows.size() - 1);
+      }
+
+      private int find(int start, int end) {
+         for (int i = 0; i < rows.size(); i++) {
+            if (getStart(i) == start && getEnd(i) == end) {
+               return i;
+            }
+         }
+         return -1;
       }
 
       @Override
