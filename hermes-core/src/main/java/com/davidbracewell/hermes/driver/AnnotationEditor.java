@@ -3,15 +3,23 @@ package com.davidbracewell.hermes.driver;
 import com.davidbracewell.Tag;
 import com.davidbracewell.application.SwingApplication;
 import com.davidbracewell.conversion.Cast;
-import com.davidbracewell.hermes.EntityType;
+import com.davidbracewell.conversion.Convert;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.AttributeType;
+import com.davidbracewell.io.Resources;
+import com.davidbracewell.json.Json;
+import com.davidbracewell.reflection.Reflect;
+import com.davidbracewell.reflection.ReflectionException;
+import com.google.common.base.Throwables;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
@@ -22,7 +30,8 @@ import java.util.TreeMap;
 public class AnnotationEditor extends SwingApplication {
    private JTextPane editorPane;
    private Map<Tag, Color> types = new TreeMap<>();
-
+   private AnnotationType annotationType;
+   private AttributeType attributeType;
 
    public static void main(String[] args) {
       new AnnotationEditor().run(args);
@@ -38,27 +47,47 @@ public class AnnotationEditor extends SwingApplication {
       while (end > start && Character.isWhitespace(txt.charAt(end - 1))) {
          end--;
       }
-
       if (start == end) {
          return;
       }
-      editorPane.setSelectionStart(start);
-      editorPane.setSelectionEnd(end);
-      StyleContext context = StyleContext.getDefaultStyleContext();
-      AttributeSet aset = context.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, Color.WHITE);
-      aset = context.addAttribute(aset, StyleConstants.Bold, true);
-      aset = context.addAttribute(aset, StyleConstants.Background, types.get(tag));
-      editorPane.setCharacterAttributes(aset, false);
+      editorPane.getStyledDocument()
+                .setCharacterAttributes(start,
+                                        end - start,
+                                        editorPane.getStyle(tag.name()),
+                                        true);
       model.addRow(new Object[]{start, end, tag, editorPane.getSelectedText()});
+   }
+
+   private void loadConfig() {
+      try {
+         Map<String, Object> map = Json.qloads(Resources.from("/home/dbb/prj/personal/hermes/hermes-core/config.json"));
+         annotationType = AnnotationType.valueOf(map.get("annotation").toString());
+         attributeType = annotationType.getTagAttribute();
+         final Reflect cReflect = Reflect.onClass(Color.class);
+         Cast.<Map<String, String>>as(map.get("values")).forEach((type, color) -> {
+            Tag tag = Cast.as(Convert.convert(type, attributeType.getValueType().getType()));
+            Color c = null;
+            try {
+               c = cReflect.get(color.toLowerCase()).get();
+            } catch (ReflectionException e) {
+               e.printStackTrace();
+            }
+            if (c == null) {
+               int r = Integer.parseInt(color.substring(0, 2), 16);
+               int g = Integer.parseInt(color.substring(2, 4), 16);
+               int b = Integer.parseInt(color.substring(4, 6), 16);
+               c = new Color(r, g, b);
+            }
+            types.put(tag, c);
+         });
+      } catch (IOException e) {
+         throw Throwables.propagate(e);
+      }
    }
 
    @Override
    public void setup() throws Exception {
-      EntityType
-         .values()
-         .forEach(e -> types.put(e, Color.BLUE));
-
-
+      loadConfig();
       setTitle("Annotation Editor");
       setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
       setLayout(new BorderLayout());
@@ -93,6 +122,12 @@ public class AnnotationEditor extends SwingApplication {
       editorPane.setText("Now is the time for all good men to come to the aid of their country.");
       splitPane.add(editorPane, JSplitPane.TOP);
 
+      this.types.forEach((t, c) -> {
+         Style style = editorPane.addStyle(t.name(), null);
+         StyleConstants.setForeground(style, Color.WHITE);
+         StyleConstants.setBackground(style, c);
+      });
+
 
       JTable table = new JTable(new DataModel());
       JComboBox<Tag> typeCombobox = new JComboBox<>(this.types.keySet().toArray(new Tag[this.types.size()]));
@@ -109,36 +144,40 @@ public class AnnotationEditor extends SwingApplication {
       table.getTableHeader().setReorderingAllowed(false);
       table.setAutoCreateRowSorter(true);
 
-      table.addMouseListener(new MouseListener() {
+      table.addMouseListener(new MouseAdapter() {
          @Override
          public void mouseClicked(MouseEvent e) {
             int row = table.getSelectedRow();
-            int start = Integer.parseInt(model.getValueAt(row, 0).toString());
-            int end = Integer.parseInt(model.getValueAt(row, 1).toString());
-            editorPane.setSelectionStart(start);
-            editorPane.setSelectionEnd(end);
-         }
-
-         @Override
-         public void mouseEntered(MouseEvent e) {
-
-         }
-
-         @Override
-         public void mouseExited(MouseEvent e) {
-
-         }
-
-         @Override
-         public void mousePressed(MouseEvent e) {
-
-         }
-
-         @Override
-         public void mouseReleased(MouseEvent e) {
-
+            if (row >= 0) {
+               int start = Integer.parseInt(model.getValueAt(row, 0).toString());
+               int end = Integer.parseInt(model.getValueAt(row, 1).toString());
+               editorPane.setSelectionStart(start);
+               editorPane.setSelectionEnd(end);
+            }
          }
       });
+
+      JPopupMenu tablePopup = new JPopupMenu();
+      JMenuItem deleteAnnotation = new JMenuItem("Delete");
+      tablePopup.add(deleteAnnotation);
+      table.setComponentPopupMenu(tablePopup);
+      deleteAnnotation.addMouseListener(new MouseAdapter() {
+         @Override
+         public void mouseReleased(MouseEvent e) {
+            int r = table.rowAtPoint(e.getPoint());
+            if (r >= 0 && r < table.getRowCount()) {
+               int start = model.getStart(r);
+               int end = model.getEnd(r);
+               model.removeRow(r);
+               editorPane.getStyledDocument()
+                         .setCharacterAttributes(start,
+                                                 end - start,
+                                                 editorPane.getStyle(StyleContext.DEFAULT_STYLE),
+                                                 true);
+            }
+         }
+      });
+
 
       JPopupMenu popupMenu = new JPopupMenu();
       editorPane.setComponentPopupMenu(popupMenu);
@@ -157,6 +196,7 @@ public class AnnotationEditor extends SwingApplication {
    class DataModel extends AbstractTableModel {
       private java.util.List<Object[]> rows = new ArrayList<>();
       private int columns = 4;
+
 
       public void addRow(Object[] row) {
          rows.add(row);
@@ -195,19 +235,35 @@ public class AnnotationEditor extends SwingApplication {
          }
       }
 
+      public int getEnd(int row) {
+         return (int) rows.get(row)[1];
+      }
+
       @Override
       public int getRowCount() {
          return rows.size();
       }
 
+      public int getStart(int row) {
+         return (int) rows.get(row)[0];
+      }
+
       @Override
       public Object getValueAt(int rowIndex, int columnIndex) {
+         if (rowIndex < 0 || rowIndex > rows.size()) {
+            return null;
+         }
          return rows.get(rowIndex)[columnIndex];
       }
 
       @Override
       public boolean isCellEditable(int rowIndex, int columnIndex) {
          return columnIndex == 2;
+      }
+
+      public void removeRow(int index) {
+         rows.remove(index);
+         fireTableDataChanged();
       }
 
       @Override
