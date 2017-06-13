@@ -28,9 +28,37 @@ public class AnnotationEditor extends SwingApplication {
       new AnnotationEditor().run(args);
    }
 
+   private void addTag(Tag tag, DataModel model) {
+      int start = editorPane.getSelectionStart();
+      int end = editorPane.getSelectionEnd();
+      String txt = editorPane.getText();
+      while (start < end && Character.isWhitespace(txt.charAt(start))) {
+         start++;
+      }
+      while (end > start && Character.isWhitespace(txt.charAt(end - 1))) {
+         end--;
+      }
+
+      if (start == end) {
+         return;
+      }
+      editorPane.setSelectionStart(start);
+      editorPane.setSelectionEnd(end);
+      StyleContext context = StyleContext.getDefaultStyleContext();
+      AttributeSet aset = context.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, Color.WHITE);
+      aset = context.addAttribute(aset, StyleConstants.Bold, true);
+      aset = context.addAttribute(aset, StyleConstants.Background, types.get(tag));
+      editorPane.setCharacterAttributes(aset, false);
+      model.addRow(new Object[]{start, end, tag, editorPane.getSelectedText()});
+   }
+
    @Override
    public void setup() throws Exception {
-      EntityType.values().forEach(e -> types.put(e, Color.BLUE));
+      EntityType
+         .values()
+         .forEach(e -> types.put(e, Color.BLUE));
+
+
       setTitle("Annotation Editor");
       setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
       setLayout(new BorderLayout());
@@ -49,9 +77,8 @@ public class AnnotationEditor extends SwingApplication {
 
 
       JPanel panel = new JPanel();
+      panel.setLayout(new FlowLayout());
       add(panel, BorderLayout.NORTH);
-      JButton button = new JButton("Add Token");
-      panel.add(button);
 
 
       JSplitPane splitPane = new JSplitPane();
@@ -113,32 +140,19 @@ public class AnnotationEditor extends SwingApplication {
          }
       });
 
-      button.addActionListener(e -> {
-         int start = editorPane.getSelectionStart();
-         int end = editorPane.getSelectionEnd();
-         String txt = editorPane.getText();
-         while (start < end && Character.isWhitespace(txt.charAt(start))) {
-            start++;
-         }
-         while (end > start && Character.isWhitespace(txt.charAt(end - 1))) {
-            end--;
-         }
+      JPopupMenu popupMenu = new JPopupMenu();
+      editorPane.setComponentPopupMenu(popupMenu);
 
-         if (start == end) {
-            return;
-         }
-         editorPane.setSelectionStart(start);
-         editorPane.setSelectionEnd(end);
-         StyleContext context = StyleContext.getDefaultStyleContext();
-         AttributeSet aset = context.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, Color.BLUE);
-         aset = context.addAttribute(aset, StyleConstants.Bold, true);
-         aset = context.addAttribute(aset, StyleConstants.Background, Color.YELLOW);
-         editorPane.setCharacterAttributes(aset, false);
-         model.addRow(new Object[]{start, end, EntityType.ROOT, editorPane.getSelectedText()});
-      });
+      for (Tag tag : types.keySet()) {
+         JButton button = new JButton(tag.name());
+         panel.add(button);
+         JMenuItem menuItem = new JMenuItem(tag.name());
+         popupMenu.add(menuItem);
+         button.addActionListener(a -> addTag(tag, model));
+         menuItem.addActionListener(a -> addTag(tag, model));
+      }
 
    }
-
 
    class DataModel extends AbstractTableModel {
       private java.util.List<Object[]> rows = new ArrayList<>();
@@ -226,6 +240,5 @@ public class AnnotationEditor extends SwingApplication {
          }
       }
    }
-
 
 }// END OF Swinger
