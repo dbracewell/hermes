@@ -37,7 +37,8 @@ public class AnnotationEditor extends SwingApplication {
    private AttributeType attributeType;
    private String taskName;
 
-   @Option(description = "JSON file describing the annotation task.", defaultValue = "/home/dbb/prj/personal/hermes/hermes-core/config.json")
+   @Option(description = "JSON file describing the annotation task.",
+      defaultValue = "/home/dbb/prj/personal/hermes/hermes-core/config.json")
    private Resource task;
 
    public static void main(String[] args) {
@@ -163,6 +164,7 @@ public class AnnotationEditor extends SwingApplication {
          public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             setForeground(Color.WHITE);
+            row = table.getRowSorter().convertRowIndexToModel(row);
             setBackground(types.get(model.getValueAt(row, column)));
             return this;
          }
