@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @author David B. Bracewell
@@ -71,7 +70,7 @@ public class TaggedFormat extends FileBasedFormat {
                                    startPositions.get(i),
                                    endPositions.get(i),
                                    Maps.map(annotationType.getTagAttribute(),
-                                            Val.of(types.get(0))
+                                            Val.of(types.get(i))
                                                .as(annotationType.getTagAttribute().getValueType().getType()))
                                   );
       }
@@ -81,8 +80,6 @@ public class TaggedFormat extends FileBasedFormat {
    @Override
    public String toString(Document document) {
       final AnnotationType annotationType = Config.get(TYPE_PROPERTY).as(AnnotationType.class, Types.ENTITY);
-      return document.sentenceStream()
-                     .map(s -> s.tag(annotationType, "UNKNOWN"))
-                     .collect(Collectors.joining("\n"));
+      return document.tag(annotationType,"UNKNOWN");
    }
 }// END OF TaggedFormat
