@@ -12,8 +12,6 @@ import com.davidbracewell.hermes.corpus.spi.TaggedFormat;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.json.Json;
-import com.davidbracewell.reflection.Reflect;
-import com.davidbracewell.reflection.ReflectionException;
 import com.davidbracewell.string.StringUtils;
 import com.google.common.base.Throwables;
 
@@ -28,17 +26,15 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Random;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.List;
 
 /**
  * @author David B. Bracewell
  */
 public class AnnotationEditor extends SwingApplication {
    private JTextPane editorPane;
-   private Map<Tag, Color> attributeTypeColorMap = new TreeMap<>();
+   private Types validTypes = new Types();
    private AnnotationType annotationType;
    private AttributeType attributeType;
    private JPopupMenu editorPopup;
@@ -46,8 +42,17 @@ public class AnnotationEditor extends SwingApplication {
    private String taskName;
    private JTable annotationTable;
    private DataModel annotationTableModel;
+   private List<Color> pallete = Arrays.asList(
+      Color.BLUE,
+      Color.RED,
+      Color.GREEN,
+      Color.YELLOW,
+      Color.ORANGE,
+      Color.PINK,
+      Color.GRAY,
+      Color.MAGENTA,
+      Color.CYAN);
    private boolean isTagged;
-
    @Option(description = "JSON file describing the annotation task.",
       defaultValue = "/home/dbb/prj/personal/hermes/hermes-core/config.json")
    private Resource task;
@@ -85,11 +90,7 @@ public class AnnotationEditor extends SwingApplication {
    private JScrollPane createAnnotationTable() {
       annotationTable = new JTable(new DataModel());
       annotationTableModel = Cast.as(annotationTable.getModel());
-      JComboBox<Tag> typeCombobox = new JComboBox<>(this.attributeTypeColorMap.keySet()
-                                                                              .toArray(
-                                                                                 new Tag[this.attributeTypeColorMap
-                                                                                            .size()]));
-      annotationTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(typeCombobox));
+      annotationTable.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(validTypes.typeCombobox));
       annotationTable.getColumnModel().getColumn(0).setPreferredWidth(75);
       annotationTable.getColumnModel().getColumn(1).setPreferredWidth(75);
       annotationTable.getColumnModel().getColumn(2).setPreferredWidth(300);
@@ -106,7 +107,7 @@ public class AnnotationEditor extends SwingApplication {
          public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             row = table.getRowSorter().convertRowIndexToModel(row);
-            Color c = attributeTypeColorMap.get(annotationTableModel.getValueAt(row, column));
+            Color c = validTypes.colorMap.get(annotationTableModel.getValueAt(row, column));
             setForeground(getFontColor(c));
             setBackground(c);
             return this;
@@ -135,10 +136,10 @@ public class AnnotationEditor extends SwingApplication {
       editorPane = new JTextPane(document);
       editorPane.setEditable(false);
       editorPane.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
-      this.attributeTypeColorMap.forEach((t, c) -> {
+      this.validTypes.forEach(t -> {
          Style style = editorPane.addStyle(t.name(), null);
-         StyleConstants.setForeground(style, getFontColor(c));
-         StyleConstants.setBackground(style, c);
+         StyleConstants.setForeground(style, getFontColor(validTypes.getColor(t)));
+         StyleConstants.setBackground(style, validTypes.getColor(t));
       });
       editorPane.setComponentPopupMenu(createEditorPopup());
       editorPane.addCaretListener(e -> {
@@ -164,7 +165,7 @@ public class AnnotationEditor extends SwingApplication {
       delete.addActionListener(e -> deleteAnnotation());
       JMenu addAnnotation = new JMenu("Add...");
       editorPopup.add(addAnnotation);
-      for (Tag tag : attributeTypeColorMap.keySet()) {
+      for (Tag tag : validTypes) {
          JMenuItem menuItem = new JMenuItem(tag.name());
          addAnnotation.add(menuItem);
          menuItem.addActionListener(a -> addTag(tag));
@@ -189,41 +190,13 @@ public class AnnotationEditor extends SwingApplication {
       toolbarPanel = new JPanel();
       toolbarPanel.setLayout(new FlowLayout());
       add(toolbarPanel, BorderLayout.NORTH);
-      for (Tag tag : attributeTypeColorMap.keySet()) {
+      for (Tag tag : validTypes) {
          JButton button = new JButton(tag.name());
          button.addActionListener(a -> addTag(tag));
          toolbarPanel.add(button);
       }
 
-      JButton save = new JButton("SAVE");
-      toolbarPanel.add(save);
-      save.addActionListener(e -> {
-         try {
-            Document d = DocumentFactory.getInstance().createRaw(editorPane.getText());
-            annotationTableModel.annotations.forEach(a -> d.createAnnotation(a.getType(), a.start(), a.end(),
-                                                                             Maps.map(attributeType,
-                                                                                      a.getTag().orElse(null))));
-            TaggedFormat format = new TaggedFormat();
-            Resources.from("/home/dbb/out.txt").write(format.toString(d));
-         } catch (Exception ee) {
-            ee.printStackTrace();
-         }
-      });
 
-      JButton load = new JButton("LOAD");
-      toolbarPanel.add(load);
-      load.addActionListener(e -> {
-         try {
-            loadDocument(Corpus.builder()
-                               .source(Resources.from("/home/dbb/test.txt"))
-                               .format("TAGGED")
-                               .build()
-                               .stream().first().orElse(null));
-
-         } catch (Exception ee) {
-            ee.printStackTrace();
-         }
-      });
    }
 
    private void deleteAnnotation() {
@@ -272,28 +245,12 @@ public class AnnotationEditor extends SwingApplication {
          taskName = map.getOrDefault("task", "").toString();
          annotationType = AnnotationType.valueOf(map.get("annotation").toString());
          attributeType = annotationType.getTagAttribute();
-         isTagged = true;
-         final Reflect cReflect = Reflect.onClass(Color.class);
-         Cast.<Map<String, String>>as(map.get("values")).forEach((type, color) -> {
-            Tag tag = Cast.as(Convert.convert(type, attributeType.getValueType().getType()));
-            Color c = null;
-            if (StringUtils.isNullOrBlank(color)) {
-               c = generateRandomColor();
-            } else {
-               try {
-                  c = cReflect.get(color.toLowerCase()).get();
-               } catch (ReflectionException e) {
-                  e.printStackTrace();
-               }
-               if (c == null) {
-                  int r = Integer.parseInt(color.substring(0, 2), 16);
-                  int g = Integer.parseInt(color.substring(2, 4), 16);
-                  int b = Integer.parseInt(color.substring(4, 6), 16);
-                  c = new Color(r, g, b);
-               }
-            }
-            attributeTypeColorMap.put(tag, c);
-         });
+         isTagged = map.containsKey("types");
+         if (map.containsKey("types")) {
+            List<String> list = Cast.as(map.get("types"));
+            list.forEach(st -> validTypes.add(
+               Cast.as(Convert.convert(st, attributeType.getValueType().getType()))));
+         }
       } catch (IOException e) {
          throw Throwables.propagate(e);
       }
@@ -306,18 +263,20 @@ public class AnnotationEditor extends SwingApplication {
       annotationTableModel.fireTableDataChanged();
       doc.get(annotationType)
          .forEach(a -> {
-            Object[] row = {
-               a.start(),
-               a.end(),
-               a.getTag().orElse(null),
-               a.toString()
-            };
-            annotationTableModel.addRow(row);
-            editorPane.getStyledDocument()
-                      .setCharacterAttributes(a.start(),
-                                              a.length(),
-                                              editorPane.getStyle(a.getTag().orElse(null).name()),
-                                              true);
+            if (validTypes.isValid(a.getTag().orElse(null))) {
+               Object[] row = {
+                  a.start(),
+                  a.end(),
+                  a.getTag().orElse(null),
+                  a.toString()
+               };
+               annotationTableModel.addRow(row);
+               editorPane.getStyledDocument()
+                         .setCharacterAttributes(a.start(),
+                                                 a.length(),
+                                                 editorPane.getStyle(a.getTag().orElse(null).name()),
+                                                 true);
+            }
          });
    }
 
@@ -337,9 +296,41 @@ public class AnnotationEditor extends SwingApplication {
       JMenu menu = new JMenu("File");
       menu.setMnemonic(KeyEvent.VK_F);
 
-      menu.add(new JMenuItem("Open", KeyEvent.VK_O));
+      JMenuItem fileOpen = new JMenuItem("Open...", KeyEvent.VK_O);
+      menu.add(fileOpen);
+      final JFileChooser fileChooser = new JFileChooser();
+      fileOpen.addActionListener(e -> {
+         int returnValue = fileChooser.showOpenDialog(AnnotationEditor.this);
+         if (returnValue == JFileChooser.APPROVE_OPTION) {
+            loadDocument(Corpus.builder()
+                               .source(Resources.fromFile(fileChooser.getSelectedFile()))
+                               .format("TAGGED")
+                               .build()
+                               .stream().first().orElse(null));
+         }
+      });
+
+      JMenuItem fileSave = new JMenuItem("Save As...", KeyEvent.VK_S);
+      menu.add(fileSave);
+      fileSave.addActionListener(e -> {
+         int returnValue = fileChooser.showSaveDialog(AnnotationEditor.this);
+         if (returnValue == JFileChooser.APPROVE_OPTION) {
+            try {
+               Document d = DocumentFactory.getInstance().createRaw(editorPane.getText());
+               annotationTableModel.annotations.forEach(a -> d.createAnnotation(a.getType(), a.start(), a.end(),
+                                                                                Maps.map(attributeType,
+                                                                                         a.getTag().orElse(null))));
+               TaggedFormat format = new TaggedFormat();
+               Resources.fromFile(fileChooser.getSelectedFile()).write(format.toString(d));
+            } catch (Exception ee) {
+               ee.printStackTrace();
+            }
+         }
+      });
+
       menu.addSeparator();
       JMenuItem exit = new JMenuItem("Quit", KeyEvent.VK_Q);
+      exit.addActionListener(e -> System.exit(0));
       menu.add(exit);
       menuBar.add(menu);
       setJMenuBar(menuBar);
@@ -372,6 +363,65 @@ public class AnnotationEditor extends SwingApplication {
          annotationTable.getSelectionModel().setSelectionInterval(viewRow, viewRow);
          editorPane.setSelectionStart(annotationTableModel.getStart(modelRow));
          editorPane.setSelectionEnd(annotationTableModel.getEnd(modelRow));
+      }
+   }
+
+   class Types implements Iterable<Tag> {
+      final Set<Tag> tags = new HashSet<>();
+      final Map<Tag, Color> colorMap = new HashMap<>();
+      final JComboBox<Tag> typeCombobox = new JComboBox<>();
+      int colorIndex = 0;
+
+      public Types() {
+         typeCombobox.setEditable(true);
+      }
+
+      void add(Tag tag) {
+         if (!tags.contains(tag)) {
+            tags.add(tag);
+            Color c;
+            if (colorIndex < pallete.size()) {
+               c = pallete.get(colorIndex);
+            } else {
+               c = generateRandomColor();
+            }
+            colorMap.put(tag, c);
+            typeCombobox.addItem(tag);
+            colorIndex++;
+         }
+      }
+
+      void addAll(List<Tag> tags) {
+         tags.forEach(this::add);
+         sort();
+      }
+
+      void clear() {
+         tags.clear();
+         colorMap.clear();
+      }
+
+      private Color getColor(Tag tag) {
+         return colorMap.getOrDefault(tag, Color.WHITE);
+      }
+
+      boolean isValid(Tag tag) {
+         return tags.contains(tag);
+      }
+
+      @Override
+      public Iterator<Tag> iterator() {
+         return tags.iterator();
+      }
+
+      void sort() {
+         List<Tag> items = new ArrayList<>();
+         for (int i = 0; i < typeCombobox.getItemCount(); i++) {
+            items.add(typeCombobox.getItemAt(i));
+         }
+         typeCombobox.removeAllItems();
+         items.sort(Comparator.comparing(Tag::name));
+         items.forEach(typeCombobox::addItem);
       }
    }
 
