@@ -1,0 +1,25 @@
+{
+  "task": "NER Annotation",
+  "annotation": "ENTITY",
+  "types": [
+    "CARDINAL",
+    "DATE",
+    "DATE_TIME",
+    "EMAIL",
+    "EMOTICON",
+    "HASH_TAG",
+    "INTERNET",
+    "LOCATION",
+    "MONEY",
+    "NUMBER",
+    "ORDINAL",
+    "ORGANIZATION",
+    "PERCENTAGE",
+    "PERSON",
+    "REPLY",
+    "TIME",
+    "URL",
+    "QUANTITY",
+    "PRODUCT"
+  ]
+}

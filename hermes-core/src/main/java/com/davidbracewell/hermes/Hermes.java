@@ -25,6 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.SystemInfo;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.config.Configurator;
+import com.davidbracewell.config.Preloader;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
@@ -168,6 +169,7 @@ public final class Hermes {
       String[] leftOver = Config.initialize(programName, args);
       //Ensure that the core hermes config is loaded
       Config.loadPackageConfig(HERMES_PACKAGE);
+      Preloader.preload();
       if (packages != null) {
          for (String aPackage : packages) {
             if (!HERMES_PACKAGE.equals(aPackage)) {

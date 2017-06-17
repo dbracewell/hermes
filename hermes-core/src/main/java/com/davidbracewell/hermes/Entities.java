@@ -103,4 +103,14 @@ public interface Entities {
     */
    EntityType REPLY = EntityType.create("REPLY", INTERNET);
 
+   /**
+    * The constant QUANTITY.
+    */
+   EntityType QUANTITY = EntityType.create("QUANTITY", NUMBER);
+
+   /**
+    * The constant PRODUCT.
+    */
+   EntityType PRODUCT = EntityType.create("PRODUCT", EntityType.ROOT);
+
 }//END OF Entities
