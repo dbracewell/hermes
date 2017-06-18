@@ -1,5 +1,6 @@
 package com.davidbracewell.hermes.driver;
 
+import com.davidbracewell.SystemInfo;
 import com.davidbracewell.Tag;
 import com.davidbracewell.application.SwingApplication;
 import com.davidbracewell.cli.Option;
@@ -9,6 +10,7 @@ import com.davidbracewell.conversion.Convert;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.spi.TaggedFormat;
+import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.json.Json;
@@ -29,11 +31,14 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author David B. Bracewell
  */
 public class AnnotationEditor extends SwingApplication {
+   private Deque<JMenuItem> mru = new LinkedList<>();
+   private Properties properties;
    private JTextPane editorPane;
    private Types validTypes = new Types();
    private AnnotationType annotationType;
@@ -57,6 +62,7 @@ public class AnnotationEditor extends SwingApplication {
    @Option(description = "JSON file describing the annotation task.",
       defaultValue = "classpath:com/davidbracewell/hermes/editor/entity.json")
    private Resource task;
+   private Resource propertiesFile;
 
    public static void main(String[] args) {
       new AnnotationEditor().run(args);
@@ -69,6 +75,7 @@ public class AnnotationEditor extends SwingApplication {
          if (JOptionPane.showConfirmDialog(null, "Delete existing annotations on span?") == JOptionPane.OK_OPTION) {
             annotationTableModel.annotations.overlapping(new Span(start, end)).forEach(a -> {
                int r = annotationTableModel.find(a.start(), a.end());
+               System.err.println(r + " : " + Arrays.toString(annotationTableModel.rows.get(r)));
                annotationTableModel.removeRow(r);
             });
          } else {
@@ -209,6 +216,16 @@ public class AnnotationEditor extends SwingApplication {
       return editorPopup;
    }
 
+   private JMenuItem createMRUItem(String file) {
+      JMenuItem item = new JMenuItem(file);
+      item.addActionListener(a -> loadDocument(Corpus.builder()
+                                                     .source(Resources.fromFile(file))
+                                                     .format("TAGGED")
+                                                     .build()
+                                                     .stream().first().orElse(null)));
+      return item;
+   }
+
    private void deleteAnnotation() {
       int row = annotationTableModel.find(editorPane.getSelectionStart(), editorPane.getSelectionEnd());
       if (row >= 0) {
@@ -272,6 +289,11 @@ public class AnnotationEditor extends SwingApplication {
       annotationTableModel.annotations.clear();
       annotationTableModel.rows.clear();
       annotationTableModel.fireTableDataChanged();
+      editorPane.getStyledDocument()
+                .setCharacterAttributes(0, editorPane.getText().length(),
+                                        editorPane.getStyle(StyleContext.DEFAULT_STYLE)
+                                                  .copyAttributes(),
+                                        true);
       doc.get(annotationType)
          .forEach(a -> {
             if (validTypes.isValid(a.getTag().orElse(null))) {
@@ -295,6 +317,13 @@ public class AnnotationEditor extends SwingApplication {
 
    @Override
    public void setup() throws Exception {
+      properties = new Properties();
+      propertiesFile = Resources.from(SystemInfo.USER_HOME)
+                                .getChild(".aeditor")
+                                .getChild("properties.xml");
+      if (propertiesFile.exists()) {
+         properties.loadFromXML(propertiesFile.inputStream());
+      }
       loadConfig();
       if (StringUtils.isNullOrBlank(taskName)) {
          setTitle("Annotation Editor");
@@ -312,17 +341,53 @@ public class AnnotationEditor extends SwingApplication {
 
       JMenuItem fileOpen = new JMenuItem("Open...", KeyEvent.VK_O);
       menu.add(fileOpen);
+
+      JMenu recent = new JMenu("Recent");
+      menu.add(recent);
+
+
+      if (properties.containsKey("mru")) {
+         StringUtils.split(properties.get("mru").toString(), ',')
+                    .forEach(file -> {
+                       JMenuItem ii = createMRUItem(file);
+                       recent.add(ii);
+                       mru.addFirst(ii);
+                    });
+      }
+
+
       final JFileChooser fileChooser = new JFileChooser();
       fileOpen.addActionListener(e -> {
          int returnValue = fileChooser.showOpenDialog(AnnotationEditor.this);
          if (returnValue == JFileChooser.APPROVE_OPTION) {
-            loadDocument(Corpus.builder()
-                               .source(Resources.fromFile(fileChooser.getSelectedFile()))
-                               .format("TAGGED")
-                               .build()
-                               .stream().first().orElse(null));
+            mru.addFirst(createMRUItem(fileChooser.getSelectedFile().getAbsolutePath()));
+            recent.insert(mru.getFirst(), 0);
+
+            if (mru.size() > 10) {
+               recent.remove(mru.removeLast());
+            }
+
+            properties.setProperty("mru", CSV.builder()
+                                             .formatter()
+                                             .format(mru.stream()
+                                                        .map(JMenuItem::getText)
+                                                        .collect(Collectors.toList())));
+            try {
+               propertiesFile.getParent().mkdirs();
+               properties.storeToXML(propertiesFile.outputStream(), "");
+            } catch (IOException e1) {
+               e1.printStackTrace();
+            }
+
          }
+
+         loadDocument(Corpus.builder()
+                            .source(Resources.fromFile(fileChooser.getSelectedFile()))
+                            .format("TAGGED")
+                            .build()
+                            .stream().first().orElse(null));
       });
+
 
       JMenuItem fileSave = new JMenuItem("Save As...", KeyEvent.VK_S);
       menu.add(fileSave);
@@ -558,6 +623,11 @@ public class AnnotationEditor extends SwingApplication {
          int end = getEnd(index);
          annotations.removeAll(annotations.overlapping(new Span(start, end)));
          rows.remove(index);
+         editorPane.getStyledDocument()
+                   .setCharacterAttributes(start, end - start,
+                                           editorPane.getStyle(StyleContext.DEFAULT_STYLE)
+                                                     .copyAttributes(),
+                                           true);
          fireTableDataChanged();
       }
 
