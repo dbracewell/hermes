@@ -23,6 +23,7 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -64,27 +65,32 @@ public class AnnotationEditor extends SwingApplication {
    private void addTag(Tag tag) {
       int start = editorPane.getSelectionStart();
       int end = editorPane.getSelectionEnd();
-      if (!annotationTableModel.spanHasAnnotation(start, end)) {
-         String txt = editorPane.getText();
-         while (start < end && Character.isWhitespace(txt.charAt(start))) {
-            start++;
-         }
-         while (end > start && Character.isWhitespace(txt.charAt(end - 1))) {
-            end--;
-         }
-         if (start == end) {
+      if (annotationTableModel.spanHasAnnotation(start, end)) {
+         if (JOptionPane.showConfirmDialog(null, "Delete existing annotations on span?") == JOptionPane.OK_OPTION) {
+            annotationTableModel.annotations.overlapping(new Span(start, end)).forEach(a -> {
+               int r = annotationTableModel.find(a.start(), a.end());
+               annotationTableModel.removeRow(r);
+            });
+         } else {
             return;
          }
-         editorPane.getStyledDocument()
-                   .setCharacterAttributes(start,
-                                           end - start,
-                                           editorPane.getStyle(tag.name()),
-                                           true);
-         annotationTableModel.addRow(new Object[]{start, end, tag, editorPane.getSelectedText()});
-         for (Component component : toolbarPanel.getComponents()) {
-            component.setEnabled(false);
-         }
       }
+      String txt = editorPane.getText();
+      while (start < end && Character.isWhitespace(txt.charAt(start))) {
+         start++;
+      }
+      while (end > start && Character.isWhitespace(txt.charAt(end - 1))) {
+         end--;
+      }
+      if (start == end) {
+         return;
+      }
+      editorPane.getStyledDocument()
+                .setCharacterAttributes(start,
+                                        end - start,
+                                        editorPane.getStyle(tag.name()),
+                                        true);
+      annotationTableModel.addRow(new Object[]{start, end, tag, editorPane.getSelectedText()});
    }
 
    private JScrollPane createAnnotationTable() {
@@ -108,8 +114,14 @@ public class AnnotationEditor extends SwingApplication {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             row = table.getRowSorter().convertRowIndexToModel(row);
             Color c = validTypes.colorMap.get(annotationTableModel.getValueAt(row, column));
-            setForeground(getFontColor(c));
-            setBackground(c);
+            if (isSelected) {
+               setForeground(table.getSelectionForeground());
+               setBackground(table.getSelectionBackground());
+            } else {
+               setForeground(getFontColor(c));
+               setBackground(c);
+            }
+            validTypes.typeCombobox.setSelectedItem(value);
             return this;
          }
       });
@@ -134,24 +146,14 @@ public class AnnotationEditor extends SwingApplication {
       DefaultStyledDocument document = new DefaultStyledDocument();
       editorPane = new JTextPane(document);
       editorPane.setEditable(false);
-      editorPane.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
+      editorPane.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+      editorPane.getCaret().setVisible(true);
       this.validTypes.forEach(t -> {
          Style style = editorPane.addStyle(t.name(), null);
          StyleConstants.setForeground(style, getFontColor(validTypes.getColor(t)));
          StyleConstants.setBackground(style, validTypes.getColor(t));
       });
       editorPane.setComponentPopupMenu(createEditorPopup());
-      editorPane.addCaretListener(e -> {
-         if (annotationTableModel.spanHasAnnotation(editorPane.getSelectionStart(), editorPane.getSelectionEnd())) {
-            for (Component component : toolbarPanel.getComponents()) {
-               component.setEnabled(false);
-            }
-         } else {
-            for (Component component : toolbarPanel.getComponents()) {
-               component.setEnabled(true);
-            }
-         }
-      });
       editorPane.addMouseListener(mouseClicked(this::syncEditorSelection));
       editorPane.addMouseListener(mousePressed(this::syncEditorSelection));
       return editorPane;
@@ -175,10 +177,8 @@ public class AnnotationEditor extends SwingApplication {
          int end = editorPane.getSelectionEnd();
          if (annotationTableModel.spanHasAnnotation(start, end)) {
             editorPopup.getSubElements()[0].getComponent().setEnabled(true);
-            editorPopup.getSubElements()[1].getComponent().setEnabled(false);
          } else {
             editorPopup.getSubElements()[0].getComponent().setEnabled(false);
-            editorPopup.getSubElements()[1].getComponent().setEnabled(true);
          }
       }));
 
@@ -189,10 +189,33 @@ public class AnnotationEditor extends SwingApplication {
       toolbarPanel = new JPanel();
       toolbarPanel.setLayout(new WrapLayout());
       add(toolbarPanel, BorderLayout.NORTH);
+      int i = 1;
       for (Tag tag : validTypes) {
-         JButton button = new JButton(tag.name());
+         int adj = (i >= 10) ? (i - 9) : i;
+         String btnName = tag.name();
+         if (i < 20) {
+            btnName += "(" + (i >= 10 ? "a+" : "") + adj + ")";
+         }
+         JButton button = new JButton(btnName);
          button.addActionListener(a -> addTag(tag));
          toolbarPanel.add(button);
+         Action a = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               addTag(tag);
+            }
+         };
+         String code = "";
+         if (i > 10) {
+            code += " alt";
+         }
+         code += " pressed " + adj;
+         a.putValue(Action.ACCELERATOR_KEY,
+                    KeyStroke.getKeyStroke(code));
+         i++;
+         button.getActionMap().put("myaction-" + i, a);
+         button.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+               .put((KeyStroke) a.getValue(Action.ACCELERATOR_KEY), "myaction-" + i);
       }
 
 
@@ -278,6 +301,7 @@ public class AnnotationEditor extends SwingApplication {
                                                  true);
             }
          });
+      editorPane.setCaretPosition(0);
    }
 
    @Override
@@ -293,6 +317,7 @@ public class AnnotationEditor extends SwingApplication {
       setMinimumSize(new Dimension(800, 600));
 
       JMenuBar menuBar = new JMenuBar();
+      menuBar.add(Box.createRigidArea(new Dimension(5, 25)));
       JMenu menu = new JMenu("File");
       menu.setMnemonic(KeyEvent.VK_F);
 
@@ -375,7 +400,7 @@ public class AnnotationEditor extends SwingApplication {
       int colorIndex = 0;
 
       public Types() {
-         typeCombobox.setEditable(true);
+         typeCombobox.setEditable(false);
       }
 
       void add(Tag tag) {
