@@ -1,6 +1,7 @@
 package com.davidbracewell.hermes.filter;
 
 import com.davidbracewell.Tag;
+import com.davidbracewell.collection.Span;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableBiPredicate;
 import com.davidbracewell.function.SerializablePredicate;

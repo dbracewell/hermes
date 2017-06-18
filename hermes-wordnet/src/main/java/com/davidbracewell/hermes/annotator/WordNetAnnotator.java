@@ -1,5 +1,6 @@
 package com.davidbracewell.hermes.annotator;
 
+import com.davidbracewell.collection.Span;
 import com.davidbracewell.collection.Trie;
 import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.morphology.Lemmatizer;

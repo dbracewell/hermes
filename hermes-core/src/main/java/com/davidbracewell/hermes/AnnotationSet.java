@@ -22,6 +22,8 @@
 package com.davidbracewell.hermes;
 
 
+import com.davidbracewell.collection.Span;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;

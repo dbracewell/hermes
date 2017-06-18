@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.collection.Sets;
+import com.davidbracewell.collection.Span;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;

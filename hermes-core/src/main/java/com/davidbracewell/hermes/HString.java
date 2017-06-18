@@ -25,6 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.Tag;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
+import com.davidbracewell.collection.Span;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.collection.list.Lists;
 import com.davidbracewell.conversion.Cast;

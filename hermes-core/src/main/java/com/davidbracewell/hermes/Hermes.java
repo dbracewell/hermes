@@ -126,7 +126,7 @@ public final class Hermes {
          classpathDir.getChild("model").getChild(modelName),
          modelDir.getChild(modelName)
       }) {
-         if (r.exists()) {
+         if (r != null && r.exists()) {
             return r;
          }
       }

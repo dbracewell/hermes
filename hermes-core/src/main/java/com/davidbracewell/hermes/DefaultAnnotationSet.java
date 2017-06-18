@@ -1,5 +1,7 @@
 package com.davidbracewell.hermes;
 
+import com.davidbracewell.collection.Span;
+
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Predicate;
