@@ -152,12 +152,13 @@ public class AnnotationEditor extends SwingApplication {
 
    private JTextPane createEditor() {
       DefaultStyledDocument document = new DefaultStyledDocument();
+      UIManager.get("TextPane.font");
+      UIManager.put("TextPane.font", new Font(Font.SANS_SERIF, Font.PLAIN, 14));
       editorPane = new JTextPane(document);
       editorPane.setEditable(false);
-      editorPane.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
       editorPane.getCaret().setVisible(true);
       this.validTypes.forEach(t -> {
-         Style style = editorPane.addStyle(t.name(), null);
+         Style style = editorPane.addStyle(t.name(), editorPane.getStyle(StyleContext.DEFAULT_STYLE));
          StyleConstants.setForeground(style, getFontColor(validTypes.getColor(t)));
          StyleConstants.setBackground(style, validTypes.getColor(t));
       });
@@ -173,12 +174,14 @@ public class AnnotationEditor extends SwingApplication {
                if (font.getSize() < 24) {
                   Font f2 = new Font(font.getName(), font.getStyle(), font.getSize() + 2);
                   editorPane.setFont(f2);
+                  UIManager.put("TextPane.font", f2);
                }
             } else if (e.isControlDown() && e.getKeyChar() == '-') {
                Font font = editorPane.getFont();
                if (font.getSize() > 12) {
                   Font f2 = new Font(font.getName(), font.getStyle(), font.getSize() - 2);
                   editorPane.setFont(f2);
+                  UIManager.put("TextPane.font", f2);
                }
             }
             super.keyPressed(e);
