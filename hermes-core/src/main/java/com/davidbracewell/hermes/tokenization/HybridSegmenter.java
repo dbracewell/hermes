@@ -42,6 +42,13 @@ public class HybridSegmenter implements Loggable, Serializable {
       this.maxSpanSize = maxSpanSize;
    }
 
+   private double multi(double d1, double d2) {
+      double m = d1 * d2;
+      if (m < d1) {
+         return Double.MAX_VALUE;
+      }
+      return m;
+   }
 
    private double scoreWord(int start, int end, String word, Labeling labels) {
       double spanLength = word.length();
@@ -57,14 +64,6 @@ public class HybridSegmenter implements Loggable, Serializable {
          }
       }
       return Feature.isTrue(labels.getLabel(end - 1)) ? spanLength : 1d;
-   }
-
-   private double multi(double d1, double d2) {
-      double m = d1 * d2;
-      if (m < d1) {
-         return Double.MAX_VALUE;
-      }
-      return m;
    }
 
    /**

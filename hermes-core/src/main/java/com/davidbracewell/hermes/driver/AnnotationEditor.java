@@ -58,6 +58,7 @@ public class AnnotationEditor extends SwingApplication {
       defaultValue = "classpath:com/davidbracewell/hermes/editor/entity.json")
    private Resource task;
    private Resource propertiesFile;
+   private JMenu mruMenu;
 
    public static void main(String[] args) {
       new AnnotationEditor().run(args);
@@ -306,14 +307,14 @@ public class AnnotationEditor extends SwingApplication {
       menu.add(fileOpen);
 
 
-      JMenu recent = new JMenu("Recent");
-      menu.add(recent);
+      mruMenu = new JMenu("Recent");
+      menu.add(mruMenu);
 
       if (properties.containsKey("mru")) {
          StringUtils.split(properties.get("mru").toString(), ',')
                     .forEach(file -> {
                        JMenuItem ii = createMRUItem(file);
-                       recent.add(ii);
+                       mruMenu.add(ii);
                        mru.addFirst(ii);
                     });
       }
@@ -323,26 +324,9 @@ public class AnnotationEditor extends SwingApplication {
          fileChooser.setCurrentDirectory(new File(properties.getProperty("current_directory")));
          int returnValue = fileChooser.showOpenDialog(AnnotationEditor.this);
          if (returnValue == JFileChooser.APPROVE_OPTION) {
-            mru.addFirst(createMRUItem(fileChooser.getSelectedFile().getAbsolutePath()));
-            recent.insert(mru.getFirst(), 0);
             currentFile = Resources.fromFile(fileChooser.getSelectedFile());
             properties.setProperty("current_directory", fileChooser.getSelectedFile().getAbsolutePath());
-            if (mru.size() > 10) {
-               recent.remove(mru.removeLast());
-            }
-
-            properties.setProperty("mru", CSV.builder()
-                                             .formatter()
-                                             .format(mru.stream()
-                                                        .map(JMenuItem::getText)
-                                                        .collect(Collectors.toList())));
-            try {
-               propertiesFile.getParent().mkdirs();
-               properties.storeToXML(propertiesFile.outputStream(), "");
-            } catch (IOException e1) {
-               e1.printStackTrace();
-            }
-
+            savePreferences();
             loadDocument(Resources.fromFile(fileChooser.getSelectedFile()));
          }
       });
@@ -350,34 +334,19 @@ public class AnnotationEditor extends SwingApplication {
 
       JMenuItem fileSave = new JMenuItem("Save", KeyEvent.VK_S);
       menu.add(fileSave);
-      menu.addActionListener(pe -> {
-         TaggedFormat format = new TaggedFormat();
-         Document d = DocumentFactory.getInstance().createRaw(editorPane.getText());
-         annotationTableModel.annotations.forEach(a -> d.createAnnotation(a.getType(), a.start(), a.end(),
-                                                                          Maps.map(attributeType,
-                                                                                   a.getTag().orElse(null))));
-         try {
-            currentFile.write(format.toString(d));
-         } catch (IOException e) {
-            e.printStackTrace();
-         }
-      });
+      fileSave.addActionListener(pe -> save(currentFile));
 
       JMenuItem fileSaveAs = new JMenuItem("Save As...");
       menu.add(fileSaveAs);
       fileSaveAs.addActionListener(e -> {
          int returnValue = fileChooser.showSaveDialog(AnnotationEditor.this);
          if (returnValue == JFileChooser.APPROVE_OPTION) {
-            try {
-               Document d = DocumentFactory.getInstance().createRaw(editorPane.getText());
-               annotationTableModel.annotations.forEach(a -> d.createAnnotation(a.getType(), a.start(), a.end(),
-                                                                                Maps.map(attributeType,
-                                                                                         a.getTag().orElse(null))));
-               TaggedFormat format = new TaggedFormat();
-               Resources.fromFile(fileChooser.getSelectedFile()).write(format.toString(d));
-            } catch (Exception ee) {
-               ee.printStackTrace();
-            }
+            currentFile = Resources.fromFile(fileChooser.getSelectedFile());
+            setTitle(getTitle().replaceFirst(" \\(.*\\)$", "") + " (" + currentFile.baseName() + ")");
+            updateMRU(fileChooser.getSelectedFile().getAbsolutePath());
+            properties.setProperty("current_directory", fileChooser.getSelectedFile().getAbsolutePath());
+            savePreferences();
+            save(currentFile);
          }
       });
 
@@ -445,7 +414,7 @@ public class AnnotationEditor extends SwingApplication {
 
    private void loadDocument(Resource docResource) {
       currentFile = docResource;
-
+      updateMRU(docResource.path());
       List<Object[]> rows = new ArrayList<>();
       StringBuilder text = new StringBuilder();
 
@@ -470,12 +439,12 @@ public class AnnotationEditor extends SwingApplication {
                   });
             });
 
-      setTitle(getTitle() + " (" + currentFile.baseName() + ")");
+      setTitle(getTitle().replaceFirst(" \\(.*\\)$", "") + " (" + currentFile.baseName() + ")");
       editorPane.setText(text.toString());
       annotationTableModel.annotations.clear();
       annotationTableModel.rows.clear();
       annotationTableModel.fireTableDataChanged();
-      editorPane.setCharacterAttributes(DEFAULT, true);
+      editorPane.getStyledDocument().setCharacterAttributes(0, editorPane.getText().length(), DEFAULT, true);
       rows.forEach(row -> {
          annotationTableModel.addRow(row);
          int start = (int) row[0];
@@ -502,6 +471,28 @@ public class AnnotationEditor extends SwingApplication {
          }
       } catch (IOException e) {
          throw Throwables.propagate(e);
+      }
+   }
+
+   private void save(Resource out) {
+      TaggedFormat format = new TaggedFormat();
+      Document d = DocumentFactory.getInstance().createRaw(editorPane.getText());
+      annotationTableModel.annotations.forEach(a -> d.createAnnotation(a.getType(), a.start(), a.end(),
+                                                                       Maps.map(attributeType,
+                                                                                a.getTag().orElse(null))));
+      try {
+         out.write(format.toString(d));
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+   }
+
+   private void savePreferences() {
+      try {
+         propertiesFile.getParent().mkdirs();
+         properties.storeToXML(propertiesFile.outputStream(), "");
+      } catch (IOException e1) {
+         e1.printStackTrace();
       }
    }
 
@@ -567,6 +558,30 @@ public class AnnotationEditor extends SwingApplication {
          editorPane.setSelectionStart(annotationTableModel.getStart(modelRow));
          editorPane.setSelectionEnd(annotationTableModel.getEnd(modelRow));
       }
+   }
+
+   private void updateMRU(String path) {
+      if (mru.stream().noneMatch(a -> a.getText().equals(path))) {
+         mru.addFirst(createMRUItem(path));
+         mruMenu.insert(mru.getFirst(), 0);
+         if (mru.size() > 10) {
+            mruMenu.remove(mru.removeLast());
+         }
+      } else {
+         for (Component component : mruMenu.getMenuComponents()) {
+            JMenuItem ii = Cast.as(component);
+            if (ii.getText().equals(path)) {
+               mruMenu.remove(ii);
+               mruMenu.insert(ii, 0);
+               break;
+            }
+         }
+      }
+      properties.setProperty("mru", CSV.builder()
+                                       .formatter()
+                                       .format(mru.stream()
+                                                  .map(JMenuItem::getText)
+                                                  .collect(Collectors.toList())));
    }
 
    private static class TagSet extends JComboBox<Tag> implements Serializable, Iterable<Tag> {
