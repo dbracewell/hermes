@@ -25,9 +25,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -54,6 +52,7 @@ public class AnnotationEditor extends SwingApplication {
    private Style DEFAULT;
    private Resource currentFile;
    private boolean isTagged;
+   private boolean dirty = false;
    @Option(description = "JSON file describing the annotation task.",
       defaultValue = "classpath:com/davidbracewell/hermes/editor/entity.json")
    private Resource task;
@@ -80,6 +79,7 @@ public class AnnotationEditor extends SwingApplication {
       if (start == end) {
          return;
       }
+      dirty = true;
       editorPane.getStyledDocument()
                 .setCharacterAttributes(start, end - start, editorPane.getStyle(tag.name()), true);
       annotationTableModel.addRow(new Object[]{start, end, tag, editorPane.getSelectedText()});
@@ -111,6 +111,15 @@ public class AnnotationEditor extends SwingApplication {
       }
       editorPane.setSelectionEnd(end);
       editorPane.setSelectionStart(start);
+   }
+
+   private void checkDirty() {
+      if (dirty) {
+         int r = JOptionPane.showConfirmDialog(this, "Save Changes?", "Save Changes?", JOptionPane.YES_NO_OPTION);
+         if (r == JOptionPane.YES_OPTION) {
+            save(currentFile);
+         }
+      }
    }
 
    private JComponent createAnnotationTable() {
@@ -165,7 +174,7 @@ public class AnnotationEditor extends SwingApplication {
       JTextArea lines = new JTextArea("1");
       editorPane = new JTextPane(new DefaultStyledDocument());
       editorPane.setEditable(false);
-      editorPane.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+
       editorPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
       editorPane.getCaret().setVisible(true);
       DEFAULT = editorPane.addStyle("DEFAULT", null);
@@ -179,7 +188,11 @@ public class AnnotationEditor extends SwingApplication {
       editorPane.addMouseListener(mouseClicked(this::syncEditorSelection));
       editorPane.addMouseListener(mousePressed(this::syncEditorSelection));
 
-
+      int fontSize = 14;
+      if (properties.containsKey("font_size")) {
+         fontSize = Integer.parseInt(properties.getProperty("font_size"));
+      }
+      editorPane.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, fontSize));
       editorPane.addKeyListener(new KeyAdapter() {
          @Override
          public void keyReleased(KeyEvent e) {
@@ -197,6 +210,7 @@ public class AnnotationEditor extends SwingApplication {
                   editorPane.setFont(f2);
                }
             }
+            savePreferences();
             lines.setFont(new Font(Font.MONOSPACED, Font.PLAIN, editorPane.getFont().getSize()));
             super.keyPressed(e);
          }
@@ -352,7 +366,7 @@ public class AnnotationEditor extends SwingApplication {
 
       menu.addSeparator();
       JMenuItem exit = new JMenuItem("Quit", KeyEvent.VK_Q);
-      exit.addActionListener(e -> System.exit(0));
+      exit.addActionListener(e -> dispatchEvent(new WindowEvent(AnnotationEditor.this, WindowEvent.WINDOW_CLOSING)));
       menu.add(exit);
 
       menu.addMenuListener(new MenuListener() {
@@ -393,6 +407,7 @@ public class AnnotationEditor extends SwingApplication {
    private void deleteAnnotation() {
       int row = annotationTableModel.find(editorPane.getSelectionStart(), editorPane.getSelectionEnd());
       if (row >= 0) {
+         dirty = true;
          deleteAnnotation(new int[]{
             annotationTable.getRowSorter().convertRowIndexToView(row)
          });
@@ -403,6 +418,7 @@ public class AnnotationEditor extends SwingApplication {
       for (int i = rows.length - 1; i >= 0; i--) {
          int r = annotationTable.getRowSorter().convertRowIndexToModel(rows[i]);
          if (r >= 0 && r < annotationTable.getRowCount()) {
+            dirty = true;
             int start = annotationTableModel.getStart(r);
             int end = annotationTableModel.getEnd(r);
             annotationTableModel.removeRow(r);
@@ -413,6 +429,8 @@ public class AnnotationEditor extends SwingApplication {
    }
 
    private void loadDocument(Resource docResource) {
+      checkDirty();
+      dirty = false;
       currentFile = docResource;
       updateMRU(docResource.path());
       List<Object[]> rows = new ArrayList<>();
@@ -488,6 +506,7 @@ public class AnnotationEditor extends SwingApplication {
    }
 
    private void savePreferences() {
+      properties.setProperty("font_size", Integer.toString(editorPane.getFont().getSize()));
       try {
          propertiesFile.getParent().mkdirs();
          properties.storeToXML(propertiesFile.outputStream(), "");
@@ -536,6 +555,15 @@ public class AnnotationEditor extends SwingApplication {
 
       Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
       this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
+
+      addWindowListener(new WindowAdapter() {
+         @Override
+         public void windowClosing(WindowEvent e) {
+            checkDirty();
+            savePreferences();
+            super.windowClosing(e);
+         }
+      });
    }
 
    private void syncEditorSelection(MouseEvent e) {
