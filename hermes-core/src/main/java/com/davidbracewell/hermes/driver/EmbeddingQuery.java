@@ -34,7 +34,7 @@ public class EmbeddingQuery extends HermesCommandLineApp {
                      .forEach(term -> System.out.println("  " + term));
          } else if (embedding.contains(line)) {
             embedding.nearest(line.toLowerCase(), 10).forEach(
-               slv -> System.out.println("  " + slv.getLabel() + " : " + slv.getScore()));
+               slv -> System.out.println("  " + slv.getLabel() + " : " + slv.getWeight()));
             System.out.println();
          } else {
             System.out.println("!! " + line + " is not in the dictionary");

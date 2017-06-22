@@ -229,18 +229,6 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
       return asEmbeddingDataset(Types.TOKEN);
    }
 
-
-   /**
-    * Process corpus.
-    *
-    * @param processor the processor
-    * @return the corpus
-    * @throws Exception the exception
-    */
-   default Corpus process(@NonNull CorpusProcessor processor) throws Exception {
-      return processor.process(this, new ProcessorContext());
-   }
-
    /**
     * As embedding dataset dataset.
     *
@@ -264,6 +252,18 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
                                           return sentences.stream();
                                        }),
                                Collection::stream);
+   }
+
+   default MStream<Instance> asInstanceStream(@NonNull Featurizer<HString> featurizer) {
+      return stream().map(featurizer::extractInstance);
+   }
+
+   default MStream<Instance> asInstanceStream(@NonNull Featurizer<HString> featurizer, @NonNull AttributeType labelAttributeType) {
+      return asLabeledStream(labelAttributeType).map(featurizer::extractInstance);
+   }
+
+   default MStream<Instance> asInstanceStream(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, ?> labelFunction) {
+      return asLabeledStream(labelFunction).map(featurizer::extractInstance);
    }
 
    /**
@@ -307,8 +307,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
       return Dataset
                 .regression()
                 .type(getDataSetType())
-                .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
-         ;
+                .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance));
    }
 
    /**
@@ -605,6 +604,17 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
                                         return nGramExtractor.streamTuples(doc);
                                      }
                                     ).countByValue()));
+   }
+
+   /**
+    * Process corpus.
+    *
+    * @param processor the processor
+    * @return the corpus
+    * @throws Exception the exception
+    */
+   default Corpus process(@NonNull CorpusProcessor processor) throws Exception {
+      return processor.process(this, new ProcessorContext());
    }
 
    /**

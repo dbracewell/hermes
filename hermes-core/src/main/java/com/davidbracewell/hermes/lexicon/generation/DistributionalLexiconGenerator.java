@@ -122,7 +122,7 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
                              if (negVectors.get(tag).magnitude() > 0) {
                                 neg = Similarity.Cosine.calculate(negVectors.get(tag), slv);
                              }
-                             scores.set(slv.getLabel(), tag, slv.getScore() - neg);
+                             scores.set(slv.getLabel(), tag, slv.getWeight() - neg);
                           });
          });
          MultiCounter<T, String> selection = MultiCounters.newMultiCounter();
