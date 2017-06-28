@@ -27,11 +27,10 @@ public class CharacterBasedWordSegmenter implements Serializable {
 
          SequenceInput<Character> input = new SequenceInput<>();
          for (char c : content.toCharArray()) {
-            input.add(c);
             if (Character.isWhitespace(c)) {
-
+               input.add(c, "true");
             } else {
-
+               input.add(c, "false");
             }
          }
 
