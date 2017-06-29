@@ -4,12 +4,14 @@ import com.davidbracewell.SystemInfo;
 import com.davidbracewell.Tag;
 import com.davidbracewell.application.SwingApplication;
 import com.davidbracewell.cli.Option;
+import com.davidbracewell.collection.IntervalTree;
 import com.davidbracewell.collection.Span;
-import com.davidbracewell.collection.map.Maps;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
-import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.AnnotationType;
+import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Document;
+import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.spi.TaggedFormat;
 import com.davidbracewell.io.CSV;
@@ -154,13 +156,20 @@ public class AnnotationEditor extends SwingApplication {
                         }
                      });
 
-      annotationTable.addMouseListener(mousePressed(e -> {
-         int row = annotationTable.getRowSorter().convertRowIndexToModel(annotationTable.getSelectedRow());
+      annotationTable.getSelectionModel().addListSelectionListener(e -> {
+         int row = annotationTable.getRowSorter().convertRowIndexToModel(e.getLastIndex());
          if (row >= 0) {
             editorPane.setSelectionStart(annotationTableModel.getStart(row));
             editorPane.setSelectionEnd(annotationTableModel.getEnd(row));
          }
-      }));
+      });
+//      annotationTable.addMouseListener(mousePressed(e -> {
+//         int row = annotationTable.getRowSorter().convertRowIndexToModel(annotationTable.getSelectedRow());
+//         if (row >= 0) {
+//            editorPane.setSelectionStart(annotationTableModel.getStart(row));
+//            editorPane.setSelectionEnd(annotationTableModel.getEnd(row));
+//         }
+//      }));
 
       JPopupMenu tablePopup = new JPopupMenu();
       JMenuItem deleteAnnotation = new JMenuItem("Delete");
@@ -495,9 +504,9 @@ public class AnnotationEditor extends SwingApplication {
    private void save(Resource out) {
       TaggedFormat format = new TaggedFormat();
       Document d = DocumentFactory.getInstance().createRaw(editorPane.getText());
-      annotationTableModel.annotations.forEach(a -> d.createAnnotation(a.getType(), a.start(), a.end(),
-                                                                       Maps.map(attributeType,
-                                                                                a.getTag().orElse(null))));
+//      annotationTableModel.annotations.forEach(a -> d.createAnnotation(a.getType(), a.start(), a.end(),
+//                                                                       Maps.map(attributeType,
+//                                                                                a.getTag().orElse(null))));
       try {
          out.write(format.toString(d));
       } catch (IOException e) {
@@ -545,6 +554,49 @@ public class AnnotationEditor extends SwingApplication {
 
       menuBar.add(createFileMenu());
       menuBar.add(tagSet.createTagMenu(this::addTag));
+
+
+      JMenu searchMenu = new JMenu("Search");
+      menuBar.add(searchMenu);
+      searchMenu.setMnemonic(KeyEvent.VK_S);
+      JMenuItem nextAnnotation = new JMenuItem("Next Annotation", KeyEvent.VK_N);
+      searchMenu.add(nextAnnotation);
+      nextAnnotation.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, KeyEvent.ALT_DOWN_MASK));
+      nextAnnotation.addActionListener(e -> {
+         int start = editorPane.getSelectionEnd();
+         int end = start + 10;
+         System.out.println(start + " : " + end);
+         Span next = annotationTableModel.annotations.ceiling(Span.of(start, end));
+         System.out.println(next);
+         if (next != null) {
+            int r = annotationTableModel.find(next.start(), next.end());
+            if (r != -1) {
+               annotationTable.getSelectionModel()
+                              .setSelectionInterval(annotationTable.getRowSorter().convertRowIndexToView(r),
+                                                    annotationTable.getRowSorter().convertRowIndexToView(r));
+
+            }
+         }
+      });
+
+      JMenuItem prevAnnotation = new JMenuItem("Previous Annotation", KeyEvent.VK_N);
+      searchMenu.add(prevAnnotation);
+      prevAnnotation.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, KeyEvent.ALT_DOWN_MASK));
+      prevAnnotation.addActionListener(e -> {
+         int start = editorPane.getSelectionStart() - 5;
+         int end = editorPane.getSelectionStart();
+         Span next = annotationTableModel.annotations.floor(Span.of(start, end));
+         System.out.println(next);
+         if (next != null) {
+            int r = annotationTableModel.find(next.start(), next.end());
+            if (r != -1) {
+               annotationTable.getSelectionModel()
+                              .setSelectionInterval(annotationTable.getRowSorter().convertRowIndexToView(r),
+                                                    annotationTable.getRowSorter().convertRowIndexToView(r));
+            }
+         }
+      });
+
       JSplitPane splitPane = new JSplitPane();
       splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
       splitPane.setDividerLocation(300);
@@ -710,7 +762,7 @@ public class AnnotationEditor extends SwingApplication {
    }
 
    class DataModel extends AbstractTableModel {
-      private AnnotationTree annotations = new AnnotationTree();
+      private IntervalTree<Span> annotations = new IntervalTree<>();
       private java.util.List<Object[]> rows = new ArrayList<>();
       private int columns = 4;
 
@@ -718,18 +770,13 @@ public class AnnotationEditor extends SwingApplication {
          rows.add(row);
          int start = (int) row[0];
          int end = (int) row[1];
-         Annotation annotation = Fragments.detachedAnnotation(annotationType, start, end);
-         if (isTagged) {
-            Tag tag = (Tag) row[2];
-            annotation.put(attributeType, tag);
-         }
-         annotations.add(annotation);
+         annotations.add(Span.of(start, end));
          fireTableRowsInserted(rows.size() - 1, rows.size() - 1);
          return rows.size() - 1;
       }
 
       private int find(int start, int end) {
-         java.util.List<Annotation> annotationList = annotations.overlapping(new Span(start, end));
+         java.util.List<Span> annotationList = annotations.overlapping(new Span(start, end));
          if (annotationList.isEmpty()) {
             return -1;
          }
