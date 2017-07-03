@@ -8,6 +8,7 @@ import com.davidbracewell.collection.IntervalTree;
 import com.davidbracewell.collection.Span;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Convert;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.Document;
@@ -19,7 +20,6 @@ import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.json.Json;
 import com.davidbracewell.string.StringUtils;
-import com.google.common.base.Throwables;
 
 import javax.swing.*;
 import javax.swing.event.*;

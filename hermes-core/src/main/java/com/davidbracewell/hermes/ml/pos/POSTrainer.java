@@ -147,7 +147,9 @@ public class POSTrainer extends CommandLineApplication {
       learner.setParameter("maxIterations", 25);
       learner.setParameter("tolerance", 1E-5);
       learner.setParameter("verbose", true);
-      learner.setTransitionFeatures(TransitionFeatures.SECOND_ORDER);
+      learner.setTransitionFeatures(TransitionFeature.chain(TransitionFeature.SECOND_ORDER,
+                                                            TransitionFeature.fromTemplate("T[-1],w[0]"),
+                                                            TransitionFeature.fromTemplate("T[-2],T[-1],w[0]")));
       return learner;
    }
 

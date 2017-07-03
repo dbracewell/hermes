@@ -44,6 +44,7 @@ import com.davidbracewell.function.SerializableConsumer;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.function.Unchecked;
+import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
@@ -63,7 +64,6 @@ import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.StreamingContext;
 import com.davidbracewell.stream.accumulator.MLongAccumulator;
 import com.davidbracewell.tuple.Tuple;
-import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
 import java.io.IOException;

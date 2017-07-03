@@ -91,7 +91,7 @@ public class PhraseChunkTrainer extends BIOTrainer {
    @Override
    protected SequenceLabelerLearner getLearner() {
       SequenceLabelerLearner learner = new CRFTrainer();
-      learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
+      learner.setTransitionFeatures(TransitionFeature.FIRST_ORDER);
       learner.setValidator(new BIOValidator());
       learner.setParameter("maxIterations", 200);
       learner.setParameter("verbose", true);

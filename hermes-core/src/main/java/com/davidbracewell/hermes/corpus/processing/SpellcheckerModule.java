@@ -5,6 +5,7 @@ import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.extraction.TermExtractor;
@@ -12,7 +13,6 @@ import com.davidbracewell.hermes.lexicon.TrieWordList;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringPredicates;
-import com.google.common.base.Throwables;
 import lombok.NonNull;
 
 import java.io.IOException;
