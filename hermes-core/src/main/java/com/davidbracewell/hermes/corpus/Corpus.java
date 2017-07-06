@@ -331,7 +331,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @param featurizer the featurizer
     * @return the dataset
     */
-   default Dataset<Sequence> asSequenceDataSet(@NonNull SequenceFeaturizer<Annotation> featurizer) {
+   default Dataset<Sequence> asSequenceDataSet(@NonNull SequenceFeaturizer<? super Annotation> featurizer) {
       return Dataset
                 .sequence()
                 .type(DatasetType.InMemory)
@@ -346,7 +346,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @param featurizer   the featurizer
     * @return the dataset
     */
-   default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+   default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull SequenceFeaturizer<? super Annotation> featurizer) {
       return Dataset
                 .sequence()
                 .type(getDataSetType())
@@ -361,7 +361,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @param featurizer    the featurizer
     * @return the dataset
     */
-   default Dataset<Sequence> asSequenceDataSet(@NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+   default Dataset<Sequence> asSequenceDataSet(@NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<? super Annotation> featurizer) {
       return Dataset
                 .sequence()
                 .type(getDataSetType())
@@ -377,7 +377,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @param featurizer    the featurizer
     * @return the dataset
     */
-   default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+   default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<? super Annotation> featurizer) {
       return Dataset
                 .sequence()
                 .type(getDataSetType())
