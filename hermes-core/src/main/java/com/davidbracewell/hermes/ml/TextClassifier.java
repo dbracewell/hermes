@@ -1,6 +1,7 @@
 package com.davidbracewell.hermes.ml;
 
-import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.hermes.HString;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
@@ -9,7 +10,7 @@ import java.io.Serializable;
 /**
  * @author David B. Bracewell
  */
-public abstract class AnnotationTagger implements Serializable {
+public abstract class TextClassifier implements Serializable {
    private static final long serialVersionUID = 1L;
 
    /**
@@ -19,12 +20,13 @@ public abstract class AnnotationTagger implements Serializable {
     * @return the t
     * @throws Exception the exception
     */
-   public static <T extends AnnotationTagger> T read(@NonNull Resource resource) throws Exception {
+   public static <T extends TextClassifier> T read(@NonNull Resource resource) throws Exception {
       return resource.readObject();
    }
 
+   public abstract void classify(HString text);
 
-   public abstract void tag(Annotation sentence);
+   protected abstract Featurizer<HString> getFeaturizer();
 
    /**
     * Write.
@@ -36,5 +38,4 @@ public abstract class AnnotationTagger implements Serializable {
       resource.setIsCompressed(true).writeObject(this);
    }
 
-
-}// END OF AnnotationTagger
+}// END OF TextClassifier
