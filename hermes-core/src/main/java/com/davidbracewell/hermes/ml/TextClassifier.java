@@ -1,6 +1,5 @@
 package com.davidbracewell.hermes.ml;
 
-import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
@@ -8,25 +7,31 @@ import lombok.NonNull;
 import java.io.Serializable;
 
 /**
+ * The type Text classifier.
+ *
  * @author David B. Bracewell
  */
-public abstract class TextClassifier implements Serializable {
-   private static final long serialVersionUID = 1L;
+public interface TextClassifier extends Serializable {
 
    /**
     * Read t.
     *
+    * @param <T>      the type parameter
     * @param resource the resource
     * @return the t
     * @throws Exception the exception
     */
-   public static <T extends TextClassifier> T read(@NonNull Resource resource) throws Exception {
+   static <T extends TextClassifier> T read(@NonNull Resource resource) throws Exception {
       return resource.readObject();
    }
 
-   public abstract void classify(HString text);
+   /**
+    * Classify.
+    *
+    * @param text the text
+    */
+   void classify(HString text);
 
-   protected abstract Featurizer<HString> getFeaturizer();
 
    /**
     * Write.
@@ -34,7 +39,7 @@ public abstract class TextClassifier implements Serializable {
     * @param resource the resource
     * @throws Exception the exception
     */
-   public void write(@NonNull Resource resource) throws Exception {
+   default void write(@NonNull Resource resource) throws Exception {
       resource.setIsCompressed(true).writeObject(this);
    }
 
