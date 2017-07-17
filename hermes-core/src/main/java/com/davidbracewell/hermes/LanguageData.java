@@ -31,12 +31,14 @@ import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.guava.common.cache.Cache;
 import com.davidbracewell.guava.common.cache.CacheBuilder;
+import com.davidbracewell.guava.common.cache.CacheLoader;
+import com.davidbracewell.guava.common.cache.LoadingCache;
 import com.davidbracewell.hermes.lexicon.Lexicon;
 import com.davidbracewell.hermes.lexicon.LexiconSpec;
 import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.logging.Logger;
+import com.davidbracewell.logging.Loggable;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
@@ -47,16 +49,16 @@ import java.util.concurrent.ExecutionException;
  *
  * @author David B. Bracewell
  */
-public final class LanguageData {
+public final class LanguageData implements Loggable {
 
    private static final Resource baseClasspath = Resources.fromClasspath("hermes/");
-   private static final Cache<Language, Embedding> embeddingCache = CacheBuilder
-                                                                       .from("maximumSize=25")
-                                                                       .build();
+   private static final LoadingCache<Language, Embedding> embeddingCache = CacheBuilder
+                                                                              .from("maximumSize=25")
+                                                                              .build(new EmbeddingLoader());
    private static final Cache<String, Lexicon> lexicons = CacheBuilder
                                                              .from("maximumSize=500")
                                                              .build();
-   private static final Logger log = Logger.getLogger(LanguageData.class);
+
 
    private LanguageData() {
       throw new IllegalAccessError();
@@ -68,15 +70,32 @@ public final class LanguageData {
     * @param language the language
     * @return the default embedding model
     */
-   public static Embedding getDefaultEmbeddingModel(@NonNull Language language) {
+   public static Embedding getDefaultEmbedding(@NonNull Language language) {
       try {
-         return embeddingCache.get(language, () -> {
-            Resource loc = Hermes.findModel(language, "embedding", StringUtils.EMPTY);
-            if (loc != null && loc.exists()) {
-               return Embedding.read(loc);
+         return embeddingCache.get(language);
+      } catch (ExecutionException e) {
+         throw Throwables.propagate(e);
+      }
+   }
+
+   public static Lexicon getLexicon(@NonNull Language language, @NonNull String lexiconName) {
+      return getLexicon(language, lexiconName, LexiconSpec.builder().caseSensitive(false).probabilistic(false).build());
+   }
+
+   public static Lexicon getLexicon(@NonNull Language language, @NonNull String lexiconName, @NonNull LexiconSpec spec) {
+      String name = language.getCode() + "::" + lexiconName;
+      try {
+         return lexicons.get(name, () -> {
+            for (Resource lexicon : new Resource[]{
+               baseClasspath.getChild(lng2Folder(language)).getChild("lexicons").getChild(lexiconName),
+               baseClasspath.getChild("lexicons").getChild(lexiconName)
+            }) {
+               if (lexicon.exists()) {
+                  spec.setResource(lexicon);
+                  return spec.create();
+               }
             }
-            return new Embedding(new EncoderPair(new NoOptLabelEncoder(), new NoOptEncoder()),
-                                 new DefaultVectorStore<>(100, Similarity.Cosine));
+            return new TrieLexicon(true, true, null);
          });
       } catch (ExecutionException e) {
          throw Throwables.propagate(e);
@@ -92,36 +111,17 @@ public final class LanguageData {
                 .toLowerCase();
    }
 
-   /**
-    * Load subjective lexicon lexicon.
-    *
-    * @param language the language
-    * @return the lexicon
-    */
-   public static Lexicon loadSubjectiveLexicon(@NonNull Language language) {
-      try {
-         return lexicons.get(language.getCode() + "::Sentiment",
-                             () -> {
-                                try {
-                                   return LexiconSpec
-                                             .builder()
-                                             .caseSensitive(false)
-                                             .tagAttribute(Types.TAG)
-                                             .hasConstraints(true)
-                                             .resource(
-                                                baseClasspath
-                                                   .getChild(lng2Folder(language))
-                                                   .getChild("lexicon")
-                                                   .getChild("subjective.dict"))
-                                             .build()
-                                             .create();
-                                } catch (Exception e) {
-                                   log.severe("Error Loading Sentiment lexicon: {0}", e);
-                                   return new TrieLexicon(false, false, Types.TAG);
-                                }
-                             });
-      } catch (ExecutionException e) {
-         throw Throwables.propagate(e);
+
+   private static class EmbeddingLoader extends CacheLoader<Language, Embedding> {
+
+      @Override
+      public Embedding load(Language language) throws Exception {
+         Resource loc = Hermes.findModel(language, "embedding", StringUtils.EMPTY);
+         if (loc != null && loc.exists()) {
+            return Embedding.read(loc);
+         }
+         return new Embedding(new EncoderPair(new NoOptLabelEncoder(), new NoOptEncoder()),
+                              new DefaultVectorStore<>(100, Similarity.Cosine));
       }
    }
 

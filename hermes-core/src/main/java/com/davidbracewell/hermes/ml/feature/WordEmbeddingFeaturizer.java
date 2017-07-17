@@ -22,7 +22,7 @@ public class WordEmbeddingFeaturizer implements Featurizer<HString> {
 
    @Override
    public Set<Feature> apply(HString hString) {
-      Embedding embedding = LanguageData.getDefaultEmbeddingModel(hString.getLanguage());
+      Embedding embedding = LanguageData.getDefaultEmbedding(hString.getLanguage());
       Vector vector = null;
 
       if (embedding.contains(hString.toString())) {
