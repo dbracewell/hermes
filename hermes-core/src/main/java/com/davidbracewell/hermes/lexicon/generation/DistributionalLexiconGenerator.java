@@ -97,18 +97,18 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
          Map<T, Vector> vectors = new HashMap<>();
          Map<T, Vector> negVectors = new HashMap<>();
          seedTerms.keySet().forEach(tag -> {
-            Vector v = new DenseVector(wordEmbeddings.getDimension());
+            Vector v = new DenseVector(wordEmbeddings.dimension());
             seedTerms.get(tag).stream()
                      .filter(wordEmbeddings::contains)
-                     .forEach(s -> v.addSelf(wordEmbeddings.getVector(s)));
+                     .forEach(s -> v.addSelf(wordEmbeddings.get(s)));
             v.mapDivideSelf(seedTerms.size());
             vectors.put(tag, v);
 
-            Vector negV = new DenseVector(wordEmbeddings.getDimension());
+            Vector negV = new DenseVector(wordEmbeddings.dimension());
             negativeSeedTerms.get(tag)
                              .stream()
                              .filter(wordEmbeddings::contains)
-                             .forEach(s -> negV.addSelf(wordEmbeddings.getVector(s)));
+                             .forEach(s -> negV.addSelf(wordEmbeddings.get(s)));
             negVectors.put(tag, negV);
          });
          lexicon.putAll(seedTerms);

@@ -26,13 +26,13 @@ public class WordEmbeddingFeaturizer implements Featurizer<HString> {
       Vector vector = null;
 
       if (embedding.contains(hString.toString())) {
-         vector = embedding.getVector(hString.toString());
+         vector = embedding.get(hString.toString());
       } else if (embedding.contains(hString.toLowerCase())) {
-         vector = embedding.getVector(hString.toLowerCase());
+         vector = embedding.get(hString.toLowerCase());
       } else if (embedding.contains(hString.getLemma())) {
-         vector = embedding.getVector(hString.getLemma());
+         vector = embedding.get(hString.getLemma());
       } else if (embedding.contains(hString.getPOS().getUniversalTag().name())) {
-         vector = embedding.getVector(hString.getPOS().getUniversalTag().name());
+         vector = embedding.get(hString.getPOS().getUniversalTag().name());
       }
 
       if (vector == null) {

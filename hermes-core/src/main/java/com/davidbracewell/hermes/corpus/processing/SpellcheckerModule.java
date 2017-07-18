@@ -86,8 +86,8 @@ public class SpellcheckerModule implements ProcessingModule, Serializable {
                                                          .filter(e -> unigrams.get(e.getKey()) >= 10)
                                                          .forEach(e -> {
                                                              double sim = Similarity.Cosine.calculate(
-                                                                 spellingEmbedding.getVector(e.getKey()),
-                                                                 spellingEmbedding.getVector(oov));
+                                                                 spellingEmbedding.get(e.getKey()),
+                                                                 spellingEmbedding.get(oov));
                                                              if (sim > 0) {
                                                                  adjusted.increment(e.getKey(), sim);
                                                              }

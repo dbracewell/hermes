@@ -24,9 +24,6 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Language;
 import com.davidbracewell.apollo.affinity.Similarity;
 import com.davidbracewell.apollo.linalg.store.DefaultVectorStore;
-import com.davidbracewell.apollo.ml.EncoderPair;
-import com.davidbracewell.apollo.ml.NoOptEncoder;
-import com.davidbracewell.apollo.ml.NoOptLabelEncoder;
 import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.guava.common.cache.Cache;
@@ -120,8 +117,7 @@ public final class LanguageData implements Loggable {
          if (loc != null && loc.exists()) {
             return Embedding.read(loc);
          }
-         return new Embedding(new EncoderPair(new NoOptLabelEncoder(), new NoOptEncoder()),
-                              new DefaultVectorStore<>(100, Similarity.Cosine));
+         return new Embedding(new DefaultVectorStore<>(100, Similarity.Cosine));
       }
    }
 

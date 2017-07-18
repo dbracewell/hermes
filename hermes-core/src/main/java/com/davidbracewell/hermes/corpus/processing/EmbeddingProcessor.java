@@ -143,8 +143,8 @@ public class EmbeddingProcessor implements ProcessingModule {
       if (output != null && output.exists()) {
          try {
             Embedding embedding = output.readObject();
-            logInfo("Loaded embedding with vocab size = {0} and dimension = {1}", embedding.getVocab().size(),
-                    embedding.getDimension());
+            logInfo("Loaded embedding with vocab size = {0} and dimension = {1}", embedding.size(),
+                    embedding.dimension());
             context.property(EMBEDDING_PROPERTY, embedding);
             return ProcessingState.LOADED(corpus);
          } catch (Exception e) {

@@ -29,7 +29,7 @@ public class EmbeddingQuery extends HermesCommandLineApp {
             System.exit(0);
          } else if (line.startsWith("?search") || line.startsWith("?s")) {
             String search = line.substring(line.indexOf(' ')).trim();
-            embedding.getVocab().parallelStream()
+            embedding.keys().parallelStream()
                      .filter(term -> term.startsWith(search))
                      .forEach(term -> System.out.println("  " + term));
          } else if (embedding.contains(line)) {
