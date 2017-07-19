@@ -23,7 +23,11 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.Tag;
+import com.davidbracewell.apollo.linalg.Vector;
+import com.davidbracewell.apollo.linalg.VectorComposition;
+import com.davidbracewell.apollo.linalg.VectorCompositions;
 import com.davidbracewell.apollo.ml.LabeledDatum;
+import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.collection.Span;
 import com.davidbracewell.collection.Streams;
@@ -50,14 +54,12 @@ import java.util.stream.Stream;
 import static com.davidbracewell.tuple.Tuples.$;
 
 /**
- * <p>
- * Represents a java string on steroids. HStrings act as a <code>CharSequence</code> and have methods similar to those
- * on <code>String</code>. Methods that do not modify the underlying string representation, e.g. substring, find, will
- * return another HString whereas methods that modify the string, e.g. lower casing, return a String object.
+ * <p> Represents a java string on steroids. HStrings act as a <code>CharSequence</code> and have methods similar to
+ * those on <code>String</code>. Methods that do not modify the underlying string representation, e.g. substring, find,
+ * will return another HString whereas methods that modify the string, e.g. lower casing, return a String object.
  * Additionally, HStrings have a span (i.e. start and end positions), attributes, and annotations. HStrings allow for
  * methods to process documents, fragments, and annotations in a uniform fashion. Methods on the HString facilitate
- * determining if the object is an annotation ({@link #isAnnotation()} or is a document ({@link #isDocument()}).
- * </p>
+ * determining if the object is an annotation ({@link #isAnnotation()} or is a document ({@link #isDocument()}). </p>
  *
  * @author David B. Bracewell
  */
@@ -119,9 +121,9 @@ public abstract class HString extends Span implements StringLike, AttributedObje
 
    /**
     * <p>Constructs a relation graph with the given relation types as the edges and the given annotation types as the
-    * vertices (the {@link #interleaved(AnnotationType...)} method is used to get the annotations).
-    * Relations will be determine for annotations by including the relations of their sub-annotations (i.e. sub-spans).
-    * This allows, for example, a dependency graph to be built over other annotation types, e.g. phrase chunks.</p>
+    * vertices (the {@link #interleaved(AnnotationType...)} method is used to get the annotations). Relations will be
+    * determine for annotations by including the relations of their sub-annotations (i.e. sub-spans). This allows, for
+    * example, a dependency graph to be built over other annotation types, e.g. phrase chunks.</p>
     *
     * @param relationTypes   the relation types making up the edges
     * @param annotationTypes annotation types making up the vertices
@@ -164,45 +166,6 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       return g;
    }
 
-   public String inSentence() {
-      if (this.isInstance(Types.SENTENCE)) {
-         return toString();
-      }
-      Annotation sentence = first(Types.SENTENCE);
-      if (sentence.isEmpty()) {
-         return StringUtils.EMPTY;
-      }
-
-      String tag = isAnnotation() ? Cast.<Annotation>as(this)
-                                       .getTag()
-                                       .map(Tag::name)
-                                       .orElse(Cast.<Annotation>as(this).getType().name())
-                                  : "b";
-
-      StringBuilder builder = new StringBuilder();
-      int modStart = start() - sentence.start();
-      int modEnd = end() - sentence.start();
-      if (start() == sentence.start()) {
-         builder.append("<").append(tag).append(">")
-                .append(toString())
-                .append("</").append(tag).append("> ")
-                .append(sentence.substring(modEnd, sentence.end() - sentence.start()));
-      } else if (end() == sentence.end()) {
-         builder.append(sentence.substring(0, modStart))
-                .append("<").append(tag).append(">")
-                .append(toString())
-                .append("</").append(tag).append(">");
-      } else {
-         builder.append(sentence.substring(0, modStart))
-                .append("<").append(tag).append(">")
-                .append(toString())
-                .append("</").append(tag).append(">")
-                .append(sentence.substring(modEnd, sentence.end() - sentence.start()));
-      }
-
-      return builder.toString();
-   }
-
    @Override
    public List<Annotation> annotations() {
       if (document() == null) {
@@ -210,33 +173,6 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       }
       return document().get(AnnotationType.ROOT, this);
    }
-
-   public String tag(@NonNull AnnotationType type, String defaultTag) {
-      Preconditions.checkArgument(StringUtils.isNotNullOrBlank(defaultTag), "Default tag must not be null or blank.");
-      List<Annotation> annotations = get(type);
-      if (annotations.size() == 0) {
-         return toString();
-      }
-      int modStart = start();
-      StringBuilder builder = new StringBuilder();
-      int lastEnd = 0;
-      for (Annotation a : annotations) {
-         String tag = a.getTag().map(Tag::name).orElse(defaultTag);
-         String taggedAnnotation = "<" + tag + ">" + a + "</" + tag + ">";
-         int start = a.start() - modStart;
-         int end = a.end() - modStart;
-         if (start > lastEnd) {
-            builder.append(substring(lastEnd, start));
-         }
-         builder.append(taggedAnnotation);
-         lastEnd = end;
-      }
-      if (lastEnd < length()) {
-         builder.append(substring(lastEnd, length()));
-      }
-      return builder.toString();
-   }
-
 
    /**
     * Gets this HString as an annotation. If the HString is already an annotation it is simply cast. Otherwise a
@@ -304,6 +240,31 @@ public abstract class HString extends Span implements StringLike, AttributedObje
          si.add(token, labelFunction.apply(token));
       }
       return si;
+   }
+
+   public Vector asVector(@NonNull VectorComposition composition) {
+      return asVector(composition, Types.TOKEN);
+   }
+
+   public Vector asVector() {
+      return asVector(VectorCompositions.SVD, Types.TOKEN);
+   }
+
+   public Vector asVector(@NonNull VectorComposition composition, @NonNull AnnotationType... types) {
+      Embedding embedding = LanguageData.getDefaultEmbedding(getLanguage());
+      Vector v = Vector.dZeros(embedding.dimension());
+      interleaved(types).forEach(a -> {
+         if (embedding.containsKey(a.toString())) {
+            v.addSelf(embedding.get(a.toString()));
+         } else if (embedding.containsKey(a.getLemma())) {
+            v.addSelf(embedding.get(a.getLemma()));
+         } else if (embedding.containsKey(a.toLowerCase())) {
+            v.addSelf(embedding.get(a.toLowerCase()));
+         } else if (embedding.containsKey(a.getPOS().name())) {
+            v.addSelf(embedding.get(a.getPOS().name()));
+         }
+      });
+      return v;
    }
 
    @Override
@@ -419,8 +380,8 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
-    * Finds the given text in this HString starting from the beginning of this HString. If the document is
-    * annotated with tokens, the match will extend to the token(s) covering the match.
+    * Finds the given text in this HString starting from the beginning of this HString. If the document is annotated
+    * with tokens, the match will extend to the token(s) covering the match.
     *
     * @param text the text to search for
     * @return the HString for the match or empty if no match is found.
@@ -647,8 +608,7 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
-    * Gets the lemmatized version of the HString. Lemmas of longer phrases are constructed from token
-    * lemmas.
+    * Gets the lemmatized version of the HString. Lemmas of longer phrases are constructed from token lemmas.
     *
     * @return The lemmatized version of the HString.
     */
@@ -681,8 +641,8 @@ public abstract class HString extends Span implements StringLike, AttributedObje
 
    /**
     * Gets the stemmed version of the HString. Stems of token are determined using the <code>Stemmer</code> associated
-    * with the language that the token is in. Tokens store their stem using the <code>STEM</code> attribute, so that
-    * the stem only needs to be calculated once.Stems of longer phrases are constructed from token stems.
+    * with the language that the token is in. Tokens store their stem using the <code>STEM</code> attribute, so that the
+    * stem only needs to be calculated once.Stems of longer phrases are constructed from token stems.
     *
     * @return The stemmed version of the HString.
     */
@@ -725,17 +685,52 @@ public abstract class HString extends Span implements StringLike, AttributedObje
                                     .orElse(this));
    }
 
+   public String inSentence() {
+      if (this.isInstance(Types.SENTENCE)) {
+         return toString();
+      }
+      Annotation sentence = first(Types.SENTENCE);
+      if (sentence.isEmpty()) {
+         return StringUtils.EMPTY;
+      }
+
+      String tag = isAnnotation() ? Cast.<Annotation>as(this)
+                                       .getTag()
+                                       .map(Tag::name)
+                                       .orElse(Cast.<Annotation>as(this).getType().name())
+                                  : "b";
+
+      StringBuilder builder = new StringBuilder();
+      int modStart = start() - sentence.start();
+      int modEnd = end() - sentence.start();
+      if (start() == sentence.start()) {
+         builder.append("<").append(tag).append(">")
+                .append(toString())
+                .append("</").append(tag).append("> ")
+                .append(sentence.substring(modEnd, sentence.end() - sentence.start()));
+      } else if (end() == sentence.end()) {
+         builder.append(sentence.substring(0, modStart))
+                .append("<").append(tag).append(">")
+                .append(toString())
+                .append("</").append(tag).append(">");
+      } else {
+         builder.append(sentence.substring(0, modStart))
+                .append("<").append(tag).append(">")
+                .append(toString())
+                .append("</").append(tag).append(">")
+                .append(sentence.substring(modEnd, sentence.end() - sentence.start()));
+      }
+
+      return builder.toString();
+   }
+
    /**
-    * <p>
-    * Returns the annotations of the given types that overlap this string in a maximum match fashion. Each token in the
-    * string is examined and the annotation type with the longest span on that token is chosen. If more than one type
-    * has the span length, the first one found will be chose, i.e. the order in which the types are passed in to the
-    * method can effect the outcome.
-    * </p>
-    * <p>
-    * Examples where this is useful is when dealing with multi-word expressions. Using the interleaved method you can
-    * retrieve all tokens and multi-word expressions to fully match the span of the string.
-    * </p>
+    * <p> Returns the annotations of the given types that overlap this string in a maximum match fashion. Each token in
+    * the string is examined and the annotation type with the longest span on that token is chosen. If more than one
+    * type has the span length, the first one found will be chose, i.e. the order in which the types are passed in to
+    * the method can effect the outcome. </p> <p> Examples where this is useful is when dealing with multi-word
+    * expressions. Using the interleaved method you can retrieve all tokens and multi-word expressions to fully match
+    * the span of the string. </p>
     *
     * @param types The other types to examine
     * @return The list of interleaved annotations
@@ -902,8 +897,8 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    }
 
    /**
-    * Splits this HString using the given predicate to apply against tokens. An example of where this might be useful
-    * is when we want to split long phrases on different punctuation, e.g. commas or semicolons.
+    * Splits this HString using the given predicate to apply against tokens. An example of where this might be useful is
+    * when we want to split long phrases on different punctuation, e.g. commas or semicolons.
     *
     * @param delimiterPredicate the predicate to use to determine if a token is a delimiter or not
     * @return the list of split HString
@@ -948,6 +943,32 @@ public abstract class HString extends Span implements StringLike, AttributedObje
    public HString substring(int relativeStart, int relativeEnd) {
       Preconditions.checkPositionIndexes(relativeStart, relativeEnd, length());
       return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
+   }
+
+   public String tag(@NonNull AnnotationType type, String defaultTag) {
+      Preconditions.checkArgument(StringUtils.isNotNullOrBlank(defaultTag), "Default tag must not be null or blank.");
+      List<Annotation> annotations = get(type);
+      if (annotations.size() == 0) {
+         return toString();
+      }
+      int modStart = start();
+      StringBuilder builder = new StringBuilder();
+      int lastEnd = 0;
+      for (Annotation a : annotations) {
+         String tag = a.getTag().map(Tag::name).orElse(defaultTag);
+         String taggedAnnotation = "<" + tag + ">" + a + "</" + tag + ">";
+         int start = a.start() - modStart;
+         int end = a.end() - modStart;
+         if (start > lastEnd) {
+            builder.append(substring(lastEnd, start));
+         }
+         builder.append(taggedAnnotation);
+         lastEnd = end;
+      }
+      if (lastEnd < length()) {
+         builder.append(substring(lastEnd, length()));
+      }
+      return builder.toString();
    }
 
    /**
