@@ -23,12 +23,12 @@ package com.davidbracewell.hermes.corpus.processing;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.conversion.Cast;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -38,7 +38,7 @@ import java.util.Map;
  */
 public class ProcessorContext implements Serializable {
    private static final long serialVersionUID = 1L;
-   private final Map<String, Object> properties = new Object2ObjectOpenHashMap<>();
+   private final Map<String, Object> properties = new HashMap<>();
 
 
    /**
@@ -91,16 +91,6 @@ public class ProcessorContext implements Serializable {
    }
 
    /**
-    * Gets string.
-    *
-    * @param name the name
-    * @return the string
-    */
-   public String getString(String name) {
-      return getAs(name, String.class);
-   }
-
-   /**
     * Gets double.
     *
     * @param name the name
@@ -108,27 +98,6 @@ public class ProcessorContext implements Serializable {
     */
    public Double getDouble(String name) {
       return getAs(name, Double.class);
-   }
-
-   /**
-    * Gets integer.
-    *
-    * @param name the name
-    * @return the integer
-    */
-   public Integer getInteger(String name) {
-      return getAs(name, Integer.class);
-   }
-
-   /**
-    * Gets string.
-    *
-    * @param name         the name
-    * @param defaultValue the default value
-    * @return the string
-    */
-   public String getString(String name, String defaultValue) {
-      return getAs(name, String.class, defaultValue);
    }
 
    /**
@@ -145,12 +114,43 @@ public class ProcessorContext implements Serializable {
    /**
     * Gets integer.
     *
+    * @param name the name
+    * @return the integer
+    */
+   public Integer getInteger(String name) {
+      return getAs(name, Integer.class);
+   }
+
+   /**
+    * Gets integer.
+    *
     * @param name         the name
     * @param defaultValue the default value
     * @return the integer
     */
    public Integer getInteger(String name, int defaultValue) {
       return getAs(name, Integer.class, defaultValue);
+   }
+
+   /**
+    * Gets string.
+    *
+    * @param name the name
+    * @return the string
+    */
+   public String getString(String name) {
+      return getAs(name, String.class);
+   }
+
+   /**
+    * Gets string.
+    *
+    * @param name         the name
+    * @param defaultValue the default value
+    * @return the string
+    */
+   public String getString(String name, String defaultValue) {
+      return getAs(name, String.class, defaultValue);
    }
 
    /**

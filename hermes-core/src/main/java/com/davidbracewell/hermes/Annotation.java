@@ -26,7 +26,6 @@ import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -46,8 +45,7 @@ import static com.davidbracewell.tuple.Tuples.$;
  * {@link #next()}, {@link #next(AnnotationType)}, {@link #previous()}, and {@link #previous(AnnotationType)} methods
  * facilitate retrieval of the next and previous annotation of the same or different type. The <code>sources</code>,
  * <code>targets</code>, and {@link #get(RelationType, boolean)} methods allow retrieval of the annotations connected
- * via relations and the relations (edges) themeselves.
- * </p>
+ * via relations and the relations (edges) themeselves. </p>
  *
  * <p> Commonly, annotations have an associated <code>Tag</code> attribute which acts as label. Examples of tags include
  * part-of-speech and entity type. Tags can be retrieved using the {@link #getTag()} method. Annotation types specify
@@ -65,7 +63,7 @@ public final class Annotation extends Fragment implements Serializable {
     */
    public static long DETACHED_ID = Long.MIN_VALUE;
    private final AnnotationType annotationType;
-   private final Set<Relation> relations = new ObjectOpenHashSet<>();
+   private final Set<Relation> relations = new HashSet<>();
    private long id = DETACHED_ID;
    private volatile transient Annotation[] tokens;
 
@@ -127,12 +125,6 @@ public final class Annotation extends Fragment implements Serializable {
    }
 
    @Override
-   public Collection<Relation> relations(boolean includeSubAnnotations) {
-      return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
-   }
-
-
-   @Override
    public List<Annotation> children() {
       List<Annotation> tokens;
       if (document().getAnnotationSet().isCompleted(Types.SENTENCE)) {
@@ -150,7 +142,6 @@ public final class Annotation extends Fragment implements Serializable {
                    })
                    .collect(Collectors.toList());
    }
-
 
    @Override
    public Tuple2<String, Annotation> dependencyRelation() {
@@ -253,7 +244,6 @@ public final class Annotation extends Fragment implements Serializable {
       return document() == null || id == DETACHED_ID;
    }
 
-
    @Override
    public boolean isInstance(AnnotationType type) {
       return this.annotationType.isInstance(type);
@@ -319,6 +309,11 @@ public final class Annotation extends Fragment implements Serializable {
    public Annotation previous(AnnotationType type) {
       return document() == null ? Fragments.detachedEmptyAnnotation() : document().getAnnotationSet().previous(this,
                                                                                                                type);
+   }
+
+   @Override
+   public Collection<Relation> relations(boolean includeSubAnnotations) {
+      return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
    }
 
    @Override

@@ -30,11 +30,11 @@ import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.ml.feature.ValueCalculator;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import lombok.NonNull;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -48,7 +48,7 @@ import java.util.stream.Stream;
 public abstract class AbstractExtractor<T extends AbstractExtractor> implements Serializable {
    private static final long serialVersionUID = 1L;
 
-   private Set<AnnotationType> annotationType = new ObjectOpenHashSet<>();
+   private Set<AnnotationType> annotationType = new HashSet<>();
    private SerializableFunction<HString, HString> trimFunction = h -> h;
    private SerializableFunction<HString, String> toStringFunction = HString::toString;
    private SerializablePredicate<? super HString> filter = hString -> true;

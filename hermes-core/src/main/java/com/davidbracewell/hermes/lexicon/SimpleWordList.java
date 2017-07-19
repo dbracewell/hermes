@@ -22,11 +22,11 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.io.resource.Resource;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,7 +46,7 @@ public class SimpleWordList implements WordList, Serializable {
     * @param words the words
     */
    public SimpleWordList(@NonNull Set<String> words) {
-      this.words = new ObjectOpenHashSet<>(words);
+      this.words = new HashSet<>(words);
    }
 
    @Override
