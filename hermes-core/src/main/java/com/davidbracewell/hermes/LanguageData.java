@@ -22,9 +22,9 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.apollo.affinity.Similarity;
-import com.davidbracewell.apollo.linalg.store.DefaultVectorStore;
+import com.davidbracewell.apollo.linear.store.DefaultVectorStore;
 import com.davidbracewell.apollo.ml.embedding.Embedding;
+import com.davidbracewell.apollo.stat.measure.Similarity;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.guava.common.cache.Cache;
 import com.davidbracewell.guava.common.cache.CacheBuilder;

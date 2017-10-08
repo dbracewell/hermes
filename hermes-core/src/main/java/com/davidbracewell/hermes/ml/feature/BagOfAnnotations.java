@@ -22,12 +22,12 @@
 package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.cache.Cached;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.extraction.AbstractTermExtractor;
 
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -54,12 +54,12 @@ public class BagOfAnnotations implements Featurizer<HString> {
 
    @Override
    @Cached(keyMaker = HStringKeyMaker.class)
-   public Set<Feature> apply(HString hString) {
+   public List<Feature> apply(HString hString) {
       return featureSpec.count(hString)
                         .entries()
                         .stream()
                         .map(e -> Feature.real(e.getKey(), e.getValue()))
-                        .collect(Collectors.toSet());
+                        .collect(Collectors.toList());
    }
 
 

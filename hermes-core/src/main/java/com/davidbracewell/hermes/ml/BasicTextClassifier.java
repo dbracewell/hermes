@@ -1,6 +1,5 @@
 package com.davidbracewell.hermes.ml;
 
-import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.TrainTestSplit;
 import com.davidbracewell.apollo.ml.classification.Classification;
@@ -8,6 +7,7 @@ import com.davidbracewell.apollo.ml.classification.Classifier;
 import com.davidbracewell.apollo.ml.classification.ClassifierEvaluation;
 import com.davidbracewell.apollo.ml.classification.ClassifierLearner;
 import com.davidbracewell.apollo.ml.data.Dataset;
+import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.cli.CommandLineParser;
 import com.davidbracewell.cli.NamedOption;

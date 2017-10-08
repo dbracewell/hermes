@@ -1,20 +1,26 @@
 package com.davidbracewell.hermes.tokenization;
 
 import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.PredicateFeaturizer;
+import com.davidbracewell.apollo.ml.featurizer.PredicateFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.apollo.ml.sequence.feature.NGramSequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.feature.WindowedSequenceFeaturizer;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.string.StringUtils;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author David B. Bracewell
  */
 public class ZHWordSegmenterTrainer extends WordSegmenterTrainer {
+   public static void main(String[] args) throws Exception {
+      CharacterBasedWordSegmenter wordSegmenter = CharacterBasedWordSegmenter.read(Resources.from("tmp.bin"));
+      wordSegmenter.tokenize("我爱你").forEach(System.out::println);
+//      new ZHWordSegmenterTrainer().run(Hermes.initializeApplication(args));
+   }
+
    @Override
    protected SequenceFeaturizer<Character> getFeaturizer() {
       return SequenceFeaturizer.chain(
@@ -22,12 +28,6 @@ public class ZHWordSegmenterTrainer extends WordSegmenterTrainer {
          new PrefixFeature(),
          new NGramSequenceFeaturizer<>(3, 3, new CharFeature()),
          new WindowedSequenceFeaturizer<>(3, 3, new CharFeature()));
-   }
-
-   public static void main(String[] args) throws Exception {
-      CharacterBasedWordSegmenter wordSegmenter = CharacterBasedWordSegmenter.read(Resources.from("tmp.bin"));
-      wordSegmenter.tokenize("我爱你").forEach(System.out::println);
-//      new ZHWordSegmenterTrainer().run(Hermes.initializeApplication(args));
    }
 
    @Override
@@ -54,10 +54,10 @@ public class ZHWordSegmenterTrainer extends WordSegmenterTrainer {
       private static final long serialVersionUID = 1L;
 
       @Override
-      public Set<Feature> apply(Context<Character> characterContext) {
+      public List<Feature> apply(Context<Character> characterContext) {
          int index = characterContext.getIndex();
 
-         Set<Feature> features = new HashSet<>();
+         List<Feature> features = new ArrayList<>();
          StringBuilder prefix = new StringBuilder(characterContext.getCurrent());
          for (int i = 1; index - i >= 0 && characterContext.getPreviousLabel(i)
                                                            .map(f -> f.equals("true"))

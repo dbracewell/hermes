@@ -1,7 +1,7 @@
 package com.davidbracewell.hermes.corpus.processing;
 
-import com.davidbracewell.apollo.affinity.Similarity;
 import com.davidbracewell.apollo.ml.embedding.Embedding;
+import com.davidbracewell.apollo.stat.measure.Similarity;
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.config.Config;

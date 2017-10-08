@@ -22,17 +22,17 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.SystemInfo;
-import com.davidbracewell.apollo.affinity.AssociationMeasures;
-import com.davidbracewell.apollo.affinity.ContingencyTable;
-import com.davidbracewell.apollo.affinity.ContingencyTableCalculator;
-import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.data.DatasetType;
+import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
+import com.davidbracewell.apollo.stat.measure.AssociationMeasures;
+import com.davidbracewell.apollo.stat.measure.ContingencyTable;
+import com.davidbracewell.apollo.stat.measure.ContingencyTableCalculator;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;

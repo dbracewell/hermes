@@ -1,15 +1,15 @@
 package com.davidbracewell.hermes.ml.feature;
 
-import com.davidbracewell.apollo.linalg.Vector;
+import com.davidbracewell.apollo.linear.NDArray;
 import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.apollo.ml.embedding.Embedding;
+import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.LanguageData;
 
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -21,9 +21,9 @@ public class WordEmbeddingFeaturizer implements Featurizer<HString> {
    private static final long serialVersionUID = 1L;
 
    @Override
-   public Set<Feature> apply(HString hString) {
+   public List<Feature> apply(HString hString) {
       Embedding embedding = LanguageData.getDefaultEmbedding(hString.getLanguage());
-      Vector vector = null;
+      NDArray vector = null;
 
       if (embedding.contains(hString.toString())) {
          vector = embedding.get(hString.toString());
@@ -36,12 +36,12 @@ public class WordEmbeddingFeaturizer implements Featurizer<HString> {
       }
 
       if (vector == null) {
-         return Collections.emptySet();
+         return Collections.emptyList();
       }
 
-      return Streams.asStream(vector.nonZeroIterator())
+      return Streams.asStream(vector.sparseIterator())
                     .map(e -> Feature.real("embedding-dimension-" + e.getIndex(), e.getValue()))
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toList());
    }
 
 }// END OF WordEmbeddingFeaturizer

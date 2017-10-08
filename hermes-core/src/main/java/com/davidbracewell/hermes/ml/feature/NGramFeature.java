@@ -22,12 +22,12 @@
 package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.cache.Cached;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.extraction.AbstractNGramExtractor;
 
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -41,20 +41,19 @@ public class NGramFeature implements Featurizer<HString> {
       this.spec = spec;
    }
 
+   public static Builder builder() {
+      return new Builder();
+   }
+
    @Override
    @Cached(keyMaker = HStringKeyMaker.class)
-   public Set<Feature> apply(HString hString) {
+   public List<Feature> apply(HString hString) {
       return spec.countTuples(hString).entries().stream()
                  .map(e -> Feature.real(e.getKey().stream()
                                          .map(Object::toString)
                                          .collect(Collectors.joining(" ")),
                                         e.getValue()))
-                 .collect(Collectors.toSet());
-   }
-
-
-   public static Builder builder() {
-      return new Builder();
+                 .collect(Collectors.toList());
    }
 
    public static class Builder extends AbstractNGramExtractor<Builder> {

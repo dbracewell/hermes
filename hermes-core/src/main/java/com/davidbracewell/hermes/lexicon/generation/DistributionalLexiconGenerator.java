@@ -22,10 +22,10 @@
 package com.davidbracewell.hermes.lexicon.generation;
 
 import com.davidbracewell.Tag;
-import com.davidbracewell.apollo.affinity.Similarity;
-import com.davidbracewell.apollo.linalg.DenseVector;
-import com.davidbracewell.apollo.linalg.Vector;
+import com.davidbracewell.apollo.linear.NDArray;
+import com.davidbracewell.apollo.linear.NDArrayFactory;
 import com.davidbracewell.apollo.ml.embedding.Embedding;
+import com.davidbracewell.apollo.stat.measure.Similarity;
 import com.davidbracewell.collection.counter.MultiCounter;
 import com.davidbracewell.collection.counter.MultiCounters;
 import com.davidbracewell.guava.common.base.Preconditions;
@@ -94,21 +94,21 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
    public Multimap<T, String> generate() {
       HashMultimap<T, String> lexicon = HashMultimap.create();
       if (seedTerms.size() > 0) {
-         Map<T, Vector> vectors = new HashMap<>();
-         Map<T, Vector> negVectors = new HashMap<>();
+         Map<T, NDArray> vectors = new HashMap<>();
+         Map<T, NDArray> negVectors = new HashMap<>();
          seedTerms.keySet().forEach(tag -> {
-            Vector v = new DenseVector(wordEmbeddings.dimension());
+            NDArray v = NDArrayFactory.DENSE_DOUBLE.zeros(wordEmbeddings.dimension());
             seedTerms.get(tag).stream()
                      .filter(wordEmbeddings::contains)
-                     .forEach(s -> v.addSelf(wordEmbeddings.get(s)));
-            v.mapDivideSelf(seedTerms.size());
+                     .forEach(s -> v.addi(wordEmbeddings.get(s)));
+            v.divi(seedTerms.size());
             vectors.put(tag, v);
 
-            Vector negV = new DenseVector(wordEmbeddings.dimension());
+            NDArray negV = NDArrayFactory.DENSE_DOUBLE.zeros(wordEmbeddings.dimension());
             negativeSeedTerms.get(tag)
                              .stream()
                              .filter(wordEmbeddings::contains)
-                             .forEach(s -> negV.addSelf(wordEmbeddings.get(s)));
+                             .forEach(s -> negV.addi(wordEmbeddings.get(s)));
             negVectors.put(tag, negV);
          });
          lexicon.putAll(seedTerms);
@@ -119,7 +119,7 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
                           .filter(slv -> !seedTerms.containsValue(slv.getLabel()))
                           .forEach(slv -> {
                              double neg = 0;
-                             if (negVectors.get(tag).magnitude() > 0) {
+                             if (negVectors.get(tag).norm2() > 0) {
                                 neg = Similarity.Cosine.calculate(negVectors.get(tag), slv);
                              }
                              scores.set(slv.getLabel(), tag, slv.getWeight() - neg);

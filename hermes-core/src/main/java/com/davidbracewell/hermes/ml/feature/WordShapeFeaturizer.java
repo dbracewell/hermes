@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.ml.feature;
 
-import com.davidbracewell.apollo.ml.PredicateFeaturizer;
+import com.davidbracewell.apollo.ml.featurizer.PredicateFeaturizer;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.string.StringUtils;
 
@@ -29,9 +29,8 @@ import com.davidbracewell.string.StringUtils;
  * @author David B. Bracewell
  */
 public class WordShapeFeaturizer extends PredicateFeaturizer<HString> {
-   private static final long serialVersionUID = 1L;
-
    public static final WordShapeFeaturizer INSTANCE = new WordShapeFeaturizer();
+   private static final long serialVersionUID = 1L;
 
    public WordShapeFeaturizer() {
       super("WordShape");

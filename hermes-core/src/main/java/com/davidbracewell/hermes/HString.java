@@ -23,9 +23,9 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.Tag;
-import com.davidbracewell.apollo.linalg.Vector;
-import com.davidbracewell.apollo.linalg.VectorComposition;
-import com.davidbracewell.apollo.linalg.VectorCompositions;
+import com.davidbracewell.apollo.linear.NDArray;
+import com.davidbracewell.apollo.linear.VectorComposition;
+import com.davidbracewell.apollo.linear.VectorCompositions;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
@@ -242,29 +242,29 @@ public abstract class HString extends Span implements StringLike, AttributedObje
       return si;
    }
 
-   public Vector asVector(@NonNull VectorComposition composition) {
+   public NDArray asVector(@NonNull VectorComposition composition) {
       return asVector(composition, Types.TOKEN);
    }
 
-   public Vector asVector() {
-      return asVector(VectorCompositions.SVD, Types.TOKEN);
+   public NDArray asVector() {
+      return asVector(VectorCompositions.Average, Types.TOKEN);
    }
 
-   public Vector asVector(@NonNull VectorComposition composition, @NonNull AnnotationType... types) {
+   public NDArray asVector(@NonNull VectorComposition composition, @NonNull AnnotationType... types) {
       Embedding embedding = LanguageData.getDefaultEmbedding(getLanguage());
-      Vector v = Vector.dZeros(embedding.dimension());
+      List<NDArray> vectors = new ArrayList<>();
       interleaved(types).forEach(a -> {
          if (embedding.containsKey(a.toString())) {
-            v.addSelf(embedding.get(a.toString()));
+            vectors.add(embedding.get(a.toString()));
          } else if (embedding.containsKey(a.getLemma())) {
-            v.addSelf(embedding.get(a.getLemma()));
+            vectors.add(embedding.get(a.getLemma()));
          } else if (embedding.containsKey(a.toLowerCase())) {
-            v.addSelf(embedding.get(a.toLowerCase()));
+            vectors.add(embedding.get(a.toLowerCase()));
          } else if (embedding.containsKey(a.getPOS().name())) {
-            v.addSelf(embedding.get(a.getPOS().name()));
+            vectors.add(embedding.get(a.getPOS().name()));
          }
       });
-      return v;
+      return composition.compose(vectors.toArray(new NDArray[vectors.size()]));
    }
 
    @Override
