@@ -9,8 +9,8 @@ import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.string.StringPredicates;
 import com.davidbracewell.string.StringUtils;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author David B. Bracewell
@@ -18,7 +18,7 @@ import java.util.Set;
 public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
    private static final long serialVersionUID = 1L;
 
-   private void affixes(String word, int position, int length, Set<Feature> features) {
+   private void affixes(String word, int position, int length, List<Feature> features) {
       if (word.length() >= length && !word.equals("!DIGIT") && !word.equals("!YEAR") && !word.equals(
          Sequence.BOS) && !word.equals(Sequence.EOS)) {
          for (int li = 0; li < length; li++) {
@@ -42,9 +42,9 @@ public class DefaultPOSFeaturizer implements SequenceFeaturizer<Annotation> {
 
    @Override
    @Cached
-   public Set<Feature> apply(Context<Annotation> iterator) {
+   public List<Feature> apply(Context<Annotation> iterator) {
       String word = iterator.getCurrent().toString();
-      Set<Feature> features = new HashSet<>();
+      List<Feature> features = new ArrayList<>();
 
       String next = null, nextNext = null;
       if (iterator.getContext(1).isPresent()) {
