@@ -30,7 +30,7 @@ import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
-import com.davidbracewell.apollo.stat.measure.AssociationMeasures;
+import com.davidbracewell.apollo.stat.measure.Association;
 import com.davidbracewell.apollo.stat.measure.ContingencyTable;
 import com.davidbracewell.apollo.stat.measure.ContingencyTableCalculator;
 import com.davidbracewell.collection.Streams;
@@ -681,7 +681,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @return the counter
     */
    default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor, int minCount, double minScore) {
-      return significantBigrams(nGramExtractor, minCount, AssociationMeasures.Mikolov, minScore);
+      return significantBigrams(nGramExtractor, minCount, Association.Mikolov, minScore);
    }
 
    /**
