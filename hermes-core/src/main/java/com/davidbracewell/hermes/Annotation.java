@@ -185,6 +185,7 @@ public final class Annotation extends Fragment implements Serializable {
          relationStream = Stream.concat(relationStream,
                                         annotations().stream()
                                                      .filter(a -> a != this)
+                                                     .filter(a-> a.sentence().id == sentence().id)
                                                      .flatMap(token -> token.relations(false).stream()))
                                 .distinct();
       }

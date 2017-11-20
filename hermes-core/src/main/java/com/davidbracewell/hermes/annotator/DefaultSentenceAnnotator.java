@@ -248,32 +248,8 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
                                                   .add("wy.")
                                                   .add("wyo.")
                                                   .add("yuk.")
-
+                                                  .add("st.")
                                                   .build();
-
-   private boolean isEndOfSentenceMark(Annotation token) {
-      if (token.isEmpty() || token.get(Types.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN).isInstance(
-         TokenType.EMOTICON,
-         TokenType.PERSON_TITLE)) {
-         return false;
-      }
-      char c = token.charAt(token.length() - 1);
-      return Arrays.binarySearch(endOfSentence, c) >= 0;
-   }
-
-   private boolean isContinue(Annotation token) {
-      char c = token.isEmpty() ? ' ' : token.charAt(token.length() - 1);
-      return Arrays.binarySearch(sContinue, c) >= 0;
-   }
-
-   private boolean isEndPunctuation(Annotation token) {
-      if (token.length() != 1) {
-         return false;
-      }
-      char n = token.charAt(0);
-      int type = Character.getType(n);
-      return n == '"' || type == Character.FINAL_QUOTE_PUNCTUATION || type == Character.END_PUNCTUATION;
-   }
 
    private boolean addSentence(Document doc, int start, int end, int index) {
       while (start < doc.length() && Character.isWhitespace(doc.charAt(start))) {
@@ -288,121 +264,6 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
          return true;
       }
       return false;
-   }
-
-   private Annotation getToken(List<Annotation> tokens, int index) {
-      if (index < 0 || index >= tokens.size()) {
-         return Fragments.detachedEmptyAnnotation();
-      }
-      return tokens.get(index);
-   }
-
-   private boolean isAbbreviation(Annotation token) {
-      TokenType type = token.get(Types.TOKEN_TYPE).cast();
-      return type != null && (type.equals(TokenType.ACRONYM)
-                                 || (type.equals(TokenType.TIME)
-                                        && (token.next().isEmpty() || Character.isUpperCase(token.next().charAt(0)))));
-   }
-
-
-   private boolean isCapitalized(Annotation token) {
-      if (token.length() == 1 && token.contentEquals("I")) {
-         return true;
-      } else if (token.length() > 1) {
-         return !StringUtils.hasLetter(token) || Character.isUpperCase(token.charAt(0));
-      }
-      return false;
-   }
-
-   private int countNewLineBeforeNext(Document doc, Annotation cToken, Annotation nToken) {
-      if (nToken.isEmpty()) {
-         return 0;
-      }
-      int count = 0;
-      char prev = '\0';
-      for (int i = cToken.end(); i < nToken.start(); i++) {
-         if (doc.charAt(i) == '\r' || (prev != '\r' && doc.charAt(i) == '\n')) {
-            count++;
-         }
-         prev = doc.charAt(i);
-      }
-      return count;
-   }
-
-   private boolean isListMarker(Annotation token) {
-      return token.contentEquals("*") || token.contentEquals("+") || token.contentEquals(">");
-   }
-
-   private boolean isEndBracket(Annotation annotation) {
-      if (annotation.length() == 1) {
-         switch (annotation.charAt(0)) {
-            case ')':
-            case ']':
-            case '>':
-               return true;
-         }
-      }
-      return false;
-   }
-
-   enum InternalType {
-      ABBREVIATION,
-      LIST_MARKER,
-      QUOTATION_MARK,
-      END_OF_SENTENCE,
-      CONTINUE_SENTENCE,
-      PERSON_TITLE,
-      CAPITALIZED,
-      END_BRACKET,
-      OTHER
-   }
-
-   private boolean isQuotation(Annotation annotation) {
-      if (annotation.length() == 1) {
-         int type = Character.getType(annotation.charAt(0));
-         return annotation.contentEquals("\"")
-                   || annotation.contentEquals("'")
-                   || type == Character.INITIAL_QUOTE_PUNCTUATION
-                   || type == Character.FINAL_QUOTE_PUNCTUATION;
-      }
-      return false;
-   }
-
-   private Set<InternalType> getTypes(Annotation annotation) {
-      Set<InternalType> types = new HashSet<>();
-      if (isQuotation(annotation)) {
-         types.add(QUOTATION_MARK);
-      }
-      if (isAbbreviation(annotation)) {
-         types.add(ABBREVIATION);
-      }
-      if (isListMarker(annotation)) {
-         types.add(LIST_MARKER);
-      }
-      if (isEndOfSentenceMark(annotation)) {
-         types.add(END_OF_SENTENCE);
-      }
-      if (isContinue(annotation)) {
-         types.add(CONTINUE_SENTENCE);
-      }
-      if (annotation.get(Types.TOKEN_TYPE).equals(TokenType.PERSON_TITLE)) {
-         types.add(PERSON_TITLE);
-      }
-      if (isCapitalized(annotation)) {
-         types.add(CAPITALIZED);
-      }
-      if (isEndBracket(annotation)) {
-         types.add(END_BRACKET);
-      }
-      if (types.isEmpty()) {
-         types.add(OTHER);
-      }
-
-      return types;
-   }
-
-   private int distance(Annotation a1, Annotation a2) {
-      return a2.start() - a1.end();
    }
 
    @Override
@@ -474,6 +335,132 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
 
    }
 
+   private int countNewLineBeforeNext(Document doc, Annotation cToken, Annotation nToken) {
+      if (nToken.isEmpty()) {
+         return 0;
+      }
+      int count = 0;
+      char prev = '\0';
+      for (int i = cToken.end(); i < nToken.start(); i++) {
+         if (doc.charAt(i) == '\r' || (prev != '\r' && doc.charAt(i) == '\n')) {
+            count++;
+         }
+         prev = doc.charAt(i);
+      }
+      return count;
+   }
+
+   private int distance(Annotation a1, Annotation a2) {
+      return a2.start() - a1.end();
+   }
+
+   private Annotation getToken(List<Annotation> tokens, int index) {
+      if (index < 0 || index >= tokens.size()) {
+         return Fragments.detachedEmptyAnnotation();
+      }
+      return tokens.get(index);
+   }
+
+   private Set<InternalType> getTypes(Annotation annotation) {
+      Set<InternalType> types = new HashSet<>();
+      if (isQuotation(annotation)) {
+         types.add(QUOTATION_MARK);
+      }
+      if (isAbbreviation(annotation)) {
+         types.add(ABBREVIATION);
+      }
+      if (isListMarker(annotation)) {
+         types.add(LIST_MARKER);
+      }
+      if (isEndOfSentenceMark(annotation)) {
+         types.add(END_OF_SENTENCE);
+      }
+      if (isContinue(annotation)) {
+         types.add(CONTINUE_SENTENCE);
+      }
+      if (annotation.get(Types.TOKEN_TYPE).equals(TokenType.PERSON_TITLE)) {
+         types.add(PERSON_TITLE);
+      }
+      if (isCapitalized(annotation)) {
+         types.add(CAPITALIZED);
+      }
+      if (isEndBracket(annotation)) {
+         types.add(END_BRACKET);
+      }
+      if (types.isEmpty()) {
+         types.add(OTHER);
+      }
+
+      return types;
+   }
+
+   private boolean isAbbreviation(Annotation token) {
+      TokenType type = token.get(Types.TOKEN_TYPE).cast();
+      return type != null && (type.equals(TokenType.ACRONYM)
+                                 || (type.equals(TokenType.TIME)
+                                        && (token.next().isEmpty() || Character.isUpperCase(token.next().charAt(0)))));
+   }
+
+   private boolean isCapitalized(Annotation token) {
+      if (token.length() == 1 && token.contentEquals("I")) {
+         return true;
+      } else if (token.length() > 1) {
+         return !StringUtils.hasLetter(token) || Character.isUpperCase(token.charAt(0));
+      }
+      return false;
+   }
+
+   private boolean isContinue(Annotation token) {
+      char c = token.isEmpty() ? ' ' : token.charAt(token.length() - 1);
+      return Arrays.binarySearch(sContinue, c) >= 0;
+   }
+
+   private boolean isEndBracket(Annotation annotation) {
+      if (annotation.length() == 1) {
+         switch (annotation.charAt(0)) {
+            case ')':
+            case ']':
+            case '>':
+               return true;
+         }
+      }
+      return false;
+   }
+
+   private boolean isEndOfSentenceMark(Annotation token) {
+      if (token.isEmpty() || token.get(Types.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN).isInstance(
+         TokenType.EMOTICON,
+         TokenType.PERSON_TITLE)) {
+         return false;
+      }
+      char c = token.charAt(token.length() - 1);
+      return Arrays.binarySearch(endOfSentence, c) >= 0;
+   }
+
+   private boolean isEndPunctuation(Annotation token) {
+      if (token.length() != 1) {
+         return false;
+      }
+      char n = token.charAt(0);
+      int type = Character.getType(n);
+      return n == '"' || type == Character.FINAL_QUOTE_PUNCTUATION || type == Character.END_PUNCTUATION;
+   }
+
+   private boolean isListMarker(Annotation token) {
+      return token.contentEquals("*") || token.contentEquals("+") || token.contentEquals(">");
+   }
+
+   private boolean isQuotation(Annotation annotation) {
+      if (annotation.length() == 1) {
+         int type = Character.getType(annotation.charAt(0));
+         return annotation.contentEquals("\"")
+                   || annotation.contentEquals("'")
+                   || type == Character.INITIAL_QUOTE_PUNCTUATION
+                   || type == Character.FINAL_QUOTE_PUNCTUATION;
+      }
+      return false;
+   }
+
    @Override
    public Set<AnnotatableType> requires() {
       return Collections.singleton(Types.TOKEN);
@@ -482,6 +469,18 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
    @Override
    public Set<AnnotatableType> satisfies() {
       return Collections.singleton(Types.SENTENCE);
+   }
+
+   enum InternalType {
+      ABBREVIATION,
+      LIST_MARKER,
+      QUOTATION_MARK,
+      END_OF_SENTENCE,
+      CONTINUE_SENTENCE,
+      PERSON_TITLE,
+      CAPITALIZED,
+      END_BRACKET,
+      OTHER
    }
 
 
