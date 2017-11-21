@@ -286,6 +286,7 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
          Set<InternalType> cTypes = getTypes(cToken);
          Set<InternalType> nTypes = getTypes(nToken);
 
+
          if (cTypes.contains(QUOTATION_MARK)) {
             quoteCount++;
          }
@@ -306,8 +307,7 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
                cToken = nToken;
             }
 
-
-            if (!nTypes.contains(CONTINUE_SENTENCE) && addSentence(doc, start, cToken.end(), sentenceIndex)) {
+            if (!noSentenceBreak.contains(cToken.toLowerCase()) && !nTypes.contains(CONTINUE_SENTENCE) && addSentence(doc, start, cToken.end(), sentenceIndex)) {
                sentenceIndex++;
                lastEnd = cToken.end();
                start = -1;
@@ -328,7 +328,6 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
             }
          }
       }
-
       if (tokens.size() > 0 && lastEnd < tokens.get(tokens.size() - 1).end()) {
          addSentence(doc, start, tokens.get(tokens.size() - 1).end(), sentenceIndex);
       }
