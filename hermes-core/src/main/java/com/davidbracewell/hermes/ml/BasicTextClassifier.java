@@ -13,6 +13,7 @@ import com.davidbracewell.cli.CommandLineParser;
 import com.davidbracewell.cli.NamedOption;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
+import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.guava.common.collect.Iterables;
 import com.davidbracewell.hermes.AnnotatableType;
@@ -22,6 +23,8 @@ import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.corpus.CorpusType;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
+
+import java.util.Random;
 
 /**
  * The type Basic text classifier.
@@ -75,10 +78,26 @@ public abstract class BasicTextClassifier implements TextClassifier {
                                .type(Resource.class)
                                .required(true)
                                .build());
+      cli.addOption(NamedOption.builder()
+                               .name("undersample")
+                               .description("Undersample")
+                               .type(Boolean.class)
+                               .required(false)
+                               .defaultValue(false)
+                               .build());
+      cli.addOption(NamedOption.builder()
+                               .name("oversample")
+                               .description("Oversample")
+                               .type(Boolean.class)
+                               .required(false)
+                               .defaultValue(false)
+                               .build());
       cli.parse(args);
       Hermes.initializeApplication(args);
 
-      Dataset<Instance> data = getDataset(cli.get("data"), cli.get("format"), cli.get("corpusType"));
+      Dataset<Instance> data = getDataset(cli.get("data"), cli.get("format"), cli.get("corpusType"),
+                                          cli.get("undersample"),
+                                          cli.get("oversample"));
 
       Mode mode = cli.get("mode");
       switch (mode) {
@@ -116,7 +135,7 @@ public abstract class BasicTextClassifier implements TextClassifier {
     * @param corpusType the corpus type
     * @return the dataset
     */
-   protected Dataset<Instance> getDataset(Resource data, String format, CorpusType corpusType) {
+   protected Dataset<Instance> getDataset(Resource data, String format, CorpusType corpusType, boolean undersample, boolean oversample) {
       Corpus corpus = Corpus.builder()
                             .format(format)
                             .source(data)
@@ -126,7 +145,29 @@ public abstract class BasicTextClassifier implements TextClassifier {
       if (required != null && required.length > 0) {
          corpus = corpus.annotate(required);
       }
-      return corpus.asClassificationDataSet(getFeaturizer(), getOracle()).preprocess(getPreprocessors()).shuffle();
+
+
+      Corpus filtered = corpus;
+      SerializablePredicate<HString> predicate = getTextFilter();
+      if (predicate != null) {
+         filtered = corpus.filter(getTextFilter());
+      }
+      Dataset<Instance> dataset = Dataset
+                                     .classification()
+                                     .type(corpus.getDataSetType())
+                                     .source(filtered
+                                                .asLabeledStream(getOracle())
+                                                .map(getFeaturizer()::extractInstance));
+
+
+      if (undersample) {
+         dataset = dataset.undersample();
+      }
+      if (oversample) {
+         dataset = dataset.oversample();
+      }
+
+      return dataset.shuffle(new Random(34));
    }
 
    /**
@@ -157,6 +198,10 @@ public abstract class BasicTextClassifier implements TextClassifier {
     */
    protected PreprocessorList<Instance> getPreprocessors() {
       return PreprocessorList.empty();
+   }
+
+   protected SerializablePredicate<HString> getTextFilter() {
+      return null;
    }
 
    /**
