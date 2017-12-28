@@ -64,6 +64,7 @@ public interface AnnotatableType {
       String key = Config.closestKey(type(), language, name(), "annotator");
       Annotator annotator = null;
 
+
       if (StringUtils.isNotNullOrBlank(key)) {
          //Annotator is defined via configuration (this will override defaults)
          annotator = Config.get(key).as(Annotator.class);
