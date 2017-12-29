@@ -38,58 +38,61 @@ import java.io.Serializable;
  * @author David B. Bracewell
  */
 public class MStreamCorpus implements Corpus, Serializable {
-  private static final long serialVersionUID = 1L;
-  private final MStream<Document> stream;
-  private final DocumentFactory documentFactory;
+   private static final long serialVersionUID = 1L;
+   private final MStream<Document> stream;
+   private final DocumentFactory documentFactory;
 
-  public MStreamCorpus(MStream<Document> stream, DocumentFactory documentFactory) {
-    this.stream = stream;
-    this.documentFactory = documentFactory;
-  }
+   public MStreamCorpus(MStream<Document> stream, DocumentFactory documentFactory) {
+      this.stream = stream;
+      this.documentFactory = documentFactory;
+   }
 
-  @Override
-  public void close() throws Exception {
-    stream.close();
-  }
+   @Override
+   public void close() throws Exception {
+      stream.close();
+   }
 
-  @Override
-  public MStream<Document> stream() {
-    return stream;
-  }
+   @Override
+   public long size() {
+      return stream.count();
+   }
 
-  @Override
-  public Corpus annotate(@NonNull AnnotatableType... types) {
-    return new MStreamCorpus(stream.map(d -> {
-      Pipeline.process(d, types);
-      return d;
-    }),
-      documentFactory
-    );
-  }
+   @Override
+   public MStream<Document> stream() {
+      return stream;
+   }
 
-  @Override
-  public CorpusType getCorpusType() {
-    return null;
-  }
+   @Override
+   public Corpus annotate(@NonNull AnnotatableType... types) {
+      return new MStreamCorpus(stream.map(d -> {
+         Pipeline.process(d, types);
+         return d;
+      }), documentFactory);
+   }
 
-  @Override
-  public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
-    return new MStreamCorpus(stream().map(Cast.as(function)), documentFactory);
-  }
+   @Override
+   public CorpusType getCorpusType() {
+      return CorpusType.STREAM;
+   }
 
-  @Override
-  public DocumentFactory getDocumentFactory() {
-    return documentFactory;
-  }
+   @Override
+   public Corpus map(@NonNull SerializableFunction<Document, Document> function) {
+      return new MStreamCorpus(stream().map(Cast.as(function)), documentFactory);
+   }
 
-  @Override
-  public Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
-    return new MStreamCorpus(stream.filter(filter), documentFactory);
-  }
+   @Override
+   public DocumentFactory getDocumentFactory() {
+      return documentFactory;
+   }
 
-  @Override
-  public StreamingContext getStreamingContext() {
-    return stream.getContext();
-  }
+   @Override
+   public Corpus filter(@NonNull SerializablePredicate<? super Document> filter) {
+      return new MStreamCorpus(stream.filter(filter), documentFactory);
+   }
+
+   @Override
+   public StreamingContext getStreamingContext() {
+      return stream.getContext();
+   }
 
 }//END OF MStreamCorpus
