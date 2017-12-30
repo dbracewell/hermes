@@ -8,11 +8,12 @@ import com.davidbracewell.apollo.ml.classification.Classifier;
 import com.davidbracewell.apollo.ml.classification.ClassifierEvaluation;
 import com.davidbracewell.apollo.ml.classification.ClassifierLearner;
 import com.davidbracewell.apollo.ml.data.Dataset;
+import com.davidbracewell.apollo.ml.encoder.Encoder;
+import com.davidbracewell.apollo.ml.encoder.IndexEncoder;
 import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.apollo.ml.preprocess.PreprocessorList;
 import com.davidbracewell.cli.CommandLineParser;
 import com.davidbracewell.cli.NamedOption;
-import com.davidbracewell.collection.counter.MultiCounter;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
@@ -166,6 +167,7 @@ public abstract class BasicTextClassifier implements TextClassifier {
         }
         Dataset<Instance> dataset = Dataset
                 .classification()
+                .featureEncoder(getFeatureEncoder())
                 .type(corpus.getDataSetType())
                 .source(filtered
                         .asLabeledStream(getOracle())
@@ -180,6 +182,10 @@ public abstract class BasicTextClassifier implements TextClassifier {
         }
 
         return dataset.shuffle(new Random(34));
+    }
+
+    protected Encoder getFeatureEncoder(){
+        return new IndexEncoder();
     }
 
     /**
