@@ -49,9 +49,9 @@ public class NGramFeature implements Featurizer<HString> {
    @Cached(keyMaker = HStringKeyMaker.class)
    public List<Feature> apply(HString hString) {
       return spec.countTuples(hString).entries().stream()
-                 .map(e -> Feature.real(e.getKey().stream()
-                                         .map(Object::toString)
-                                         .collect(Collectors.joining(" ")),
+                 .map(e -> Feature.real("NGRAM(" + e.getKey().stream()
+                                                    .map(Object::toString)
+                                                    .collect(Collectors.joining(" ")) + ")",
                                         e.getValue()))
                  .collect(Collectors.toList());
    }
