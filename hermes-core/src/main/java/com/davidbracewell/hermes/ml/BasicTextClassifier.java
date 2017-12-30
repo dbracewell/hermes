@@ -255,10 +255,6 @@ public abstract class BasicTextClassifier implements TextClassifier {
      */
     protected void train(Dataset<Instance> dataset) {
         this.classifier = getLearner().train(dataset);
-        MultiCounter<String,String> mc = this.classifier.getModelParameters().transpose();
-        for (String k1 : mc.firstKeys()) {
-            System.out.println(k1 + " : " + mc.get(k1).topN(5));
-        }
     }
 
 
