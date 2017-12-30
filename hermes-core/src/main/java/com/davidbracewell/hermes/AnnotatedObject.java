@@ -46,11 +46,11 @@ public interface AnnotatedObject {
     * Gets the first annotation overlapping this object with the given annotation type.
     *
     * @param type the annotation type
-    * @return the first annotation of the given type overlapping this object or a detached empty annotation if there is
+    * @return the first annotation of the given type overlapping this object or an empty annotation if there is
     * none.
     */
    default Annotation first(@NonNull AnnotationType type) {
-      return get(type).stream().findFirst().orElseGet(Fragments::detachedEmptyAnnotation);
+      return get(type).stream().findFirst().orElseGet(() -> Fragments.emptyAnnotation(document()));
    }
 
    /**
