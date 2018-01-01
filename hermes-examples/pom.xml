@@ -27,19 +27,19 @@
     <parent>
         <groupId>com.davidbracewell</groupId>
         <artifactId>hermes</artifactId>
-        <version>0.5</version>
+        <version>0.6-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
     <dependencies>
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>hermes-core</artifactId>
-            <version>0.5</version>
+            <version>0.6-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>hermes-opennlp</artifactId>
-            <version>0.5</version>
+            <version>0.6-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.davidbracewell</groupId>
