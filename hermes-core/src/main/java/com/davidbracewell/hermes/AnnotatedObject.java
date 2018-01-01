@@ -50,7 +50,7 @@ public interface AnnotatedObject {
     * none.
     */
    default Annotation first(@NonNull AnnotationType type) {
-      return get(type).stream().findFirst().orElseGet(() -> Fragments.emptyAnnotation(document()));
+      return get(type).stream().findFirst().orElseGet(Fragments::detachedEmptyAnnotation);
    }
 
    /**
