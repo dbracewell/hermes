@@ -57,4 +57,6 @@ public interface WordList extends Iterable<String> {
    int size();
 
 
+   void merge(WordList other);
+
 }//END OF WordList

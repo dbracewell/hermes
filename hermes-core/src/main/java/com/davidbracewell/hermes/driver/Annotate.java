@@ -33,9 +33,7 @@ public class Annotate extends HermesCommandLineApp {
 
    @Override
    protected void programLogic() throws Exception {
-      writeCorpus(
-         getCorpus().annotate(convert())
-                 );
+      writeCorpus(getCorpus().annotate(convert()));
    }
 
 }// END OF Annotate

@@ -38,40 +38,45 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class LexiconAnnotator extends SentenceLevelAnnotator implements Serializable {
-  private static final long serialVersionUID = 1L;
-  private final AnnotationType type;
-  private final Lexicon lexicon;
+   private static final long serialVersionUID = 1L;
+   private final AnnotationType type;
+   private final Lexicon lexicon;
 
 
-  /**
-   * Instantiates a new Lexicon annotator.
-   *
-   * @param type        the type
-   * @param lexiconName the lexicon name
-   */
-  public LexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName) {
-    this(type, LexiconManager.getLexicon(lexiconName));
-  }
+   /**
+    * Instantiates a new Lexicon annotator.
+    *
+    * @param type        the type
+    * @param lexiconName the lexicon name
+    */
+   public LexiconAnnotator(@NonNull AnnotationType type, @NonNull String lexiconName) {
+      this(type, LexiconManager.getLexicon(lexiconName));
+   }
 
-  /**
-   * Instantiates a new Lexicon annotator.
-   *
-   * @param type    the type
-   * @param lexicon the lexicon
-   */
-  public LexiconAnnotator(@NonNull AnnotationType type, @NonNull Lexicon lexicon) {
-    this.lexicon = lexicon;
-    this.type = type;
-  }
+   /**
+    * Instantiates a new Lexicon annotator.
+    *
+    * @param type    the type
+    * @param lexicon the lexicon
+    */
+   public LexiconAnnotator(@NonNull AnnotationType type, @NonNull Lexicon lexicon) {
+      this.lexicon = lexicon;
+      this.type = type;
+   }
 
-  @Override
-  public void annotate(Annotation sentence) {
-    lexicon.match(sentence).forEach(hString -> sentence.document().createAnnotation(type, hString, true));
-  }
+   @Override
+   public void annotate(Annotation sentence) {
+      lexicon.match(sentence).forEach(hString -> sentence.document()
+                                                         .annotationBuilder()
+                                                         .type(type)
+                                                         .bounds(hString)
+                                                         .attributes(hString)
+                                                         .createAttached());
+   }
 
-  @Override
-  public Set<AnnotatableType> satisfies() {
-    return Collections.singleton(type);
-  }
+   @Override
+   public Set<AnnotatableType> satisfies() {
+      return Collections.singleton(type);
+   }
 
 }//END OF LexiconAnnotator

@@ -22,15 +22,13 @@
 package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.cache.Cached;
-import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.extraction.AbstractExtractor;
-import com.davidbracewell.stream.MStream;
-import com.davidbracewell.stream.StreamingContext;
+import com.davidbracewell.hermes.extraction.AbstractTermExtractor;
 
-import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The type Bag of annotations.
@@ -38,57 +36,56 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class BagOfAnnotations implements Featurizer<HString> {
-  private static final long serialVersionUID = 1L;
-  /**
-   * The Feature spec.
-   */
-  final AbstractExtractor<?> featureSpec;
+   private static final long serialVersionUID = 1L;
+   /**
+    * The Feature spec.
+    */
+   final AbstractTermExtractor<?> featureSpec;
 
-  /**
-   * Instantiates a new Bag of annotations.
-   *
-   * @param featureSpec the feature spec
-   */
-  public BagOfAnnotations(AbstractExtractor featureSpec) {
-    this.featureSpec = featureSpec;
-  }
-
-
-  @Override
-  @Cached(keyMaker = HStringKeyMaker.class)
-  public Set<Feature> apply(HString hString) {
-    MStream<String> stream = StreamingContext.local().stream(
-      hString.stream(featureSpec.getAnnotationType())
-        .filter(featureSpec.getFilter())
-        .map(featureSpec.getToStringFunction())
-    );
-    return featureSpec.getValueCalculator().apply(Counters.newCounter(stream.countByValue()));
-  }
+   /**
+    * Instantiates a new Bag of annotations.
+    *
+    * @param featureSpec the feature spec
+    */
+   public BagOfAnnotations(AbstractTermExtractor<?> featureSpec) {
+      this.featureSpec = featureSpec;
+   }
 
 
-  /**
-   * Builder builder.
-   *
-   * @return the builder
-   */
-  public static Builder builder() {
-    return new Builder();
-  }
+   @Override
+   @Cached(keyMaker = HStringKeyMaker.class)
+   public List<Feature> apply(HString hString) {
+      return featureSpec.count(hString)
+                        .entries()
+                        .stream()
+                        .map(e -> Feature.real(e.getKey(), e.getValue()))
+                        .collect(Collectors.toList());
+   }
 
-  /**
-   * The type Builder.
-   */
-  public static class Builder extends AbstractExtractor<Builder> {
-    private static final long serialVersionUID = 1L;
 
-    /**
-     * Build bag of annotations.
-     *
-     * @return the bag of annotations
-     */
-    public BagOfAnnotations build() {
-      return new BagOfAnnotations(this);
-    }
-  }
+   /**
+    * Builder builder.
+    *
+    * @return the builder
+    */
+   public static Builder builder() {
+      return new Builder();
+   }
+
+   /**
+    * The type Builder.
+    */
+   public static class Builder extends AbstractTermExtractor<Builder> {
+      private static final long serialVersionUID = 1L;
+
+      /**
+       * Build bag of annotations.
+       *
+       * @return the bag of annotations
+       */
+      public BagOfAnnotations build() {
+         return new BagOfAnnotations(this);
+      }
+   }
 
 }//END OF BagOfAnnotations

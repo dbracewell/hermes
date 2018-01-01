@@ -27,24 +27,24 @@
     <parent>
         <groupId>com.davidbracewell</groupId>
         <artifactId>hermes</artifactId>
-        <version>0.4</version>
+        <version>0.5</version>
         <relativePath>..</relativePath>
     </parent>
     <dependencies>
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>hermes-core</artifactId>
-            <version>0.4</version>
+            <version>0.5</version>
         </dependency>
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>hermes-opennlp</artifactId>
-            <version>0.4</version>
+            <version>0.5</version>
         </dependency>
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>hermes-en-models</artifactId>
-            <version>0.3</version>
+            <version>0.4</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>

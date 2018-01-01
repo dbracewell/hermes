@@ -22,23 +22,14 @@
 package com.davidbracewell.hermes.extraction;
 
 import com.davidbracewell.Copyable;
-import com.davidbracewell.collection.counter.Counter;
-import com.davidbracewell.collection.counter.Counters;
-import com.davidbracewell.hermes.HString;
-import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * The type Term spec.
  *
  * @author David B. Bracewell
  */
-public class TermExtractor extends AbstractExtractor<TermExtractor> implements Copyable<TermExtractor> {
+public class TermExtractor extends AbstractTermExtractor<TermExtractor> implements Copyable<TermExtractor> {
    private static final long serialVersionUID = 1L;
 
    /**
@@ -66,58 +57,6 @@ public class TermExtractor extends AbstractExtractor<TermExtractor> implements C
       return new TermExtractor();
    }
 
-
-   /**
-    * Executes the TermSpec returning a stream of stringified terms. This method does not use the TermSpec's {@link
-    * com.davidbracewell.hermes.ml.feature.ValueCalculator}
-    *
-    * @param hString the HString to process
-    * @return a stream of term counts
-    */
-   public Stream<String> stream(@NonNull HString hString) {
-      return hString.stream(getAnnotationType())
-                    .map(getTrimFunction())
-                    .filter(getFilter())
-                    .map(getToStringFunction())
-                    .filter(StringUtils::isNotNullOrBlank);
-   }
-
-   /**
-    * Executes the TermSpec returning a list of stringified terms. This method does not use the TermSpec's {@link
-    * com.davidbracewell.hermes.ml.feature.ValueCalculator}
-    *
-    * @param hString the HString to process
-    * @return a list of term counts
-    */
-   public List<String> collect(@NonNull HString hString) {
-      return stream(hString).collect(Collectors.toList());
-   }
-
-   /**
-    * Executes the TermSpec returning a set of stringified terms. This method does not use the TermSpec's {@link
-    * com.davidbracewell.hermes.ml.feature.ValueCalculator}
-    *
-    * @param hString the HString to process
-    * @return a set of term counts
-    */
-   public Set<String> unique(@NonNull HString hString) {
-      return stream(hString).collect(Collectors.toSet());
-   }
-
-   /**
-    * Fully executes the TermSpec returning a count of the stringified terms with their values adjusted according the
-    * TermSpec's {@link com.davidbracewell.hermes.ml.feature.ValueCalculator}
-    *
-    * @param hString the HString to process
-    * @return an adjusted counter of term counts
-    */
-   public Counter<String> count(@NonNull HString hString) {
-      return getValueCalculator().adjust(Counters.newCounter(hString.stream(getAnnotationType())
-                                                                    .map(getTrimFunction())
-                                                                    .filter(getFilter())
-                                                                    .map(getToStringFunction())
-                                                                    .filter(StringUtils::isNotNullOrBlank)));
-   }
 
    @Override
    public TermExtractor copy() {

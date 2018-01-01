@@ -22,11 +22,7 @@
 package com.davidbracewell.hermes.annotator;
 
 import com.davidbracewell.config.Config;
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.Pipeline;
-import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.Entities;
+import com.davidbracewell.hermes.*;
 import org.junit.Test;
 
 import java.util.List;

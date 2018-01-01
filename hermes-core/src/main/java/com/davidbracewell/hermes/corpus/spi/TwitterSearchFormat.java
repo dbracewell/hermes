@@ -29,7 +29,7 @@ import com.davidbracewell.hermes.DocumentFactory;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.io.structured.StructuredFormat;
+import com.davidbracewell.json.Json;
 import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class TwitterSearchFormat extends FileBasedFormat {
 
    @Override
    public Iterable<Document> read(Resource resource, DocumentFactory documentFactory) throws IOException {
-      Map<String, ?> file = StructuredFormat.JSON.loads(resource);
+      Map<String, ?> file = Json.loads(resource);
       List<Document> documentList = new ArrayList<>();
       List<Map<String, ?>> statuses = Cast.as(Val.of(file.get("statuses")).asList(Map.class));
       statuses.forEach(status -> {

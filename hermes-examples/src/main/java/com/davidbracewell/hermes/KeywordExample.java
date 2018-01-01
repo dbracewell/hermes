@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes;
 
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.extraction.TermExtractor;
 import com.davidbracewell.hermes.extraction.keyword.NPClusteringKeywordExtractor;
 import com.davidbracewell.hermes.extraction.keyword.TermKeywordExtractor;
 import com.davidbracewell.hermes.filter.StopWords;
@@ -48,7 +48,7 @@ public class KeywordExample {
             "Alice started to her feet, for it flashed across her mind that she had never before seen a rabbit with either " +
             "a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she ran across the field after " +
             "it, and fortunately was just in time to see it pop down a large rabbit-hole under the hedge. Excerpt taken from: https://www.gutenberg.org/files/11/11-h/11-h.htm."
-         );
+                                         );
       document.annotate(Types.TOKEN, Types.SENTENCE, Types.PHRASE_CHUNK);
       NPClusteringKeywordExtractor ke = new NPClusteringKeywordExtractor();
       System.out.println("   NPClusteringKeywordExtractor");
@@ -57,11 +57,12 @@ public class KeywordExample {
 
 
       System.out.println("   TFKeywordExtractor");
-      TermKeywordExtractor tfke = new TermKeywordExtractor(com.davidbracewell.hermes.extraction.TermExtractor.create()
-                                                                                                             .annotationType(Types.PHRASE_CHUNK)
-                                                                                                             .toStringFunction(
-                                                                  pc -> pc.trim(StopWords.isStopWord()).getLemma())
-                                                                                                             .filter(pc -> pc.getPOS().isInstance(POS.NOUN))
+      TermKeywordExtractor tfke = new TermKeywordExtractor(TermExtractor.create()
+                                                                        .annotationType(Types.PHRASE_CHUNK)
+                                                                        .toStringFunction(
+                                                                           pc -> pc.trim(StopWords.isStopWord())
+                                                                                   .getLemma())
+                                                                        .filter(pc -> pc.getPOS().isInstance(POS.NOUN))
       );
       tfke.extract(document).topN(10).forEach((kw, score) -> System.out.println(kw + "\t" + score));
 

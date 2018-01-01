@@ -37,7 +37,7 @@ import lombok.NonNull;
  *
  * @author David B. Bracewell
  */
-public class AnnotatorCache {
+public final class AnnotatorCache {
 
    private static volatile AnnotatorCache INSTANCE;
    private final Cache<String, Annotator> cache;

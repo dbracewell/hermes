@@ -59,7 +59,6 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
       this.tagAttributeType = tagAttributeType;
    }
 
-
    public AttributeType getTagAttributeType() {
       return tagAttributeType;
    }
@@ -75,6 +74,11 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
    }
 
 
+   /**
+    * Ensure longest lemma.
+    *
+    * @param lemma the lemma
+    */
    protected void ensureLongestLemma(String lemma) {
       this.longestLemma = Math.max(this.longestLemma, lemma.split("\\s+").length);
    }
@@ -171,7 +175,7 @@ public abstract class BaseLexicon implements Lexicon, Serializable {
          if (prefix.test(token)) {
 
             LexiconMatch bestMatch = null;
-            for (int j = i + 1; j < tokens.size() && j < (i + 1 + longestLemma); j++) {
+            for (int j = i + 1; j <= tokens.size() && j < (i + 1 + longestLemma); j++) {
                HString temp = HString.union(tokens.subList(i, j));
                List<LexiconEntry> entries = getEntries(temp);
                if (entries.size() > 0) {

@@ -2,11 +2,7 @@ package com.davidbracewell.hermes.corpus.spi;
 
 import com.davidbracewell.SystemInfo;
 import com.davidbracewell.guava.common.base.Preconditions;
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.DocumentFactory;
-import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.corpus.CorpusFormat;
 import com.davidbracewell.io.resource.Resource;
 import com.davidbracewell.string.StringUtils;
@@ -15,6 +11,7 @@ import org.kohsuke.MetaInfServices;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,6 +21,16 @@ import java.util.List;
 @MetaInfServices(CorpusFormat.class)
 public class POSTrainFormat extends FileBasedFormat {
    private static final long serialVersionUID = 1L;
+
+   @Override
+   public boolean isOnePerLine() {
+      return true;
+   }
+
+   @Override
+   public String name() {
+      return "POS";
+   }
 
    private Document processLine(String line, DocumentFactory documentFactory) {
       List<String> tokens = new LinkedList<>();
@@ -50,7 +57,7 @@ public class POSTrainFormat extends FileBasedFormat {
             document.tokenAt(i).put(Types.PART_OF_SPEECH, p);
          }
       }
-      document.createAnnotation(Types.SENTENCE, 0, document.length());
+      document.createAnnotation(Types.SENTENCE, 0, document.length(), Collections.emptyMap());
       document.getAnnotationSet().setIsCompleted(Types.SENTENCE, true, "PROVIDED");
       document.getAnnotationSet().setIsCompleted(Types.TOKEN, true, "PROVIDED");
       document.getAnnotationSet().setIsCompleted(Types.PART_OF_SPEECH, complete, "PROVIDED");
@@ -74,23 +81,6 @@ public class POSTrainFormat extends FileBasedFormat {
    }
 
    @Override
-   public String name() {
-      return "POS";
-   }
-
-//  @Override
-//  public void write(@NonNull Resource resource, @NonNull Document document) throws IOException {
-//    if( document.getAnnotationSet().isCompleted(Types.PART_OF_SPEECH)) {
-//      try (BufferedWriter writer = new BufferedWriter(resource.writer())) {
-//        for (Annotation sentence : document.sentences()) {
-//          writer.write(sentence.toPOSString('_'));
-//          writer.write(SystemInfo.LINE_SEPARATOR);
-//        }
-//      }
-//    }
-//  }
-
-   @Override
    public String toString(@NonNull Document document) {
       StringBuilder builder = new StringBuilder();
       if (document.getAnnotationSet().isCompleted(Types.PART_OF_SPEECH)) {
@@ -100,10 +90,5 @@ public class POSTrainFormat extends FileBasedFormat {
          }
       }
       return builder.toString();
-   }
-
-   @Override
-   public boolean isOnePerLine() {
-      return true;
    }
 }// END OF POSTrainFormat

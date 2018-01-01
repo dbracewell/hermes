@@ -23,16 +23,24 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.Tag;
+import com.davidbracewell.apollo.linear.NDArray;
+import com.davidbracewell.apollo.linear.VectorComposition;
+import com.davidbracewell.apollo.linear.VectorCompositions;
 import com.davidbracewell.apollo.ml.LabeledDatum;
+import com.davidbracewell.apollo.ml.embedding.Embedding;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
+import com.davidbracewell.collection.Span;
 import com.davidbracewell.collection.Streams;
+import com.davidbracewell.collection.list.Lists;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.extraction.regex.TokenMatcher;
+import com.davidbracewell.hermes.extraction.regex.TokenRegex;
 import com.davidbracewell.hermes.morphology.Stemmers;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple;
+import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
 
 import java.util.*;
@@ -41,22 +49,21 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.davidbracewell.tuple.Tuples.$;
 
 /**
- * <p>
- * Represents a java string on steroids. HStrings act as a <code>CharSequence</code> and have methods similar to those
- * on <code>String</code>. Methods that do not modify the underlying string representation, e.g. substring, find, will
- * return another HString whereas methods that modify the string, e.g. lower casing, return a String object.
+ * <p> Represents a java string on steroids. HStrings act as a <code>CharSequence</code> and have methods similar to
+ * those on <code>String</code>. Methods that do not modify the underlying string representation, e.g. substring, find,
+ * will return another HString whereas methods that modify the string, e.g. lower casing, return a String object.
  * Additionally, HStrings have a span (i.e. start and end positions), attributes, and annotations. HStrings allow for
  * methods to process documents, fragments, and annotations in a uniform fashion. Methods on the HString facilitate
- * determining if the object is an annotation ({@link #isAnnotation()} or is a document ({@link #isDocument()}).
- * </p>
+ * determining if the object is an annotation ({@link #isAnnotation()} or is a document ({@link #isDocument()}). </p>
  *
  * @author David B. Bracewell
  */
-public abstract class HString extends Span implements CharSequence, AttributedObject, AnnotatedObject, RelationalObject {
+public abstract class HString extends Span implements StringLike, AttributedObject, AnnotatedObject, RelationalObject {
    private static final long serialVersionUID = 1L;
 
    /**
@@ -67,104 +74,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    HString(int start, int end) {
       super(start, end);
-   }
-
-
-   /**
-    * Tagged text string.
-    *
-    * @param type the type
-    * @return the string
-    */
-   public String taggedText(@NonNull AnnotationType type) {
-      StringBuilder builder = new StringBuilder();
-      interleaved(type, Types.TOKEN).forEach(annotation -> {
-         if (annotation.getType().equals(type)) {
-            builder.append("<")
-                   .append(annotation.getTag().map(Tag::name).orElse("?"))
-                   .append(">")
-                   .append(annotation)
-                   .append("</")
-                   .append(annotation.getTag().map(Tag::name).orElse("?"))
-                   .append(">")
-                   .append(" ");
-         } else {
-            builder.append(annotation).append(" ");
-         }
-      });
-      return builder.toString();
-   }
-
-
-   /**
-    * Trim left h string.
-    *
-    * @param toTrimPredicate the to trim predicate
-    * @return the h string
-    */
-   public HString trimLeft(@NonNull Predicate<? super Annotation> toTrimPredicate) {
-      int start = 0;
-      while (start < tokenLength() && toTrimPredicate.test(tokenAt(start))) {
-         start++;
-      }
-      if (start < tokenLength()) {
-         return tokenAt(start).union(tokenAt(tokenLength() - 1));
-      }
-      return Fragments.empty(document());
-   }
-
-   /**
-    * Trim right h string.
-    *
-    * @param toTrimPredicate the to trim predicate
-    * @return the h string
-    */
-   public HString trimRight(@NonNull Predicate<? super Annotation> toTrimPredicate) {
-      int end = tokenLength() - 1;
-      while (end >= 0 && toTrimPredicate.test(tokenAt(end))) {
-         end--;
-      }
-      if (end > 0) {
-         return tokenAt(0).union(tokenAt(end));
-      } else if (end == 0) {
-         return tokenAt(0);
-      }
-      return Fragments.empty(document());
-   }
-
-   /**
-    * Trim h string.
-    *
-    * @param toTrimPredicate the to trim predicate
-    * @return the h string
-    */
-   public HString trim(@NonNull Predicate<? super Annotation> toTrimPredicate) {
-      return trimRight(toTrimPredicate).trimLeft(toTrimPredicate);
-   }
-
-   /**
-    * Split list.
-    *
-    * @param delimiterPredicate the delimiter predicate
-    * @return the list
-    */
-   public List<HString> split(@NonNull Predicate<? super Annotation> delimiterPredicate) {
-      List<HString> result = new ArrayList<>();
-      int start = -1;
-      for (int i = 0; i < tokenLength(); i++) {
-         if (delimiterPredicate.test(tokenAt(i))) {
-            if (start != -1) {
-               result.add(tokenAt(start).union(tokenAt(i - 1)));
-            }
-            start = -1;
-         } else if (start == -1) {
-            start = i;
-         }
-      }
-      if (start != -1) {
-         result.add(tokenAt(start).union(tokenAt(tokenLength() - 1)));
-      }
-      return result;
    }
 
    /**
@@ -178,14 +87,28 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @return A new HString representing the union over the spans of the given HStrings.
     */
    public static HString union(@NonNull HString first, @NonNull HString second, HString... others) {
-      Preconditions.checkArgument(first.document() == second.document(),
-                                  "Cannot union strings from different documents");
-      Document owner = first.document();
-      int start = Math.min(first.start(), second.start());
-      int end = Math.max(first.end(), second.end());
-      if (others != null) {
-         for (HString hString : others) {
-            Preconditions.checkArgument(owner == hString.document(), "Cannot union strings from different documents");
+      return union(Lists.union(Arrays.asList(first, second), Arrays.asList(others)));
+   }
+
+   /**
+    * Creates a new string by performing a union over the spans of two or more HStrings. The new HString will have a
+    * span that starts at the minimum starting position of the given strings and end at the maximum ending position of
+    * the given strings.
+    *
+    * @param strings the HStrings to union
+    * @return A new HString representing the union over the spans of the given HStrings.
+    */
+   public static HString union(@NonNull Iterable<? extends HString> strings) {
+      int start = Integer.MAX_VALUE;
+      int end = Integer.MIN_VALUE;
+      Document owner = null;
+      for (HString hString : strings) {
+         if (!hString.isEmpty()) {
+            if (owner == null && hString.document() != null) {
+               owner = hString.document();
+            } else if (hString.document() == null || owner != hString.document()) {
+               throw new IllegalArgumentException("Cannot union strings from different documents");
+            }
             start = Math.min(start, hString.start());
             end = Math.max(end, hString.end());
          }
@@ -197,28 +120,151 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Union h string.
+    * <p>Constructs a relation graph with the given relation types as the edges and the given annotation types as the
+    * vertices (the {@link #interleaved(AnnotationType...)} method is used to get the annotations). Relations will be
+    * determine for annotations by including the relations of their sub-annotations (i.e. sub-spans). This allows, for
+    * example, a dependency graph to be built over other annotation types, e.g. phrase chunks.</p>
     *
-    * @param strings the strings
-    * @return the h string
+    * @param relationTypes   the relation types making up the edges
+    * @param annotationTypes annotation types making up the vertices
+    * @return the relation graph
     */
-   public static HString union(@NonNull Iterable<? extends HString> strings) {
-      int start = Integer.MAX_VALUE;
-      int end = Integer.MIN_VALUE;
-      Document owner = null;
-      for (HString hString : strings) {
-         if (owner == null && hString.document() != null) {
-            owner = hString.document();
-         } else if (hString.document() == null || owner != hString.document()) {
-            throw new IllegalArgumentException("Cannot union strings from different documents");
+   public RelationGraph annotationGraph(@NonNull Tuple relationTypes, @NonNull AnnotationType... annotationTypes) {
+      RelationGraph g = new RelationGraph();
+      List<Annotation> vertices = interleaved(annotationTypes);
+      Set<RelationType> relationTypeList = Streams
+                                              .asStream(relationTypes.iterator())
+                                              .filter(r -> r instanceof RelationType)
+                                              .map(Cast::<RelationType>as)
+                                              .collect(Collectors.toSet());
+      g.addVertices(vertices);
+      for (Annotation source : vertices) {
+         Collection<Relation> relations = source.relations(true);
+         for (Relation relation : relations) {
+            if (relationTypeList.contains(relation.getType())) {
+               relation
+                  .getTarget(document())
+                  .ifPresent(target -> {
+                     target = g.containsVertex(target)
+                              ? target
+                              : target
+                                   .stream(AnnotationType.ROOT)
+                                   .filter(g::containsVertex)
+                                   .findFirst()
+                                   .orElse(null);
+                     if (target != null) {
+                        if (!g.containsEdge(source, target)) {
+                           RelationEdge edge = g.addEdge(source, target);
+                           edge.setRelation(relation.getValue());
+                           edge.setRelationType(relation.getType());
+                        }
+                     }
+                  });
+            }
          }
-         start = Math.min(start, hString.start());
-         end = Math.max(end, hString.end());
       }
-      if (start < 0 || start >= end) {
-         return Fragments.empty(owner);
+      return g;
+   }
+
+   @Override
+   public List<Annotation> annotations() {
+      if (document() == null) {
+         return Collections.emptyList();
       }
-      return new Fragment(owner, start, end);
+      return document().get(AnnotationType.ROOT, this);
+   }
+
+   /**
+    * Gets this HString as an annotation. If the HString is already an annotation it is simply cast. Otherwise a
+    * detached annotation of type <code>AnnotationType.ROOT</code> is created.
+    *
+    * @return An annotation.
+    */
+   public Annotation asAnnotation() {
+      if (this instanceof Annotation) {
+         return Cast.as(this);
+      } else if (document() != null) {
+         return document()
+                   .annotationBuilder()
+                   .type(AnnotationType.ROOT)
+                   .bounds(this)
+                   .attributes(this)
+                   .createDetached();
+      }
+      return Fragments.detachedAnnotation(AnnotationType.ROOT, start(), end());
+   }
+
+   /**
+    * Creates a labeled data point from this HString applying the given label function to determine the label, i.e.
+    * class.
+    *
+    * @param labelFunction the label function to determine the label (or class) of the data point (e.g. part-of-speech,
+    *                      sentiment, etc.)
+    * @return the labeled datum
+    */
+   public LabeledDatum<HString> asLabeledData(@NonNull Function<HString, ?> labelFunction) {
+      return LabeledDatum.of(labelFunction.apply(this), this);
+   }
+
+   /**
+    * Creates a labeled data point from this HString using the value of the given attribute type as the label, i.e.
+    * class.
+    *
+    * @param attributeTypeLabel the attribute type whose value will become the label of the data point
+    * @return the labeled datum
+    */
+   public LabeledDatum<HString> asLabeledData(@NonNull AttributeType attributeTypeLabel) {
+      return LabeledDatum.of(get(attributeTypeLabel), this);
+   }
+
+   /**
+    * Creates an unlabeled {@link SequenceInput} of tokens from this HString.
+    *
+    * @return the sequence input
+    */
+   public SequenceInput<Annotation> asSequence() {
+      return new SequenceInput<>(Cast.cast(tokens()));
+   }
+
+   /**
+    * Creates a labeled {@link SequenceInput} of tokens from this HString applying the given label function to each
+    * token to determine its label, i.e. class..
+    *
+    * @param labelFunction the label function to determine the label (or class) of the data point (e.g. part-of-speech,
+    *                      sentiment, etc.)
+    * @return the sequence input
+    */
+   public SequenceInput<Annotation> asSequence(@NonNull Function<? super Annotation, String> labelFunction) {
+      SequenceInput<Annotation> si = new SequenceInput<>();
+      for (Annotation token : tokens()) {
+         si.add(token, labelFunction.apply(token));
+      }
+      return si;
+   }
+
+   public NDArray asVector(@NonNull VectorComposition composition) {
+      return asVector(composition, Types.TOKEN);
+   }
+
+   public NDArray asVector() {
+      return asVector(VectorCompositions.Average, Types.TOKEN);
+   }
+
+   public NDArray asVector(@NonNull VectorComposition composition, @NonNull AnnotationType... types) {
+      Embedding embedding = LanguageData.getDefaultEmbedding(getLanguage());
+      List<NDArray> vectors = new ArrayList<>();
+      interleaved(types).forEach(a -> {
+         if (embedding.containsKey(a.toString())) {
+            vectors.add(embedding.get(a.toString()));
+         } else if (embedding.containsKey(a.getLemma())) {
+            vectors.add(embedding.get(a.getLemma()));
+         } else if (embedding.containsKey(a.toLowerCase())) {
+            vectors.add(embedding.get(a.toLowerCase()));
+         } else if (embedding.containsKey(a.getPOS().name())) {
+            vectors.add(embedding.get(a.getPOS().name()));
+         }
+      });
+      return composition.compose(vectors.toArray(new NDArray[vectors.size()]));
    }
 
    @Override
@@ -227,21 +273,23 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Char n grams.
+    * Extracts character n-grams of the given order (e.g. 1=unigram, 2=bigram, etc.)
     *
-    * @param order the order
-    * @return the list
+    * @param order the order of the n-gram to extract
+    * @return the list of character n-grams of given order making up this HString
     */
    public List<HString> charNGrams(int order) {
       return charNGrams(order, order);
    }
 
    /**
-    * Char n grams.
+    * Extracts all character n-grams from the given minimum to given maximum order (e.g. 1=unigram, 2=bigram, etc.)
     *
-    * @param minOrder the min order
-    * @param maxOrder the max order
-    * @return the list
+    * @param minOrder the minimum order
+    * @param maxOrder the maximum order
+    * @return the list of character n-grams of order <code>minOrder</code> to <code>maxOrder</code> making up this
+    * HString
+    * @throws IllegalArgumentException If minOrder > maxOrder or minOrder <= 0
     */
    public List<HString> charNGrams(int minOrder, int maxOrder) {
       Preconditions.checkArgument(minOrder <= maxOrder,
@@ -262,23 +310,53 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Determines if the content of this HString equals the given char sequence.
+    * Context h string.
     *
-    * @param content the content to check for equality
-    * @return True if equals, False otherwise
+    * @param windowSize the window size
+    * @return the h string
     */
-   public boolean contentEqual(CharSequence content) {
-      return toString().contentEquals(content);
+   public HString context(int windowSize) {
+      return context(Types.TOKEN, windowSize);
    }
 
    /**
-    * Determines if the content of this HString equals the given char sequence ignoring case.
+    * Context h string.
     *
-    * @param content the content to check for equality
-    * @return True if equals, False otherwise
+    * @param type       the type
+    * @param windowSize the window size
+    * @return the h string
     */
-   public boolean contentEqualIgnoreCase(String content) {
-      return toString().equalsIgnoreCase(content);
+   public HString context(@NonNull AnnotationType type, int windowSize) {
+      return leftContext(type, windowSize).union(rightContext(type, windowSize));
+   }
+
+   /**
+    * Creates a {@link RelationGraph} with dependency edges and token vertices.
+    *
+    * @return the dependency relation graph
+    */
+   public RelationGraph dependencyGraph() {
+      return annotationGraph($(Types.DEPENDENCY), Types.TOKEN);
+   }
+
+   /**
+    * Creates a {@link RelationGraph} with dependency edges and vertices made up of the given types.
+    *
+    * @param types The annotation types making up the vertices of the dependency relation graph.
+    * @return the dependency relation graph
+    */
+   public RelationGraph dependencyGraph(@NonNull AnnotationType... types) {
+      return annotationGraph($(Types.DEPENDENCY), types);
+   }
+
+   @Override
+   public Tuple2<String, Annotation> dependencyRelation() {
+      if (head().isAnnotation()) {
+         return head()
+                   .asAnnotation()
+                   .dependencyRelation();
+      }
+      return $(StringUtils.EMPTY, Fragments.emptyAnnotation(document()));
    }
 
    /**
@@ -296,19 +374,174 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
                 && super.encloses(other);
    }
 
-   /**
-    * Determines if this HString ends with the given suffix.
-    *
-    * @param suffix the suffix to check
-    * @return True ends with the given suffix, False otherwise
-    */
-   public boolean endsWith(String suffix) {
-      return toString().endsWith(suffix);
-   }
-
    @Override
    public final boolean equals(Object other) {
       return this == other;
+   }
+
+   /**
+    * Finds the given text in this HString starting from the beginning of this HString. If the document is annotated
+    * with tokens, the match will extend to the token(s) covering the match.
+    *
+    * @param text the text to search for
+    * @return the HString for the match or empty if no match is found.
+    */
+   public HString find(String text) {
+      return find(text, 0);
+   }
+
+   /**
+    * Finds the given text in this HString starting from the given start index of this HString. If the document is
+    * annotated with tokens, the match will extend to the token(s) covering the match.
+    *
+    * @param text  the text to search for
+    * @param start the index to start the search from
+    * @return the HString for the match or empty if no match is found.
+    */
+   public HString find(@NonNull String text, int start) {
+      Preconditions.checkPositionIndex(start, length());
+      int pos = indexOf(text, start);
+      if (pos == -1) {
+         return Fragments.empty(document());
+      }
+
+      //If we have tokens expand the match to the overlaping tokens.
+      if (document() != null && document().isCompleted(Types.TOKEN)) {
+         return union(substring(pos, pos + text.length()).tokens());
+      }
+
+      return substring(pos, pos + text.length());
+   }
+
+   /**
+    * Finds all occurrences of the given text in this HString starting
+    *
+    * @param text the text to search for
+    * @return A list of HString that are matches to the given string
+    */
+   public Stream<HString> findAll(@NonNull String text) {
+      return Streams.asStream(new Iterator<HString>() {
+         Integer pos = null;
+         int start = 0;
+
+         private boolean advance() {
+            if (pos == null) {
+               pos = indexOf(text, start);
+            }
+            return pos != -1;
+         }
+
+         @Override
+         public boolean hasNext() {
+            return advance();
+         }
+
+         @Override
+         public HString next() {
+            if (!advance()) {
+               throw new NoSuchElementException();
+            }
+            int n = pos;
+            pos = null;
+            start = n + 1;
+            //If we have tokens expand the match to the overlaping tokens.
+            if (document() != null && document().isCompleted(Types.TOKEN)) {
+               return union(substring(n, n + text.length()).tokens());
+            }
+            return substring(n, n + text.length());
+         }
+      });
+   }
+
+   /**
+    * Finds all occurrences of the  given regular expression in this HString starting from the beginning of this
+    * HString
+    *
+    * @param regex the regular expression to search for
+    * @return A list of HString that are matches to the given regular expression
+    */
+   public Stream<HString> findAllPatterns(@NonNull String regex) {
+      return findAllPatterns(Pattern.compile(regex));
+   }
+
+   /**
+    * Finds all matches to the given token regular expression in this HString.
+    *
+    * @param regex the token regex to match
+    * @return Stream of matches
+    */
+   public Stream<HString> findAllPatterns(@NonNull TokenRegex regex) {
+      return Streams.asStream(new Iterator<HString>() {
+         TokenMatcher m = regex.matcher(HString.this);
+         HString nextMatch = null;
+
+         private boolean advance() {
+            if (nextMatch == null && m.find()) {
+               nextMatch = m.group();
+            }
+            return nextMatch != null;
+         }
+
+         @Override
+         public boolean hasNext() {
+            return advance();
+         }
+
+         @Override
+         public HString next() {
+            if (!advance()) {
+               throw new NoSuchElementException();
+            }
+            HString toReturn = nextMatch;
+            nextMatch = null;
+            return toReturn;
+         }
+      });
+   }
+
+   /**
+    * Finds all occurrences of the  given regular expression in this HString starting from the beginning of this
+    * HString
+    *
+    * @param regex the regular expression to search for
+    * @return A list of HString that are matches to the given regular expression
+    */
+   public Stream<HString> findAllPatterns(@NonNull Pattern regex) {
+      return Streams.asStream(new Iterator<HString>() {
+         Matcher m = regex.matcher(HString.this);
+         int start = -1;
+         int end = -1;
+
+         private boolean advance() {
+            if (start == -1) {
+               if (m.find()) {
+                  start = m.start();
+                  end = m.end();
+               }
+            }
+            return start != -1;
+         }
+
+         @Override
+         public boolean hasNext() {
+            return advance();
+         }
+
+         @Override
+         public HString next() {
+            if (!advance()) {
+               throw new NoSuchElementException();
+            }
+            HString sub = substring(start, end);
+            start = -1;
+            end = -1;
+            //If we have tokens expand the match to the overlaping tokens.
+            if (document() != null && document().isCompleted(Types.TOKEN)) {
+               return union(sub.tokens());
+            }
+            return sub;
+         }
+      });
    }
 
    /**
@@ -335,82 +568,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return Fragments.empty(document());
    }
 
-   /**
-    * Finds all occurrences of the  given regular expression in this HString starting from the beginning of this HString
-    *
-    * @param regex the regular expression to search for
-    * @return A list of HString that are matches to the given regular expression
-    */
-   public List<HString> findAllPatterns(@NonNull String regex) {
-      return findAllPatterns(Pattern.compile(regex));
-   }
-
-   /**
-    * Finds all occurrences of the  given regular expression in this HString starting from the beginning of this HString
-    *
-    * @param regex the regular expression to search for
-    * @return A list of HString that are matches to the given regular expression
-    */
-   public List<HString> findAllPatterns(@NonNull Pattern regex) {
-      Matcher m = regex.matcher(this);
-      List<HString> matches = new ArrayList<>();
-      while (m.find()) {
-         if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
-            matches.add(union(substring(m.start(), m.end()).tokens()));
-         } else {
-            matches.add(substring(m.start(), m.end()));
-         }
-      }
-      return matches;
-   }
-
-   /**
-    * Finds the given text in this HString starting from the beginning of this HString
-    *
-    * @param text the text to search for
-    * @return the HString for the match or empty if no match is found.
-    */
-   public HString find(String text) {
-      return find(text, 0);
-   }
-
-   /**
-    * Finds all occurrences of the given text in this HString starting
-    *
-    * @param text the text to search for
-    * @return A list of HString that are matches to the given string
-    */
-   public List<HString> findAll(@NonNull String text) {
-      List<HString> matches = new ArrayList<>();
-      for (int pos = indexOf(text, 0); pos < length() && pos != -1; pos = indexOf(text, pos + 1)) {
-         if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
-            matches.add(union(substring(pos, pos + text.length()).tokens()));
-         } else {
-            matches.add(substring(pos, pos + text.length()));
-         }
-      }
-      return matches;
-   }
-
-   /**
-    * Finds the given text in this HString starting from the given start index of this HString
-    *
-    * @param text  the text to search for
-    * @param start the index to start the search from
-    * @return the HString for the match or empty if no match is found.
-    */
-   public HString find(@NonNull String text, int start) {
-      Preconditions.checkPositionIndex(start, length());
-      int pos = indexOf(text, start);
-      if (pos == -1) {
-         return Fragments.empty(document());
-      }
-      if (document() != null && document().getAnnotationSet().isCompleted(Types.TOKEN)) {
-         return union(substring(pos, pos + text.length()).tokens());
-      }
-      return substring(pos, pos + text.length());
-   }
-
    @Override
    public Val get(AttributeType attributeType) {
       if (attributeType == null) {
@@ -427,11 +584,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return get(type, annotation -> annotation.isInstance(type) && annotation.overlaps(this));
    }
 
-   @Override
-   public List<Annotation> getAllAnnotations() {
-      return document().get(AnnotationType.ROOT, this);
-   }
-
    /**
     * Exposes the underlying attributes as a Map
     *
@@ -439,12 +591,7 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    protected abstract Map<AttributeType, Val> getAttributeMap();
 
-   /**
-    * Gets the language of the HString. If no language is set for this HString, the language of document will be
-    * returned. In the event that this HString is not associated with a document, the default language will be returned.
-    *
-    * @return The language of the HString
-    */
+   @Override
    public Language getLanguage() {
       if (contains(Types.LANGUAGE)) {
          return get(Types.LANGUAGE).as(Language.class);
@@ -455,33 +602,32 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return document().getLanguage();
    }
 
-   /**
-    * Sets the language of the HString
-    *
-    * @param language The language of the HString.
-    */
+   @Override
    public void setLanguage(Language language) {
       put(Types.LANGUAGE, language);
    }
 
    /**
-    * Gets the lemmatized version of the HString. Lemmas of longer phrases are constructed from token
-    * lemmas.
+    * Gets the lemmatized version of the HString. Lemmas of longer phrases are constructed from token lemmas.
     *
     * @return The lemmatized version of the HString.
     */
    public String getLemma() {
       if (isInstance(Types.TOKEN)) {
+         if (contains(Types.SPELLING_CORRECTION)) {
+            return get(Types.SPELLING_CORRECTION).asString();
+         }
          if (contains(Types.LEMMA)) {
             return get(Types.LEMMA).asString();
          }
          return toLowerCase();
       }
-      return tokens().stream()
-                     .map(HString::getLemma)
-                     .collect(Collectors.joining(
-                        getLanguage().usesWhitespace() ? " " : ""
-                                                ));
+      return tokens()
+                .stream()
+                .map(HString::getLemma)
+                .collect(Collectors.joining(
+                   getLanguage().usesWhitespace() ? " " : ""
+                                           ));
    }
 
    /**
@@ -493,12 +639,24 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return POS.forText(this);
    }
 
-   @Override
-   public final List<Annotation> getStartingHere(AnnotationType type) {
-      if (type == null) {
-         return Collections.emptyList();
+   /**
+    * Gets the stemmed version of the HString. Stems of token are determined using the <code>Stemmer</code> associated
+    * with the language that the token is in. Tokens store their stem using the <code>STEM</code> attribute, so that the
+    * stem only needs to be calculated once.Stems of longer phrases are constructed from token stems.
+    *
+    * @return The stemmed version of the HString.
+    */
+   public String getStem() {
+      if (isInstance(Types.TOKEN)) {
+         putIfAbsent(Types.STEM, Stemmers
+                                    .getStemmer(getLanguage())
+                                    .stem(this));
+         return get(Types.STEM).asString();
       }
-      return get(type, annotation -> annotation.start() == start() && annotation.isInstance(type));
+      return tokens()
+                .stream()
+                .map(HString::getStem)
+                .collect(Collectors.joining(getLanguage().usesWhitespace() ? " " : ""));
    }
 
    @Override
@@ -507,26 +665,101 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Returns the index within this string of the first occurrence of the specified substring.
+    * Gets head.
     *
-    * @param text the substring to search for.
-    * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
-    * @see String#indexOf(String) String#indexOf(String)String#indexOf(String)String#indexOf(String)
+    * @return the head
     */
-   public int indexOf(String text) {
-      return indexOf(text, 0);
+   public HString head() {
+      return tokens()
+                .stream()
+                .filter(t -> t
+                                .parent()
+                                .isEmpty())
+                .map(Cast::<HString>as)
+                .findFirst()
+                .orElseGet(() -> tokens()
+                                    .stream()
+                                    .filter(t -> !this.overlaps(t.parent()))
+                                    .map(Cast::<HString>as)
+                                    .findFirst()
+                                    .orElse(this));
+   }
+
+   public String inSentence() {
+      if (this.isInstance(Types.SENTENCE)) {
+         return toString();
+      }
+      Annotation sentence = first(Types.SENTENCE);
+      if (sentence.isEmpty()) {
+         return StringUtils.EMPTY;
+      }
+
+      String tag = isAnnotation() ? Cast.<Annotation>as(this)
+                                       .getTag()
+                                       .map(Tag::name)
+                                       .orElse(Cast.<Annotation>as(this).getType().name())
+                                  : "b";
+
+      StringBuilder builder = new StringBuilder();
+      int modStart = start() - sentence.start();
+      int modEnd = end() - sentence.start();
+      if (start() == sentence.start()) {
+         builder.append("<").append(tag).append(">")
+                .append(toString())
+                .append("</").append(tag).append("> ")
+                .append(sentence.substring(modEnd, sentence.end() - sentence.start()));
+      } else if (end() == sentence.end()) {
+         builder.append(sentence.substring(0, modStart))
+                .append("<").append(tag).append(">")
+                .append(toString())
+                .append("</").append(tag).append(">");
+      } else {
+         builder.append(sentence.substring(0, modStart))
+                .append("<").append(tag).append(">")
+                .append(toString())
+                .append("</").append(tag).append(">")
+                .append(sentence.substring(modEnd, sentence.end() - sentence.start()));
+      }
+
+      return builder.toString();
    }
 
    /**
-    * Returns the index within this string of the first occurrence of the specified substring.
+    * <p> Returns the annotations of the given types that overlap this string in a maximum match fashion. Each token in
+    * the string is examined and the annotation type with the longest span on that token is chosen. If more than one
+    * type has the span length, the first one found will be chose, i.e. the order in which the types are passed in to
+    * the method can effect the outcome. </p> <p> Examples where this is useful is when dealing with multi-word
+    * expressions. Using the interleaved method you can retrieve all tokens and multi-word expressions to fully match
+    * the span of the string. </p>
     *
-    * @param text  the substring to search for.
-    * @param start the index to to start searching from
-    * @return the index of the first occurrence of the specified substring, or -1 if there is no such occurrence.
-    * @see String#indexOf(String, int) String#indexOf(String, int)String#indexOf(String, int)String#indexOf(String, int)
+    * @param types The other types to examine
+    * @return The list of interleaved annotations
     */
-   public int indexOf(String text, int start) {
-      return toString().indexOf(text, start);
+   public List<Annotation> interleaved(@NonNull AnnotationType... types) {
+      if (types == null || types.length == 0) {
+         return Collections.emptyList();
+      }
+
+
+      List<Annotation> annotations = new ArrayList<>();
+      for (int i = 0; i < tokenLength(); ) {
+         Annotation annotation = Fragments.detachedEmptyAnnotation();
+         for (AnnotationType other : types) {
+            for (Annotation temp : tokenAt(i).get(other)) {
+               if (temp.tokenLength() > annotation.tokenLength()) {
+                  annotation = temp;
+               }
+            }
+         }
+
+         if (annotation.isEmpty()) {
+            i++;
+         } else {
+            i += annotation.tokenLength();
+            annotations.add(annotation);
+         }
+      }
+      return annotations;
    }
 
    /**
@@ -536,18 +769,6 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     */
    public boolean isAnnotation() {
       return false;
-   }
-
-   /**
-    * As annotation optional.
-    *
-    * @return the optional
-    */
-   public Optional<Annotation> asAnnotation() {
-      if (this instanceof Annotation) {
-         return Optional.of(Cast.as(this));
-      }
-      return Optional.empty();
    }
 
    /**
@@ -570,36 +791,41 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Returns a regular expression matcher for the given pattern over this HString
+    * Left context h string.
     *
-    * @param pattern the pattern to search for
-    * @return the matcher
+    * @param windowSize the window size
+    * @return the h string
     */
-   public Matcher matcher(String pattern) {
-      return Pattern.compile(pattern).matcher(this);
+   public HString leftContext(int windowSize) {
+      return leftContext(Types.TOKEN, windowSize);
    }
 
    /**
-    * Returns a regular expression matcher for the given pattern over this HString
+    * Left context h string.
     *
-    * @param pattern the pattern to search for
-    * @return the matcher
+    * @param type       the type
+    * @param windowSize the window size
+    * @return the h string
     */
-   public Matcher matcher(@NonNull Pattern pattern) {
-      return pattern.matcher(this);
+   public HString leftContext(@NonNull AnnotationType type, int windowSize) {
+      windowSize = Math.abs(windowSize);
+      Preconditions.checkArgument(windowSize >= 0);
+      int sentenceStart = sentence().start();
+      if (windowSize == 0 || start() <= sentenceStart) {
+         return Fragments.detachedEmptyHString();
+      }
+      HString context = firstToken().previous(type);
+      for (int i = 1; i < windowSize; i++) {
+         HString next = context
+                           .firstToken()
+                           .previous(type);
+         if (next.end() <= sentenceStart) {
+            break;
+         }
+         context = context.union(next);
+      }
+      return context;
    }
-
-   /**
-    * Tells whether or not this string matches the given regular expression.
-    *
-    * @param regex the regular expression
-    * @return true if, and only if, this string matches the given regular expression
-    * @see String#matches(String) String#matches(String)String#matches(String)String#matches(String)
-    */
-   public boolean matches(String regex) {
-      return toString().matches(regex);
-   }
-
 
    /**
     * Checks if this HString overlaps with the given other.
@@ -634,77 +860,74 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
    }
 
    /**
-    * Converts this string to a new character array.
+    * Right context h string.
     *
-    * @return a newly allocated character array whose length is the length of this string and whose contents are
-    * initialized to contain the character sequence represented by this string.
+    * @param windowSize the window size
+    * @return the h string
     */
-   public char[] toCharArray() {
-      return toString().toCharArray();
+   public HString rightContext(int windowSize) {
+      return rightContext(Types.TOKEN, windowSize);
    }
 
    /**
-    * Replaces all substrings of this string that matches the given string with the given replacement.
+    * Right context h string.
     *
-    * @param oldString the old string
-    * @param newString the new string
-    * @return the string
-    * @see String#replace(CharSequence, CharSequence) String#replace(CharSequence, CharSequence)String#replace(CharSequence,
-    * CharSequence)String#replace(CharSequence, CharSequence)
+    * @param type       the type
+    * @param windowSize the window size
+    * @return the h string
     */
-   public String replace(String oldString, String newString) {
-      return toString().replace(oldString, newString);
+   public HString rightContext(@NonNull AnnotationType type, int windowSize) {
+      windowSize = Math.abs(windowSize);
+      Preconditions.checkArgument(windowSize >= 0);
+      int sentenceEnd = sentence().end();
+      if (windowSize == 0 || end() >= sentenceEnd) {
+         return Fragments.detachedEmptyHString();
+      }
+      HString context = lastToken().next(type);
+      for (int i = 1; i < windowSize; i++) {
+         HString next = context
+                           .lastToken()
+                           .next(type);
+         if (next.start() >= sentenceEnd) {
+            break;
+         }
+         context = context.union(next);
+      }
+      return context;
    }
 
    /**
-    * Replaces all substrings of this string that matches the given regular expression with the given replacement.
+    * Splits this HString using the given predicate to apply against tokens. An example of where this might be useful is
+    * when we want to split long phrases on different punctuation, e.g. commas or semicolons.
     *
-    * @param regex       the regular expression
-    * @param replacement the string to be substituted
-    * @return the resulting string
-    * @see String#replaceAll(String, String) String#replaceAll(String, String)String#replaceAll(String,
-    * String)String#replaceAll(String, String)
+    * @param delimiterPredicate the predicate to use to determine if a token is a delimiter or not
+    * @return the list of split HString
     */
-   public String replaceAll(String regex, String replacement) {
-      return toString().replaceAll(regex, replacement);
-   }
-
-   /**
-    * Replaces the first substring of this string that matches the given regular expression with the given replacement.
-    *
-    * @param regex       the regular expression
-    * @param replacement the string to be substituted
-    * @return the resulting string
-    * @see String#replaceFirst(String, String) String#replaceFirst(String, String)String#replaceFirst(String,
-    * String)String#replaceFirst(String, String)
-    */
-   public String replaceFirst(String regex, String replacement) {
-      return toString().replaceFirst(regex, replacement);
-   }
-
-   /**
-    * Tests if this string starts with the specified prefix.
-    *
-    * @param prefix the prefix
-    * @return true if the HString starts with the specified prefix
-    */
-   public boolean startsWith(String prefix) {
-      return toString().startsWith(prefix);
-   }
-
-   /**
-    * Returns true if and only if this string contains the specified sequence of char values.
-    *
-    * @param string the sequence to search for
-    * @return true if this string contains s, false otherwise
-    */
-   public boolean contains(@NonNull String string) {
-      return toString().contains(string);
+   public List<HString> split(@NonNull Predicate<? super Annotation> delimiterPredicate) {
+      List<HString> result = new ArrayList<>();
+      int start = -1;
+      for (int i = 0; i < tokenLength(); i++) {
+         if (delimiterPredicate.test(tokenAt(i))) {
+            if (start != -1) {
+               result.add(tokenAt(start).union(tokenAt(i - 1)));
+            }
+            start = -1;
+         } else if (start == -1) {
+            start = i;
+         }
+      }
+      if (start != -1) {
+         result.add(tokenAt(start).union(tokenAt(tokenLength() - 1)));
+      }
+      return result;
    }
 
    @Override
-   public CharSequence subSequence(int start, int end) {
-      return toString().subSequence(start, end);
+   public final List<Annotation> startingHere(AnnotationType type) {
+      if (type == null) {
+         return Collections.emptyList();
+      }
+      return get(type, annotation -> annotation.start() == start() && annotation.isInstance(type));
    }
 
    /**
@@ -722,15 +945,30 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
       return new Fragment(document(), start() + relativeStart, start() + relativeEnd);
    }
 
-   /**
-    * To lower case.
-    *
-    * @return the string
-    * @see String#toLowerCase(Locale) String#toLowerCase(Locale)String#toLowerCase(Locale)String#toLowerCase(Locale)NOTE:
-    * Uses locale associated with the HString's langauge
-    */
-   public String toLowerCase() {
-      return toString().toLowerCase(getLanguage().asLocale());
+   public String tag(@NonNull AnnotationType type, String defaultTag) {
+      Preconditions.checkArgument(StringUtils.isNotNullOrBlank(defaultTag), "Default tag must not be null or blank.");
+      List<Annotation> annotations = get(type);
+      if (annotations.size() == 0) {
+         return toString();
+      }
+      int modStart = start();
+      StringBuilder builder = new StringBuilder();
+      int lastEnd = 0;
+      for (Annotation a : annotations) {
+         String tag = a.getTag().map(Tag::name).orElse(defaultTag);
+         String taggedAnnotation = "<" + tag + ">" + a + "</" + tag + ">";
+         int start = a.start() - modStart;
+         int end = a.end() - modStart;
+         if (start > lastEnd) {
+            builder.append(substring(lastEnd, start));
+         }
+         builder.append(taggedAnnotation);
+         lastEnd = end;
+      }
+      if (lastEnd < length()) {
+         builder.append(substring(lastEnd, length()));
+      }
+      return builder.toString();
    }
 
    /**
@@ -749,224 +987,84 @@ public abstract class HString extends Span implements CharSequence, AttributedOb
     * @return the HString with part-of-speech information attached to tokens
     */
    public String toPOSString(char delimiter) {
-      return tokens().stream()
-                     .map(t -> t.toString() + delimiter + t.get(Types.PART_OF_SPEECH).as(POS.class, POS.ANY).asString())
-                     .collect(Collectors.joining(" "));
+      return tokens()
+                .stream()
+                .map(t -> t.toString() + delimiter + t
+                                                        .get(Types.PART_OF_SPEECH)
+                                                        .as(POS.class, POS.ANY)
+                                                        .asString())
+                .collect(Collectors.joining(" "));
    }
 
    @Override
    public String toString() {
-      if (document() == null) {
+      if (document() == null || isEmpty()) {
          return StringUtils.EMPTY;
       }
-      return document().toString().substring(start(), end());
+      return document()
+                .toString()
+                .substring(start(), end());
    }
 
    /**
-    * Converts the HString to upper case
+    * Trims tokens off the left and right of this HString that match the given predicate.
     *
-    * @return the upper case version of the HString
-    * @see String#toUpperCase(Locale) String#toUpperCase(Locale)String#toUpperCase(Locale)String#toUpperCase(Locale)NOTE:
-    * Uses locale associated with the HString's langauge
+    * @param toTrimPredicate the predicate to use to determine if a token should be removed (evaulate to TRUE) or kept
+    *                        (evaluate to FALSE).
+    * @return the trimmed HString
     */
-   public String toUpperCase() {
-      return toString().toUpperCase(getLanguage().asLocale());
+   public HString trim(@NonNull Predicate<? super Annotation> toTrimPredicate) {
+      return trimRight(toTrimPredicate).trimLeft(toTrimPredicate);
    }
 
+   /**
+    * Trims tokens off the left of this HString that match the given predicate.
+    *
+    * @param toTrimPredicate the predicate to use to determine if a token should be removed (evaulate to TRUE) or kept
+    *                        (evaluate to FALSE).
+    * @return the trimmed HString
+    */
+   public HString trimLeft(@NonNull Predicate<? super Annotation> toTrimPredicate) {
+      int start = 0;
+      while (start < tokenLength() && toTrimPredicate.test(tokenAt(start))) {
+         start++;
+      }
+      if (start < tokenLength()) {
+         return tokenAt(start).union(tokenAt(tokenLength() - 1));
+      }
+      return Fragments.empty(document());
+   }
+
+   /**
+    * Trims tokens off the right of this HString that match the given predicate.
+    *
+    * @param toTrimPredicate the predicate to use to determine if a token should be removed (evaulate to TRUE) or kept
+    *                        (evaluate to FALSE).
+    * @return the trimmed HString
+    */
+   public HString trimRight(@NonNull Predicate<? super Annotation> toTrimPredicate) {
+      int end = tokenLength() - 1;
+      while (end >= 0 && toTrimPredicate.test(tokenAt(end))) {
+         end--;
+      }
+      if (end > 0) {
+         return tokenAt(0).union(tokenAt(end));
+      } else if (end == 0) {
+         return tokenAt(0);
+      }
+      return Fragments.empty(document());
+   }
 
    /**
     * Creates a new string by performing a union over the spans of this HString and at least one more HString. The new
     * HString will have a span that starts at the minimum starting position of the given strings and end at the maximum
     * ending position of the given strings.
     *
-    * @param other    the HString to union with
-    * @param evenMore the other HStrings to union
+    * @param other the HString to union with
     * @return A new HString representing the union over the spans of the given HStrings.
     */
-   public HString union(@NonNull HString other, HString... evenMore) {
-      return HString.union(this, other, evenMore);
-   }
-
-   /**
-    * Gets the stemmed version of the HString. Stems of token are determined using the <code>Stemmer</code> associated
-    * with the language that the token is in. Tokens store their stem using the <code>STEM</code> attribute, so that the
-    * stem only needs to be calculated once.Stems of longer phrases are constructed from token stems.
-    *
-    * @return The stemmed version of the HString.
-    */
-   public String getStem() {
-      if (isInstance(Types.TOKEN)) {
-         putIfAbsent(Types.STEM, Stemmers.getStemmer(getLanguage()).stem(this));
-         return get(Types.STEM).asString();
-      }
-      return tokens().stream()
-                     .map(HString::getStem)
-                     .collect(Collectors.joining(
-                        getLanguage().usesWhitespace() ? " " : ""
-                                                ));
-   }
-
-
-   /**
-    * <p>
-    * Returns the annotations of the given types that overlap this string in a maximum match fashion. Each token in the
-    * string is examined and the annotation type with the longest span on that token is chosen. If more than one type
-    * has the span length, the first one found will be chose, i.e. the order in which the types are passed in to the
-    * method can effect the outcome.
-    * </p>
-    * <p>
-    * Examples where this is useful is when dealing with multiword expressions. Using the interleaved method you can
-    * retrieve all tokens and mutliword expressions to fully match the span of the string.
-    * </p>
-    *
-    * @param type1  The first type (Must declare at leas one)
-    * @param others The other types to examine
-    * @return The list of interleaved annotations
-    */
-   public List<Annotation> interleaved(@NonNull AnnotationType type1, AnnotationType... others) {
-      if (others == null || others.length == 0) {
-         return get(type1);
-      }
-
-      List<Annotation> annotations = new ArrayList<>();
-      for (int i = 0; i < tokenLength(); ) {
-         Annotation annotation = Fragments.detachedEmptyAnnotation();
-         for (Annotation temp : tokenAt(i).get(type1)) {
-            if (temp.tokenLength() > annotation.tokenLength()) {
-               annotation = temp;
-            }
-         }
-         for (AnnotationType other : others) {
-            for (Annotation temp : tokenAt(i).get(other)) {
-               if (temp.tokenLength() > annotation.tokenLength()) {
-                  annotation = temp;
-               }
-            }
-         }
-
-         if (annotation.isEmpty()) {
-            i++;
-         } else {
-            i += annotation.tokenLength();
-            annotations.add(annotation);
-         }
-      }
-      return annotations;
-   }
-
-   /**
-    * Gets head.
-    *
-    * @return the head
-    */
-   public HString getHead() {
-      return tokens().stream()
-                     .filter(t -> !t.parent().isPresent())
-                     .map(Cast::<HString>as)
-                     .findFirst()
-                     .orElseGet(() -> tokens().stream()
-                                              .filter(t -> !this.overlaps(t.parent().get()))
-                                              .map(Cast::<HString>as)
-                                              .findFirst()
-                                              .orElse(this));
-   }
-
-   /**
-    * As labeled data labeled datum.
-    *
-    * @param labelFunction the label function
-    * @return the labeled datum
-    */
-   public LabeledDatum<HString> asLabeledData(@NonNull Function<HString, ? extends Object> labelFunction) {
-      return LabeledDatum.of(labelFunction.apply(this), this);
-   }
-
-   /**
-    * As labeled data labeled datum.
-    *
-    * @param attributeTypeLabel the attribute type label
-    * @return the labeled datum
-    */
-   public LabeledDatum<HString> asLabeledData(@NonNull AttributeType attributeTypeLabel) {
-      return LabeledDatum.of(get(attributeTypeLabel), this);
-   }
-
-   /**
-    * As sequence sequence input.
-    *
-    * @return the sequence input
-    */
-   public SequenceInput<Annotation> asSequence() {
-      return new SequenceInput<>(Cast.cast(tokens()));
-   }
-
-   /**
-    * As sequence sequence input.
-    *
-    * @param labelFunction the label function
-    * @return the sequence input
-    */
-   public SequenceInput<Annotation> asSequence(@NonNull Function<? super Annotation, String> labelFunction) {
-      SequenceInput<Annotation> si = new SequenceInput<>();
-      for (Annotation token : tokens()) {
-         si.add(token, labelFunction.apply(token));
-      }
-      return si;
-   }
-
-   /**
-    * Dependency graph relation graph.
-    *
-    * @return the relation graph
-    */
-   public RelationGraph dependencyGraph() {
-      return annotationGraph($(Types.DEPENDENCY), Types.TOKEN);
-   }
-
-   /**
-    * Dependency graph relation graph.
-    *
-    * @param type1 the type 1
-    * @param other the other
-    * @return the relation graph
-    */
-   public RelationGraph dependencyGraph(AnnotationType type1, AnnotationType... other) {
-      return annotationGraph($(Types.DEPENDENCY), type1, other);
-   }
-
-   /**
-    * Annotation graph relation graph.
-    *
-    * @param relationTypes   the relation types
-    * @param type            the type
-    * @param annotationTypes the annotation types
-    * @return the relation graph
-    */
-   public RelationGraph annotationGraph(Tuple relationTypes, AnnotationType type, AnnotationType... annotationTypes) {
-      RelationGraph g = new RelationGraph();
-      List<Annotation> vertices = interleaved(type, annotationTypes);
-      Set<RelationType> relationTypeList = Streams.asStream(relationTypes.iterator()).filter(
-         r -> r instanceof RelationType)
-                                                  .map(Cast::<RelationType>as).collect(Collectors.toSet());
-      g.addVertices(vertices);
-
-      for (Annotation source : vertices) {
-         Collection<Relation> relations = source.allRelations(true);
-         for (Relation relation : relations) {
-            if (relationTypeList.contains(relation.getType())) {
-               relation.getTarget(this).ifPresent(target -> {
-                  if (g.containsVertex(target)) {
-                     if (!g.containsEdge(source, target)) {
-                        RelationEdge edge = g.addEdge(source, target);
-                        edge.setRelation(relation.getValue());
-                        edge.setRelationType(relation.getType());
-                     }
-                  }
-               });
-            }
-         }
-      }
-      return g;
+   public HString union(@NonNull HString other) {
+      return HString.union(this, other);
    }
 
 }//END OF HString

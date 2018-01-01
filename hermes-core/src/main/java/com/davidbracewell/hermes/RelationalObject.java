@@ -25,208 +25,200 @@ import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * The interface Relational object.
+ * <p>An object that can has relations (edges) defined between itself and other objects. Convenience methods ({@link
+ * #parent()}, {@link #children()}, {@link #dependencyRelation()}) exist for dealing with dependency relations, which
+ * are the most common relation used in Hermes. Examples of other relations include, co-reference, lexical chains, and
+ * discourse structure.</p>
  *
  * @author David B. Bracewell
  */
 public interface RelationalObject {
 
-  /**
-   * Add all relations.
-   *
-   * @param relations the relations
-   */
-  default void addAll(@NonNull Collection<Relation> relations) {
-  }
+   /**
+    * Adds a relation to the object.
+    *
+    * @param relation the relation to add
+    */
+   default void add(@NonNull Relation relation) {
+   }
 
-  /**
-   * Add relation.
-   *
-   * @param relation the relation
-   */
-  default void add(@NonNull Relation relation) {
-  }
+   /**
+    * Adds multiple relations to the object.
+    *
+    * @param relations the relations to add
+    */
+   default void addAll(@NonNull Collection<Relation> relations) {
+   }
 
-  /**
-   * Gets relations.
-   *
-   * @param relationType the relation type
-   * @return the relations
-   */
-  default List<Relation> get(@NonNull RelationType relationType) {
-    return get(relationType, true);
-  }
+   /**
+    * Gets all relations where this object is the <code>source</code>. The retrieved relations include relations across
+    * all sub annotations.
+    *
+    * @return the relations where this object is the source.
+    */
+   default Collection<Relation> relations() {
+      return relations(true);
+   }
 
-  /**
-   * Get list.
-   *
-   * @param relationType          the relation type
-   * @param includeSubAnnotations the include sub annotations
-   * @return the list
-   */
-  default List<Relation> get(@NonNull RelationType relationType, boolean includeSubAnnotations) {
-    return Collections.emptyList();
-  }
+   /**
+    * Gets all relations where this object is the <code>source</code>.
+    *
+    * @param includeSubAnnotations True include relations found on sub annotations, false include only those relations
+    *                              explicitly associated with this object
+    * @return the relations where this object is the source.
+    */
+   Collection<Relation> relations(boolean includeSubAnnotations);
 
-  /**
-   * Gets relations.
-   *
-   * @return the relations
-   */
-  default Collection<Relation> allRelations() {
-    return allRelations(false);
-  }
+   /**
+    * Gets children.
+    *
+    * @return the children
+    */
+   List<Annotation> children();
 
-  /**
-   * Gets all relations.
-   *
-   * @param includeSubAnnotations the include sub annotations
-   * @return the all relations
-   */
-  default Collection<Relation> allRelations(boolean includeSubAnnotations) {
-    return Collections.emptyList();
-  }
+   /**
+    * Children list.
+    *
+    * @param relation the relation
+    * @return the list
+    */
+   default List<Annotation> children(@NonNull String relation) {
+      return children().stream().filter(
+         a -> a.dependencyRelation().v1.equalsIgnoreCase(relation)).collect(Collectors.toList());
+   }
 
-  /**
-   * Gets children.
-   *
-   * @return the children
-   */
-  default List<Annotation> children() {
-    return Collections.emptyList();
-  }
+   /**
+    * Get dependency relation optional.
+    *
+    * @return the optional
+    */
+   Tuple2<String, Annotation> dependencyRelation();
 
+   /**
+    * Gets relations.
+    *
+    * @param relationType the relation type
+    * @return the relations
+    */
+   default List<Relation> get(@NonNull RelationType relationType) {
+      return get(relationType, true);
+   }
 
-  /**
-   * Children list.
-   *
-   * @param relation the relation
-   * @return the list
-   */
-  default List<Annotation> children(@NonNull String relation) {
-    return children().stream().filter(a -> a.dependencyRelation().filter(r -> r.v1.equalsIgnoreCase(relation)).isPresent()).collect(Collectors.toList());
-  }
+   /**
+    * Get list.
+    *
+    * @param relationType          the relation type
+    * @param includeSubAnnotations the include sub annotations
+    * @return the list
+    */
+   List<Relation> get(RelationType relationType, boolean includeSubAnnotations);
 
-  /**
-   * Get dependency relation optional.
-   *
-   * @return the optional
-   */
-  default Optional<Tuple2<String, Annotation>> dependencyRelation() {
-    return Optional.empty();
-  }
+   default Relation get(@NonNull RelationType relationType, @NonNull Annotation target) {
+      return get(relationType).stream().filter(r -> r.getTarget() == target.getId()).findFirst()
+                              .orElse(null);
+   }
 
-  /**
-   * Gets parent.
-   *
-   * @return the parent
-   */
-  default Optional<Annotation> parent() {
-    return dependencyRelation().map(Tuple2::getValue);
-  }
+   /**
+    * Gets parent.
+    *
+    * @return the parent
+    */
+   default Annotation parent() {
+      return dependencyRelation().v2;
+   }
 
-  /**
-   * Gets sources.
-   *
-   * @param type  the type
-   * @param value the value
-   * @return the sources
-   */
-  default List<Annotation> sources(@NonNull RelationType type, @NonNull String value) {
-    return sources(type, value, true);
-  }
-
-  /**
-   * Gets sources.
-   *
-   * @param type                  the type
-   * @param value                 the value
-   * @param includeSubAnnotations the include sub annotations
-   * @return the sources
-   */
-  default List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-    return Collections.emptyList();
-  }
-
-  /**
-   * Gets sources.
-   *
-   * @param type the type
-   * @return the sources
-   */
-  default List<Annotation> sources(@NonNull RelationType type) {
-    return sources(type, true);
-  }
-
-  /**
-   * Gets sources.
-   *
-   * @param type                  the type
-   * @param includeSubAnnotations the include sub annotations
-   * @return the sources
-   */
-  default List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
-    return Collections.emptyList();
-  }
-
-  /**
-   * Gets targets.
-   *
-   * @param type the type
-   * @return the targets
-   */
-  default List<Annotation> targets(@NonNull RelationType type) {
-    return targets(type, true);
-  }
-
-  /**
-   * Gets targets.
-   *
-   * @param type                  the type
-   * @param includeSubAnnotations the include sub annotations
-   * @return the targets
-   */
-  default List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
-    return Collections.emptyList();
-  }
-
-  /**
-   * Gets targets.
-   *
-   * @param type  the type
-   * @param value the value
-   * @return the targets
-   */
-  default List<Annotation> targets(@NonNull RelationType type, @NonNull String value) {
-    return targets(type, value, true);
-  }
-
-  /**
-   * Gets targets.
-   *
-   * @param type                  the type
-   * @param value                 the value
-   * @param includeSubAnnotations the include sub annotations
-   * @return the targets
-   */
-  default List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-    return Collections.emptyList();
-  }
-
-  /**
-   * Remove relation.
-   *
-   * @param relation the relation
-   */
-  default void remove(@NonNull Relation relation) {
+   /**
+    * Remove relation.
+    *
+    * @param relation the relation
+    */
+   default void remove(@NonNull Relation relation) {
 
 
-  }
+   }
+
+   /**
+    * Gets sources.
+    *
+    * @param type  the type
+    * @param value the value
+    * @return the sources
+    */
+   default List<Annotation> sources(@NonNull RelationType type, @NonNull String value) {
+      return sources(type, value, true);
+   }
+
+   /**
+    * Gets sources.
+    *
+    * @param type                  the type
+    * @param value                 the value
+    * @param includeSubAnnotations the include sub annotations
+    * @return the sources
+    */
+   List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations);
+
+   /**
+    * Gets sources.
+    *
+    * @param type the type
+    * @return the sources
+    */
+   default List<Annotation> sources(@NonNull RelationType type) {
+      return sources(type, true);
+   }
+
+   /**
+    * Gets sources.
+    *
+    * @param type                  the type
+    * @param includeSubAnnotations the include sub annotations
+    * @return the sources
+    */
+   List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations);
+
+   /**
+    * Gets targets.
+    *
+    * @param type the type
+    * @return the targets
+    */
+   default List<Annotation> targets(@NonNull RelationType type) {
+      return targets(type, true);
+   }
+
+   /**
+    * Gets targets.
+    *
+    * @param type                  the type
+    * @param includeSubAnnotations the include sub annotations
+    * @return the targets
+    */
+   List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations);
+
+   /**
+    * Gets targets.
+    *
+    * @param type  the type
+    * @param value the value
+    * @return the targets
+    */
+   default List<Annotation> targets(@NonNull RelationType type, @NonNull String value) {
+      return targets(type, value, true);
+   }
+
+   /**
+    * Gets targets.
+    *
+    * @param type                  the type
+    * @param value                 the value
+    * @param includeSubAnnotations the include sub annotations
+    * @return the targets
+    */
+   List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations);
 
 }//END OF RelationalObject

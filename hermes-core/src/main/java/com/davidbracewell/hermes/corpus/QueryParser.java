@@ -44,6 +44,90 @@ import java.util.List;
  */
 public class QueryParser {
 
+   private final Parser parser;
+   private final Operator defaultOperator;
+
+   public QueryParser() {
+      this(Operator.OR);
+   }
+
+   public QueryParser(@NonNull Operator defaultOperator) {
+      this.parser = new Parser(new Grammar() {{
+         register(CommonTypes.OPENPARENS, new GroupHandler(CommonTypes.CLOSEPARENS));
+         register(Types.NOT, new PrefixOperatorHandler());
+         register(CommonTypes.WORD, new WordHandler(defaultOperator));
+         register(Types.FIELD, new PrefixOperatorHandler());
+         register(Operator.AND, new BinaryOperatorHandler(10, true));
+         register(Operator.OR, new BinaryOperatorHandler(10, true));
+      }},
+                               RegularExpressionLexer.builder()
+                                                     .add(CommonTypes.OPENPARENS)
+                                                     .add(CommonTypes.CLOSEPARENS)
+                                                     .add(Operator.AND)
+                                                     .add(Operator.OR)
+                                                     .add(Types.NOT)
+                                                     .add(Types.FIELD)
+                                                     .add(CommonTypes.WORD,
+                                                          "(\"([^\"]|\\\\\")*\"|[^\\s\\|\\&\\)\\(]+)")
+                                                     .build()
+      );
+      this.defaultOperator = defaultOperator;
+   }
+
+   SerializablePredicate<HString> and(SerializablePredicate<HString> l, SerializablePredicate<HString> r) {
+      return (hString -> l.test(hString) && r.test(hString));
+   }
+
+   private SerializablePredicate<HString> generate(Expression e) {
+      if (e.isInstance(ValueExpression.class)) {
+         return s -> s.contains(e.as(ValueExpression.class).value);
+      } else if (e.isInstance(PrefixOperatorExpression.class)) {
+         PrefixOperatorExpression pe = e.as(PrefixOperatorExpression.class);
+         if (pe.operator.getType().isInstance(Types.NOT)) {
+            return negate(generate(pe.right));
+         } else if (pe.operator.getType().isInstance(Types.FIELD)) {
+            final AttributeType attributeType = com.davidbracewell.hermes.Types.attribute(
+               pe.operator.getText().substring(1, pe.operator.getText().length() - 2));
+            final SerializablePredicate<HString> predicate = generate(pe.right);
+            return hString ->
+                      hString.document().contains(attributeType) &&
+                         predicate.test(Fragments.string(hString.document().get(attributeType).asString()));
+         }
+         return generate(pe.right);
+      }
+      BinaryOperatorExpression boe = e.as(BinaryOperatorExpression.class);
+      SerializablePredicate<HString> left = generate(boe.left);
+      SerializablePredicate<HString> right = generate(boe.right);
+      return boe.operator.getType().isInstance(Operator.AND) ? and(left, right) : or(left, right);
+   }
+
+   SerializablePredicate<HString> negate(SerializablePredicate<HString> p) {
+      return (hString -> !p.test(hString));
+   }
+
+   SerializablePredicate<HString> or(SerializablePredicate<HString> l, SerializablePredicate<HString> r) {
+      return (hString -> l.test(hString) || r.test(hString));
+   }
+
+   public SerializablePredicate<HString> parse(String query) throws ParseException {
+      ExpressionIterator expressionIterator = parser.parse(query);
+      List<SerializablePredicate<HString>> predicates = new ArrayList<>();
+      while (expressionIterator.hasNext()) {
+         Expression expression = expressionIterator.next();
+         predicates.add(generate(expression));
+      }
+      if (predicates.isEmpty()) {
+         return d -> true;
+      }
+      SerializablePredicate<HString> finalPredicate = predicates.get(0);
+      for (int i = 1; i < predicates.size(); i++) {
+         finalPredicate = defaultOperator == Operator.AND ? and(finalPredicate, predicates.get(i)) : or(finalPredicate,
+                                                                                                        predicates.get(
+                                                                                                           i));
+      }
+      return finalPredicate;
+   }
+
    public enum Operator implements ParserTokenType, HasLexicalPattern {
       AND("([Aa][Nn][Dd]|&)"),
       OR("([Oo][Rr]|\\|)");
@@ -100,101 +184,14 @@ public class QueryParser {
                !expressionIterator.tokenStream().lookAheadType(0).equals(Operator.OR) &&
                !expressionIterator.tokenStream().lookAheadType(0).equals(CommonTypes.CLOSEPARENS)
             ) {
-            return new BinaryOperatorExpression(
-                                                  new ValueExpression(token.text, token.type),
-                                                  new ParserToken(defaultOperator.toString(), defaultOperator),
-                                                  expressionIterator.next()
+            return new BinaryOperatorExpression(new ValueExpression(token.text, token.type),
+                                                new ParserToken(defaultOperator.toString(), defaultOperator),
+                                                expressionIterator.next()
             );
          }
          return new ValueExpression(token.text, token.getType());
       }
 
-   }
-
-   private final Parser parser;
-   private final Operator defaultOperator;
-
-   public QueryParser() {
-      this(Operator.OR);
-   }
-
-   public QueryParser(@NonNull Operator defaultOperator) {
-      this.parser = new Parser(
-                                 new Grammar() {{
-                                    register(CommonTypes.OPENPARENS, new GroupHandler(CommonTypes.CLOSEPARENS));
-                                    register(Types.NOT, new PrefixOperatorHandler());
-                                    register(CommonTypes.WORD, new WordHandler(defaultOperator));
-                                    register(Types.FIELD, new PrefixOperatorHandler());
-                                    register(Operator.AND, new BinaryOperatorHandler(10, true));
-                                    register(Operator.OR, new BinaryOperatorHandler(10, true));
-                                 }},
-                                 RegularExpressionLexer.builder()
-                                                       .add(CommonTypes.OPENPARENS)
-                                                       .add(CommonTypes.CLOSEPARENS)
-                                                       .add(Operator.AND)
-                                                       .add(Operator.OR)
-                                                       .add(Types.NOT)
-                                                       .add(Types.FIELD)
-                                                       .add(CommonTypes.WORD,
-                                                            "(\"([^\"]|\\\\\")*\"|[^\\s\\|\\&\\)\\(]+)")
-                                                       .build()
-      );
-      this.defaultOperator = defaultOperator;
-   }
-
-
-   public SerializablePredicate<HString> parse(String query) throws ParseException {
-      ExpressionIterator expressionIterator = parser.parse(query);
-      List<SerializablePredicate<HString>> predicates = new ArrayList<>();
-      while (expressionIterator.hasNext()) {
-         Expression expression = expressionIterator.next();
-         predicates.add(generate(expression));
-      }
-      if (predicates.isEmpty()) {
-         return d -> true;
-      }
-      SerializablePredicate<HString> finalPredicate = predicates.get(0);
-      for (int i = 1; i < predicates.size(); i++) {
-         finalPredicate = defaultOperator == Operator.AND ? and(finalPredicate, predicates.get(i)) : or(finalPredicate,
-                                                                                                        predicates.get(
-                                                                                                           i));
-      }
-      return finalPredicate;
-   }
-
-   private SerializablePredicate<HString> generate(Expression e) {
-      if (e.isInstance(ValueExpression.class)) {
-         return s -> s.contains(e.as(ValueExpression.class).value);
-      } else if (e.isInstance(PrefixOperatorExpression.class)) {
-         PrefixOperatorExpression pe = e.as(PrefixOperatorExpression.class);
-         if (pe.operator.getType().isInstance(Types.NOT)) {
-            return negate(generate(pe.right));
-         } else if (pe.operator.getType().isInstance(Types.FIELD)) {
-            final AttributeType attributeType = com.davidbracewell.hermes.Types.attribute(
-               pe.operator.getText().substring(1, pe.operator.getText().length() - 2));
-            final SerializablePredicate<HString> predicate = generate(pe.right);
-            return hString ->
-                      hString.document().contains(attributeType) &&
-                         predicate.test(Fragments.string(hString.document().get(attributeType).asString()));
-         }
-         return generate(pe.right);
-      }
-      BinaryOperatorExpression boe = e.as(BinaryOperatorExpression.class);
-      SerializablePredicate<HString> left = generate(boe.left);
-      SerializablePredicate<HString> right = generate(boe.right);
-      return boe.operator.getType().isInstance(Operator.AND) ? and(left, right) : or(left, right);
-   }
-
-   SerializablePredicate<HString> negate(SerializablePredicate<HString> p) {
-      return (hString -> !p.test(hString));
-   }
-
-   SerializablePredicate<HString> and(SerializablePredicate<HString> l, SerializablePredicate<HString> r) {
-      return (hString -> l.test(hString) && r.test(hString));
-   }
-
-   SerializablePredicate<HString> or(SerializablePredicate<HString> l, SerializablePredicate<HString> r) {
-      return (hString -> l.test(hString) || r.test(hString));
    }
 
 

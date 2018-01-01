@@ -30,6 +30,7 @@ import lombok.NonNull;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -207,7 +208,6 @@ public interface Lexicon extends Predicate<HString>, WordList {
       }
    }
 
-
    /**
     * Find list.
     *
@@ -224,5 +224,8 @@ public interface Lexicon extends Predicate<HString>, WordList {
     * @return the entries
     */
    List<LexiconEntry> getEntries(HString hString);
+
+
+   Set<LexiconEntry> entries();
 
 }//END OF Lexicon

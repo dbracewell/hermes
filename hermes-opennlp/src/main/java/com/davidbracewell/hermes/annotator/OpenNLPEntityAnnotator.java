@@ -26,7 +26,6 @@ import com.davidbracewell.config.Config;
 import com.davidbracewell.guava.common.collect.HashMultimap;
 import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.io.resource.Resource;
 import lombok.SneakyThrows;
 import opennlp.tools.namefind.NameFinderME;
@@ -34,8 +33,6 @@ import opennlp.tools.namefind.TokenNameFinderModel;
 
 import java.io.Serializable;
 import java.util.*;
-
-import static com.davidbracewell.collection.map.Maps.map;
 
 /**
  * @author David B. Bracewell
@@ -59,10 +56,12 @@ public class OpenNLPEntityAnnotator implements Annotator, Serializable {
             double[] probs = finder.probs(spans);
             for (int i = 0; i < spans.length; i++) {
                opennlp.tools.util.Span span = spans[i];
-               document.createAnnotation(OPENNLP_ENTITY,
-                                         tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1)))
-                       .putAll(map(Types.ENTITY_TYPE, EntityType.create(span.getType().toUpperCase()),
-                                   Types.CONFIDENCE, probs[i]));
+               document.annotationBuilder()
+                       .type(OPENNLP_ENTITY)
+                       .bounds(tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1)))
+                       .attribute(Types.ENTITY_TYPE, EntityType.create(span.getType().toUpperCase()))
+                       .attribute(Types.CONFIDENCE, probs[i])
+                       .createAttached();
             }
          }
       }

@@ -27,16 +27,15 @@ import com.davidbracewell.atlas.Vertex;
 import com.davidbracewell.atlas.algorithms.DijkstraShortestPath;
 import com.davidbracewell.atlas.algorithms.ShortestPath;
 import com.davidbracewell.atlas.io.GraphViz;
+import com.davidbracewell.collection.Sets;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.davidbracewell.collection.map.Maps.map;
 
@@ -78,6 +77,13 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
          gPrime.addEdge(e);
       });
       return gPrime;
+   }
+
+   public void removeEdgeIf(@NonNull Predicate<RelationEdge> predicate) {
+      edges()
+         .parallelStream()
+         .filter(predicate)
+         .forEach(this::removeEdge);
    }
 
    @Override
@@ -213,5 +219,50 @@ public class RelationGraph extends AdjacencyMatrix<Annotation> {
       return Cast.as(lazyShortestPath.get().path(source, target));
    }
 
+   /**
+    * Gets sub tree nodes.
+    *
+    * @param node the node
+    * @return the sub tree nodes
+    */
+   public Set<Annotation> getSubTreeNodes(@NonNull Annotation node) {
+      return getSubTreeNodes(node, null);
+   }
+
+   /**
+    * Gets sub tree nodes.
+    *
+    * @param node           the node
+    * @param childRelations the child relations
+    * @return the sub tree nodes
+    */
+   public Set<Annotation> getSubTreeNodes(@NonNull Annotation node, String... childRelations) {
+      Set<Annotation> children = new HashSet<>();
+      Set<String> targetRel = childRelations == null ? Collections.emptySet() : Sets.asSet(
+         Arrays.asList(childRelations));
+      Predicate<RelationEdge> keep = edge -> targetRel.size() == 0 || targetRel.contains(edge.getRelation());
+
+      Queue<RelationEdge> queue = new LinkedList<>(getInEdges(node).stream().filter(keep).collect(Collectors.toList()));
+      while (!queue.isEmpty()) {
+         RelationEdge n = queue.remove();
+         if (!"relcl".equals(n.getRelation()) && !"parataxis".equals(n.getRelation())) {
+            children.add(n.getFirstVertex());
+            queue.addAll(getInEdges(n.getFirstVertex())
+                            .stream()
+                            .filter(e -> !children.contains(e.getFirstVertex()))
+                            .collect(Collectors.toSet()));
+         }
+      }
+      return children;
+   }
+
+
+   public HString getSubTreeText(Annotation node, boolean includeGiven) {
+      Set<Annotation> children = getSubTreeNodes(node);
+      if (includeGiven) {
+         children.add(node);
+      }
+      return HString.union(children);
+   }
 
 }//END OF RelationGraph

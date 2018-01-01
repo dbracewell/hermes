@@ -24,9 +24,9 @@ package com.davidbracewell.hermes.ml.chunker;
 import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.Pipeline;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.BIOLabelMaker;
 import com.davidbracewell.hermes.ml.BIOTrainer;
@@ -91,7 +91,7 @@ public class PhraseChunkTrainer extends BIOTrainer {
    @Override
    protected SequenceLabelerLearner getLearner() {
       SequenceLabelerLearner learner = new CRFTrainer();
-      learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
+      learner.setTransitionFeatures(TransitionFeature.FIRST_ORDER);
       learner.setValidator(new BIOValidator());
       learner.setParameter("maxIterations", 200);
       learner.setParameter("verbose", true);

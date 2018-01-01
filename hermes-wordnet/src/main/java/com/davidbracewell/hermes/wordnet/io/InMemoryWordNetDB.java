@@ -24,7 +24,7 @@ package com.davidbracewell.hermes.wordnet.io;
 import com.davidbracewell.guava.common.collect.HashBasedTable;
 import com.davidbracewell.guava.common.collect.Table;
 import com.davidbracewell.guava.common.collect.TreeMultimap;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.wordnet.Sense;
 import com.davidbracewell.hermes.wordnet.Synset;
 import com.davidbracewell.hermes.wordnet.WordNetPOS;

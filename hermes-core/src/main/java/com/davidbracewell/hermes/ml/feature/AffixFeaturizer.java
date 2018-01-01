@@ -22,11 +22,11 @@
 package com.davidbracewell.hermes.ml.feature;
 
 import com.davidbracewell.apollo.ml.Feature;
-import com.davidbracewell.apollo.ml.Featurizer;
+import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.hermes.HString;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author David B. Bracewell
@@ -42,8 +42,8 @@ public class AffixFeaturizer implements Featurizer<HString> {
    }
 
    @Override
-   public Set<Feature> apply(HString word) {
-      Set<Feature> features = new HashSet<>();
+   public List<Feature> apply(HString word) {
+      List<Feature> features = new ArrayList<>();
       for (int i = 1; word.length() > i && i <= suffixSize; i++) {
          features.add(Feature.TRUE("SUFFIX[" + i + "]", word.substring(word.length() - i, word.length()).toString()));
       }

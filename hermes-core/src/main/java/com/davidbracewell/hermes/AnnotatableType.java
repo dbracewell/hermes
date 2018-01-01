@@ -23,6 +23,7 @@ package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.hermes.annotator.Annotator;
 import com.davidbracewell.reflection.BeanUtils;
@@ -32,19 +33,19 @@ import com.davidbracewell.reflection.ReflectionUtils;
 import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 
+import java.util.Optional;
+
 /**
- * <p>
- * An annotatable type is one that can be added to a document through the use of a {@link Pipeline}. The interface
- * exists to unify {@link AnnotationType}s, {@link AttributeType}s, and {@link RelationType}s.
- * </p>
+ * <p> An annotatable type is one that can be added to a document through the use of a {@link Pipeline}. The interface
+ * exists to unify {@link AnnotationType}s, {@link AttributeType}s, and {@link RelationType}s.</p>
  *
  * @author David B. Bracewell
  */
 public interface AnnotatableType {
    /**
-    * The constant ANNOTATOR_PACKAGE.
+    * Package to look for default annotator implementations.
     */
-   String ANNOTATOR_PACKAGE = "com.davidbracewell.hermes.annotator";
+   String ANNOTATOR_PACKAGE = Hermes.HERMES_PACKAGE + ".annotator";
 
    /**
     * Gets the annotator associated with this type for a given language. First, an annotator is checked for in the
@@ -61,8 +62,8 @@ public interface AnnotatableType {
    default Annotator getAnnotator(@NonNull Language language) {
       //Step 1: Check for a config override
       String key = Config.closestKey(type(), language, name(), "annotator");
-
       Annotator annotator = null;
+
 
       if (StringUtils.isNotNullOrBlank(key)) {
          //Annotator is defined via configuration (this will override defaults)
@@ -74,22 +75,19 @@ public interface AnnotatableType {
          String typeName = StringUtils.toTitleCase(name().replaceAll("[^a-zA-Z]", " ")
                                                          .trim()
                                                          .toLowerCase()).replaceAll("\\s+", "");
-
          String languageName = StringUtils.toTitleCase(language.name().toLowerCase());
-         Class<?> annotatorClass = ReflectionUtils.getClassForNameQuietly(
-            ANNOTATOR_PACKAGE + ".Default" + languageName + typeName + "Annotator");
 
-         if (annotatorClass == null) {
-            annotatorClass = ReflectionUtils
-                                .getClassForNameQuietly(ANNOTATOR_PACKAGE + ".Default" + typeName + "Annotator");
+         Class<?> annotatorClass = Optional
+             .ofNullable(ReflectionUtils.getClassForNameQuietly(ANNOTATOR_PACKAGE + ".Default" + languageName + typeName + "Annotator"))
+             .orElse(Cast.as(ReflectionUtils.getClassForNameQuietly(ANNOTATOR_PACKAGE + ".Default" + typeName + "Annotator")));
+
+         if (annotatorClass != null) {
+            try {
+               annotator = Reflect.onClass(annotatorClass).create().get();
+            } catch (ReflectionException e) {
+               annotator = null;
+            }
          }
-
-         try {
-            annotator = Reflect.onClass(annotatorClass).create().get();
-         } catch (ReflectionException e) {
-            annotator = null;
-         }
-
       }
 
       if (annotator == null) {

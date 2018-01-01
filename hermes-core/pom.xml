@@ -27,7 +27,7 @@
     <parent>
         <groupId>com.davidbracewell</groupId>
         <artifactId>hermes</artifactId>
-        <version>0.4</version>
+        <version>0.5</version>
         <relativePath>..</relativePath>
     </parent>
     <dependencies>
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>atlas</artifactId>
-            <version>0.3</version>
+            <version>0.4</version>
         </dependency>
         <dependency>
             <groupId>org.maltparser</groupId>
@@ -67,25 +67,6 @@
     </dependencies>
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.1.201405082137</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>de.jflex</groupId>
                 <artifactId>jflex-maven-plugin</artifactId>

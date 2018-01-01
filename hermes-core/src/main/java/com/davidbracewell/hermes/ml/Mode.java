@@ -7,5 +7,7 @@ public enum Mode {
    TRAIN,
    TEST,
    SPLIT,
+   CV3,
+   CV10,
    LABEL
 }//END OF Mode

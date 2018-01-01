@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.ml.feature;
 
-import com.davidbracewell.apollo.ml.PredicateFeaturizer;
+import com.davidbracewell.apollo.ml.featurizer.PredicateFeaturizer;
 import com.davidbracewell.hermes.HString;
 
 import java.util.regex.Pattern;
@@ -46,7 +46,7 @@ public class WordClassFeaturizer extends PredicateFeaturizer<HString> {
          return "CURRENCY";
       }
 
-      if (string.contentEqualIgnoreCase("'s")) {
+      if (string.contentEqualsIgnoreCase("'s")) {
          return "POSSESSIVE";
       }
 

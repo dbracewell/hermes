@@ -22,13 +22,13 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
-import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.Learner;
 import com.davidbracewell.apollo.ml.classification.ClassifierEvaluation;
 import com.davidbracewell.apollo.ml.classification.ClassifierLearner;
 import com.davidbracewell.apollo.ml.classification.LibLinearLearner;
 import com.davidbracewell.apollo.ml.data.Dataset;
+import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.corpus.Corpus;
 import com.davidbracewell.hermes.ml.feature.BagOfAnnotations;

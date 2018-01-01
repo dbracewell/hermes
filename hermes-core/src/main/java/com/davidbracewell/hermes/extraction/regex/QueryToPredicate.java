@@ -23,11 +23,7 @@ package com.davidbracewell.hermes.extraction.regex;
 
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.function.SerializablePredicate;
-import com.davidbracewell.hermes.AttributeType;
-import com.davidbracewell.hermes.HString;
-import com.davidbracewell.hermes.RelationType;
-import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.*;
 import com.davidbracewell.hermes.filter.HStringPredicates;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
@@ -143,7 +139,10 @@ public final class QueryToPredicate {
          SerializablePredicate<HString> child = parse(pe.right);
 
          if (exp.match(RegexTokenTypes.PARENT)) {
-            return hString -> hString.asAnnotation().map(a -> a.parent().filter(child).isPresent()).orElse(false);
+            return hString -> {
+               Annotation annotation = hString.asAnnotation();
+               return !annotation.parent().isEmpty() && child.test(annotation.parent());
+            };
          }
          if (exp.match(RegexTokenTypes.NOT)) {
             return child.negate();
@@ -176,7 +175,7 @@ public final class QueryToPredicate {
             predicate = predicate.and(parse(mve.expressions.get(i)));
          }
          final SerializablePredicate<HString> fPredicate = predicate;
-         return hString -> hString.getStartingHere(mve.annotationType).stream().anyMatch(fPredicate);
+         return hString -> hString.startingHere(mve.annotationType).stream().anyMatch(fPredicate);
       } else if (exp.match(RegexTokenTypes.RELATIONGROUP)) {
          RelationGroupExpression ae = Cast.as(exp);
          Expression child = ae.expressions.get(0);
@@ -264,12 +263,13 @@ public final class QueryToPredicate {
          List<String> parts = StringUtils.split(exp.toString().substring(1), ':');
          RelationType relation = RelationType.create(StringUtils.unescape(parts.get(0), '\\'));
          String value = parts.size() > 1 ? StringUtils.unescape(parts.get(1), '\\') : null;
-         return h -> h.asAnnotation().filter(a -> {
+         return h -> {
+            Annotation a = h.asAnnotation();
             if (value == null) {
                return a.targets(relation).size() > 0;
             }
             return a.targets(relation, value).size() > 0;
-         }).map(a -> true).orElse(false);
+         };
       }
 
       throw new ParseException("Unknown expression: " + exp.toString());

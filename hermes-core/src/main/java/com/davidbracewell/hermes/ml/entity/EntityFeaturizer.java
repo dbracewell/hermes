@@ -27,8 +27,8 @@ import com.davidbracewell.apollo.ml.sequence.Context;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.hermes.Annotation;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author David B. Bracewell
@@ -42,8 +42,8 @@ public class EntityFeaturizer implements SequenceFeaturizer<Annotation> {
    }
 
    @Override
-   public Set<Feature> apply(Context<Annotation> itr) {
-      Set<Feature> features = new HashSet<>();
+   public List<Feature> apply(Context<Annotation> itr) {
+      List<Feature> features = new ArrayList<>();
       Language language = Language.fromString(itr.getCurrent().toString());
       if (language != Language.UNKNOWN) {
          features.add(p("IsLanguageName"));

@@ -25,11 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.guava.common.base.Throwables;
 import com.davidbracewell.guava.common.collect.Maps;
-import com.davidbracewell.hermes.AnnotatableType;
-import com.davidbracewell.hermes.Annotation;
-import com.davidbracewell.hermes.Document;
-import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.*;
 import opennlp.tools.chunker.ChunkerME;
 import opennlp.tools.chunker.ChunkerModel;
 import opennlp.tools.util.Span;
@@ -42,58 +38,61 @@ import java.util.*;
  * @author David B. Bracewell
  */
 public class OpenNLPPhraseChunkAnnotator implements Annotator, Serializable {
-  private static final long serialVersionUID = 1L;
-  private volatile Map<Language, ChunkerModel> chunkerModels = Maps.newEnumMap(Language.class);
+   private static final long serialVersionUID = 1L;
+   private volatile Map<Language, ChunkerModel> chunkerModels = Maps.newEnumMap(Language.class);
 
-  @Override
-  public void annotate(Document document) {
-    ChunkerME chunker = new ChunkerME(loadChunker(document.getLanguage()));
-    for (Annotation sentence : document.sentences()) {
-      List<Annotation> tokenList = sentence.tokens();
-      String[] tokens = new String[tokenList.size()];
-      String[] pos = new String[tokenList.size()];
-      for (int i = 0; i < tokenList.size(); i++) {
-        tokens[i] = tokenList.get(i).toString();
-        pos[i] = tokenList.get(i).get(Types.PART_OF_SPEECH).as(POS.class).asString();
+   @Override
+   public void annotate(Document document) {
+      ChunkerME chunker = new ChunkerME(loadChunker(document.getLanguage()));
+      for (Annotation sentence : document.sentences()) {
+         List<Annotation> tokenList = sentence.tokens();
+         String[] tokens = new String[tokenList.size()];
+         String[] pos = new String[tokenList.size()];
+         for (int i = 0; i < tokenList.size(); i++) {
+            tokens[i] = tokenList.get(i).toString();
+            pos[i] = tokenList.get(i).get(Types.PART_OF_SPEECH).as(POS.class).asString();
+         }
+         Span[] chunks = chunker.chunkAsSpans(tokens, pos);
+         for (Span span : chunks) {
+            sentence.document().annotationBuilder()
+                    .type(Types.PHRASE_CHUNK)
+                    .bounds(tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1)))
+                    .attribute(Types.PART_OF_SPEECH, POS.valueOf(span.getType()))
+                    .createAttached();
+         }
       }
-      Span[] chunks = chunker.chunkAsSpans(tokens, pos);
-      for (Span span : chunks) {
-        sentence.document().createAnnotation(
-          Types.PHRASE_CHUNK,
-          tokenList.get(span.getStart()).union(tokenList.get(span.getEnd() - 1))
-        ).put(Types.PART_OF_SPEECH, POS.valueOf(span.getType()));
+   }
+
+   private ChunkerModel loadChunker(Language language) {
+      if (!chunkerModels.containsKey(language)) {
+         synchronized (OpenNLPPhraseChunkAnnotator.class) {
+            if (!chunkerModels.containsKey(language)) {
+               try {
+                  chunkerModels.put(language, new ChunkerModel(Config.get("opennlp", language, "phrase_chunk", "model")
+                                                                     .asResource()
+                                                                     .inputStream()));
+               } catch (IOException e) {
+                  throw Throwables.propagate(e);
+               }
+            }
+         }
       }
-    }
-  }
-
-  private ChunkerModel loadChunker(Language language) {
-    if (!chunkerModels.containsKey(language)) {
-      synchronized (OpenNLPPhraseChunkAnnotator.class) {
-        if (!chunkerModels.containsKey(language)) {
-          try {
-            chunkerModels.put(language, new ChunkerModel(Config.get("opennlp", language, "phrase_chunk", "model").asResource().inputStream()));
-          } catch (IOException e) {
-            throw Throwables.propagate(e);
-          }
-        }
-      }
-    }
-    return chunkerModels.get(language);
-  }
+      return chunkerModels.get(language);
+   }
 
 
-  @Override
-  public Set<AnnotatableType> satisfies() {
-    return Collections.singleton(Types.PHRASE_CHUNK);
-  }
+   @Override
+   public Set<AnnotatableType> satisfies() {
+      return Collections.singleton(Types.PHRASE_CHUNK);
+   }
 
-  @Override
-  public Set<AnnotatableType> requires() {
-    return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN, Types.PART_OF_SPEECH));
-  }
+   @Override
+   public Set<AnnotatableType> requires() {
+      return new HashSet<>(Arrays.asList(Types.SENTENCE, Types.TOKEN, Types.PART_OF_SPEECH));
+   }
 
-  @Override
-  public String getVersion() {
-    return "1.6.0";
-  }
+   @Override
+   public String getVersion() {
+      return "1.6.0";
+   }
 }//END OF OpenNLPPhraseChunkAnnotator

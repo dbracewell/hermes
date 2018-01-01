@@ -29,6 +29,7 @@ import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.application.CommandLineApplication;
 import com.davidbracewell.cli.Option;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.AnnotationType;
 import com.davidbracewell.hermes.corpus.Corpus;
@@ -98,12 +99,23 @@ public abstract class BIOTrainer extends CommandLineApplication {
    }
 
    /**
-    * Gets validator.
+    * Gets dataset.
     *
-    * @return the validator
+    * @param featurizer the featurizer
+    * @return the dataset
     */
-   protected SequenceValidator getValidator() {
-      return new BIOValidator();
+   protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
+      Corpus c = Corpus
+                    .builder()
+                    .corpusType(corpusType)
+                    .source(corpus)
+                    .format(corpusFormat)
+                    .build();
+      AnnotatableType[] required = required();
+      if (required.length > 0) {
+         c = c.annotate(required);
+      }
+      return c.asSequenceDataSet(new BIOLabelMaker(trainingAnnotation, validTags()), featurizer);
    }
 
    /**
@@ -112,6 +124,13 @@ public abstract class BIOTrainer extends CommandLineApplication {
     * @return the featurizer
     */
    protected abstract SequenceFeaturizer<Annotation> getFeaturizer();
+
+   /**
+    * Gets learner.
+    *
+    * @return the learner
+    */
+   protected abstract SequenceLabelerLearner getLearner();
 
    /**
     * Gets preprocessors.
@@ -126,45 +145,13 @@ public abstract class BIOTrainer extends CommandLineApplication {
    }
 
    /**
-    * Gets learner.
+    * Gets validator.
     *
-    * @return the learner
+    * @return the validator
     */
-   protected abstract SequenceLabelerLearner getLearner();
-
-   protected Set<String> validTags() {
-      return Collections.emptySet();
+   protected SequenceValidator getValidator() {
+      return new BIOValidator();
    }
-
-   /**
-    * Gets dataset.
-    *
-    * @param featurizer the featurizer
-    * @return the dataset
-    */
-   protected Dataset<Sequence> getDataset(SequenceFeaturizer<Annotation> featurizer) {
-      return Corpus
-                .builder()
-                .corpusType(corpusType)
-                .source(corpus)
-                .format(corpusFormat)
-                .build()
-                .asSequenceDataSet(new BIOLabelMaker(trainingAnnotation, validTags()), featurizer);
-   }
-
-   /**
-    * Test.
-    *
-    * @throws Exception the exception
-    */
-   protected void test() throws Exception {
-      BIOTagger tagger = BIOTagger.read(model);
-      Dataset<Sequence> test = getDataset(tagger.featurizer);
-      BIOEvaluation eval = new BIOEvaluation();
-      eval.evaluate(tagger.labeler, test);
-      eval.output(System.out);
-   }
-
 
    protected void label() throws Exception {
       BIOTagger tagger = BIOTagger.read(model);
@@ -181,24 +168,26 @@ public abstract class BIOTrainer extends CommandLineApplication {
       });
    }
 
-   /**
-    * Train.
-    *
-    * @throws Exception the exception
-    */
-   protected void train() throws Exception {
-      final SequenceFeaturizer<Annotation> featurizer = getFeaturizer();
-      Dataset<Sequence> train = getDataset(featurizer);
-      PreprocessorList<Sequence> preprocessors = getPreprocessors();
-      if (preprocessors != null && preprocessors.size() > 0) {
-         train = train.preprocess(preprocessors);
+   @Override
+   protected void programLogic() throws Exception {
+      switch (mode) {
+         case TEST:
+            test();
+            break;
+         case TRAIN:
+            train();
+            break;
+         case SPLIT:
+            split();
+            break;
+         case LABEL:
+            label();
+            break;
       }
-      train.encode();
-      SequenceLabelerLearner learner = getLearner();
-      learner.setValidator(getValidator());
-      SequenceLabeler labeler = learner.train(train);
-      BIOTagger tagger = new BIOTagger(featurizer, annotationType, labeler);
-      tagger.write(model);
+   }
+
+   protected AnnotatableType[] required() {
+      return new AnnotatableType[0];
    }
 
    protected void split() throws Exception {
@@ -221,22 +210,41 @@ public abstract class BIOTrainer extends CommandLineApplication {
       });
    }
 
-   @Override
-   protected void programLogic() throws Exception {
-      switch (mode) {
-         case TEST:
-            test();
-            break;
-         case TRAIN:
-            train();
-            break;
-         case SPLIT:
-            split();
-            break;
-         case LABEL:
-            label();
-            break;
+   /**
+    * Test.
+    *
+    * @throws Exception the exception
+    */
+   protected void test() throws Exception {
+      BIOTagger tagger = BIOTagger.read(model);
+      Dataset<Sequence> test = getDataset(tagger.featurizer);
+      BIOEvaluation eval = new BIOEvaluation();
+      eval.evaluate(tagger.labeler, test);
+      eval.output(System.out);
+   }
+
+   /**
+    * Train.
+    *
+    * @throws Exception the exception
+    */
+   protected void train() throws Exception {
+      final SequenceFeaturizer<Annotation> featurizer = getFeaturizer();
+      Dataset<Sequence> train = getDataset(featurizer);
+      PreprocessorList<Sequence> preprocessors = getPreprocessors();
+      if (preprocessors != null && preprocessors.size() > 0) {
+         train = train.preprocess(preprocessors);
       }
+      train.encode();
+      SequenceLabelerLearner learner = getLearner();
+      learner.setValidator(getValidator());
+      SequenceLabeler labeler = learner.train(train);
+      BIOTagger tagger = new BIOTagger(featurizer, annotationType, labeler);
+      tagger.write(model);
+   }
+
+   protected Set<String> validTags() {
+      return Collections.emptySet();
    }
 
 }// END OF BIOTrainer

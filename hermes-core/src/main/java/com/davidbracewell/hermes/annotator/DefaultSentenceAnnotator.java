@@ -28,10 +28,9 @@ import com.davidbracewell.hermes.tokenization.TokenType;
 import com.davidbracewell.string.StringUtils;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
+import static com.davidbracewell.hermes.annotator.DefaultSentenceAnnotator.InternalType.*;
 
 /**
  * <p> A <code>BreakIterator</code> backed sentence annotator that has limited knowledge of abbreviations. </p>
@@ -249,32 +248,8 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
                                                   .add("wy.")
                                                   .add("wyo.")
                                                   .add("yuk.")
-
+                                                  .add("st.")
                                                   .build();
-
-   private boolean isEndOfSentenceMark(Annotation token) {
-      if (token.isEmpty() || token.get(Types.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN).isInstance(
-         TokenType.EMOTICON,
-         TokenType.PERSON_TITLE)) {
-         return false;
-      }
-      char c = token.charAt(token.length() - 1);
-      return Arrays.binarySearch(endOfSentence, c) >= 0;
-   }
-
-   private boolean isContinue(Annotation token) {
-      char c = token.isEmpty() ? ' ' : token.charAt(token.length() - 1);
-      return Arrays.binarySearch(sContinue, c) >= 0;
-   }
-
-   private boolean isEndPunctuation(Annotation token) {
-      if (token.length() != 1) {
-         return false;
-      }
-      char n = token.charAt(0);
-      int type = Character.getType(n);
-      return n == '"' || type == Character.FINAL_QUOTE_PUNCTUATION || type == Character.END_PUNCTUATION;
-   }
 
    private boolean addSentence(Document doc, int start, int end, int index) {
       while (start < doc.length() && Character.isWhitespace(doc.charAt(start))) {
@@ -291,30 +266,72 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
       return false;
    }
 
-   private Annotation getToken(List<Annotation> tokens, int index) {
-      if (index < 0 || index >= tokens.size()) {
-         return Fragments.detachedEmptyAnnotation();
+   @Override
+   public void annotate(Document doc) {
+      List<Annotation> tokens = doc.tokens();
+      int start = -1;
+      int sentenceIndex = 0;
+      int lastEnd = -1;
+
+
+      int quoteCount = 0;
+      for (int ti = 0; ti < tokens.size(); ti++) {
+         Annotation cToken = tokens.get(ti);
+         Annotation nToken = getToken(tokens, ti + 1);
+
+         if (start == -1) {
+            start = cToken.start();
+         }
+
+         Set<InternalType> cTypes = getTypes(cToken);
+         Set<InternalType> nTypes = getTypes(nToken);
+
+
+         if (cTypes.contains(QUOTATION_MARK)) {
+            quoteCount++;
+         }
+
+         if ((cTypes.contains(ABBREVIATION) && nTypes.contains(CAPITALIZED) && quoteCount % 2 == 0)
+                || (!cTypes.contains(ABBREVIATION) && cTypes.contains(END_OF_SENTENCE) && !nTypes.contains(
+            PERSON_TITLE))) {
+
+            while (nTypes.contains(END_OF_SENTENCE)) {
+               ti++;
+               cToken = nToken;
+               nToken = getToken(tokens, ti + 1);
+               nTypes = getTypes(nToken);
+            }
+
+            if ((nTypes.contains(END_BRACKET) || nTypes.contains(QUOTATION_MARK)) && distance(cToken, nToken) == 0) {
+               ti++;
+               cToken = nToken;
+            }
+
+            if (!noSentenceBreak.contains(cToken.toLowerCase()) && !nTypes.contains(CONTINUE_SENTENCE) && addSentence(doc, start, cToken.end(), sentenceIndex)) {
+               sentenceIndex++;
+               lastEnd = cToken.end();
+               start = -1;
+               quoteCount = 0;
+            }
+         } else {
+            int newLines = countNewLineBeforeNext(doc, cToken, nToken);
+            if (newLines > 1
+                   || (newLines == 1 && nTypes.contains(CAPITALIZED))
+                   || (newLines == 1 && nTypes.contains(LIST_MARKER))) {
+               //Two or more line ends typically signifies a section heading, so treat it as a sentence.
+               if (addSentence(doc, start, cToken.end(), sentenceIndex)) {
+                  sentenceIndex++;
+                  lastEnd = cToken.end();
+                  start = -1;
+                  quoteCount = 0;
+               }
+            }
+         }
       }
-      return tokens.get(index);
-   }
-
-   private boolean isAbbreviation(Annotation token) {
-      TokenType type = token.get(Types.TOKEN_TYPE).cast();
-      return type != null &&
-                (type.equals(TokenType.ACRONYM)
-                    || (type.equals(TokenType.TIME) && (token.next().isEmpty()
-                                                           || Character.isUpperCase(token.next().charAt(0)))));
-   }
-
-
-   private boolean isCapitalized(Annotation token) {
-      if (token.length() == 1 && token.contentEqual("I")) {
-         return true;
-      } else if (token.length() > 1) {
-         return !StringUtils.hasLetter(token)
-                   || Character.isUpperCase(token.charAt(0));
+      if (tokens.size() > 0 && lastEnd < tokens.get(tokens.size() - 1).end()) {
+         addSentence(doc, start, tokens.get(tokens.size() - 1).end(), sentenceIndex);
       }
-      return false;
+
    }
 
    private int countNewLineBeforeNext(Document doc, Annotation cToken, Annotation nToken) {
@@ -322,77 +339,125 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
          return 0;
       }
       int count = 0;
+      char prev = '\0';
       for (int i = cToken.end(); i < nToken.start(); i++) {
-         if (doc.charAt(i) == '\r' || doc.charAt(i) == '\n') {
+         if (doc.charAt(i) == '\r' || (prev != '\r' && doc.charAt(i) == '\n')) {
             count++;
          }
+         prev = doc.charAt(i);
       }
       return count;
    }
 
-   private boolean isListMarker(Annotation token) {
-      return token.contentEqual("*") || token.contentEqual("+") || token.contentEqual(">");
+   private int distance(Annotation a1, Annotation a2) {
+      return a2.start() - a1.end();
    }
 
-   @Override
-   public void annotate(Document doc) {
-      List<Annotation> tokens = doc.tokens();
-      int start = 0;
-      int sentenceIndex = 0;
-      int lastEnd = -1;
+   private Annotation getToken(List<Annotation> tokens, int index) {
+      if (index < 0 || index >= tokens.size()) {
+         return Fragments.detachedEmptyAnnotation();
+      }
+      return tokens.get(index);
+   }
 
-      for (int ti = 0; ti < tokens.size(); ti++) {
-         Annotation cToken = tokens.get(ti);
-         Annotation nToken = getToken(tokens, ti + 1);
-         if (start == -1) {
-            start = cToken.start();
-         }
-
-         boolean isAbbreviation = isAbbreviation(cToken);
-
-         TokenType cTokenType = cToken.get(Types.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN);
-
-         if ((isAbbreviation && isCapitalized(nToken))
-                || (!isAbbreviation && !cTokenType.isInstance(TokenType.PERSON_TITLE) && isEndOfSentenceMark(cToken))
-            ) {
-
-            while (isEndOfSentenceMark(nToken)) {
-               ti++;
-               cToken = nToken;
-               nToken = getToken(tokens, ti + 1);
-            }
-
-            if (isEndPunctuation(nToken)) {
-               ti++;
-               cToken = nToken;
-               nToken = getToken(tokens, ti + 1);
-            }
-
-            if (!isContinue(nToken) && addSentence(doc, start, cToken.end(), sentenceIndex)) {
-               sentenceIndex++;
-               lastEnd = cToken.end();
-               start = -1;
-            }
-
-         } else {
-            int newLines = countNewLineBeforeNext(doc, cToken, nToken);
-            if (newLines > 1
-                   || (newLines == 1 && isCapitalized(nToken))
-                   || (newLines == 1 && isListMarker(nToken))) {
-               //Two or more line ends typically signifies a section heading, so treat it as a sentence.
-               if (addSentence(doc, start, cToken.end(), sentenceIndex)) {
-                  sentenceIndex++;
-                  lastEnd = cToken.end();
-                  start = -1;
-               }
-            }
-         }
+   private Set<InternalType> getTypes(Annotation annotation) {
+      Set<InternalType> types = new HashSet<>();
+      if (isQuotation(annotation)) {
+         types.add(QUOTATION_MARK);
+      }
+      if (isAbbreviation(annotation)) {
+         types.add(ABBREVIATION);
+      }
+      if (isListMarker(annotation)) {
+         types.add(LIST_MARKER);
+      }
+      if (isEndOfSentenceMark(annotation)) {
+         types.add(END_OF_SENTENCE);
+      }
+      if (isContinue(annotation)) {
+         types.add(CONTINUE_SENTENCE);
+      }
+      if (annotation.get(Types.TOKEN_TYPE).equals(TokenType.PERSON_TITLE)) {
+         types.add(PERSON_TITLE);
+      }
+      if (isCapitalized(annotation)) {
+         types.add(CAPITALIZED);
+      }
+      if (isEndBracket(annotation)) {
+         types.add(END_BRACKET);
+      }
+      if (types.isEmpty()) {
+         types.add(OTHER);
       }
 
-      if (tokens.size() > 0 && lastEnd < tokens.get(tokens.size() - 1).end()) {
-         addSentence(doc, start, tokens.get(tokens.size() - 1).end(), sentenceIndex);
-      }
+      return types;
+   }
 
+   private boolean isAbbreviation(Annotation token) {
+      TokenType type = token.get(Types.TOKEN_TYPE).cast();
+      return type != null && (type.equals(TokenType.ACRONYM)
+                                 || (type.equals(TokenType.TIME)
+                                        && (token.next().isEmpty() || Character.isUpperCase(token.next().charAt(0)))));
+   }
+
+   private boolean isCapitalized(Annotation token) {
+      if (token.length() == 1 && token.contentEquals("I")) {
+         return true;
+      } else if (token.length() > 1) {
+         return !StringUtils.hasLetter(token) || Character.isUpperCase(token.charAt(0));
+      }
+      return false;
+   }
+
+   private boolean isContinue(Annotation token) {
+      char c = token.isEmpty() ? ' ' : token.charAt(token.length() - 1);
+      return Arrays.binarySearch(sContinue, c) >= 0;
+   }
+
+   private boolean isEndBracket(Annotation annotation) {
+      if (annotation.length() == 1) {
+         switch (annotation.charAt(0)) {
+            case ')':
+            case ']':
+            case '>':
+               return true;
+         }
+      }
+      return false;
+   }
+
+   private boolean isEndOfSentenceMark(Annotation token) {
+      if (token.isEmpty() || token.get(Types.TOKEN_TYPE).as(TokenType.class, TokenType.UNKNOWN).isInstance(
+         TokenType.EMOTICON,
+         TokenType.PERSON_TITLE)) {
+         return false;
+      }
+      char c = token.charAt(token.length() - 1);
+      return Arrays.binarySearch(endOfSentence, c) >= 0;
+   }
+
+   private boolean isEndPunctuation(Annotation token) {
+      if (token.length() != 1) {
+         return false;
+      }
+      char n = token.charAt(0);
+      int type = Character.getType(n);
+      return n == '"' || type == Character.FINAL_QUOTE_PUNCTUATION || type == Character.END_PUNCTUATION;
+   }
+
+   private boolean isListMarker(Annotation token) {
+      return token.contentEquals("*") || token.contentEquals("+") || token.contentEquals(">");
+   }
+
+   private boolean isQuotation(Annotation annotation) {
+      if (annotation.length() == 1) {
+         int type = Character.getType(annotation.charAt(0));
+         return annotation.contentEquals("\"")
+                   || annotation.contentEquals("'")
+                   || type == Character.INITIAL_QUOTE_PUNCTUATION
+                   || type == Character.FINAL_QUOTE_PUNCTUATION;
+      }
+      return false;
    }
 
    @Override
@@ -403,6 +468,18 @@ public class DefaultSentenceAnnotator implements Annotator, Serializable {
    @Override
    public Set<AnnotatableType> satisfies() {
       return Collections.singleton(Types.SENTENCE);
+   }
+
+   enum InternalType {
+      ABBREVIATION,
+      LIST_MARKER,
+      QUOTATION_MARK,
+      END_OF_SENTENCE,
+      CONTINUE_SENTENCE,
+      PERSON_TITLE,
+      CAPITALIZED,
+      END_BRACKET,
+      OTHER
    }
 
 

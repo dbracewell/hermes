@@ -21,7 +21,7 @@
 
 package com.davidbracewell.hermes.ml.feature;
 
-import com.davidbracewell.apollo.ml.PredicateFeaturizer;
+import com.davidbracewell.apollo.ml.featurizer.PredicateFeaturizer;
 import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
 import lombok.NonNull;

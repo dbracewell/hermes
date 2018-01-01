@@ -19,37 +19,34 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.attribute;
+package com.davidbracewell.hermes;
 
 
 import com.davidbracewell.annotation.Preload;
 
-import static com.davidbracewell.hermes.attribute.EntityType.ROOT;
-
 /**
- * The interface Entities.
+ * Predefined set of common entities.
  *
  * @author David B. Bracewell
  */
 @Preload
 public interface Entities {
-
    /**
     * The constant PERSON.
     */
-   EntityType PERSON = EntityType.create("PERSON", ROOT);
+   EntityType PERSON = EntityType.create("PERSON", EntityType.ROOT);
    /**
     * The constant ORGANIZATION.
     */
-   EntityType ORGANIZATION = EntityType.create("ORGANIZATION", ROOT);
+   EntityType ORGANIZATION = EntityType.create("ORGANIZATION", EntityType.ROOT);
    /**
     * The constant LOCATION.
     */
-   EntityType LOCATION = EntityType.create("LOCATION", ROOT);
+   EntityType LOCATION = EntityType.create("LOCATION", EntityType.ROOT);
    /**
     * The constant NUMBER.
     */
-   EntityType NUMBER = EntityType.create("NUMBER", ROOT);
+   EntityType NUMBER = EntityType.create("NUMBER", EntityType.ROOT);
 
    /**
     * The constant CARDINAL.
@@ -72,7 +69,7 @@ public interface Entities {
    /**
     * The constant DATE_TIME.
     */
-   EntityType DATE_TIME = EntityType.create("DATE_TIME", ROOT);
+   EntityType DATE_TIME = EntityType.create("DATE_TIME", EntityType.ROOT);
    /**
     * The constant DATE.
     */
@@ -84,7 +81,7 @@ public interface Entities {
    /**
     * The constant INTERNET.
     */
-   EntityType INTERNET = EntityType.create("INTERNET", ROOT);
+   EntityType INTERNET = EntityType.create("INTERNET", EntityType.ROOT);
    /**
     * The constant EMAIL.
     */
@@ -105,5 +102,15 @@ public interface Entities {
     * The constant REPLY.
     */
    EntityType REPLY = EntityType.create("REPLY", INTERNET);
+
+   /**
+    * The constant QUANTITY.
+    */
+   EntityType QUANTITY = EntityType.create("QUANTITY", NUMBER);
+
+   /**
+    * The constant PRODUCT.
+    */
+   EntityType PRODUCT = EntityType.create("PRODUCT", EntityType.ROOT);
 
 }//END OF Entities

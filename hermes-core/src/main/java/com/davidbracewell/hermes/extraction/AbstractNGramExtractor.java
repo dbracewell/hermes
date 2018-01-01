@@ -134,7 +134,7 @@ public abstract class AbstractNGramExtractor<T extends AbstractNGramExtractor> e
     * @return the stream
     */
    public Stream<Tuple> streamTuples(@NonNull HString hString) {
-      return Streams.asStream(new NGramStringIterator(hString.get(getAnnotationType())));
+      return Streams.asStream(new NGramStringIterator(annotationStream(hString).collect(Collectors.toList())));
    }
 
    /**
@@ -165,7 +165,7 @@ public abstract class AbstractNGramExtractor<T extends AbstractNGramExtractor> e
     * @return the stream
     */
    public Stream<HString> streamHString(@NonNull HString hString) {
-      return Streams.asStream(new NGramHStringIterator(hString.get(getAnnotationType())));
+      return Streams.asStream(new NGramHStringIterator(annotationStream(hString).collect(Collectors.toList())));
    }
 
    /**

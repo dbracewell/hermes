@@ -24,6 +24,7 @@ package com.davidbracewell.hermes.ml.entity;
 import com.davidbracewell.apollo.ml.sequence.*;
 import com.davidbracewell.apollo.ml.sequence.feature.NGramSequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.feature.WindowedSequenceFeaturizer;
+import com.davidbracewell.hermes.AnnotatableType;
 import com.davidbracewell.hermes.Annotation;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.ml.BIOTrainer;
@@ -43,6 +44,10 @@ public class EntityTrainer extends BIOTrainer {
       super("EntityTrainer", Types.ML_ENTITY);
    }
 
+   public static void main(String[] args) throws Exception {
+      new EntityTrainer().run(args);
+   }
+
    @Override
    @SuppressWarnings("unchecked")
    protected SequenceFeaturizer<Annotation> getFeaturizer() {
@@ -57,27 +62,28 @@ public class EntityTrainer extends BIOTrainer {
    }
 
    @Override
-   public void setup() throws Exception {
-      LibraryLoader.INSTANCE.load();
-   }
-
-//   @Override
-//   protected Set<String> validTags() {
-//      return ImmutableSet.of("PERSON", "LOCATION", "ORGANIZATION", "CARDINAL", "ORDINAL");
-//   }
-
-   @Override
    protected SequenceLabelerLearner getLearner() {
       SequenceLabelerLearner learner = new CRFTrainer();
-      learner.setTransitionFeatures(TransitionFeatures.FIRST_ORDER);
+      learner.setTransitionFeatures(TransitionFeature.FIRST_ORDER);
       learner.setValidator(new BIOValidator());
       learner.setParameter("maxIterations", 100);
       learner.setParameter("verbose", false);
       return learner;
    }
 
-   public static void main(String[] args) throws Exception {
-      new EntityTrainer().run(args);
+   //   @Override
+//   protected Set<String> validTags() {
+//      return ImmutableSet.of("PERSON", "LOCATION", "ORGANIZATION", "CARDINAL", "ORDINAL");
+//   }
+
+   @Override
+   protected AnnotatableType[] required() {
+      return new AnnotatableType[]{Types.TOKEN, Types.SENTENCE, Types.PART_OF_SPEECH, Types.DEPENDENCY};
+   }
+
+   @Override
+   public void setup() throws Exception {
+      LibraryLoader.INSTANCE.load();
    }
 
 }//END OF EntityTrainer

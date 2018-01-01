@@ -23,15 +23,11 @@ package com.davidbracewell.hermes.extraction.regex;
 
 import com.davidbracewell.config.Config;
 import com.davidbracewell.hermes.*;
-import com.davidbracewell.hermes.attribute.Entities;
-import com.davidbracewell.hermes.attribute.POS;
-import com.davidbracewell.hermes.attribute.StringTag;
 import com.davidbracewell.hermes.lexicon.LexiconManager;
 import com.davidbracewell.hermes.lexicon.TrieLexicon;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.davidbracewell.collection.map.Maps.map;
 import static org.junit.Assert.*;
 
 /**
@@ -66,12 +62,23 @@ public class TokenRegexTest {
       document.tokenAt(2).add(new Relation(Types.DEPENDENCY, "dobj", document.tokenAt(1).getId()));
 
       //Create some more entities
-      document.createAnnotation(Types.ENTITY, document.tokenAt(0), false).putAll(
-         map(Types.ENTITY_TYPE, Entities.PERSON));
-      document.createAnnotation(Types.ENTITY, document.tokenAt(2), false).putAll(
-         map(Types.ENTITY_TYPE, Entities.PERSON));
-      document.createAnnotation(Types.ENTITY, document.tokenAt(5), false).putAll(
-         map(Types.ENTITY_TYPE, Entities.LOCATION));
+      document.annotationBuilder()
+              .type(Types.ENTITY)
+              .bounds(document.tokenAt(0))
+              .attribute(Types.ENTITY_TYPE, Entities.PERSON)
+              .createAttached();
+
+      document.annotationBuilder()
+              .type(Types.ENTITY)
+              .bounds(document.tokenAt(2))
+              .attribute(Types.ENTITY_TYPE, Entities.PERSON)
+              .createAttached();
+
+      document.annotationBuilder()
+              .type(Types.ENTITY)
+              .bounds(document.tokenAt(5))
+              .attribute(Types.ENTITY_TYPE, Entities.LOCATION)
+              .createAttached();
 
       TrieLexicon lexicon = new TrieLexicon(false, false, AttributeType.create("DUMMY_TAG"));
       lexicon.add("seashore", new StringTag("BY_THE_SEA"));

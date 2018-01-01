@@ -26,7 +26,7 @@ import com.davidbracewell.collection.counter.Counters;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.base.Strings;
 import com.davidbracewell.guava.common.base.Throwables;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.wordnet.Synset;
 import com.davidbracewell.hermes.wordnet.WordNetPOS;
 import com.davidbracewell.hermes.wordnet.io.WordNetDB;

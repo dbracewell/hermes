@@ -29,6 +29,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -51,20 +52,38 @@ public class HStringTest {
       assertEquals(5, bigrams.size());
       List<HString> trigrams = hString.charNGrams(3);
       assertEquals(4, trigrams.size());
+   }
 
-//    unigrams = hString.charNGrams(1, c -> c != 'a');
-//    assertEquals(5, unigrams.size());
-//    bigrams = hString.charNGrams(2, c -> c != 'a');
-//    assertEquals(4, bigrams.size());
-//    trigrams = hString.charNGrams(3, c -> c != 'a');
-//    assertEquals(3, trigrams.size());
+   @Test
+   public void testCounts() {
+      Document document = DocumentFactory.getInstance().create(
+         "Once upon a time there lived a princess who was stuck in time.");
+      Pipeline.process(document, Types.TOKEN);
+
+      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(
+         Collectors.toList());
+      assertEquals(2, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEquals("a time"));
+      assertTrue(patterns.get(1).contentEquals("a princess"));
+
+      patterns = document.findAll("a time").collect(Collectors.toList());
+      assertEquals(1, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEquals("a time"));
+
+      assertTrue(document.find("z").isEmpty());
+      assertTrue(document.find("c").start() == 0);
+
+      assertTrue(document.tokenAt(0).isAnnotation());
+      assertTrue(document.tokenAt(0).matches("(?i)once"));
+
+      assertTrue(document.isDocument());
    }
 
    @Test
    public void testStringFunctions() {
       HString hString = Fragments.string("abcdef");
-      assertTrue(hString.contentEqual("abcdef"));
-      assertTrue(hString.contentEqualIgnoreCase("ABCDEF"));
+      assertTrue(hString.contentEquals("abcdef"));
+      assertTrue(hString.contentEqualsIgnoreCase("ABCDEF"));
 
       assertEquals("abcdef", hString.toLowerCase());
       assertEquals("ABCDEF", hString.toUpperCase());
@@ -76,14 +95,14 @@ public class HStringTest {
       assertTrue(m.find());
       assertEquals("a", m.group());
 
-      List<HString> patterns = hString.findAllPatterns(Pattern.compile("[aieou]"));
+      List<HString> patterns = hString.findAllPatterns(Pattern.compile("[aieou]")).collect(Collectors.toList());
       assertEquals(2, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a"));
-      assertTrue(patterns.get(1).contentEqual("e"));
+      assertTrue(patterns.get(0).contentEquals("a"));
+      assertTrue(patterns.get(1).contentEquals("e"));
 
-      patterns = hString.findAll("a");
+      patterns = hString.findAll("a").collect(Collectors.toList());
       assertEquals(1, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a"));
+      assertTrue(patterns.get(0).contentEquals("a"));
 
       assertTrue(hString.find("z").isEmpty());
       assertTrue(hString.find("a").start() == 0);
@@ -93,64 +112,8 @@ public class HStringTest {
       assertEquals(-1, hString.indexOf("a", 1));
 
       assertFalse(hString.isAnnotation());
-      assertFalse(hString.asAnnotation().isPresent());
 
       assertFalse(hString.isDocument());
-   }
-
-   @Test
-   public void testCounts() {
-      Document document = DocumentFactory.getInstance().create(
-         "Once upon a time there lived a princess who was stuck in time.");
-      Pipeline.process(document, Types.TOKEN);
-
-      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b"));
-      assertEquals(2, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a time"));
-      assertTrue(patterns.get(1).contentEqual("a princess"));
-
-      patterns = document.findAll("a time");
-      assertEquals(1, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a time"));
-
-      assertTrue(document.find("z").isEmpty());
-      assertTrue(document.find("c").start() == 0);
-
-      assertTrue(document.tokenAt(0).isAnnotation());
-      assertTrue(document.tokenAt(0).matches("(?i)once"));
-      assertTrue(document.tokenAt(0).asAnnotation().isPresent());
-
-      assertTrue(document.isDocument());
-   }
-
-   @Test
-   public void testTokenPatterns() {
-      Document document = DocumentFactory.getInstance().create(
-         "Once upon a time there lived a princess who was stuck in time.");
-      Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
-      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b"));
-      assertEquals(2, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a time"));
-      assertTrue(patterns.get(1).contentEqual("a princess"));
-
-      patterns = document.findAll("a time");
-      assertEquals(1, patterns.size(), 0d);
-      assertTrue(patterns.get(0).contentEqual("a time"));
-
-      assertTrue(document.find("z").isEmpty());
-      assertTrue(document.find("c").start() == 0);
-
-      assertTrue(document.tokenAt(0).startsWith("O"));
-      assertTrue(document.tokenAt(0).endsWith("ce"));
-
-      assertTrue(document.first(Types.SENTENCE).encloses(document.tokenAt(0)));
-      assertTrue(document.first(Types.SENTENCE).overlaps(document.tokenAt(0)));
-
-      assertTrue(document.tokenAt(0).isAnnotation());
-      assertTrue(document.tokenAt(0).matches("(?i)once"));
-      assertTrue(document.tokenAt(0).asAnnotation().isPresent());
-
-      assertTrue(document.isDocument());
    }
 
    @Test
@@ -165,6 +128,36 @@ public class HStringTest {
 
       ngrams = NGramExtractor.bigrams().annotationType(Types.TOKEN).collectHString(document);
       assertEquals(13, ngrams.size());
+   }
+
+   @Test
+   public void testTokenPatterns() {
+      Document document = DocumentFactory.getInstance().create(
+         "Once upon a time there lived a princess who was stuck in time.");
+      Pipeline.process(document, Types.TOKEN, Types.SENTENCE);
+      List<HString> patterns = document.findAllPatterns(Pattern.compile("\\ba\\s+\\w+\\b")).collect(
+         Collectors.toList());
+      assertEquals(2, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEquals("a time"));
+      assertTrue(patterns.get(1).contentEquals("a princess"));
+
+      patterns = document.findAll("a time").collect(Collectors.toList());
+      assertEquals(1, patterns.size(), 0d);
+      assertTrue(patterns.get(0).contentEquals("a time"));
+
+      assertTrue(document.find("z").isEmpty());
+      assertTrue(document.find("c").start() == 0);
+
+      assertTrue(document.tokenAt(0).startsWith("O"));
+      assertTrue(document.tokenAt(0).endsWith("ce"));
+
+      assertTrue(document.first(Types.SENTENCE).encloses(document.tokenAt(0)));
+      assertTrue(document.first(Types.SENTENCE).overlaps(document.tokenAt(0)));
+
+      assertTrue(document.tokenAt(0).isAnnotation());
+      assertTrue(document.tokenAt(0).matches("(?i)once"));
+
+      assertTrue(document.isDocument());
    }
 
 

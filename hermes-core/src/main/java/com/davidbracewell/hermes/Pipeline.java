@@ -69,6 +69,7 @@ public final class Pipeline implements Serializable {
    private final boolean returnCorpus;
    private long totalTime;
    private AtomicLong documentsProcessed = new AtomicLong();
+   private AtomicLong wordsProcessed = new AtomicLong();
 
 
    private Pipeline(int numberOfThreads, int queueSize, Consumer<Document> onComplete, Collection<AnnotatableType> annotationTypes, boolean returnCorpus) {
@@ -183,6 +184,11 @@ public final class Pipeline implements Serializable {
       return (double) documentsProcessed.get() / getElapsedTime(TimeUnit.SECONDS);
    }
 
+   public double wordsPerSecond(){
+      return (double) wordsProcessed.get() / getElapsedTime(TimeUnit.SECONDS);
+   }
+
+
    /**
     * Annotates documents with the annotation types defined in the pipeline.
     *
@@ -202,14 +208,14 @@ public final class Pipeline implements Serializable {
          tempFile.deleteOnExit();
          try (MultiFileWriter writer = new MultiFileWriter(tempFile, "part-", Config.get("files.partition")
                                                                                     .asIntegerValue(numberOfThreads))) {
-            builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, writer),
+            builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, wordsProcessed, writer),
                                 numberOfThreads)
                    .build()
                    .run();
          }
          corpus = Corpus.builder().offHeap().source(CorpusFormats.JSON_OPL, tempFile).build();
       } else {
-         builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed, null),
+         builder.addConsumer(new AnnotateConsumer(annotationTypes, onComplete, documentsProcessed,wordsProcessed, null),
                              numberOfThreads)
                 .build()
                 .run();
@@ -336,13 +342,15 @@ public final class Pipeline implements Serializable {
       private static final long serialVersionUID = 1L;
       private final AnnotatableType[] annotationTypes;
       private final java.util.function.Consumer<Document> onComplete;
-      private final AtomicLong counter;
+      private final AtomicLong docCounter;
+      private final AtomicLong wordCounter;
       private final MultiFileWriter writer;
 
-      private AnnotateConsumer(AnnotatableType[] annotationTypes, Consumer<Document> onComplete, AtomicLong counter, MultiFileWriter writer) {
+      private AnnotateConsumer(AnnotatableType[] annotationTypes, Consumer<Document> onComplete, AtomicLong docCounter, AtomicLong wordCounter, MultiFileWriter writer) {
          this.annotationTypes = annotationTypes;
          this.onComplete = onComplete;
-         this.counter = counter;
+         this.docCounter = docCounter;
+         this.wordCounter = wordCounter;
          this.writer = writer;
       }
 
@@ -350,9 +358,10 @@ public final class Pipeline implements Serializable {
       public void accept(Document document) {
          if (document != null) {
             process(document, annotationTypes);
-            long count = counter.incrementAndGet();
+            long count = docCounter.incrementAndGet();
+            long words = wordCounter.addAndGet(document.tokenLength());
             if (count % 5_000 == 0) {
-               System.err.println(count + " (" + documentsPerSecond() + ")");
+               System.err.printf("%d total documents (%.3f docs per second, %.3f words per second)\n", count, documentsPerSecond(), wordsPerSecond());
             }
             if (writer != null) {
                try {

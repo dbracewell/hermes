@@ -46,160 +46,173 @@ import java.util.*;
  * @author David B. Bracewell
  */
 public final class CaduceusProgram implements Serializable {
-  private static final long serialVersionUID = 1L;
-  private final List<CaduceusRule> rules = new LinkedList<>();
+   private static final long serialVersionUID = 1L;
+   private final List<CaduceusRule> rules = new LinkedList<>();
 
-  /**
-   * Instantiates a new Caduceus program.
-   */
-  public CaduceusProgram() {
+   /**
+    * Instantiates a new Caduceus program.
+    */
+   public CaduceusProgram() {
 
-  }
+   }
 
-  /**
-   * Read Caduceus program.
-   *
-   * @param resource the resource
-   * @return the lyre program
-   * @throws IOException the io exception
-   */
-  public static CaduceusProgram read(@NonNull Resource resource) throws IOException {
-    CaduceusProgram program = new CaduceusProgram();
+   /**
+    * Read Caduceus program.
+    *
+    * @param resource the resource
+    * @return the lyre program
+    * @throws IOException the io exception
+    */
+   public static CaduceusProgram read(@NonNull Resource resource) throws IOException {
+      CaduceusProgram program = new CaduceusProgram();
 
-    try (Reader reader = resource.reader()) {
-      List<Object> rules = ensureList(new Yaml().load(reader), "Caduceus rules should be specified in a list");
+      try (Reader reader = resource.reader()) {
+         List<Object> rules = ensureList(new Yaml().load(reader), "Caduceus rules should be specified in a list");
 
-      for (Object entry : rules) {
-        Map<String, Object> ruleMap = ensureMap(entry, "Rule entry should be a map");
-        String ruleName = Val.of(ruleMap.get("name")).asString();
-        String pattern = Val.of(ruleMap.get("pattern")).asString();
-        if (StringUtils.isNullOrBlank(pattern)) {
-          throw new IOException("No pattern specified: " + entry);
-        }
-        if (StringUtils.isNullOrBlank(ruleName)) {
-          throw new IOException("No rule name specified: " + entry);
-        }
-
-        List<CaduceusAnnotationProvider> annotationProviders = new LinkedList<>();
-        if (ruleMap.containsKey("annotations")) {
-          List<Object> annotationList = ensureList(ruleMap.get("annotations"), "Annotations should be specified as a list.");
-          for (Object o : annotationList) {
-            annotationProviders.add(CaduceusAnnotationProvider.fromMap(ensureMap(o, "Annotation entries should be specified as a map."), resource.descriptor(), ruleName));
-          }
-        }
-
-        List<CaduceusRelationProvider> relationProviders = new LinkedList<>();
-        if (ruleMap.containsKey("relations")) {
-          List<Object> relations = ensureList(ruleMap.get("relations"), "Relations should be specified as a list.");
-          for (Object o : relations) {
-            relationProviders.add(CaduceusRelationProvider.fromMap(ensureMap(o, "Relation entries should be specified as a map.")));
-          }
-        }
-
-        try {
-          program.rules.add(new CaduceusRule(
-            resource.descriptor(),
-            ruleName,
-            TokenRegex.compile(pattern),
-            annotationProviders,
-            relationProviders
-          ));
-        } catch (ParseException e) {
-          throw new IOException("Invalid pattern for rule " + ruleName);
-        }
-
-      }
-
-    }
-    return program;
-  }
-
-  static List<Object> ensureList(Object o, String error) throws IOException {
-    if (!(o instanceof List)) {
-      throw new IOException("Invalid Caduceus Format: " + error);
-    }
-    return Cast.as(o);
-  }
-
-  static Map<String, Object> ensureMap(Object o, String error) throws IOException {
-    if (!(o instanceof Map)) {
-      throw new IOException("Invalid Caduceus Format: " + error);
-    }
-    return Cast.as(o);
-  }
-
-  private Annotation createOrGet(Document document, AnnotationType type, HString span, Map<AttributeType, Val> attributeValMap) {
-    return document.substring(span.start(), span.end()).get(type).stream()
-      .filter(a -> a.getType().equals(type) && a.attributeEntrySet().equals(attributeValMap.entrySet()))
-      .findFirst()
-      .orElseGet(() -> document.createAnnotation(type, span, attributeValMap));
-  }
-
-  /**
-   * Execute.
-   *
-   * @param document the document
-   */
-  public void execute(@NonNull Document document) {
-    for (CaduceusRule rule : rules) {
-      TokenMatcher matcher = rule.getRegex().matcher(document);
-      while (matcher.find()) {
-        ArrayListMultimap<String, Annotation> groups = ArrayListMultimap.create();
-        ArrayListMultimap<CaduceusAnnotationProvider, Annotation> providers = ArrayListMultimap.create();
-
-        //Process all the annotation providers
-        rule.getAnnotationProviders().forEach(ap -> {
-          if (ap.getGroup().equals("*")) {
-            Annotation annotation = createOrGet(document, ap.getAnnotationType(), matcher.group(), ap.getAttributes());
-            groups.put(ap.getGroup(), annotation);
-            providers.put(ap, annotation);
-          } else {
-            matcher.group(ap.getGroup()).forEach(g -> {
-              Annotation annotation = createOrGet(document, ap.getAnnotationType(), g, ap.getAttributes());
-              groups.put(ap.getGroup(), annotation);
-              providers.put(ap, annotation);
-            });
-          }
-        });
-
-        if (!groups.containsKey("*")) {
-          groups.putAll("*", matcher.group().tokens());
-        }
-
-
-        HashMultimap<String, Tuple2<Annotation, Relation>> relations = HashMultimap.create();
-        for (CaduceusRelationProvider rp : rule.getRelationProviders()) {
-          List<Annotation> sourceAnnotations = rp.getSource().getAnnotations(groups, matcher);
-          List<Annotation> targetAnnotations = rp.getTarget().getAnnotations(groups, matcher);
-          for (Annotation source : sourceAnnotations) {
-            for (Annotation target : targetAnnotations) {
-              relations.put(rp.getName(), Tuple2.of(source, new Relation(rp.getRelationType(), rp.getRelationValue(), target.getId())));
-              if (rp.isReciprocal()) {
-                relations.put(rp.getName(), Tuple2.of(target, new Relation(rp.getRelationType(), rp.getRelationValue(), source.getId())));
-              }
+         for (Object entry : rules) {
+            Map<String, Object> ruleMap = ensureMap(entry, "Rule entry should be a map");
+            String ruleName = Val.of(ruleMap.get("name")).asString();
+            String pattern = Val.of(ruleMap.get("pattern")).asString();
+            if (StringUtils.isNullOrBlank(pattern)) {
+               throw new IOException("No pattern specified: " + entry);
             }
-          }
-        }
+            if (StringUtils.isNullOrBlank(ruleName)) {
+               throw new IOException("No rule name specified: " + entry);
+            }
 
+            List<CaduceusAnnotationProvider> annotationProviders = new LinkedList<>();
+            if (ruleMap.containsKey("annotations")) {
+               List<Object> annotationList = ensureList(ruleMap.get("annotations"),
+                                                        "Annotations should be specified as a list.");
+               for (Object o : annotationList) {
+                  annotationProviders.add(CaduceusAnnotationProvider.fromMap(
+                     ensureMap(o, "Annotation entries should be specified as a map."), resource.descriptor(),
+                     ruleName));
+               }
+            }
 
-        Set<String> finalRelations = new HashSet<>();
-        rule.getRelationProviders().stream()
-          .filter(rp -> StringUtils.isNullOrBlank(rp.getRequires()) || relations.containsKey(rp.getRequires()))
-          .forEach(rp -> {
-            relations.get(rp.getName()).forEach(t -> {
-              t.getV1().add(t.getV2());
-              finalRelations.add(rp.getName());
-            });
-          });
+            List<CaduceusRelationProvider> relationProviders = new LinkedList<>();
+            if (ruleMap.containsKey("relations")) {
+               List<Object> relations = ensureList(ruleMap.get("relations"),
+                                                   "Relations should be specified as a list.");
+               for (Object o : relations) {
+                  relationProviders.add(
+                     CaduceusRelationProvider.fromMap(ensureMap(o, "Relation entries should be specified as a map.")));
+               }
+            }
 
-        providers.entries().stream()
-          .filter(entry -> !finalRelations.containsAll(entry.getKey().getRequires()))
-          .forEach(entry -> document.remove(entry.getValue()));
+            try {
+               program.rules.add(new CaduceusRule(resource.descriptor(),
+                                                  ruleName,
+                                                  TokenRegex.compile(pattern),
+                                                  annotationProviders,
+                                                  relationProviders));
+            } catch (ParseException e) {
+               throw new IOException("Invalid pattern for rule " + ruleName);
+            }
+
+         }
 
       }
-    }
+      return program;
+   }
+
+   static List<Object> ensureList(Object o, String error) throws IOException {
+      if (!(o instanceof List)) {
+         throw new IOException("Invalid Caduceus Format: " + error);
+      }
+      return Cast.as(o);
+   }
+
+   static Map<String, Object> ensureMap(Object o, String error) throws IOException {
+      if (!(o instanceof Map)) {
+         throw new IOException("Invalid Caduceus Format: " + error);
+      }
+      return Cast.as(o);
+   }
+
+   private Annotation createOrGet(Document document, AnnotationType type, HString span, Map<AttributeType, Val> attributeValMap) {
+      return document.substring(span.start(), span.end()).get(type).stream()
+                     .filter(a -> a.getType().equals(type) && a.attributeEntrySet().equals(attributeValMap.entrySet()))
+                     .findFirst()
+                     .orElseGet(() -> document
+                                         .annotationBuilder()
+                                         .type(type)
+                                         .bounds(span)
+                                         .attributes(attributeValMap)
+                                         .createAttached());
+   }
+
+   /**
+    * Execute.
+    *
+    * @param document the document
+    */
+   public void execute(@NonNull Document document) {
+      for (CaduceusRule rule : rules) {
+         TokenMatcher matcher = rule.getRegex().matcher(document);
+         while (matcher.find()) {
+            ArrayListMultimap<String, Annotation> groups = ArrayListMultimap.create();
+            ArrayListMultimap<CaduceusAnnotationProvider, Annotation> providers = ArrayListMultimap.create();
+
+            //Process all the annotation providers
+            rule.getAnnotationProviders().forEach(ap -> {
+               if (ap.getGroup().equals("*")) {
+                  Annotation annotation = createOrGet(document, ap.getAnnotationType(), matcher.group(),
+                                                      ap.getAttributes());
+                  groups.put(ap.getGroup(), annotation);
+                  providers.put(ap, annotation);
+               } else {
+                  matcher.group(ap.getGroup()).forEach(g -> {
+                     Annotation annotation = createOrGet(document, ap.getAnnotationType(), g, ap.getAttributes());
+                     groups.put(ap.getGroup(), annotation);
+                     providers.put(ap, annotation);
+                  });
+               }
+            });
+
+            if (!groups.containsKey("*")) {
+               groups.putAll("*", matcher.group().tokens());
+            }
 
 
-  }
+            HashMultimap<String, Tuple2<Annotation, Relation>> relations = HashMultimap.create();
+            for (CaduceusRelationProvider rp : rule.getRelationProviders()) {
+               List<Annotation> sourceAnnotations = rp.getSource().getAnnotations(groups, matcher);
+               List<Annotation> targetAnnotations = rp.getTarget().getAnnotations(groups, matcher);
+               for (Annotation source : sourceAnnotations) {
+                  for (Annotation target : targetAnnotations) {
+                     relations.put(rp.getName(), Tuple2.of(source,
+                                                           new Relation(rp.getRelationType(), rp.getRelationValue(),
+                                                                        target.getId())));
+                     if (rp.isReciprocal()) {
+                        relations.put(rp.getName(), Tuple2.of(target,
+                                                              new Relation(rp.getRelationType(), rp.getRelationValue(),
+                                                                           source.getId())));
+                     }
+                  }
+               }
+            }
+
+
+            Set<String> finalRelations = new HashSet<>();
+            rule.getRelationProviders().stream()
+                .filter(rp -> StringUtils.isNullOrBlank(rp.getRequires()) || relations.containsKey(rp.getRequires()))
+                .forEach(rp -> {
+                   relations.get(rp.getName()).forEach(t -> {
+                      t.getV1().add(t.getV2());
+                      finalRelations.add(rp.getName());
+                   });
+                });
+
+            providers.entries().stream()
+                     .filter(entry -> !finalRelations.containsAll(entry.getKey().getRequires()))
+                     .forEach(entry -> document.remove(entry.getValue()));
+
+         }
+      }
+
+
+   }
 
 }//END OF CaduceusProgram

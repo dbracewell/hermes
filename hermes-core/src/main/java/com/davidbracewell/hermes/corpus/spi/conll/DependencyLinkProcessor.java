@@ -42,35 +42,36 @@ import static com.davidbracewell.tuple.Tuples.$;
 @MetaInfServices
 public class DependencyLinkProcessor implements CoNLLColumnProcessor {
 
-  @Override
-  public void processInput(Document document, List<CoNLLRow> documentRows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
-    documentRows.forEach(row -> {
-      if (row.getParent() > 0) {
-        long target = sentenceIndexToAnnotationId.get($(row.getSentence(), row.getParent()));
-        document.getAnnotation(row.getAnnotationID()).get()
-          .add(new Relation(Types.DEPENDENCY, row.getDepRelation(), target));
-      }
-    });
-  }
+   @Override
+   public void processInput(Document document, List<CoNLLRow> documentRows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
+      documentRows.forEach(row -> {
+         if (row.getParent() > 0) {
+            long target = sentenceIndexToAnnotationId.get($(row.getSentence(), row.getParent()));
+            document.getAnnotation(row.getAnnotationID()).get()
+                    .add(new Relation(Types.DEPENDENCY, row.getDepRelation(), target));
+         }
+      });
+   }
 
-  @Override
-  public String processOutput(Annotation document, Annotation token, int index) {
-    long targetID = token.dependencyRelation().map(Tuple2::getV2).map(Annotation::getId).orElse(-1L);
-    if (targetID  < 0L) {
-      return "0";
-    }
-    List<Annotation> sentence = document.tokens();
-    for (int i = 0; i < sentence.size(); i++) {
-      if (sentence.get(i).getId() == targetID) {
-        return Integer.toString(i + 1);
+   @Override
+   public String processOutput(Annotation document, Annotation token, int index) {
+      Annotation targetAnnotation = token.dependencyRelation().v2;
+      long targetID = targetAnnotation.isEmpty() ? -1 : targetAnnotation.getId();
+      if (targetID < 0L) {
+         return "0";
       }
-    }
-    return EMPTY_FIELD;
-  }
+      List<Annotation> sentence = document.tokens();
+      for (int i = 0; i < sentence.size(); i++) {
+         if (sentence.get(i).getId() == targetID) {
+            return Integer.toString(i + 1);
+         }
+      }
+      return EMPTY_FIELD;
+   }
 
-  @Override
-  public String getFieldName() {
-    return "HEAD";
-  }
+   @Override
+   public String getFieldName() {
+      return "HEAD";
+   }
 
 }//END OF DependencyLinkProcessor

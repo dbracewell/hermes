@@ -30,7 +30,7 @@ import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.guava.common.collect.LinkedHashMultimap;
 import com.davidbracewell.guava.common.collect.Maps;
 import com.davidbracewell.guava.common.collect.Multimap;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.io.CSV;
 import com.davidbracewell.io.CSVReader;
 import com.davidbracewell.io.Resources;

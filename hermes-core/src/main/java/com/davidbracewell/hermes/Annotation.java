@@ -24,16 +24,16 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Tag;
 import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.guava.common.base.Preconditions;
-import com.davidbracewell.hermes.attribute.EntityType;
 import com.davidbracewell.string.StringUtils;
 import com.davidbracewell.tuple.Tuple2;
 import lombok.NonNull;
-import org.apache.mahout.math.set.OpenHashSet;
 
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.davidbracewell.tuple.Tuples.$;
 
 /**
  * <p> Annotations are specialized {@link HString}s representing linguistic overlays on a document that associate a
@@ -45,8 +45,7 @@ import java.util.stream.Stream;
  * {@link #next()}, {@link #next(AnnotationType)}, {@link #previous()}, and {@link #previous(AnnotationType)} methods
  * facilitate retrieval of the next and previous annotation of the same or different type. The <code>sources</code>,
  * <code>targets</code>, and {@link #get(RelationType, boolean)} methods allow retrieval of the annotations connected
- * via relations and the relations (edges) themeselves.
- * </p>
+ * via relations and the relations (edges) themeselves. </p>
  *
  * <p> Commonly, annotations have an associated <code>Tag</code> attribute which acts as label. Examples of tags include
  * part-of-speech and entity type. Tags can be retrieved using the {@link #getTag()} method. Annotation types specify
@@ -64,7 +63,7 @@ public final class Annotation extends Fragment implements Serializable {
     */
    public static long DETACHED_ID = Long.MIN_VALUE;
    private final AnnotationType annotationType;
-   private final Set<Relation> relations = new OpenHashSet<>();
+   private final Set<Relation> relations = new HashSet<>();
    private long id = DETACHED_ID;
    private volatile transient Annotation[] tokens;
 
@@ -117,21 +116,13 @@ public final class Annotation extends Fragment implements Serializable {
 
    @Override
    public void add(@NonNull Relation relation) {
-      if (!relations.contains(relation)) {
-         relations.add(relation);
-      }
+      relations.add(relation);
    }
 
    @Override
    public void addAll(@NonNull Collection<Relation> relations) {
       this.relations.addAll(relations);
    }
-
-   @Override
-   public Collection<Relation> allRelations(boolean includeSubAnnotations) {
-      return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
-   }
-
 
    @Override
    public List<Annotation> children() {
@@ -145,18 +136,22 @@ public final class Annotation extends Fragment implements Serializable {
       myTokens.add(this);
       return tokens.stream()
                    .filter(t -> !t.overlaps(this))
-                   .filter(t -> t.parent().filter(myTokens::contains).isPresent())
+                   .filter(t -> {
+                      Annotation parent = t.parent();
+                      return !parent.isEmpty() && myTokens.contains(parent);
+                   })
                    .collect(Collectors.toList());
    }
 
    @Override
-   public Optional<Tuple2<String, Annotation>> dependencyRelation() {
+   public Tuple2<String, Annotation> dependencyRelation() {
       return getRelationStream(true)
                 .filter(r -> r.getType() == Types.DEPENDENCY)
                 .filter(r -> r.getTarget(this).isPresent())
                 .filter(r -> !this.overlaps(r.getTarget(this).orElse(null)))
                 .map(r -> Tuple2.of(r.getValue(), r.getTarget(this).orElse(null)))
-                .findFirst();
+                .findFirst()
+                .orElse($(StringUtils.EMPTY, Fragments.emptyAnnotation(document())));
    }
 
    @Override
@@ -188,9 +183,11 @@ public final class Annotation extends Fragment implements Serializable {
       Stream<Relation> relationStream = relations.stream();
       if (this.getType() != Types.TOKEN && includeSubAnnotations) {
          relationStream = Stream.concat(relationStream,
-                                        getAllAnnotations().stream()
-                                                           .filter(a -> a != this)
-                                                           .flatMap(token -> token.allRelations(false).stream()));
+                                        annotations().stream()
+                                                     .filter(a -> a != this)
+                                                     .filter(a-> a.sentence().id == sentence().id)
+                                                     .flatMap(token -> token.relations(false).stream()))
+                                .distinct();
       }
       return relationStream;
    }
@@ -204,16 +201,24 @@ public final class Annotation extends Fragment implements Serializable {
     * @return An optional containing the tag if present
     */
    public Optional<Tag> getTag() {
-      if (isInstance(Types.TOKEN)) {
-         return Optional.ofNullable(getPOS());
-      } else if (isInstance(Types.ENTITY)) {
-         return Optional.ofNullable(get(Types.ENTITY_TYPE).as(EntityType.class));
-      }
       AttributeType tagAttributeType = annotationType.getTagAttribute();
       if (tagAttributeType == null) {
          return Optional.ofNullable(get(Types.TAG).as(Tag.class));
       }
       return Optional.ofNullable(get(tagAttributeType).as(Tag.class));
+   }
+
+   /**
+    * <p> Gets the tag, if one, associated with the annotation. The tag attribute is defined for an annotation type
+    * using the <code>tag</code> configuration property, e.g. <code>Annotation.TYPE.tag=fully.qualified.tag.implementation</code>.
+    * Tags must implement the <code>Tag</code> interface. If no tag type is defined, the <code>Attrs.TAG</code>
+    * attribute will be retrieved. </p>
+    *
+    * @param tClass Class information for desired tag
+    * @return An optional containing the tag if present
+    */
+   public <T extends Tag> Optional<T> getTag(@NonNull Class<T> tClass) {
+      return getTag().filter(tClass::isInstance).map(Cast::<T>as);
    }
 
    /**
@@ -245,10 +250,11 @@ public final class Annotation extends Fragment implements Serializable {
    }
 
    /**
-    * Is instance of tag boolean.
+    * Determines if this annotation's tag is an instance of the given tag (String form). The string form the given tag
+    * will be decoded into the correct tag type.
     *
-    * @param tag the tag
-    * @return the boolean
+    * @param tag the string form of the tag to check
+    * @return True if this annotation's tag is an instance of the given tag.
     */
    public boolean isInstanceOfTag(String tag) {
       return !StringUtils.isNullOrBlank(tag) && isInstanceOfTag(Cast.<Tag>as(getType().getTagAttribute()
@@ -257,10 +263,10 @@ public final class Annotation extends Fragment implements Serializable {
    }
 
    /**
-    * Is instance of tag boolean.
+    * Determines if this annotation's tag is an instance of the given tag.
     *
-    * @param tag the tag
-    * @return the boolean
+    * @param tag the string form of the tag to check
+    * @return True if this annotation's tag is an instance of the given tag.
     */
    public boolean isInstanceOfTag(Tag tag) {
       return tag != null && getTag().filter(t -> t.isInstance(tag)).isPresent();
@@ -306,15 +312,20 @@ public final class Annotation extends Fragment implements Serializable {
    }
 
    @Override
+   public Collection<Relation> relations(boolean includeSubAnnotations) {
+      return getRelationStream(includeSubAnnotations).collect(Collectors.toSet());
+   }
+
+   @Override
    public void remove(@NonNull Relation relation) {
       relations.remove(relation);
    }
 
    @Override
    public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
-      Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
+      Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(annotations()) : new HashSet<>();
       targets.add(this);
-      return document().getAllAnnotations().stream()
+      return document().annotations().stream()
                        .filter(a -> !a.overlaps(this))
                        .filter(a -> a.targets(type, value, false).stream().filter(targets::contains).count() > 0)
                        .collect(Collectors.toList());
@@ -322,9 +333,9 @@ public final class Annotation extends Fragment implements Serializable {
 
    @Override
    public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
-      Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(getAllAnnotations()) : new HashSet<>();
+      Set<Annotation> targets = includeSubAnnotations ? new HashSet<>(annotations()) : new HashSet<>();
       targets.add(this);
-      return document().getAllAnnotations().stream()
+      return document().annotations().stream()
                        .filter(a -> !a.overlaps(this))
                        .filter(a -> a.targets(type, false).stream().filter(targets::contains).count() > 0)
                        .collect(Collectors.toList());

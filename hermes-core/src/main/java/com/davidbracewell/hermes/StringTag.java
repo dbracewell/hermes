@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.davidbracewell.hermes.attribute;
+package com.davidbracewell.hermes;
 
 import com.davidbracewell.Tag;
 import com.davidbracewell.guava.common.base.Preconditions;

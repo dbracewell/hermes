@@ -22,20 +22,27 @@
 package com.davidbracewell.hermes;
 
 import com.davidbracewell.Language;
+import com.davidbracewell.collection.Sets;
+import com.davidbracewell.collection.Span;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.config.Config;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.conversion.Val;
 import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.base.Throwables;
-import com.davidbracewell.guava.common.collect.Maps;
 import com.davidbracewell.io.Resources;
 import com.davidbracewell.io.resource.Resource;
-import com.davidbracewell.io.structured.StructuredFormat;
-import com.davidbracewell.io.structured.StructuredWriter;
+import com.davidbracewell.json.Json;
+import com.davidbracewell.json.JsonWriter;
 import com.davidbracewell.string.StringUtils;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import lombok.Data;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -66,8 +73,8 @@ public class Document extends HString {
    /**
     * Instantiates a new Document.
     *
-    * @param id      the id
-    * @param content the content
+    * @param id      the document id
+    * @param content the document content
     */
    Document(String id, @NonNull String content) {
       this(id, content, null);
@@ -76,9 +83,9 @@ public class Document extends HString {
    /**
     * Instantiates a new Document.
     *
-    * @param id       the id
-    * @param content  the content
-    * @param language the language
+    * @param id       the document id
+    * @param content  the document content
+    * @param language the language the document is written in
     */
    Document(String id, @NonNull String content, Language language) {
       super(0, content.length());
@@ -202,16 +209,20 @@ public class Document extends HString {
     * @throws IOException something went wrong reading the file
     */
    public static Document read(@NonNull Resource resource) throws IOException {
+      Type mapType = new TypeToken<Map<String, Object>>() {
+      }.getType();
+      Gson gson = new Gson();
       //Load the document to a map
-      Map<String, Val> json = StructuredFormat.JSON.loads(resource.readToString());
+      Map<String, Object> json = gson.fromJson(resource.readToString(), mapType);
 
       //Create the initial document using raw content
-      Document doc = DocumentFactory.getInstance().createRaw(json.getOrDefault("id", Val.NULL).asString(),
-                                                             json.get("content").asString(""));
+      Document doc = DocumentFactory.getInstance().createRaw(json.getOrDefault("id", Val.NULL).toString(),
+                                                             json.getOrDefault("content", "").toString());
 
       //Add document attributes
       if (json.containsKey("attributes")) {
-         json.get("attributes").<Map<String, Val>>cast().forEach((k, av) -> {
+         Map<String, Object> attributes = Cast.as(json.get("attributes"));
+         attributes.forEach((k, av) -> {
             AttributeType attrType = Types.attribute(k);
             Object val = attrType.getValueType().decode(av);
             if (val != null) {
@@ -222,31 +233,35 @@ public class Document extends HString {
 
       //Set completed annotations
       if (json.containsKey("completed")) {
-         json.get("completed").<Map<String, Val>>cast()
+         Map<String, Object> completed = Cast.as(json.get("completed"));
+         completed
             .forEach((k, av) -> {
                AnnotatableType type = Types.from(k);
-               doc.getAnnotationSet().setIsCompleted(type, true, av.asString());
+               doc.getAnnotationSet().setIsCompleted(type, true, av.toString());
             });
       }
 
       //Create the annotations
       AtomicLong maxAnnotationId = new AtomicLong(-1);
       if (json.containsKey("annotations")) {
-         json.get("annotations").<List<Val>>cast()
+         List<Object> annotations = Cast.as(json.get("annotations"));
+         annotations
             .forEach(v -> {
-               Map<String, Val> vv = v.cast();
+               Map<String, Object> vv = Cast.as(v);
 
                //Create new annotation
-               Annotation annotation = doc.createAnnotation(AnnotationType.create(vv.get("type").cast()),
-                                                            vv.get("start").<Integer>cast(),
-                                                            vv.get("end").<Integer>cast());
+               Annotation annotation = doc.annotationBuilder()
+                                          .type(AnnotationType.create(vv.get("type").toString()))
+                                          .start(((Number) vv.get("start")).intValue())
+                                          .end(((Number) vv.get("end")).intValue())
+                                          .createAttached();
 
                //Read in and set id and update max id value
-               annotation.setId(vv.get("id").asLongValue());
+               annotation.setId(((Number) vv.get("id")).longValue());
                maxAnnotationId.getAndUpdate(old -> old < annotation.getId() ? annotation.getId() : old);
 
                //Read in the attributes (map of types and values)
-               vv.getOrDefault("attributes", Val.of(Collections.emptyMap())).<Map<String, Val>>cast().forEach(
+               Cast.<Map<String, Object>>as(vv.getOrDefault("attributes", Collections.emptyMap())).forEach(
                   (k, av) -> {
                      AttributeType attrType = Types.attribute(k);
                      Object val = attrType.getValueType().decode(av);
@@ -257,12 +272,12 @@ public class Document extends HString {
 
                if (vv.containsKey("relations")) {
                   //Read in the relations (a list of maps containing type, value, and target)
-                  vv.get("relations").<List<Val>>cast()
+                  Cast.<List<Object>>as(vv.get("relations"))
                      .stream()
-                     .map(val -> val.asMap(HashMap.class, String.class, Val.class))
-                     .forEach(rel -> annotation.add(new Relation(RelationType.create(rel.get("type").asString()),
-                                                                 rel.get("value").asString(),
-                                                                 rel.get("target").asLongValue())));
+                     .map(Cast::<Map<String, Object>>as)
+                     .forEach(rel -> annotation.add(new Relation(RelationType.create(rel.get("type").toString()),
+                                                                 rel.get("value").toString(),
+                                                                 ((Number) rel.get("target")).longValue())));
                }
             });
 
@@ -271,38 +286,6 @@ public class Document extends HString {
       }
 
       return doc;
-   }
-
-   @Override
-   public Set<AttributeType> attributeTypeSet() {
-      return attributes.keySet();
-   }
-
-   @Override
-   public char charAt(int index) {
-      return content.charAt(index);
-   }
-
-   @Override
-   public List<Annotation> tokens() {
-      if (tokens == null) {
-         synchronized (this) {
-            if (tokens == null) {
-               tokens = get(Types.TOKEN);
-            }
-         }
-      }
-      return tokens;
-   }
-
-   /**
-    * Checks is if a given {@link AnnotatableType} is completed, i.e. been added by an annotator.
-    *
-    * @param type the type to check
-    * @return True if the type is complete, False if not
-    */
-   public boolean isCompleted(@NonNull AnnotatableType type) {
-      return annotationSet.isCompleted(type);
    }
 
    /**
@@ -315,81 +298,58 @@ public class Document extends HString {
    }
 
    /**
-    * Gets the set of completed annotations.
+    * Creates an annotation builder for adding annotations to the document.
     *
-    * @return the set of completed
+    * @return the annotation builder
     */
-   public Set<AnnotatableType> completedAnnotations() {
-      return annotationSet.getCompleted();
+   public AnnotationBuilder annotationBuilder() {
+      return new AnnotationBuilder(this);
    }
 
-   /**
-    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
-    * has a unique id assigned.
-    *
-    * @param type the type of annotation
-    * @param span the span of the annotation
-    * @return the created annotation
-    */
-   public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull Span span) {
-      return createAnnotation(type, span.start(), span.end(), Collections.emptyMap());
-   }
-
-   /**
-    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
-    * has a unique id assigned.
-    *
-    * @param type                 the type of annotation
-    * @param span                 the span of the annotation
-    * @param copyAttributes       the copy attributes
-    * @param filterAttributeTypes the filter attributes
-    * @return the created annotation
-    */
-   public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span, boolean copyAttributes, Set<AttributeType> filterAttributeTypes) {
-      Map<AttributeType, ?> map = copyAttributes ? span.getAttributeMap() : Collections.emptyMap();
-      if (filterAttributeTypes != null) {
-         map = Maps.filterEntries(map, e -> filterAttributeTypes.contains(e.getKey()));
+   public static boolean hasAnnotations(@NonNull String json, @NonNull AnnotatableType... types) {
+      if (types.length == 0) {
+         return true;
       }
-      return createAnnotation(type, span.start(), span.end(), map);
+      Set<AnnotatableType> target = Sets.asLinkedHashSet(Arrays.asList(types));
+      Type mapType = new TypeToken<Map<String, Object>>() {
+      }.getType();
+      Gson gson = new Gson();
+      Map<String, Object> rawDoc = gson.fromJson(json, mapType);
+      return rawDoc.containsKey("completed") && Cast.<Map<String, Object>>as(rawDoc.get("completed"))
+                                                   .keySet()
+                                                   .stream()
+                                                   .map(Types::from)
+                                                   .collect(Collectors.toSet())
+                                                   .containsAll(target);
+   }
+
+   @Override
+   public List<Annotation> annotations() {
+      return Streams.asStream(annotationSet.iterator()).collect(Collectors.toList());
+   }
+
+   @Override
+   public Set<AttributeType> attributeTypeSet() {
+      return attributes.keySet();
+   }
+
+   @Override
+   public List<Annotation> children() {
+      return tokens();
+   }
+
+   @Override
+   public List<Annotation> children(@NonNull String relation) {
+      return annotations();
    }
 
    /**
-    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
-    * has a unique id assigned.
+    * Gets the set of completed AnnotatableType.
     *
-    * @param type           the type of annotation
-    * @param span           the span of the annotation
-    * @param copyAttributes the copy attributes
-    * @return the created annotation
+    * @return the set of completed AnnotatableType
     */
-   public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull HString span, boolean copyAttributes) {
-      return createAnnotation(type, span, copyAttributes, null);
-   }
-
-   /**
-    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
-    * has a unique id assigned.
-    *
-    * @param type         the type of annotation
-    * @param span         the span of the annotation
-    * @param attributeMap the attributes associated with the annotation
-    * @return the created annotation
-    */
-   public Annotation createAnnotation(@NonNull AnnotationType type, @NonNull Span span, @NonNull Map<AttributeType, ?> attributeMap) {
-      return createAnnotation(type, span.start(), span.end(), attributeMap);
-   }
-
-   /**
-    * Creates an annotation of the given type encompassing the given span. The annotation is added to the document and
-    * has a unique id assigned.
-    *
-    * @param type  the type of annotation
-    * @param start the start of the span
-    * @param end   the end of the span
-    * @return the created annotation
-    */
-   public Annotation createAnnotation(@NonNull AnnotationType type, int start, int end) {
-      return createAnnotation(type, start, end, Collections.emptyMap());
+   public Set<AnnotatableType> completed() {
+      return annotationSet.getCompleted();
    }
 
    /**
@@ -419,6 +379,11 @@ public class Document extends HString {
       return this;
    }
 
+   @Override
+   public List<Relation> get(RelationType relationType, boolean includeSubAnnotations) {
+      return Collections.emptyList();
+   }
+
    /**
     * Gets annotations of the given type that overlap with the given span.
     *
@@ -439,54 +404,18 @@ public class Document extends HString {
     * @return All annotations of the given type on the document that overlap with the give span and meet the given
     * filter.
     */
-   public List<Annotation> get(AnnotationType type, @NonNull Span span, @NonNull Predicate<? super Annotation> filter) {
+   public List<Annotation> get(@NonNull AnnotationType type, @NonNull Span span, @NonNull Predicate<? super Annotation> filter) {
       return annotationSet.select(span, a -> filter.test(a) && a.isInstance(type) && a.overlaps(span));
    }
 
    @Override
-   public List<Annotation> get(AnnotationType type) {
+   public List<Annotation> get(@NonNull AnnotationType type) {
       return annotationSet.select(a -> a.isInstance(type));
    }
 
-   /**
-    * Removes the given annotation from the document
-    *
-    * @param annotation the annotation to remove
-    * @return True if the annotation was successfully removed, False otherwise
-    */
-   public boolean remove(Annotation annotation) {
-      return annotationSet.remove(annotation);
-   }
-
-   /**
-    * Removes all annotations of a given type.
-    *
-    * @param type the type of to remove
-    */
-   public void removeAnnotationType(AnnotationType type) {
-      annotationSet.removeAll(type);
-   }
-
    @Override
-   public List<Annotation> getAllAnnotations() {
-      return Streams.asStream(annotationSet.iterator()).collect(Collectors.toList());
-   }
-
-   @Override
-   public List<Annotation> get(AnnotationType type, @NonNull Predicate<? super Annotation> filter) {
-      if (type == null) {
-         return Collections.emptyList();
-      }
+   public List<Annotation> get(@NonNull AnnotationType type, @NonNull Predicate<? super Annotation> filter) {
       return annotationSet.select(a -> filter.test(a) && a.isInstance(type));
-   }
-
-   /**
-    * Gets annotation set associated with the document
-    *
-    * @return the annotation set
-    */
-   public AnnotationSet getAnnotationSet() {
-      return annotationSet;
    }
 
    /**
@@ -497,6 +426,15 @@ public class Document extends HString {
     */
    public Optional<Annotation> getAnnotation(long id) {
       return Optional.ofNullable(annotationSet.get(id));
+   }
+
+   /**
+    * Gets annotation set associated with the document
+    *
+    * @return the annotation set
+    */
+   public AnnotationSet getAnnotationSet() {
+      return annotationSet;
    }
 
    @Override
@@ -534,9 +472,63 @@ public class Document extends HString {
       return Hermes.defaultLanguage();
    }
 
+   /**
+    * Checks is if a given {@link AnnotatableType} is completed, i.e. been added by an annotator.
+    *
+    * @param type the type to check
+    * @return True if the type is complete, False if not
+    */
+   public boolean isCompleted(@NonNull AnnotatableType type) {
+      return annotationSet.isCompleted(type);
+   }
+
    @Override
    public boolean isDocument() {
       return true;
+   }
+
+   @Override
+   public Collection<Relation> relations(boolean includeSubAnnotations) {
+      return Collections.emptySet();
+   }
+
+   /**
+    * Removes the given annotation from the document
+    *
+    * @param annotation the annotation to remove
+    * @return True if the annotation was successfully removed, False otherwise
+    */
+   public boolean remove(Annotation annotation) {
+      return annotationSet.remove(annotation);
+   }
+
+   /**
+    * Removes all annotations of a given type.
+    *
+    * @param type the type of to remove
+    */
+   public void removeAnnotationType(AnnotationType type) {
+      annotationSet.removeAll(type);
+   }
+
+   @Override
+   public List<Annotation> sources(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+      return Collections.emptyList();
+   }
+
+   @Override
+   public List<Annotation> sources(@NonNull RelationType type, boolean includeSubAnnotations) {
+      return null;
+   }
+
+   @Override
+   public List<Annotation> targets(@NonNull RelationType type, boolean includeSubAnnotations) {
+      return Collections.emptyList();
+   }
+
+   @Override
+   public List<Annotation> targets(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
+      return Collections.emptyList();
    }
 
    /**
@@ -559,6 +551,18 @@ public class Document extends HString {
       return content;
    }
 
+   @Override
+   public List<Annotation> tokens() {
+      if (tokens == null) {
+         synchronized (this) {
+            if (tokens == null) {
+               tokens = get(Types.TOKEN);
+            }
+         }
+      }
+      return tokens;
+   }
+
    /**
     * Writes the document in a structured format
     *
@@ -566,15 +570,15 @@ public class Document extends HString {
     * @throws IOException something went wrong writing
     */
    public void write(@NonNull Resource resource) throws IOException {
-      try (StructuredWriter writer = StructuredFormat.JSON.createWriter(resource)) {
+      try (JsonWriter writer = Json.createWriter(resource)) {
          writer.beginDocument();
-         writer.writeKeyValue("id", getId());
-         writer.writeKeyValue("content", toString());
+         writer.property("id", getId());
+         writer.property("content", toString());
 
          if (attributes.size() > 0) {
             writer.beginObject("attributes");
             for (Map.Entry<AttributeType, Val> entry : attributeEntrySet()) {
-               writer.writeKeyValue(entry.getKey().name(), entry.getKey().getValueType().encode(entry.getValue()));
+               writer.property(entry.getKey().name(), entry.getKey().getValueType().encode(entry.getValue()));
             }
             writer.endObject();
          }
@@ -582,39 +586,39 @@ public class Document extends HString {
          if (annotationSet.size() > 0) {
             writer.beginObject("completed");
             for (AnnotatableType type : getAnnotationSet().getCompleted()) {
-               writer.writeKeyValue(type.canonicalName(), getAnnotationSet().getAnnotationProvider(type));
+               writer.property(type.canonicalName(), getAnnotationSet().getAnnotationProvider(type));
             }
             writer.endObject();
 
             writer.beginArray("annotations");
             for (Annotation annotation : annotationSet) {
                writer.beginObject();
-               writer.writeKeyValue("type", annotation.getType().name());
-               writer.writeKeyValue("start", annotation.start());
-               writer.writeKeyValue("end", annotation.end());
-               writer.writeKeyValue("id", annotation.getId());
+               writer.property("type", annotation.getType().name());
+               writer.property("start", annotation.start());
+               writer.property("end", annotation.end());
+               writer.property("id", annotation.getId());
                if (Config.get("Annotation.writeContent").asBooleanValue(false)) {
-                  writer.writeKeyValue("content", annotation.toString());
+                  writer.property("content", annotation.toString());
                }
 
                if (annotation.getAttributeMap().size() > 0) {
                   writer.beginObject("attributes");
                   for (Map.Entry<AttributeType, Val> entry : annotation.attributeEntrySet()) {
-                     writer.writeKeyValue(entry.getKey().name(),
-                                          entry.getKey().getValueType().encode(entry.getValue()));
+                     writer.property(entry.getKey().name(),
+                                     entry.getKey().getValueType().encode(entry.getValue()));
 
                   }
                   writer.endObject();
                }
 
-               Collection<Relation> relations = annotation.allRelations();
+               Collection<Relation> relations = annotation.relations();
                if (relations.size() > 0) {
                   writer.beginArray("relations");
                   for (Relation relation : relations) {
                      writer.beginObject();
-                     writer.writeKeyValue("type", relation.getType());
-                     writer.writeKeyValue("value", relation.getValue());
-                     writer.writeKeyValue("target", relation.getTarget());
+                     writer.property("type", relation.getType());
+                     writer.property("value", relation.getValue());
+                     writer.property("target", relation.getTarget());
                      writer.endObject();
                   }
                   writer.endArray();
@@ -627,5 +631,94 @@ public class Document extends HString {
          writer.endDocument();
       }
    }
+
+   /**
+    * Annotation builder for creating annotations associated with a document
+    */
+   @Data
+   @Accessors(fluent = true)
+   public static class AnnotationBuilder {
+      private final Document document;
+      private int start = -1;
+      private int end = -1;
+      private AnnotationType type;
+      private Map<AttributeType, Object> attributes = new HashMap<>();
+
+      /**
+       * Instantiates a new Annotation builder.
+       *
+       * @param document the document
+       */
+      AnnotationBuilder(Document document) {
+         this.document = document;
+      }
+
+      /**
+       * Adds an attribute to the annotation
+       *
+       * @param type  the attribute type
+       * @param value the attribute value
+       * @return this annotation builder
+       */
+      public AnnotationBuilder attribute(@NonNull AttributeType type, @NonNull Object value) {
+         this.attributes.put(type, value);
+         return this;
+      }
+
+      /**
+       * Adds multiple attributes to the annotation
+       *
+       * @param map the map of attribute types and values
+       * @return this annotation builder
+       */
+      public AnnotationBuilder attributes(@NonNull Map<AttributeType, ?> map) {
+         this.attributes.putAll(map);
+         return this;
+      }
+
+      /**
+       * Adds attributes to this annotation by copying the attributes of another HString object.
+       *
+       * @param copy the HString object whose attributes will be copied
+       * @return this annotation builder
+       */
+      public AnnotationBuilder attributes(@NonNull HString copy) {
+         this.attributes.putAll(copy.getAttributeMap());
+         return this;
+      }
+
+      /**
+       * Sets the bounds of this annotation from the given span
+       *
+       * @param span the span to use for the bounds of the annotation
+       * @return this annotation builder
+       */
+      public AnnotationBuilder bounds(@NonNull Span span) {
+         this.start = span.start();
+         this.end = span.end();
+         return this;
+      }
+
+      /**
+       * Creates the annotation and attaches it to the document
+       *
+       * @return the annotation
+       */
+      public Annotation createAttached() {
+         return document.createAnnotation(type, start, end, attributes);
+      }
+
+      /**
+       * Creates the annotation associated, but not attached, to the document
+       *
+       * @return the annotation
+       */
+      public Annotation createDetached() {
+         Annotation annotation = new Annotation(document, type, start, end);
+         annotation.putAll(attributes);
+         return annotation;
+      }
+
+   }//END OF AnnotationBuilder
 
 }//END OF Document

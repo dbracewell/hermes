@@ -1,4 +1,3 @@
-package com.davidbracewell.hermes.attribute;
 /*
  * (c) 2005 David B. Bracewell
  *
@@ -20,6 +19,8 @@ package com.davidbracewell.hermes.attribute;
  * under the License.
  */
 
+package com.davidbracewell.hermes;
+
 import com.davidbracewell.DynamicEnum;
 import com.davidbracewell.HierarchicalEnumValue;
 import com.davidbracewell.config.Config;
@@ -33,8 +34,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Auto generated using enumGen.py
- * The type EntityType.
+ * <p>Tag type associated with Entity annotations. Entities are defined in a hierarchy, e.g. <code>Location ->
+ * Country</code></p>
  */
 public final class EntityType extends HierarchicalEnumValue<EntityType> implements Comparable<EntityType> {
    private static final long serialVersionUID = 1L;

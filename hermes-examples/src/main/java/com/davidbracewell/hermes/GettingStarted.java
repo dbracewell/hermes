@@ -24,6 +24,7 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.hermes.extraction.TermExtractor;
 
+import java.util.Collections;
 import java.util.regex.Matcher;
 
 /**
@@ -70,7 +71,7 @@ public class GettingStarted {
     Matcher matcher = document.matcher("\\b(fox|dog)\\b");
     while (matcher.find()) {
       //Creating the annotation is done using the document and only requires the type and the character offsets
-      document.createAnnotation(animalMention, matcher.start(), matcher.end());
+      document.createAnnotation(animalMention, matcher.start(), matcher.end(), Collections.emptyMap());
       //More complicated annotations would also provide attributes, for example Entity Type word Word Sense.
     }
 

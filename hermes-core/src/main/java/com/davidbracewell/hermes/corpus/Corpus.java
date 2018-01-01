@@ -22,17 +22,17 @@
 package com.davidbracewell.hermes.corpus;
 
 import com.davidbracewell.SystemInfo;
-import com.davidbracewell.apollo.affinity.AssociationMeasures;
-import com.davidbracewell.apollo.affinity.ContingencyTable;
-import com.davidbracewell.apollo.affinity.ContingencyTableCalculator;
-import com.davidbracewell.apollo.ml.Featurizer;
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.LabeledDatum;
 import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.data.DatasetType;
+import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.apollo.ml.sequence.Sequence;
 import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
+import com.davidbracewell.apollo.stat.measure.Association;
+import com.davidbracewell.apollo.stat.measure.ContingencyTable;
+import com.davidbracewell.apollo.stat.measure.ContingencyTableCalculator;
 import com.davidbracewell.collection.Streams;
 import com.davidbracewell.collection.counter.Counter;
 import com.davidbracewell.collection.counter.Counters;
@@ -44,9 +44,12 @@ import com.davidbracewell.function.SerializableConsumer;
 import com.davidbracewell.function.SerializableFunction;
 import com.davidbracewell.function.SerializablePredicate;
 import com.davidbracewell.function.Unchecked;
+import com.davidbracewell.guava.common.base.Preconditions;
 import com.davidbracewell.guava.common.collect.ArrayListMultimap;
 import com.davidbracewell.guava.common.collect.Multimap;
 import com.davidbracewell.hermes.*;
+import com.davidbracewell.hermes.corpus.processing.CorpusProcessor;
+import com.davidbracewell.hermes.corpus.processing.ProcessorContext;
 import com.davidbracewell.hermes.extraction.NGramExtractor;
 import com.davidbracewell.hermes.extraction.TermExtractor;
 import com.davidbracewell.hermes.filter.StopWords;
@@ -61,7 +64,6 @@ import com.davidbracewell.stream.MStream;
 import com.davidbracewell.stream.StreamingContext;
 import com.davidbracewell.stream.accumulator.MLongAccumulator;
 import com.davidbracewell.tuple.Tuple;
-import com.google.common.base.Preconditions;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -169,7 +171,11 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    default Corpus applyLexicon(@NonNull Lexicon lexicon, @NonNull AnnotationType type) {
       return map(doc -> {
          if (!doc.isCompleted(type)) {
-            lexicon.match(doc).forEach(match -> doc.createAnnotation(type, match));
+            lexicon.match(doc).forEach(match -> doc.annotationBuilder()
+                                                   .type(type)
+                                                   .bounds(match)
+                                                   .attributes(match)
+                                                   .createAttached());
          }
          return doc;
       });
@@ -226,11 +232,10 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    /**
     * As embedding dataset dataset.
     *
-    * @param type1 the type 1
     * @param types the types
     * @return the dataset
     */
-   default Dataset<Sequence> asEmbeddingDataset(AnnotationType type1, AnnotationType... types) {
+   default Dataset<Sequence> asEmbeddingDataset(@NonNull AnnotationType... types) {
       return Dataset.embedding(getDataSetType(),
                                stream().parallel()
                                        .flatMap(document -> {
@@ -238,7 +243,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
                                           document.sentences()
                                                   .forEach(sentence ->
                                                               sentences.add(
-                                                                 sentence.interleaved(type1, types)
+                                                                 sentence.interleaved(types)
                                                                          .stream()
                                                                          .filter(StopWords.isNotStopWord())
                                                                          .map(HString::getLemma)
@@ -247,6 +252,18 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
                                           return sentences.stream();
                                        }),
                                Collection::stream);
+   }
+
+   default MStream<Instance> asInstanceStream(@NonNull Featurizer<HString> featurizer) {
+      return stream().map(featurizer::extractInstance);
+   }
+
+   default MStream<Instance> asInstanceStream(@NonNull Featurizer<HString> featurizer, @NonNull AttributeType labelAttributeType) {
+      return asLabeledStream(labelAttributeType).map(featurizer::extractInstance);
+   }
+
+   default MStream<Instance> asInstanceStream(@NonNull Featurizer<HString> featurizer, @NonNull SerializableFunction<HString, ?> labelFunction) {
+      return asLabeledStream(labelFunction).map(featurizer::extractInstance);
    }
 
    /**
@@ -290,8 +307,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
       return Dataset
                 .regression()
                 .type(getDataSetType())
-                .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance))
-         ;
+                .source(asLabeledStream(labelAttributeType).map(featurizer::extractInstance));
    }
 
    /**
@@ -315,7 +331,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @param featurizer the featurizer
     * @return the dataset
     */
-   default Dataset<Sequence> asSequenceDataSet(@NonNull SequenceFeaturizer<Annotation> featurizer) {
+   default Dataset<Sequence> asSequenceDataSet(@NonNull SequenceFeaturizer<? super Annotation> featurizer) {
       return Dataset
                 .sequence()
                 .type(DatasetType.InMemory)
@@ -330,7 +346,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @param featurizer   the featurizer
     * @return the dataset
     */
-   default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+   default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull SequenceFeaturizer<? super Annotation> featurizer) {
       return Dataset
                 .sequence()
                 .type(getDataSetType())
@@ -345,7 +361,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @param featurizer    the featurizer
     * @return the dataset
     */
-   default Dataset<Sequence> asSequenceDataSet(@NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+   default Dataset<Sequence> asSequenceDataSet(@NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<? super Annotation> featurizer) {
       return Dataset
                 .sequence()
                 .type(getDataSetType())
@@ -361,7 +377,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @param featurizer    the featurizer
     * @return the dataset
     */
-   default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<Annotation> featurizer) {
+   default Dataset<Sequence> asSequenceDataSet(@NonNull AnnotationType sequenceType, @NonNull Function<? super Annotation, String> labelFunction, @NonNull SequenceFeaturizer<? super Annotation> featurizer) {
       return Dataset
                 .sequence()
                 .type(getDataSetType())
@@ -591,6 +607,17 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
    }
 
    /**
+    * Process corpus.
+    *
+    * @param processor the processor
+    * @return the corpus
+    * @throws Exception the exception
+    */
+   default Corpus process(@NonNull CorpusProcessor processor) throws Exception {
+      return processor.process(this, new ProcessorContext());
+   }
+
+   /**
     * Query collection.
     *
     * @param query the query
@@ -654,7 +681,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
     * @return the counter
     */
    default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor, int minCount, double minScore) {
-      return significantBigrams(nGramExtractor, minCount, AssociationMeasures.Mikolov, minScore);
+      return significantBigrams(nGramExtractor, minCount, Association.Mikolov, minScore);
    }
 
    /**
@@ -765,7 +792,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
                                                               Config.get("files.partition").asIntegerValue(10))) {
                Broker.<Document>builder()
                   .addProducer(new IterableProducer<>(this))
-                  .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document))),
+                  .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document).trim() + "\n")),
                                SystemInfo.NUMBER_OF_PROCESSORS - 1)
                   .build().run();
             } catch (RuntimeException re) {
@@ -778,7 +805,7 @@ public interface Corpus extends Iterable<Document>, AutoCloseable, Loggable {
             try (AsyncWriter writer = new AsyncWriter(resource.writer())) {
                Broker.<Document>builder()
                   .addProducer(new IterableProducer<>(this))
-                  .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document))),
+                  .addConsumer(Unchecked.consumer(document -> writer.write(format.toString(document).trim() + "\n")),
                                SystemInfo.NUMBER_OF_PROCESSORS - 1)
                   .build().run();
             } catch (RuntimeException re) {

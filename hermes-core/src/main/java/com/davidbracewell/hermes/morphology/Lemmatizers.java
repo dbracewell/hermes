@@ -25,7 +25,7 @@ import com.davidbracewell.Language;
 import com.davidbracewell.collection.Trie;
 import com.davidbracewell.config.Config;
 import com.davidbracewell.guava.common.collect.Maps;
-import com.davidbracewell.hermes.attribute.POS;
+import com.davidbracewell.hermes.POS;
 import lombok.NonNull;
 
 import java.util.Collections;

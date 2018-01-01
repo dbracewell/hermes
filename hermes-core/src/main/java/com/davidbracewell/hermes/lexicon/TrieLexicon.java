@@ -22,6 +22,7 @@
 package com.davidbracewell.hermes.lexicon;
 
 import com.davidbracewell.collection.Trie;
+import com.davidbracewell.conversion.Cast;
 import com.davidbracewell.hermes.AttributeType;
 import com.davidbracewell.hermes.HString;
 import lombok.NonNull;
@@ -51,8 +52,12 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    }
 
    @Override
-   public Iterator<String> iterator() {
-      return trie.keySet().iterator();
+   public void add(@NonNull LexiconEntry entry) {
+      if (!trie.containsKey(entry.getLemma())) {
+         trie.put(entry.getLemma(), new LinkedList<>());
+      }
+      ensureLongestLemma(entry.getLemma());
+      trie.get(entry.getLemma()).add(entry);
    }
 
    @Override
@@ -64,20 +69,21 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    }
 
    @Override
-   public int size() {
-      return trie.size();
+   public void merge(@NonNull WordList other) {
+      if (other instanceof Lexicon) {
+         Lexicon lother = Cast.as(other);
+         lother.entries().forEach(this::add);
+      } else {
+         other.forEach(this::add);
+      }
    }
 
    @Override
    public List<LexiconEntry> getEntries(@NonNull HString hString) {
       String str = normalize(hString);
-      if (trie.containsKey(str)) {
-         return trie.get(str).stream()
-                    .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
-                    .sorted()
-                    .collect(Collectors.toList());
+      if (!trie.containsKey(str)) {
+         str = normalize(hString.getLemma());
       }
-      str = normalize(hString.getLemma());
       if (trie.containsKey(str)) {
          return trie.get(str).stream()
                     .filter(le -> le.getConstraint() == null || le.getConstraint().test(hString))
@@ -88,12 +94,41 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    }
 
    @Override
-   public void add(@NonNull LexiconEntry entry) {
-      if (!trie.containsKey(entry.getLemma())) {
-         trie.put(entry.getLemma(), new LinkedList<>());
-      }
-      ensureLongestLemma(entry.getLemma());
-      trie.get(entry.getLemma()).add(entry);
+   public Set<LexiconEntry> entries() {
+      return new AbstractSet<LexiconEntry>() {
+         @Override
+         public Iterator<LexiconEntry> iterator() {
+            return new Iterator<LexiconEntry>() {
+               Iterator<List<LexiconEntry>> itr = trie.values().iterator();
+               Iterator<LexiconEntry> subItr = null;
+
+
+               private boolean advance() {
+                  while (itr.hasNext() && (subItr == null || !subItr.hasNext())) {
+                     subItr = itr.next().iterator();
+                  }
+                  return subItr != null && subItr.hasNext();
+               }
+
+
+               @Override
+               public boolean hasNext() {
+                  return advance();
+               }
+
+               @Override
+               public LexiconEntry next() {
+                  advance();
+                  return subItr.next();
+               }
+            };
+         }
+
+         @Override
+         public int size() {
+            return TrieLexicon.this.size();
+         }
+      };
    }
 
    @Override
@@ -102,13 +137,35 @@ public class TrieLexicon extends BaseLexicon implements PrefixSearchable {
    }
 
    @Override
+   public boolean isPrefixMatch(String string) {
+      return trie.prefix(normalize(string)).size() > 0;
+   }
+
+   @Override
+   public Iterator<String> iterator() {
+      return trie.keySet().iterator();
+   }
+
+   @Override
    public Set<String> prefixes(String string) {
       return trie.prefix(string).keySet();
    }
 
    @Override
-   public boolean isPrefixMatch(String string) {
-      return trie.prefix(normalize(string)).size() > 0;
+   public int size() {
+      return trie.size();
+   }
+
+   public Map<String, Integer> suggest(@NonNull String element) {
+      return trie.suggest(element);
+   }
+
+   public Map<String, Integer> suggest(@NonNull String element, int maxCost) {
+      return trie.suggest(element, maxCost);
+   }
+
+   public Map<String, Integer> suggest(@NonNull String element, int maxCost, int substitutionCost) {
+      return trie.suggest(element, maxCost, substitutionCost);
    }
 
 }//END OF BaseTrieLexicon

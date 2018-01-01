@@ -21,12 +21,12 @@
 
 package com.davidbracewell.hermes.lexicon;
 
-import com.davidbracewell.guava.common.collect.ImmutableSet;
 import com.davidbracewell.io.resource.Resource;
 import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,7 +46,7 @@ public class SimpleWordList implements WordList, Serializable {
     * @param words the words
     */
    public SimpleWordList(@NonNull Set<String> words) {
-      this.words = ImmutableSet.copyOf(words);
+      this.words = new HashSet<>(words);
    }
 
    @Override
@@ -62,6 +62,11 @@ public class SimpleWordList implements WordList, Serializable {
    @Override
    public int size() {
       return words.size();
+   }
+
+   @Override
+   public void merge(@NonNull WordList other) {
+      other.forEach(words::add);
    }
 
    public static WordList read(@NonNull Resource resource, boolean lowerCase) throws IOException {

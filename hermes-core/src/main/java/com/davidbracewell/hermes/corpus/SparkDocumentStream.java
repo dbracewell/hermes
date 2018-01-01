@@ -96,6 +96,9 @@ class SparkDocumentStream implements MStream<Document>, Serializable {
    public SparkDocumentStream annotate(@NonNull AnnotatableType... types) {
       return new SparkDocumentStream(source.map(json -> {
          Hermes.initializeWorker(configBroadcast.value());
+         if (Document.hasAnnotations(json, types)) {
+            return json;
+         }
          Document document = Document.fromJson(json);
          Pipeline.process(document, types);
          return document.toJson();

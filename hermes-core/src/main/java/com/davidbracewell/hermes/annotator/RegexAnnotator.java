@@ -41,54 +41,54 @@ import java.util.regex.Pattern;
  * @author David B. Bracewell
  */
 public class RegexAnnotator implements Annotator, Serializable {
-  private static final long serialVersionUID = 1L;
-  private final Pattern regex;
-  private final AnnotationType providedType;
+   private static final long serialVersionUID = 1L;
+   private final Pattern regex;
+   private final AnnotationType providedType;
 
-  /**
-   * Instantiates a new Regex annotator.
-   *
-   * @param regex        the regex
-   * @param providedType the provided type
-   */
-  public RegexAnnotator(@NonNull String regex, @NonNull AnnotationType providedType) {
-    regex = StringUtils.trim(regex);
-    if (!regex.startsWith("\\b")) {
-      regex = "\\b" + regex;
-    }
-    if (!regex.endsWith("\\b")) {
-      regex += "\\b";
-    }
-    this.regex = Pattern.compile(regex);
-    this.providedType = providedType;
-  }
+   /**
+    * Instantiates a new Regex annotator.
+    *
+    * @param regex        the regex
+    * @param providedType the provided type
+    */
+   public RegexAnnotator(@NonNull String regex, @NonNull AnnotationType providedType) {
+      regex = StringUtils.trim(regex);
+      if (!regex.startsWith("\\b")) {
+         regex = "\\b" + regex;
+      }
+      if (!regex.endsWith("\\b")) {
+         regex += "\\b";
+      }
+      this.regex = Pattern.compile(regex);
+      this.providedType = providedType;
+   }
 
-  /**
-   * Instantiates a new Regex annotator.
-   *
-   * @param regex        the regex
-   * @param providedType the provided type
-   */
-  public RegexAnnotator(@NonNull String regex, @NonNull String providedType) {
-    this(regex, AnnotationType.create(providedType));
-  }
+   /**
+    * Instantiates a new Regex annotator.
+    *
+    * @param regex        the regex
+    * @param providedType the provided type
+    */
+   public RegexAnnotator(@NonNull String regex, @NonNull String providedType) {
+      this(regex, AnnotationType.create(providedType));
+   }
 
-  @Override
-  public void annotate(Document document) {
-    Matcher matcher = document.matcher(regex);
-    while (matcher.find()) {
-      document.createAnnotation(providedType, matcher.start(), matcher.end());
-    }
-  }
+   @Override
+   public void annotate(Document document) {
+      Matcher matcher = document.matcher(regex);
+      while (matcher.find()) {
+         document.createAnnotation(providedType, matcher.start(), matcher.end(), Collections.emptyMap());
+      }
+   }
 
-  @Override
-  public Set<AnnotatableType> satisfies() {
-    return Collections.singleton(providedType);
-  }
+   @Override
+   public Set<AnnotatableType> satisfies() {
+      return Collections.singleton(providedType);
+   }
 
-  @Override
-  public String getVersion() {
-    return "(" + regex.pattern() + ")";
-  }
+   @Override
+   public String getVersion() {
+      return "(" + regex.pattern() + ")";
+   }
 
 }//END OF RegexAnnotator

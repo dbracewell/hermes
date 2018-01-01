@@ -26,43 +26,47 @@ import com.davidbracewell.apollo.ml.sequence.SequenceFeaturizer;
 import com.davidbracewell.apollo.ml.sequence.SequenceInput;
 import com.davidbracewell.apollo.ml.sequence.SequenceLabeler;
 import com.davidbracewell.hermes.Annotation;
+import com.davidbracewell.hermes.POS;
 import com.davidbracewell.hermes.Types;
-import com.davidbracewell.hermes.attribute.POS;
 import com.davidbracewell.hermes.ml.AnnotationTagger;
 
 /**
  * @author David B. Bracewell
  */
 public class POSTagger extends AnnotationTagger {
-  private static final long serialVersionUID = 1L;
-  /**
-   * The Featurizer.
-   */
-  final SequenceFeaturizer<Annotation> featurizer;
-  /**
-   * The Labeler.
-   */
-  final SequenceLabeler labeler;
+   private static final long serialVersionUID = 1L;
+   /**
+    * The Featurizer.
+    */
+   final SequenceFeaturizer<Annotation> featurizer;
+   /**
+    * The Labeler.
+    */
+   final SequenceLabeler labeler;
 
-  public POSTagger(SequenceFeaturizer<Annotation> featurizer, SequenceLabeler labeler) {
-    this.featurizer = featurizer;
-    this.labeler = labeler;
-  }
+   public POSTagger(SequenceFeaturizer<Annotation> featurizer, SequenceLabeler labeler) {
+      this.featurizer = featurizer;
+      this.labeler = labeler;
+   }
 
-  @Override
-  public void tag(Annotation sentence) {
-    SequenceInput<Annotation> sequenceInput = new SequenceInput<>(sentence.tokens());
-    Labeling result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
-    for (int i = 0; i < sentence.tokenLength(); i++) {
-      if (sentence.tokenAt(i - 1).getPOS().isVerb() &&
-        sentence.tokenAt(i + 1).contentEqualIgnoreCase("to") &&
-        sentence.tokenAt(i).toLowerCase().endsWith("ing")) {
-        //Common error of MODAL + GERUND (where GERUND form is commonly a noun) + to => VBG
-        sentence.tokenAt(i).put(Types.PART_OF_SPEECH, POS.VBG);
-      } else {
-        sentence.tokenAt(i).put(Types.PART_OF_SPEECH, POS.fromString(result.getLabel(i)));
+   @Override
+   public void tag(Annotation sentence) {
+      SequenceInput<Annotation> sequenceInput = new SequenceInput<>(sentence.tokens());
+      Labeling result = labeler.label(featurizer.extractSequence(sequenceInput.iterator()));
+      for (int i = 0; i < sentence.tokenLength(); i++) {
+         if (sentence.tokenAt(i - 1).getPOS().isPronoun()
+                && sentence.tokenAt(i).contentEqualsIgnoreCase("like")
+            ) {
+            sentence.tokenAt(i).put(Types.PART_OF_SPEECH, POS.VB);
+         } else if (sentence.tokenAt(i - 1).getPOS().isVerb() &&
+                       sentence.tokenAt(i + 1).contentEqualsIgnoreCase("to") &&
+                       sentence.tokenAt(i).toLowerCase().endsWith("ing")) {
+            //Common error of MODAL + GERUND (where GERUND form is commonly a noun) + to => VBG
+            sentence.tokenAt(i).put(Types.PART_OF_SPEECH, POS.VBG);
+         } else {
+            sentence.tokenAt(i).put(Types.PART_OF_SPEECH, POS.fromString(result.getLabel(i)));
+         }
       }
-    }
-  }
+   }
 
 }// END OF POSTagger
