@@ -44,7 +44,7 @@
         <dependency>
             <groupId>com.davidbracewell</groupId>
             <artifactId>hermes-en-models</artifactId>
-            <version>0.4-SNAPSHOT</version>
+            <version>0.4</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
