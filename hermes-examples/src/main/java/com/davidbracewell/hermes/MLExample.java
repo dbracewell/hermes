@@ -24,7 +24,7 @@ package com.davidbracewell.hermes;
 import com.davidbracewell.Language;
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.Learner;
-import com.davidbracewell.apollo.ml.classification.ClassifierEvaluation;
+import com.davidbracewell.apollo.ml.classification.MultiClassEvaluation;
 import com.davidbracewell.apollo.ml.classification.ClassifierLearner;
 import com.davidbracewell.apollo.ml.classification.LibLinearLearner;
 import com.davidbracewell.apollo.ml.data.Dataset;
@@ -208,7 +208,7 @@ public class MLExample {
 
       //Perform 10-fold cross-validation and output the results to System.out
       //Don't expect great results with this size data and feature set
-      ClassifierEvaluation.crossValidation(dataset, supplier, 10)
+      MultiClassEvaluation.crossValidation(dataset, supplier, 10)
                           .output(System.out, true);
 
    }

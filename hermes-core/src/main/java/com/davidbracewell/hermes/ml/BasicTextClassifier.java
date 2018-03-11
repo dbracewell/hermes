@@ -3,10 +3,7 @@ package com.davidbracewell.hermes.ml;
 import com.davidbracewell.apollo.ml.Instance;
 import com.davidbracewell.apollo.ml.TrainTestSet;
 import com.davidbracewell.apollo.ml.TrainTestSplit;
-import com.davidbracewell.apollo.ml.classification.Classification;
-import com.davidbracewell.apollo.ml.classification.Classifier;
-import com.davidbracewell.apollo.ml.classification.ClassifierEvaluation;
-import com.davidbracewell.apollo.ml.classification.ClassifierLearner;
+import com.davidbracewell.apollo.ml.classification.*;
 import com.davidbracewell.apollo.ml.data.Dataset;
 import com.davidbracewell.apollo.ml.encoder.Encoder;
 import com.davidbracewell.apollo.ml.encoder.IndexEncoder;
@@ -36,7 +33,7 @@ import java.util.Random;
  */
 public abstract class BasicTextClassifier implements TextClassifier {
     private static final long serialVersionUID = 1L;
-    private Classifier classifier;
+    protected Classifier classifier;
 
     @Override
     public final void classify(@NonNull HString text) {
@@ -128,7 +125,7 @@ public abstract class BasicTextClassifier implements TextClassifier {
             case CV3:
             case CV10:
                 TrainTestSet<Instance> folds = data.fold(mode == Mode.CV3 ? 3 : 10);
-                ClassifierEvaluation evaluation = new ClassifierEvaluation();
+                MultiClassEvaluation evaluation = new MultiClassEvaluation();
                 for (TrainTestSplit<Instance> fold : folds) {
                     train(fold.getTrain());
                     evaluation.merge(test(fold.getTest(), false));
