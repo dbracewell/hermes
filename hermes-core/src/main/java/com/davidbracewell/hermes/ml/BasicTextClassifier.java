@@ -100,6 +100,11 @@ public abstract class BasicTextClassifier implements TextClassifier {
                 cli.get("oversample"));
 
         Mode mode = cli.get("mode");
+
+        if( mode == null ){
+            throw new IllegalArgumentException("Invalid Mode");
+        }
+
         switch (mode) {
             case TEST:
                 try {
@@ -257,7 +262,7 @@ public abstract class BasicTextClassifier implements TextClassifier {
      * @param dataset the dataset
      */
     protected void train(Dataset<Instance> dataset) {
-        this.classifier = getLearner().train(dataset);
+        this.classifier = getLearner().train(dataset.preprocess(getPreprocessors()));
     }
 
 

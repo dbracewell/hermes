@@ -26,6 +26,7 @@ import com.davidbracewell.apollo.ml.featurizer.Featurizer;
 import com.davidbracewell.cache.Cached;
 import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.extraction.AbstractTermExtractor;
+import com.davidbracewell.string.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,7 +59,12 @@ public class BagOfAnnotations implements Featurizer<HString> {
       return featureSpec.count(hString)
                         .entries()
                         .stream()
-                        .map(e -> Feature.real(e.getKey(), e.getValue()))
+                        .map(e -> {
+                           if (StringUtils.isNullOrBlank(featureSpec.getPrefix())) {
+                              return Feature.real(e.getKey(), e.getValue());
+                           }
+                           return Feature.real(featureSpec.getPrefix() + "=" + e.getKey(), e.getValue());
+                        })
                         .collect(Collectors.toList());
    }
 

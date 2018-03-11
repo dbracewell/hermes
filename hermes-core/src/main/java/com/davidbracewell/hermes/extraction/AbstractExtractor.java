@@ -30,6 +30,7 @@ import com.davidbracewell.hermes.HString;
 import com.davidbracewell.hermes.Types;
 import com.davidbracewell.hermes.filter.StopWords;
 import com.davidbracewell.hermes.ml.feature.ValueCalculator;
+import com.davidbracewell.string.StringUtils;
 import lombok.NonNull;
 import lombok.ToString;
 
@@ -53,6 +54,7 @@ public abstract class AbstractExtractor<T extends AbstractExtractor> implements 
    private SerializableFunction<HString, String> toStringFunction = HString::toString;
    private SerializablePredicate<? super HString> filter = hString -> true;
    private ValueCalculator valueCalculator = ValueCalculator.Frequency;
+   private String prefix = StringUtils.EMPTY;
 
    /**
     * Instantiates a new Abstract feature spec.
@@ -143,6 +145,15 @@ public abstract class AbstractExtractor<T extends AbstractExtractor> implements 
          return new AnnotationType[]{Types.TOKEN};
       }
       return annotationType.toArray(new AnnotationType[annotationType.size()]);
+   }
+
+   public T prefix(String prefix) {
+      this.prefix = StringUtils.isNullOrBlank(prefix) ? StringUtils.EMPTY : prefix;
+      return Cast.as(this);
+   }
+
+   public String getPrefix() {
+      return prefix;
    }
 
    /**
