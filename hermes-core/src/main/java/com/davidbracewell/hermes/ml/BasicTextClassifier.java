@@ -125,10 +125,15 @@ public abstract class BasicTextClassifier implements TextClassifier {
             case CV3:
             case CV10:
                 TrainTestSet<Instance> folds = data.fold(mode == Mode.CV3 ? 3 : 10);
-                MultiClassEvaluation evaluation = new MultiClassEvaluation();
+                ClassifierEvaluation evaluation = null;
                 for (TrainTestSplit<Instance> fold : folds) {
                     train(fold.getTrain());
-                    evaluation.merge(test(fold.getTest(), false));
+                    ClassifierEvaluation current = test(fold.getTest(), false);
+                    if( evaluation == null ){
+                        evaluation = current;
+                    } else {
+                        evaluation.merge(current);
+                    }
                 }
                 evaluation.output(System.out);
                 break;
